@@ -1,2 +1,28 @@
-This is the branch used for bring up of
-STM32 hardware.
+STM32F3/4-Discovery - Getting started
+
+Installation och configuration:
+1. Download ARM GCC (https://launchpad.net/gcc-arm-embedded/)
+2. Download CoIDE (http://www.coocox.com/CoIDE/CoIDE_Updates.htm)
+3. Download STM32 ST-LINK Utility (http://www.st.com/web/en/catalog/tools/PF258168)
+3. Install ARM GCC
+4. Install CoIDE
+5. Configure CoIDE to point to ARM GCC (http://www.coocox.com/CoIDE/Compiler_Settings.html)
+6. Install STM32 ST-LINK Utility
+7. Plug in USB cable from PC to ST-LINK on discovery board
+
+Skapa ett Hello world projekt 
+1. Click Create Project, name it hello
+2. When prompted Chip or Board, choose Chip
+3. Choose ST, and STM32F4x => STM32F407VG.  Click Finish
+4. In the Repository window, click on Semihosting and GPIO.  Required dependencies will autoselect
+5. Double click on main.c in the Project window, and modify to contain [se bifogad fil main.c]
+6. Open printf.c from the Project window
+7. Add #include <semihosting.h> after the other includes.
+8. In the PrintChar method, add the following line before the closing brace
+    SH_SendChar(c);
+9. Right click on hello in tree of Project Window and choose Configuration
+10. Navigate to Debugger tab, and verify ST-Link is chosen
+11. Click on Semihosting Enable
+12. Choose Project + Build, should be successful
+13. Choose Debug + Debug, will deploy to board and stop at top of main
+14. Choose Debug + Run to continue the program, should see output in Semihosting window (and Green and blue LED should blink)
