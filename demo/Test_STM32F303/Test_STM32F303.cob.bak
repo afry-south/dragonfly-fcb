@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Project>
+  <Device>
+    <Manufacturer id="ST" name="ST"/>
+    <Chip id="STM32F303VC" name="STM32F303VC"/>
+  </Device>
+  <Components/>
+  <ExcludedFiles/>
+  <Drivers/>
+</Project>
