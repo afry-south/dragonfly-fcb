@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<history>
+   <processor signature="4.6.1 -O0 -nostartfiles -Map=Test_STM32F303.map -mthumb -LC:\CooCox\CoIDE\workspace\Test_STM32F303 --gc-sections -TC:\CooCox\CoIDE\workspace\Test_STM32F303\link.ld -mcpu=cortex-m4 -g -L..\.. -lm">
+      <target file="Test_STM32F303.elf" lastModified="13a8edb135a">
+         <source file="..\obj\stm32f30x_iwdg.o" lastModified="13a8edb01b5"/>
+         <source file="..\obj\stm32f30x_opamp.o" lastModified="13a8edb0206"/>
+         <source file="..\obj\usb_core.o" lastModified="13a8edb0296"/>
+         <source file="..\obj\stm32f30x_crc.o" lastModified="13a8edb02e2"/>
+         <source file="..\obj\startup_stm32f303.o" lastModified="13a8edb030a"/>
+         <source file="..\obj\stm32f30x_rcc.o" lastModified="13a8edb037b"/>
+         <source file="..\obj\stm32f3_discovery_lsm303dlhc.o" lastModified="13a8edb03de"/>
+         <source file="..\obj\stm32f30x_flash.o" lastModified="13a8edb044b"/>
+         <source file="..\obj\system_stm32f30x.o" lastModified="13a8edb0491"/>
+         <source file="..\obj\stm32f30x_adc.o" lastModified="13a8edb052a"/>
+         <source file="..\obj\usb_int.o" lastModified="13a8edb0574"/>
+         <source file="..\obj\usb_desc.o" lastModified="13a8edb05b3"/>
+         <source file="..\obj\usb_regs.o" lastModified="13a8edb063c"/>
+         <source file="..\obj\hw_config.o" lastModified="13a8edb0694"/>
+         <source file="..\obj\usb_prop.o" lastModified="13a8edb06ea"/>
+         <source file="..\obj\stm32f30x_it.o" lastModified="13a8edb074c"/>
+         <source file="..\obj\stm32f30x_gpio.o" lastModified="13a8edb079f"/>
+         <source file="..\obj\stm32f30x_comp.o" lastModified="13a8edb07e7"/>
+         <source file="..\obj\usb_pwr.o" lastModified="13a8edb082e"/>
+         <source file="..\obj\usb_init.o" lastModified="13a8edb086f"/>
+         <source file="..\obj\main.o" lastModified="13a8edb091f"/>
+         <source file="..\obj\stm32f30x_dma.o" lastModified="13a8edb0990"/>
+         <source file="..\obj\stm32f30x_exti.o" lastModified="13a8edb09dd"/>
+         <source file="..\obj\stm32f30x_spi.o" lastModified="13a8edb0a4a"/>
+         <source file="..\obj\stm32f30x_i2c.o" lastModified="13a8edb0abb"/>
+         <source file="..\obj\usb_sil.o" lastModified="13a8edb0afe"/>
+         <source file="..\obj\stm32f30x_rtc.o" lastModified="13a8edb0bb1"/>
+         <source file="..\obj\stm32f30x_misc.o" lastModified="13a8edb0bf8"/>
+         <source file="..\obj\stm32f30x_tim.o" lastModified="13a8edb0cd6"/>
+         <source file="..\obj\stm32f3_discovery_l3gd20.o" lastModified="13a8edb0d2e"/>
+         <source file="..\obj\stm32f30x_dbgmcu.o" lastModified="13a8edb0d6f"/>
+         <source file="..\obj\usb_endp.o" lastModified="13a8edb0dac"/>
+         <source file="..\obj\stm32f30x_syscfg.o" lastModified="13a8edb0df9"/>
+         <source file="..\obj\stm32f30x_pwr.o" lastModified="13a8edb0e44"/>
+         <source file="..\obj\stm32f30x_wwdg.o" lastModified="13a8edb0e89"/>
+         <source file="..\obj\stm32f30x_can.o" lastModified="13a8edb0f05"/>
+         <source file="..\obj\usb_mem.o" lastModified="13a8edb0f47"/>
+         <source file="..\obj\stm32f3_discovery.o" lastModified="13a8edb0f91"/>
+         <source file="..\obj\stm32f30x_dac.o" lastModified="13a8edb1007"/>
+         <source file="..\obj\usb_istr.o" lastModified="13a8edb104a"/>
+         <source file="..\obj\stm32f30x_usart.o" lastModified="13a8edb10ca"/>
+      </target>
+   </processor>
+</history>
