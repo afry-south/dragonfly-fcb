@@ -29,18 +29,10 @@ TIM_ICInitTypeDef TIM_CH2_ICInitStructure;
 TIM_ICInitTypeDef TIM_CH3_ICInitStructure;
 TIM_ICInitTypeDef TIM_CH4_ICInitStructure;
 
-volatile uint16_t PWM_1_IN_DOWN = 0;	// Current falling edge
-volatile uint16_t PWM_2_IN_DOWN = 0;
-volatile uint16_t PWM_3_IN_DOWN = 0;
-volatile uint16_t PWM_4_IN_DOWN = 0;
-volatile uint16_t PWM_1_IN_UP = 0;	// Current rising edge
-volatile uint16_t PWM_2_IN_UP = 0;
-volatile uint16_t PWM_3_IN_UP = 0;
-volatile uint16_t PWM_4_IN_UP = 0;
-volatile uint16_t PWM_1_IN_UP2 = 0; 	// Previous rising edge
-volatile uint16_t PWM_2_IN_UP2 = 0;
-volatile uint16_t PWM_3_IN_UP2 = 0;
-volatile uint16_t PWM_4_IN_UP2 = 0;
+volatile uint16_t PWM_IN_DOWN[4] = {0, 0, 0, 0}; 	// Current falling edge
+volatile uint16_t PWM_IN_UP[4] = {0, 0, 0, 0};		// Current rising edge
+volatile uint16_t PWM_IN_UP2[4] = {0, 0, 0, 0};		// Previous rising edge
+volatile char pulseState[4] = {0, 0, 0, 0};			// 0 = rising, 1 = falling detection
 
 volatile uint16_t PWM_1_IN_PeriodTicks = 0; 	//Number of timer ticks of the period in the pwm1 in signal
 volatile uint16_t PWM_2_IN_PeriodTicks = 0; 	//Number of timer ticks of the period in the pwm1 in signal
@@ -51,19 +43,9 @@ volatile uint16_t PWM_2_IN_DutyCycleTicks = 0; //Number of timer ticks of the du
 volatile uint16_t PWM_3_IN_DutyCycleTicks = 0; //Number of timer ticks of the duty cycle in the pwm3 in signal
 volatile uint16_t PWM_4_IN_DutyCycleTicks = 0; //Number of timer ticks of the duty cycle in the pwm4 in signal
 
-uint32_t PWM_IN_Frequency = 0;		//Frequency of the pwm in signal
-
-static volatile char pulseState1 = 0;
-static volatile char pulseState2 = 0;
-static volatile char pulseState3 = 0;
-static volatile char pulseState4 = 0;
-
-uint16_t PWM_PeriodTicks = 0;	// Number of (prescaled) clock ticks per PWM period
-uint16_t PrescalerValue = 0;	// Scales the SystemCoreClock frequency
-
-RCC_ClocksTypeDef RCC_Clocks;
-
-uint32_t i = 0; // counter (delete later)
+/* Computes prescaler and timer period to adjust output signal frequency to 400 Hz */
+uint16_t TIM4_Prescaler = 0;	// Timer 4 prescaler (recalculated in TIM4_Setup())
+uint16_t TIM4_Period = 60000;	// TIM4 clock period (set to obtain 400 MHz PWM output)
 
 // Sensor readings arrays
 float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};
@@ -98,43 +80,30 @@ int main(void)
 	/* TIM GPIO configuration */
 	TIM4_IOconfig();
 
-	/* Computes prescaler and timer period to adjust output signal frequency to 400 Hz */
-  	PrescalerValue = SystemCoreClock/24000000;	// SystemCoreClock (72 MHz on STM32F303) to 24 MHz (Prescaler = 3)
-  	PWM_PeriodTicks = 60000;					// 24 MHz to 400 Hz output signal frequency (yields a timer value of 60 000 set in the ARR register) */
-
-	/* Setup Timer 4 */
+	/* Setup Timer 4 (used for PWM output)*/
   	TIM4_Setup();
 	/* Setup Timer 4 OC registers (for PWM output) */
 	TIM4_SetupOC();
 
-	/* Setup Timer 3 */
+	/* Setup Timer 3 (used for program periodic execution) */
 	TIM3_Setup();
-	/* Setup Timer 3 IRQ */
+	/* Setup Timer 3 for interrupt generation */
 	TIM3_SetupIRQ();
 
-	/* Setup Timer 2 */
+	/* Setup Timer 2 (used for PWM input) */
 	TIM2_Setup();
+	/* Setup PWM input (GPIO, NVIC settings) */
+	PWM_In_Setup();
 
 	/* Setup sensors */
 	GyroConfig();
 	CompassConfig();
 
-	/* Setup PWM input */
-	PWM_In_Setup();
-
-	TIM4->CCR1 = getPWM_CCR(0.20);
-	TIM4->CCR2 = getPWM_CCR(0.50);
-	TIM4->CCR3 = getPWM_CCR(0.70);
-	TIM4->CCR4 = getPWM_CCR(0.90);
-
 	/* Infinite loop keeps the program alive.
 	 * The actual program tasks are performed by
 	 * the TIM3_IRQHandler interrupt handler
 	 */
-	while (1)
-	{
-	}
-
+	while (1);
 }
 
 /* @TIM3_IRQHandler
@@ -148,34 +117,18 @@ void TIM3_IRQHandler()
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
 	{
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-		i++;
-		if(i == 3000) {
-			/* Read Gyro Angular rate data */
-			GyroReadAngRate(GyroBuffer);
-			/* Read Compass data */
-			CompassReadMag(MagBuffer);
-			CompassReadAcc(AccBuffer);
 
-			// 40% dutycycle for 30 sec (if interrupt at 100 Hz)
-			TIM4->CCR1 = getPWM_CCR(0.40);
-			TIM4->CCR2 = getPWM_CCR(0.40);
-			TIM4->CCR3 = getPWM_CCR(0.40);
-			TIM4->CCR4 = getPWM_CCR(0.40);
-		}
-		else if(i == 6000) {
-			/* Read Gyro Angular rate data */
-			GyroReadAngRate(GyroBuffer);
-			/* Read Compass data */
-			CompassReadMag(MagBuffer);
-			CompassReadAcc(AccBuffer);
+		/* Read Gyro Angular rate data */
+		GyroReadAngRate(GyroBuffer);
+		/* Read Compass data */
+		CompassReadMag(MagBuffer);
+		CompassReadAcc(AccBuffer);
 
-			// 50% dutycycle for 30 sec (if interrupt at 100 Hz)
-			TIM4->CCR1 = getPWM_CCR(0.50);
-			TIM4->CCR2 = getPWM_CCR(0.50);
-			TIM4->CCR3 = getPWM_CCR(0.50);
-			TIM4->CCR4 = getPWM_CCR(0.50);
-			i = 0;
-		}
+		// Set motor output PWM
+		TIM4->CCR1 = getPWM_CCR((float)(PWM_1_IN_DutyCycleTicks/PWM_1_IN_PeriodTicks));
+		TIM4->CCR2 = getPWM_CCR((float)(PWM_2_IN_DutyCycleTicks/PWM_2_IN_PeriodTicks));
+		TIM4->CCR3 = getPWM_CCR((float)(PWM_3_IN_DutyCycleTicks/PWM_3_IN_PeriodTicks));
+		TIM4->CCR4 = getPWM_CCR((float)(PWM_4_IN_DutyCycleTicks/PWM_4_IN_PeriodTicks));
 	}
 }
 
@@ -186,147 +139,128 @@ void TIM3_IRQHandler()
  */
 void TIM2_IRQHandler()
 {
-	//If interrupt concerning CH1
+	/* If interrupt concerns CH1 */
 	if (TIM2->SR & TIM_IT_CC1)
 	{
 		TIM2->SR &= (~TIM_IT_CC1);
-		// Rising edge
-		if (pulseState1 == 0)
+
+		if (pulseState[0] == 0)	// Rising edge
 		{
 			TIM_CH1_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
 
-			PWM_1_IN_UP2 = PWM_1_IN_UP;
-			PWM_1_IN_UP = TIM_GetCapture1(TIM2);
+			PWM_IN_UP2[0] = PWM_IN_UP[0];
+			PWM_IN_UP[0] = TIM_GetCapture1(TIM2);
 
-			if(PWM_1_IN_UP >= PWM_1_IN_UP2)
-				PWM_1_IN_PeriodTicks = PWM_1_IN_UP - PWM_1_IN_UP2;
+			if(PWM_IN_UP[0] >= PWM_IN_UP2[0])
+				PWM_1_IN_PeriodTicks = PWM_IN_UP[0] - PWM_IN_UP2[0];
 			else
-				PWM_1_IN_PeriodTicks = PWM_1_IN_UP + 0xFFFF - PWM_1_IN_UP2;
+				PWM_1_IN_PeriodTicks = PWM_IN_UP[0] + 0xFFFF - PWM_IN_UP2[0];
 		}
-		//Falling edge
-		else
+		else	//Falling edge
 		{
 			TIM_CH1_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
+			PWM_IN_DOWN[0] = TIM_GetCapture1(TIM2);
 
-			PWM_1_IN_DOWN = TIM_GetCapture1(TIM2);
-
-			if (PWM_1_IN_DOWN >= PWM_1_IN_UP)
-				PWM_1_IN_DutyCycleTicks = PWM_1_IN_DOWN - PWM_1_IN_UP;
+			if (PWM_IN_DOWN[0] >= PWM_IN_UP[0])
+				PWM_1_IN_DutyCycleTicks = PWM_IN_DOWN[0] - PWM_IN_UP[0];
 			else
-				PWM_1_IN_DutyCycleTicks = PWM_1_IN_DOWN + 0xFFFF - PWM_1_IN_UP;
+				PWM_1_IN_DutyCycleTicks = PWM_IN_DOWN[0] + 0xFFFF - PWM_IN_UP[0];
 		}
-		pulseState1 = !pulseState1;
-
-		// Reverse polarity.
-		TIM_ICInit(TIM2, &TIM_CH1_ICInitStructure);
+		pulseState[0] = !pulseState[0];
+		TIM_ICInit(TIM2, &TIM_CH1_ICInitStructure);	// Reverse polarity
 	}
 
 
-	//If interrupt concerning CH2
+	/* If interrupt concerns CH2 */
 	if (TIM2->SR & TIM_IT_CC2)
 	{
 		TIM2->SR &= (~TIM_IT_CC2);
-		// Rising edge
-		if (pulseState2 == 0)
+
+		if (pulseState[1] == 0)	// Rising edge
 		{
 			TIM_CH2_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
+			PWM_IN_UP2[1] = PWM_IN_UP[1];
+			PWM_IN_UP[1] = TIM_GetCapture2(TIM2);
 
-			PWM_2_IN_UP2 = PWM_2_IN_UP;
-			PWM_2_IN_UP = TIM_GetCapture2(TIM2);
-
-			if (PWM_2_IN_UP >= PWM_2_IN_UP2)
-				PWM_2_IN_PeriodTicks = PWM_2_IN_UP - PWM_2_IN_UP2;
+			if(PWM_IN_UP[1] >= PWM_IN_UP2[1])
+				PWM_2_IN_PeriodTicks = PWM_IN_UP[1] - PWM_IN_UP2[1];
 			else
-				PWM_2_IN_PeriodTicks = PWM_2_IN_UP + 0xFFFF - PWM_2_IN_UP2;
+				PWM_2_IN_PeriodTicks = PWM_IN_UP[1] + 0xFFFF - PWM_IN_UP2[1];
 		}
-		// Falling edge
-		else
+		else	//Falling edge
 		{
 			TIM_CH2_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
+			PWM_IN_DOWN[1] = TIM_GetCapture2(TIM2);
 
-			PWM_2_IN_DOWN = TIM_GetCapture2(TIM2);
-			if (PWM_2_IN_DOWN >= PWM_2_IN_UP)
-				PWM_2_IN_DutyCycleTicks = PWM_2_IN_DOWN - PWM_2_IN_UP;
+			if (PWM_IN_DOWN[1] >= PWM_IN_UP[1])
+				PWM_2_IN_DutyCycleTicks = PWM_IN_DOWN[1] - PWM_IN_UP[1];
 			else
-				PWM_2_IN_DutyCycleTicks = PWM_2_IN_DOWN + 0xFFFF - PWM_2_IN_UP;
+				PWM_2_IN_DutyCycleTicks = PWM_IN_DOWN[1] + 0xFFFF - PWM_IN_UP[1];
 		}
-		pulseState2 = !pulseState2;
-
-		// Reverse polarity
-		TIM_ICInit(TIM2, &TIM_CH2_ICInitStructure);
+		pulseState[1] = !pulseState[1];
+		TIM_ICInit(TIM2, &TIM_CH2_ICInitStructure);	// Reverse polarity
 	}
 
 
-	//If interrupt concerning CH3
+	/* If interrupt concerns CH3 */
 	if (TIM2->SR & TIM_IT_CC3)
 	{
 		TIM2->SR &= (~TIM_IT_CC3);
-		// Rising edge
-		if (pulseState3 == 0)
+
+		if (pulseState[2] == 0)	// Rising edge
 		{
 			TIM_CH3_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
+			PWM_IN_UP2[2] = PWM_IN_UP[2];
+			PWM_IN_UP[2] = TIM_GetCapture3(TIM2);
 
-			PWM_3_IN_UP2 = PWM_3_IN_UP;
-			PWM_3_IN_UP = TIM_GetCapture3(TIM2);
-
-			if (PWM_3_IN_UP >= PWM_3_IN_UP2)
-				PWM_3_IN_PeriodTicks = PWM_3_IN_UP - PWM_3_IN_UP2;
+			if(PWM_IN_UP[2] >= PWM_IN_UP2[2])
+				PWM_3_IN_PeriodTicks = PWM_IN_UP[2] - PWM_IN_UP2[2];
 			else
-				PWM_3_IN_PeriodTicks = PWM_3_IN_UP + 0xFFFF - PWM_3_IN_UP2;
+				PWM_3_IN_PeriodTicks = PWM_IN_UP[2] + 0xFFFF - PWM_IN_UP2[2];
 		}
-		// Falling edge
-		else
+		else	//Falling edge
 		{
 			TIM_CH3_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
+			PWM_IN_DOWN[2] = TIM_GetCapture3(TIM2);
 
-			PWM_3_IN_DOWN = TIM_GetCapture3(TIM2);
-
-			if (PWM_3_IN_DOWN >= PWM_3_IN_UP)
-				PWM_3_IN_DutyCycleTicks = PWM_3_IN_DOWN - PWM_3_IN_UP;
+			if (PWM_IN_DOWN[2] >= PWM_IN_UP[2])
+				PWM_3_IN_DutyCycleTicks = PWM_IN_DOWN[2] - PWM_IN_UP[2];
 			else
-				PWM_3_IN_DutyCycleTicks = PWM_3_IN_DOWN + 0xFFFF - PWM_3_IN_UP;
+				PWM_3_IN_DutyCycleTicks = PWM_IN_DOWN[2] + 0xFFFF - PWM_IN_UP[2];
 		}
-		pulseState3 = !pulseState3;
-
-		// Reverse polarity
-		TIM_ICInit(TIM2, &TIM_CH3_ICInitStructure);
+		pulseState[2] = !pulseState[2];
+		TIM_ICInit(TIM2, &TIM_CH3_ICInitStructure); // Reverse polarity
 	}
 
-
-	//If interrupt concerning CH4
+	/* If interrupt concerns CH4 */
 	if (TIM2->SR & TIM_IT_CC4)
 	{
 		TIM2->SR &= (~TIM_IT_CC4);
-		// Rising edge
-		if (pulseState4 == 0)
+
+		if (pulseState[3] == 0)	// Rising edge
 		{
 			TIM_CH4_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
+			PWM_IN_UP2[3] = PWM_IN_UP[3];
+			PWM_IN_UP[3] = TIM_GetCapture4(TIM2);
 
-			PWM_4_IN_UP2 = PWM_4_IN_UP;
-			PWM_4_IN_UP = TIM_GetCapture4(TIM2);
-
-			if (PWM_4_IN_UP >= PWM_4_IN_UP2)
-				PWM_4_IN_PeriodTicks = PWM_4_IN_UP - PWM_4_IN_UP2;
+			if(PWM_IN_UP[3] >= PWM_IN_UP2[3])
+				PWM_4_IN_PeriodTicks = PWM_IN_UP[3] - PWM_IN_UP2[3];
 			else
-				PWM_4_IN_PeriodTicks = PWM_4_IN_UP + 0xFFFF - PWM_4_IN_UP2;
+				PWM_4_IN_PeriodTicks = PWM_IN_UP[3] + 0xFFFF - PWM_IN_UP2[3];
 		}
-		// Falling edge
-		else
+		else	//Falling edge
 		{
 			TIM_CH4_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
+			PWM_IN_DOWN[3] = TIM_GetCapture4(TIM2);
 
-			PWM_4_IN_DOWN = TIM_GetCapture4(TIM2);
-			if (PWM_4_IN_DOWN >= PWM_4_IN_UP)
-				PWM_4_IN_DutyCycleTicks = PWM_4_IN_DOWN - PWM_4_IN_UP;
+			if (PWM_IN_DOWN[3] >= PWM_IN_UP[3])
+				PWM_4_IN_DutyCycleTicks = PWM_IN_DOWN[3] - PWM_IN_UP[3];
 			else
-				PWM_4_IN_DutyCycleTicks = PWM_4_IN_DOWN + 0xFFFF - PWM_4_IN_UP;
+				PWM_4_IN_DutyCycleTicks = PWM_IN_DOWN[3] + 0xFFFF - PWM_IN_UP[3];
 		}
-		pulseState4 = !pulseState4;
-
-		// Reverse polarity
-		TIM_ICInit(TIM2, &TIM_CH4_ICInitStructure);
+		pulseState[3] = !pulseState[3];
+		TIM_ICInit(TIM2, &TIM_CH4_ICInitStructure);	// Reverse polarity
 	}
-
 }
 
 /* @TIM2_Setup
@@ -358,7 +292,7 @@ static void TIM2_Setup(void) {
  */
 static uint16_t getPWM_CCR(float dutycycle)
 {
-	return (uint16_t) (dutycycle * PWM_PeriodTicks);
+	return (uint16_t) (dutycycle * TIM4_Period);
 }
 
 /* @TIM4_IOconfig
@@ -396,13 +330,15 @@ static void TIM4_IOconfig(void)
  */
 static void TIM4_Setup(void)
 {
+	TIM4_Prescaler = SystemCoreClock/24000000;	// SystemCoreClock (72 MHz on STM32F303) to 24 MHz (Prescaler = 3)
+
 	/* TIM4 clock enable */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4 , ENABLE);
 
 	/* TIM4 Time Base configuration */
-	TIM_TimeBaseStructure4.TIM_Prescaler = PrescalerValue-1;
+	TIM_TimeBaseStructure4.TIM_Prescaler = TIM4_Prescaler-1;
 	TIM_TimeBaseStructure4.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseStructure4.TIM_Period = PWM_PeriodTicks-1;
+	TIM_TimeBaseStructure4.TIM_Period = TIM4_Period-1;
 	TIM_TimeBaseStructure4.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseStructure4.TIM_RepetitionCounter = 0;
 
@@ -467,14 +403,14 @@ static void TIM4_SetupOC(void)
 	TIM_CtrlPWMOutputs(TIM4, ENABLE);
 }
 
-static void PWM_In_Setup() {
+/* @PWM_In_Setup
+ * @brief  Sets up timer 2, GPIO and NVIC for PWM input
+ * @param  None
+ * @retval None
+ */
+static void PWM_In_Setup(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
-
-	TIM_DeInit(TIM2);
-
-	/* TIM2 clock setup */
-	TIM2_Setup();
 
 	/* GPIOD clock enable */
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
@@ -500,7 +436,6 @@ static void PWM_In_Setup() {
 	NVIC_Init(&NVIC_InitStructure);
 
 	// Timers 1-4 IC init structs, not used until interrupt handler
-	pulseState1 = 0;
 	TIM_CH1_ICInitStructure.TIM_Channel = TIM_Channel_1;
 	TIM_CH1_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
 	TIM_CH1_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
@@ -508,7 +443,6 @@ static void PWM_In_Setup() {
 	TIM_CH1_ICInitStructure.TIM_ICFilter = 0;
 	TIM_ICInit(TIM2, &TIM_CH1_ICInitStructure);
 
-	pulseState2 = 0;
 	TIM_CH2_ICInitStructure.TIM_Channel = TIM_Channel_2;
 	TIM_CH2_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
 	TIM_CH2_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
@@ -516,7 +450,6 @@ static void PWM_In_Setup() {
 	TIM_CH2_ICInitStructure.TIM_ICFilter = 0;
 	TIM_ICInit(TIM2, &TIM_CH2_ICInitStructure);
 
-	pulseState3 = 0;
 	TIM_CH3_ICInitStructure.TIM_Channel = TIM_Channel_3;
 	TIM_CH3_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
 	TIM_CH3_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
@@ -524,7 +457,6 @@ static void PWM_In_Setup() {
 	TIM_CH3_ICInitStructure.TIM_ICFilter = 0;
 	TIM_ICInit(TIM2, &TIM_CH3_ICInitStructure);
 
-	pulseState4 = 0;
 	TIM_CH4_ICInitStructure.TIM_Channel = TIM_Channel_4;
 	TIM_CH4_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
 	TIM_CH4_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
@@ -540,8 +472,6 @@ static void PWM_In_Setup() {
 
 	//Clear CC1 Flag
 	TIM_ClearFlag(TIM2, TIM_FLAG_CC1 | TIM_FLAG_CC2 | TIM_FLAG_CC3 | TIM_FLAG_CC4 );
-
-	RCC_GetClocksFreq(&RCC_Clocks);
 }
 
 
