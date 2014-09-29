@@ -155,6 +155,9 @@ void TIM2_IRQHandler()
 				PWM_1_IN_PeriodTicks = PWM_IN_UP[0] - PWM_IN_UP2[0];
 			else
 				PWM_1_IN_PeriodTicks = PWM_IN_UP[0] + 0xFFFF - PWM_IN_UP2[0];
+
+			//printf("Channel 1, Rising edge, Timer ticks = %d \nPeriod ticks = %d", PWM_1_IN_UP, PWM_1_IN_PeriodTicks);
+			GPIO_SetBits(GPIOD, GPIO_Pin_8); //Debugging set GPIOD pin 8 high
 		}
 		else	//Falling edge
 		{
@@ -165,6 +168,9 @@ void TIM2_IRQHandler()
 				PWM_1_IN_DutyCycleTicks = PWM_IN_DOWN[0] - PWM_IN_UP[0];
 			else
 				PWM_1_IN_DutyCycleTicks = PWM_IN_DOWN[0] + 0xFFFF - PWM_IN_UP[0];
+
+			//printf("Channel 1, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_1_IN_DOWN, PWM_1_IN_DutyCycleTicks);
+			GPIO_ResetBits(GPIOD, GPIO_Pin_8); //Debugging set GPIOD pin 8 low
 		}
 		pulseState[0] = !pulseState[0];
 		TIM_ICInit(TIM2, &TIM_CH1_ICInitStructure);	// Reverse polarity
@@ -186,6 +192,9 @@ void TIM2_IRQHandler()
 				PWM_2_IN_PeriodTicks = PWM_IN_UP[1] - PWM_IN_UP2[1];
 			else
 				PWM_2_IN_PeriodTicks = PWM_IN_UP[1] + 0xFFFF - PWM_IN_UP2[1];
+
+			//printf("Channel 2, Rising edge, Timer ticks = %d\nPeriod ticks = %d", PWM_2_IN_UP, PWM_2_IN_PeriodTicks);
+			GPIO_SetBits(GPIOD, GPIO_Pin_9); //Debugging set GPIOD pin 9 high
 		}
 		else	//Falling edge
 		{
@@ -196,6 +205,9 @@ void TIM2_IRQHandler()
 				PWM_2_IN_DutyCycleTicks = PWM_IN_DOWN[1] - PWM_IN_UP[1];
 			else
 				PWM_2_IN_DutyCycleTicks = PWM_IN_DOWN[1] + 0xFFFF - PWM_IN_UP[1];
+
+			//printf("Channel 2, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_2_IN_DOWN, PWM_2_IN_DutyCycleTicks);
+			GPIO_ResetBits(GPIOD, GPIO_Pin_9); //Debugging set GPIOD pin 9 low
 		}
 		pulseState[1] = !pulseState[1];
 		TIM_ICInit(TIM2, &TIM_CH2_ICInitStructure);	// Reverse polarity
@@ -217,6 +229,9 @@ void TIM2_IRQHandler()
 				PWM_3_IN_PeriodTicks = PWM_IN_UP[2] - PWM_IN_UP2[2];
 			else
 				PWM_3_IN_PeriodTicks = PWM_IN_UP[2] + 0xFFFF - PWM_IN_UP2[2];
+
+			//printf("Channel 3, Rising edge, Timer ticks = %d\nPeriod ticks = %d", PWM_3_IN_UP, PWM_3_IN_PeriodTicks);
+			GPIO_SetBits(GPIOD, GPIO_Pin_10); //Debugging set GPIOD pin 10 high
 		}
 		else	//Falling edge
 		{
@@ -227,6 +242,9 @@ void TIM2_IRQHandler()
 				PWM_3_IN_DutyCycleTicks = PWM_IN_DOWN[2] - PWM_IN_UP[2];
 			else
 				PWM_3_IN_DutyCycleTicks = PWM_IN_DOWN[2] + 0xFFFF - PWM_IN_UP[2];
+
+			//printf("Channel 3, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_3_IN_DOWN, PWM_3_IN_DutyCycleTicks);
+			GPIO_ResetBits(GPIOD, GPIO_Pin_10); //Debugging set GPIOD pin 10 low
 		}
 		pulseState[2] = !pulseState[2];
 		TIM_ICInit(TIM2, &TIM_CH3_ICInitStructure); // Reverse polarity
@@ -247,6 +265,9 @@ void TIM2_IRQHandler()
 				PWM_4_IN_PeriodTicks = PWM_IN_UP[3] - PWM_IN_UP2[3];
 			else
 				PWM_4_IN_PeriodTicks = PWM_IN_UP[3] + 0xFFFF - PWM_IN_UP2[3];
+
+			//printf("Channel 4, Rising edge, Timer ticks = %d\nPeriod ticks = %d", PWM_4_IN_UP, PWM_4_IN_PeriodTicks);
+			GPIO_SetBits(GPIOD, GPIO_Pin_11); //Debugging set GPIOD pin 11 high
 		}
 		else	//Falling edge
 		{
@@ -257,6 +278,9 @@ void TIM2_IRQHandler()
 				PWM_4_IN_DutyCycleTicks = PWM_IN_DOWN[3] - PWM_IN_UP[3];
 			else
 				PWM_4_IN_DutyCycleTicks = PWM_IN_DOWN[3] + 0xFFFF - PWM_IN_UP[3];
+
+			//printf("Channel 4, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_4_IN_DOWN, PWM_4_IN_DutyCycleTicks);
+			GPIO_ResetBits(GPIOD, GPIO_Pin_11); //Debugging set GPIOD pin 11 low
 		}
 		pulseState[3] = !pulseState[3];
 		TIM_ICInit(TIM2, &TIM_CH4_ICInitStructure);	// Reverse polarity
