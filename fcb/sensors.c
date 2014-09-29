@@ -30,12 +30,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+/* Private functions -----------------------------------------------*/
+
 /* GyroConfig
  * @brief  Configures the MEMS to gyroscope application
  * @param  None
  * @retval None
  */
-static void GyroConfig(void)
+void GyroConfig(void)
 {
 	  L3GD20_InitTypeDef L3GD20_InitStructure;
 	  L3GD20_FilterConfigTypeDef L3GD20_FilterStructure;
@@ -62,7 +64,7 @@ static void GyroConfig(void)
   * @param  pfData : Data out pointer
   * @retval None
   */
-static void GyroReadAngRate(float* pfData)
+void GyroReadAngRate(float* pfData)
 {
   uint8_t tmpbuffer[6] ={0};
   int16_t RawData[3] = {0};
@@ -117,7 +119,7 @@ static void GyroReadAngRate(float* pfData)
   * @param  None
   * @retval None
   */
-static void CompassConfig(void)
+void CompassConfig(void)
 {
   LSM303DLHCMag_InitTypeDef LSM303DLHC_InitStructure;
   LSM303DLHCAcc_InitTypeDef LSM303DLHCAcc_InitStructure;
@@ -156,7 +158,7 @@ static void CompassConfig(void)
 * @param pnData: pointer to float buffer where to store data
 * @retval None
 */
-static void CompassReadAcc(float* pfData)
+void CompassReadAcc(float* pfData)
 {
   int16_t pnRawData[3];
   uint8_t ctrlx[2];
@@ -229,7 +231,7 @@ static void CompassReadAcc(float* pfData)
 * @param  pfData: pointer to the data out
   * @retval None
   */
-static void CompassReadMag(float* pfData)
+void CompassReadMag(float* pfData)
 {
   static uint8_t buffer[6] = {0};
   uint8_t CTRLB = 0;

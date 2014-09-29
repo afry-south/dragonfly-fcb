@@ -11,43 +11,34 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include <stdio.h>
-#include "sensors.c"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure2;	// TIM2
-TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure4; // TIM3
-TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3; // TIM4
+TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3; // TIM3
 
+/* PWM output variables */
+TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure4; // TIM4
+uint16_t TIM4_Prescaler = 0;	// Timer 4 prescaler (recalculated in TIM4_Setup())
+uint16_t TIM4_Period = 60000;	// TIM4 clock period (set to obtain 400 MHz PWM output)
+
+/* PWM input variables */
+TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure2;		// TIM2
 TIM_OCInitTypeDef TIM_OCInitStructure;
-
 TIM_ICInitTypeDef TIM_CH1_ICInitStructure;
 TIM_ICInitTypeDef TIM_CH2_ICInitStructure;
 TIM_ICInitTypeDef TIM_CH3_ICInitStructure;
 TIM_ICInitTypeDef TIM_CH4_ICInitStructure;
+volatile uint16_t PWM_IN_DOWN[4] = {0, 0, 0, 0}; 	// Current falling edge (for PWM input 1, 2, 3, 4)
+volatile uint16_t PWM_IN_UP[4] = {0, 0, 0, 0};		// Current rising edge (for PWM input 1, 2, 3, 4)
+volatile uint16_t PWM_IN_UP2[4] = {0, 0, 0, 0};		// Previous rising edge (for PWM input 1, 2, 3, 4)
+volatile char pulseState[4] = {0, 0, 0, 0};			// 0 = rising, 1 = falling detection (for PWM input 1, 2, 3, 4)
+volatile uint16_t PWM_IN_DutyCycleTicks[4] = {0, 0, 0, 0};	// Number of PWM duty cycle ticks (for PWM input 1, 2, 3, 4)
+volatile uint16_t PWM_IN_PeriodTicks[4] = {0, 0, 0, 0};		// Number of PWM period ticks (for PWM input 1, 2, 3, 4)
 
-volatile uint16_t PWM_IN_DOWN[4] = {0, 0, 0, 0}; 	// Current falling edge
-volatile uint16_t PWM_IN_UP[4] = {0, 0, 0, 0};		// Current rising edge
-volatile uint16_t PWM_IN_UP2[4] = {0, 0, 0, 0};		// Previous rising edge
-volatile char pulseState[4] = {0, 0, 0, 0};			// 0 = rising, 1 = falling detection
-
-volatile uint16_t PWM_1_IN_PeriodTicks = 0; 	//Number of timer ticks of the period in the pwm1 in signal
-volatile uint16_t PWM_2_IN_PeriodTicks = 0; 	//Number of timer ticks of the period in the pwm1 in signal
-volatile uint16_t PWM_3_IN_PeriodTicks = 0; 	//Number of timer ticks of the period in the pwm1 in signal
-volatile uint16_t PWM_4_IN_PeriodTicks = 0; 	//Number of timer ticks of the period in the pwm1 in signal
-volatile uint16_t PWM_1_IN_DutyCycleTicks = 0; //Number of timer ticks of the duty cycle in the pwm1 in signal
-volatile uint16_t PWM_2_IN_DutyCycleTicks = 0; //Number of timer ticks of the duty cycle in the pwm2 in signal
-volatile uint16_t PWM_3_IN_DutyCycleTicks = 0; //Number of timer ticks of the duty cycle in the pwm3 in signal
-volatile uint16_t PWM_4_IN_DutyCycleTicks = 0; //Number of timer ticks of the duty cycle in the pwm4 in signal
-
-/* Computes prescaler and timer period to adjust output signal frequency to 400 Hz */
-uint16_t TIM4_Prescaler = 0;	// Timer 4 prescaler (recalculated in TIM4_Setup())
-uint16_t TIM4_Period = 60000;	// TIM4 clock period (set to obtain 400 MHz PWM output)
-
-// Sensor readings arrays
+/* Sensor readings variables  */
 float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};
 
 /* Private functions -----------------------------------------------*/
@@ -61,7 +52,13 @@ static void TIM3_SetupIRQ(void);
 static void PWM_In_Setup(void);
 static void TIM2_Setup(void);
 
-static uint16_t getPWM_CCR(float dutycycle);
+static uint16_t getPWM_CCR(float dutycycle, uint16_t period);
+
+void GyroConfig(void);
+void CompassConfig(void);
+void GyroReadAngRate(float* pfData);
+void CompassReadMag(float* pfData);
+void CompassReadAcc(float* pfData);
 
 /**
 * @brief  Main program.
@@ -125,10 +122,10 @@ void TIM3_IRQHandler()
 		CompassReadAcc(AccBuffer);
 
 		// Set motor output PWM
-		TIM4->CCR1 = getPWM_CCR((float)(PWM_1_IN_DutyCycleTicks/PWM_1_IN_PeriodTicks));
-		TIM4->CCR2 = getPWM_CCR((float)(PWM_2_IN_DutyCycleTicks/PWM_2_IN_PeriodTicks));
-		TIM4->CCR3 = getPWM_CCR((float)(PWM_3_IN_DutyCycleTicks/PWM_3_IN_PeriodTicks));
-		TIM4->CCR4 = getPWM_CCR((float)(PWM_4_IN_DutyCycleTicks/PWM_4_IN_PeriodTicks));
+		TIM4->CCR1 = getPWM_CCR((float)(PWM_IN_PeriodTicks[0]/PWM_IN_PeriodTicks[0]), TIM4_Period);
+		TIM4->CCR2 = getPWM_CCR((float)(PWM_IN_PeriodTicks[1]/PWM_IN_PeriodTicks[1]), TIM4_Period);
+		TIM4->CCR3 = getPWM_CCR((float)(PWM_IN_PeriodTicks[2]/PWM_IN_PeriodTicks[2]), TIM4_Period);
+		TIM4->CCR4 = getPWM_CCR((float)(PWM_IN_PeriodTicks[3]/PWM_IN_PeriodTicks[3]), TIM4_Period);
 	}
 }
 
@@ -152,12 +149,12 @@ void TIM2_IRQHandler()
 			PWM_IN_UP[0] = TIM_GetCapture1(TIM2);
 
 			if(PWM_IN_UP[0] >= PWM_IN_UP2[0])
-				PWM_1_IN_PeriodTicks = PWM_IN_UP[0] - PWM_IN_UP2[0];
+				PWM_IN_PeriodTicks[0] = PWM_IN_UP[0] - PWM_IN_UP2[0];
 			else
-				PWM_1_IN_PeriodTicks = PWM_IN_UP[0] + 0xFFFF - PWM_IN_UP2[0];
+				PWM_IN_PeriodTicks[0] = PWM_IN_UP[0] + 0xFFFF - PWM_IN_UP2[0];
 
-			//printf("Channel 1, Rising edge, Timer ticks = %d \nPeriod ticks = %d", PWM_1_IN_UP, PWM_1_IN_PeriodTicks);
-			GPIO_SetBits(GPIOD, GPIO_Pin_8); //Debugging set GPIOD pin 8 high
+				//printf("Channel 1, Rising edge, Timer ticks = %d \nPeriod ticks = %d", PWM_1_IN_UP, PWM_1_IN_PeriodTicks);
+				GPIO_SetBits(GPIOD, GPIO_Pin_8); //Debugging set GPIOD pin 8 high
 		}
 		else	//Falling edge
 		{
@@ -165,9 +162,9 @@ void TIM2_IRQHandler()
 			PWM_IN_DOWN[0] = TIM_GetCapture1(TIM2);
 
 			if (PWM_IN_DOWN[0] >= PWM_IN_UP[0])
-				PWM_1_IN_DutyCycleTicks = PWM_IN_DOWN[0] - PWM_IN_UP[0];
+				PWM_IN_DutyCycleTicks[0] = PWM_IN_DOWN[0] - PWM_IN_UP[0];
 			else
-				PWM_1_IN_DutyCycleTicks = PWM_IN_DOWN[0] + 0xFFFF - PWM_IN_UP[0];
+				PWM_IN_DutyCycleTicks[0] = PWM_IN_DOWN[0] + 0xFFFF - PWM_IN_UP[0];
 
 			//printf("Channel 1, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_1_IN_DOWN, PWM_1_IN_DutyCycleTicks);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_8); //Debugging set GPIOD pin 8 low
@@ -189,9 +186,9 @@ void TIM2_IRQHandler()
 			PWM_IN_UP[1] = TIM_GetCapture2(TIM2);
 
 			if(PWM_IN_UP[1] >= PWM_IN_UP2[1])
-				PWM_2_IN_PeriodTicks = PWM_IN_UP[1] - PWM_IN_UP2[1];
+				PWM_IN_PeriodTicks[1] = PWM_IN_UP[1] - PWM_IN_UP2[1];
 			else
-				PWM_2_IN_PeriodTicks = PWM_IN_UP[1] + 0xFFFF - PWM_IN_UP2[1];
+				PWM_IN_PeriodTicks[1] = PWM_IN_UP[1] + 0xFFFF - PWM_IN_UP2[1];
 
 			//printf("Channel 2, Rising edge, Timer ticks = %d\nPeriod ticks = %d", PWM_2_IN_UP, PWM_2_IN_PeriodTicks);
 			GPIO_SetBits(GPIOD, GPIO_Pin_9); //Debugging set GPIOD pin 9 high
@@ -202,9 +199,9 @@ void TIM2_IRQHandler()
 			PWM_IN_DOWN[1] = TIM_GetCapture2(TIM2);
 
 			if (PWM_IN_DOWN[1] >= PWM_IN_UP[1])
-				PWM_2_IN_DutyCycleTicks = PWM_IN_DOWN[1] - PWM_IN_UP[1];
+				PWM_IN_DutyCycleTicks[1] = PWM_IN_DOWN[1] - PWM_IN_UP[1];
 			else
-				PWM_2_IN_DutyCycleTicks = PWM_IN_DOWN[1] + 0xFFFF - PWM_IN_UP[1];
+				PWM_IN_DutyCycleTicks[1] = PWM_IN_DOWN[1] + 0xFFFF - PWM_IN_UP[1];
 
 			//printf("Channel 2, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_2_IN_DOWN, PWM_2_IN_DutyCycleTicks);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_9); //Debugging set GPIOD pin 9 low
@@ -226,12 +223,13 @@ void TIM2_IRQHandler()
 			PWM_IN_UP[2] = TIM_GetCapture3(TIM2);
 
 			if(PWM_IN_UP[2] >= PWM_IN_UP2[2])
-				PWM_3_IN_PeriodTicks = PWM_IN_UP[2] - PWM_IN_UP2[2];
+				PWM_IN_PeriodTicks[2] = PWM_IN_UP[2] - PWM_IN_UP2[2];
 			else
-				PWM_3_IN_PeriodTicks = PWM_IN_UP[2] + 0xFFFF - PWM_IN_UP2[2];
+				PWM_IN_PeriodTicks[2] = PWM_IN_UP[2] + 0xFFFF - PWM_IN_UP2[2];
 
 			//printf("Channel 3, Rising edge, Timer ticks = %d\nPeriod ticks = %d", PWM_3_IN_UP, PWM_3_IN_PeriodTicks);
 			GPIO_SetBits(GPIOD, GPIO_Pin_10); //Debugging set GPIOD pin 10 high
+
 		}
 		else	//Falling edge
 		{
@@ -239,9 +237,9 @@ void TIM2_IRQHandler()
 			PWM_IN_DOWN[2] = TIM_GetCapture3(TIM2);
 
 			if (PWM_IN_DOWN[2] >= PWM_IN_UP[2])
-				PWM_3_IN_DutyCycleTicks = PWM_IN_DOWN[2] - PWM_IN_UP[2];
+				PWM_IN_DutyCycleTicks[2] = PWM_IN_DOWN[2] - PWM_IN_UP[2];
 			else
-				PWM_3_IN_DutyCycleTicks = PWM_IN_DOWN[2] + 0xFFFF - PWM_IN_UP[2];
+				PWM_IN_DutyCycleTicks[2] = PWM_IN_DOWN[2] + 0xFFFF - PWM_IN_UP[2];
 
 			//printf("Channel 3, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_3_IN_DOWN, PWM_3_IN_DutyCycleTicks);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_10); //Debugging set GPIOD pin 10 low
@@ -262,9 +260,9 @@ void TIM2_IRQHandler()
 			PWM_IN_UP[3] = TIM_GetCapture4(TIM2);
 
 			if(PWM_IN_UP[3] >= PWM_IN_UP2[3])
-				PWM_4_IN_PeriodTicks = PWM_IN_UP[3] - PWM_IN_UP2[3];
+				PWM_IN_PeriodTicks[3] = PWM_IN_UP[3] - PWM_IN_UP2[3];
 			else
-				PWM_4_IN_PeriodTicks = PWM_IN_UP[3] + 0xFFFF - PWM_IN_UP2[3];
+				PWM_IN_PeriodTicks[3] = PWM_IN_UP[3] + 0xFFFF - PWM_IN_UP2[3];
 
 			//printf("Channel 4, Rising edge, Timer ticks = %d\nPeriod ticks = %d", PWM_4_IN_UP, PWM_4_IN_PeriodTicks);
 			GPIO_SetBits(GPIOD, GPIO_Pin_11); //Debugging set GPIOD pin 11 high
@@ -275,9 +273,9 @@ void TIM2_IRQHandler()
 			PWM_IN_DOWN[3] = TIM_GetCapture4(TIM2);
 
 			if (PWM_IN_DOWN[3] >= PWM_IN_UP[3])
-				PWM_4_IN_DutyCycleTicks = PWM_IN_DOWN[3] - PWM_IN_UP[3];
+				PWM_IN_DutyCycleTicks[3] = PWM_IN_DOWN[3] - PWM_IN_UP[3];
 			else
-				PWM_4_IN_DutyCycleTicks = PWM_IN_DOWN[3] + 0xFFFF - PWM_IN_UP[3];
+				PWM_IN_DutyCycleTicks[3] = PWM_IN_DOWN[3] + 0xFFFF - PWM_IN_UP[3];
 
 			//printf("Channel 4, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_4_IN_DOWN, PWM_4_IN_DutyCycleTicks);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_11); //Debugging set GPIOD pin 11 low
@@ -314,9 +312,9 @@ static void TIM2_Setup(void) {
  * @param	dutycycle: The dutycycle percentage in decimal form (i.e. 45.2% = 0.452)
  * @retval	CCR value (Nbr of PWM clock ticks with voltage) corresponding to the desired duty cycle.
  */
-static uint16_t getPWM_CCR(float dutycycle)
+static uint16_t getPWM_CCR(float dutycycle, uint16_t period)
 {
-	return (uint16_t) (dutycycle * TIM4_Period);
+	return (uint16_t) (dutycycle * period);
 }
 
 /* @TIM4_IOconfig
