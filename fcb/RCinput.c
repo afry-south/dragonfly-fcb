@@ -7,6 +7,8 @@
 * @brief   Flight Control program for the ÅF Dragonfly quadcopter
 *          File contains functionality for reading signals from the RC receiver
 ******************************************************************************/
+#include <stdio.h>
+#include <string.h>
 #include "stm32f30x.h"
 #include "stm32f3_discovery.h"
 #include "stm32f30x_it.h"
@@ -15,6 +17,9 @@
 #include "stm32f30x_rcc.h"
 #include "stm32f30x_misc.h"
 #include "RCinput.h"
+
+
+#define PWM_INPUT_SAMPLE_CLOCK 2400000
 
 /* PWM input variables */
 TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure2;		// TIM2
@@ -30,6 +35,51 @@ volatile char pulseState[4] = {0, 0, 0, 0};			// 0 = rising, 1 = falling detecti
 //TODO implement getter for Duty and Period
 volatile uint16_t PWM_IN_DutyCycleTicks[4] = {0, 0, 0, 0};	// Number of PWM duty cycle ticks (for PWM input 1, 2, 3, 4)
 volatile uint16_t PWM_IN_PeriodTicks[4] = {0, 0, 0, 0};		// Number of PWM period ticks (for PWM input 1, 2, 3, 4)
+
+PWM_TimeTypeDef PWMTimes;
+
+//PWM_TimeTypeDef PWMTimes[2];
+//volatile uint PWMSync = 0;
+
+/**
+ * TODO blabla
+ */
+/*
+static void SetPWMInputTimes(float PWM_Time1, float PWM_Time2, float PWM_Time3, float PWM_Time4, float PWM_Time5, float PWM_Time6)
+{
+	if(PWMSync)
+	{
+		PWMTimes[0]->PWM_Time1 = PWM_Time1;
+		PWMTimes[0]->PWM_Time2 = PWM_Time2;
+		PWMTimes[0]->PWM_Time3 = PWM_Time3;
+		PWMTimes[0]->PWM_Time4 = PWM_Time4;
+		PWMTimes[0]->PWM_Time5 = PWM_Time5;
+		PWMTimes[0]->PWM_Time6 = PWM_Time6;
+
+		PWMSync = 0;
+	}
+	else
+	{
+		PWMTimes[1]->PWM_Time1 = PWM_Time1;
+		PWMTimes[1]->PWM_Time2 = PWM_Time2;
+		PWMTimes[1]->PWM_Time3 = PWM_Time3;
+		PWMTimes[1]->PWM_Time4 = PWM_Time4;
+		PWMTimes[1]->PWM_Time5 = PWM_Time5;
+		PWMTimes[1]->PWM_Time6 = PWM_Time6;
+
+		PWMSync = 1;
+	}
+}
+*/
+
+/**
+ * TODO Blabla
+ */
+void GetPWMInputTimes(PWM_TimeTypeDef *PWM_Time)
+{
+		memcpy((void*)PWM_Time ,(const void*)(&PWMTimes), sizeof(PWM_TimeTypeDef));
+}
+
 
 
 /* @TIM2_IRQHandler
@@ -69,6 +119,9 @@ void TIM2_IRQHandler()
 			else
 				PWM_IN_DutyCycleTicks[0] = PWM_IN_DOWN[0] + 0xFFFF - PWM_IN_UP[0];
 
+			//TODO sanity check
+			PWMTimes.PWM_Time1 = (float)((float)PWM_IN_DutyCycleTicks[0])/((float)PWM_INPUT_SAMPLE_CLOCK);
+
 			//printf("Channel 1, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_1_IN_DOWN, PWM_1_IN_DutyCycleTicks);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_8); //Debugging set GPIOD pin 8 low
 		}
@@ -106,6 +159,7 @@ void TIM2_IRQHandler()
 			else
 				PWM_IN_DutyCycleTicks[1] = PWM_IN_DOWN[1] + 0xFFFF - PWM_IN_UP[1];
 
+			PWMTimes.PWM_Time2 = (float)((float)PWM_IN_DutyCycleTicks[1])/((float)PWM_INPUT_SAMPLE_CLOCK);
 			//printf("Channel 2, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_2_IN_DOWN, PWM_2_IN_DutyCycleTicks);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_9); //Debugging set GPIOD pin 9 low
 		}
@@ -144,6 +198,7 @@ void TIM2_IRQHandler()
 			else
 				PWM_IN_DutyCycleTicks[2] = PWM_IN_DOWN[2] + 0xFFFF - PWM_IN_UP[2];
 
+			PWMTimes.PWM_Time3 = (float)((float)PWM_IN_DutyCycleTicks[2])/((float)PWM_INPUT_SAMPLE_CLOCK);
 			//printf("Channel 3, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_3_IN_DOWN, PWM_3_IN_DutyCycleTicks);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_10); //Debugging set GPIOD pin 10 low
 		}
@@ -180,6 +235,7 @@ void TIM2_IRQHandler()
 			else
 				PWM_IN_DutyCycleTicks[3] = PWM_IN_DOWN[3] + 0xFFFF - PWM_IN_UP[3];
 
+			PWMTimes.PWM_Time4 = (float)((float)PWM_IN_DutyCycleTicks[3])/((float)PWM_INPUT_SAMPLE_CLOCK);
 			//printf("Channel 4, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_4_IN_DOWN, PWM_4_IN_DutyCycleTicks);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_11); //Debugging set GPIOD pin 11 low
 		}
@@ -188,6 +244,7 @@ void TIM2_IRQHandler()
 	}
 }
 
+#define PWM_INPUT_SAMPLE_CLOCK 2400000
 
 /* @TIM2_Setup
  * @brief	Timer 2 setup
@@ -199,7 +256,7 @@ void TIM2_Setup(void) {
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 , ENABLE);
 
 	// TIM2 Time Base configuration
-	TIM_TimeBaseStructure2.TIM_Prescaler = 30-1;	// 72 MHz to 2.4 MHz
+	TIM_TimeBaseStructure2.TIM_Prescaler = SystemCoreClock/PWM_INPUT_SAMPLE_CLOCK -1;	// 72 MHz to 2.4 MHz
 	TIM_TimeBaseStructure2.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseStructure2.TIM_Period = 0xFFFF;	// Can take receiver input down to less than 40 Hz (50 Hz is common?)
 	TIM_TimeBaseStructure2.TIM_ClockDivision = TIM_CKD_DIV1;
@@ -226,6 +283,13 @@ void PWM_In_Setup(void) {
 	/* TIM2 GPIO pin configuration : CH1=PD3, C2=PD4, CH3=PD7, CH4=PD6 */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_7 | GPIO_Pin_6;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;

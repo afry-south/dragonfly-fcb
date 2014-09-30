@@ -47,10 +47,10 @@ void TIM3_IRQHandler()
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
 		/* Read Gyro Angular rate data */
-		GyroReadAngRate(GyroBuffer);
+//		GyroReadAngRate(GyroBuffer); // BLOCKING
 		/* Read Compass data */
-		CompassReadMag(MagBuffer);
-		CompassReadAcc(AccBuffer);
+//		CompassReadMag(MagBuffer); // BLOCKING
+//		CompassReadAcc(AccBuffer);
 
 		// Set motor output PWM
 		TIM4->CCR1 = getPWM_CCR((float)(PWM_IN_DutyCycleTicks[0]/PWM_IN_PeriodTicks[0]), TIM4_Period);
