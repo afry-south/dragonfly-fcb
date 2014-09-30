@@ -23,8 +23,6 @@
 
 /* PWM output variables */
 TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure4; // TIM4
-uint16_t TIM4_Prescaler = 0;	// Timer 4 prescaler (recalculated in TIM4_Setup())
-//uint16_t TIM4_Period = 60000;	// TIM4 clock period (set to obtain 400 MHz PWM output)
 
 //TODO comment
 TIM_OCInitTypeDef TIM_OCInitStructure;
@@ -58,13 +56,11 @@ void TIM4_IOconfig(void)
  */
 void TIM4_Setup(void)
 {
-	TIM4_Prescaler = SystemCoreClock/24000000;	// SystemCoreClock (72 MHz on STM32F303) to 24 MHz (Prescaler = 3)
-
 	/* TIM4 clock enable */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4 , ENABLE);
 
 	/* TIM4 Time Base configuration */
-	TIM_TimeBaseStructure4.TIM_Prescaler = TIM4_Prescaler-1;
+	TIM_TimeBaseStructure4.TIM_Prescaler = SystemCoreClock/MOTOR_OUT_SAMPLECLOCK-1; // SystemCoreClock (72 MHz on STM32F303) to 24 MHz (Prescaler = 3)
 	TIM_TimeBaseStructure4.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseStructure4.TIM_Period = TIM4_Period-1;
 	TIM_TimeBaseStructure4.TIM_ClockDivision = TIM_CKD_DIV1;

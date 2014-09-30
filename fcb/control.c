@@ -5,34 +5,18 @@
 * @version v. 0.0.1
 * @date    2014-09-29
 * @brief   Flight Control program for the ÅF Dragonfly quadcopter
-*          File contains flight controller logic.
+*          File contains flight controller logic (input->control->output).
 ******************************************************************************
-**/
-/* @getPWM_CCR
- * @brief	Returns the CCR (Capture compare register) value for a specified PWM duty cycle.
- * @param	dutycycle: The dutycycle percentage in decimal form (i.e. 45.2% = 0.452)
- * @retval	CCR value (Nbr of PWM clock ticks with voltage) corresponding to the desired duty cycle.
- */
+
+/* Includes ------------------------------------------------------------------*/
 #include "control.h"
 #include "RCinput.h"
 #include "sensors.h"
 #include "motor_output.h"
-
-TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3; // TIM3
-
-/* Sensor readings variables  */
-float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};
-
-
-/* @getPWM_CCR
- * @brief	TODO Blabla.
- * @param	None.
- * @retval	None.
- */
-uint16_t getPWM_CCR(float dutycycle, uint16_t period)
-{
-	return (uint16_t) (dutycycle * period);
-}
+/* Private variables ---------------------------------------------------------*/
+TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;	// TIM3 init struct
+float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Sensor readings arrays
+PWM_TimeTypeDef pwmTimes[6];	// 6-channel PWM input width in seconds
 
 /* @TIM3_IRQHandler
  * @brief	Timer 3 interrupt handler.
@@ -47,20 +31,23 @@ void TIM3_IRQHandler()
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
 		/* Read Gyro Angular rate data */
-		GyroReadAngRate(GyroBuffer);
+//		GyroReadAngRate(GyroBuffer);	// BLOCKING...
 		/* Read Compass data */
-		CompassReadMag(MagBuffer);
-		CompassReadAcc(AccBuffer);
+//		CompassReadMag(MagBuffer);		// BLOCKING...
+//		CompassReadAcc(AccBuffer);		// BLOCKING...
+
+		// TODO Everything counted in seconds, make microsends (10^(-6) s) to avoid using floats?
+		GetPWMInputTimes(&pwmTimes);
 
 		// Set motor output PWM
-		TIM4->CCR1 = getPWM_CCR((float)(PWM_IN_DutyCycleTicks[0]/PWM_IN_PeriodTicks[0]), TIM4_Period);
-		TIM4->CCR2 = getPWM_CCR((float)(PWM_IN_DutyCycleTicks[1]/PWM_IN_PeriodTicks[1]), TIM4_Period);
-		TIM4->CCR3 = getPWM_CCR((float)(PWM_IN_DutyCycleTicks[2]/PWM_IN_PeriodTicks[2]), TIM4_Period);
-		TIM4->CCR4 = getPWM_CCR((float)(PWM_IN_DutyCycleTicks[3]/PWM_IN_PeriodTicks[3]), TIM4_Period);
+		TIM4->CCR1 = GetPWM_CCR(pwmTimes->PWM_Time1);
+		TIM4->CCR2 = GetPWM_CCR(pwmTimes->PWM_Time2);
+		TIM4->CCR3 = GetPWM_CCR(pwmTimes->PWM_Time3);
+		TIM4->CCR4 = GetPWM_CCR(pwmTimes->PWM_Time4);
+		// TODO pwmTimes->PWM_Time5
+		// TODO pwmTimes->PWM_Time6
 	}
 }
-
-
 
 /* @TIM3_Setup
  * @brief	Sets up the Timer 3 timebase. Timer 3 is responsible for
@@ -77,7 +64,7 @@ void TIM3_Setup(void)
 	/* TIM3 Time Base configuration */
 	TIM_TimeBaseStructure3.TIM_Prescaler = SystemCoreClock/1000000 - 1;	// 72 MHz to 1 MHz
 	TIM_TimeBaseStructure3.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseStructure3.TIM_Period = 10000 - 1;						// 1 Mhz to 100 Hz
+	TIM_TimeBaseStructure3.TIM_Period = 20000 - 1;						// 1 Mhz to 50 Hz
 	TIM_TimeBaseStructure3.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseStructure3.TIM_RepetitionCounter = 0;
 	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure3);
@@ -86,9 +73,15 @@ void TIM3_Setup(void)
 	TIM_Cmd(TIM3, ENABLE);
 }
 
-
-
-
+/* @getPWM_CCR
+ * @brief	Recalculates a time pulse width to number of TIM4 clock ticks.
+ * @param	t is the pulse width in seconds.
+ * @retval	TIM4 clock ticks to be written to TIM4 CCR output.
+ */
+uint16_t GetPWM_CCR(float t)
+{
+	return (uint16_t) (t * SystemCoreClock/TIM_GetPrescaler(TIM4));
+}
 
 /* TIM3_SetupIRQ
  * @brief  Configures the Timer 3 IRQ Handler.
