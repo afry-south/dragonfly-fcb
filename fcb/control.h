@@ -6,7 +6,7 @@
 #include "stm32f30x_rcc.h"
 #include "stm32f30x_misc.h"
 
-uint16_t getPWM_CCR(float dutycycle, uint16_t period);
+uint16_t GetPWM_CCR(float dutycycle);
 void TIM3_IRQHandler(void);
 void TIM3_Setup(void);
 void TIM3_SetupIRQ(void);
