@@ -153,8 +153,8 @@ void ControlAllocation(void)
 {
 	out_temp[0] = (Bq*L*U[0] - 4*Bq*Ct*L - M_SQRT2*Bq*U[1] - M_SQRT2*Bq*U[2] - At*L*U[3]) / ((double)4*At*Bq*L);
 	out_temp[1] = (Bq*L*U[0] - 4*Bq*Ct*L - M_SQRT2*Bq*U[1] + M_SQRT2*Bq*U[2] + At*L*U[3]) / ((double)4*At*Bq*L);
-	out_temp[2] = (Bq*L*U[0] - 4*Bq*Ct*L + M_SQRT2*Bq*U[1] + M_SQRT2*Bq*U[2] + At*L*U[3]) / ((double)4*At*Bq*L);
-	out_temp[3] = (Bq*L*U[0] - 4*Bq*Ct*L + M_SQRT2*Bq*U[1] - M_SQRT2*Bq*U[2] - At*L*U[3]) / ((double)4*At*Bq*L);
+	out_temp[2] = (Bq*L*U[0] - 4*Bq*Ct*L + M_SQRT2*Bq*U[1] + M_SQRT2*Bq*U[2] - At*L*U[3]) / ((double)4*At*Bq*L);
+	out_temp[3] = (Bq*L*U[0] - 4*Bq*Ct*L + M_SQRT2*Bq*U[1] - M_SQRT2*Bq*U[2] + At*L*U[3]) / ((double)4*At*Bq*L);
 
 	if(out_temp[0] >= 0)
 		t_out[0] = sqrtf(out_temp[0]);
@@ -164,17 +164,17 @@ void ControlAllocation(void)
 	if(out_temp[1] >= 0)
 		t_out[1] = sqrtf(out_temp[1]);
 	else
-		t_out[1] = 0;
+		t_out[1] = 0.0015;
 
 	if(out_temp[2] >= 0)
 		t_out[2] = sqrtf(out_temp[2]);
 	else
-		t_out[2] = 0;
+		t_out[2] = 0.0015;
 
 	if(out_temp[3] >= 0)
 		t_out[3] = sqrtf(out_temp[3]);
 	else
-		t_out[3] = 0;
+		t_out[3] = 0.0015;
 
 // Set ESC limits
 
