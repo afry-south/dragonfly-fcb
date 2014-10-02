@@ -26,7 +26,9 @@
         <Option name="LTO" value="0"/>
         <Option name="IsNewStartupCode" value="1"/>
         <Option name="Library" value="Not use C Library"/>
-        <LinkedLibraries/>
+        <LinkedLibraries>
+          <Libset dir="..\tools\gcc_arm_4.8_2014q1\arm-none-eabi\lib\armv7e-m\fpu\" libs="m"/>
+        </LinkedLibraries>
         <MemoryAreas debugInFlashNotRAM="1">
           <Memory name="IROM1" type="ReadOnly" size="0x00040000" startValue="0x08000000"/>
           <Memory name="IRAM1" type="ReadWrite" size="0x0000A000" startValue="0x20000000"/>
@@ -95,8 +97,8 @@
     <File name="cmsis_boot/startup/startup_stm32f30x.S" path="cmsis_boot/startup/startup_stm32f30x.S" type="1"/>
     <File name="sensors.h" path="sensors.h" type="1"/>
     <File name="cmsis/core_cm4_simd.h" path="cmsis/core_cm4_simd.h" type="1"/>
-    <File name="stm_lib/inc/stm32f30x_i2c.h" path="stm_lib/inc/stm32f30x_i2c.h" type="1"/>
     <File name="cmsis_boot/startup" path="" type="2"/>
+    <File name="stm_lib/inc/stm32f30x_i2c.h" path="stm_lib/inc/stm32f30x_i2c.h" type="1"/>
     <File name="stm32f30x_it.h" path="stm32f30x_it.h" type="1"/>
     <File name="cmsis/core_cmFunc.h" path="cmsis/core_cmFunc.h" type="1"/>
     <File name="cmsis/core_cm4.h" path="cmsis/core_cm4.h" type="1"/>
@@ -108,38 +110,39 @@
     <File name="com.c" path="com.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_adc.h" path="stm_lib/inc/stm32f30x_adc.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_rtc.h" path="stm_lib/inc/stm32f30x_rtc.h" type="1"/>
+    <File name="libm.a" path="../Tools/gcc_arm_4.8_2014q1/arm-none-eabi/lib/armv7e-m/fpu/libm.a" type="1"/>
     <File name="stm_lib/inc/stm32f30x_syscfg.h" path="stm_lib/inc/stm32f30x_syscfg.h" type="1"/>
     <File name="stm_lib/src/stm32f30x_tim.c" path="stm_lib/src/stm32f30x_tim.c" type="1"/>
     <File name="stm_lib/src/stm32f30x_wwdg.c" path="stm_lib/src/stm32f30x_wwdg.c" type="1"/>
+    <File name="stm_lib/inc/stm32f30x_comp.h" path="stm_lib/inc/stm32f30x_comp.h" type="1"/>
     <File name="motor_output.h" path="motor_output.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_gpio.h" path="stm_lib/inc/stm32f30x_gpio.h" type="1"/>
-    <File name="stm_lib/inc/stm32f30x_comp.h" path="stm_lib/inc/stm32f30x_comp.h" type="1"/>
     <File name="utils/stm32f3_discovery_lsm303dlhc.h" path="utils/stm32f3_discovery_lsm303dlhc.h" type="1"/>
     <File name="cmsis_boot/system_stm32f30x.h" path="cmsis_boot/system_stm32f30x.h" type="1"/>
-    <File name="stm_lib/inc/stm32f30x_iwdg.h" path="stm_lib/inc/stm32f30x_iwdg.h" type="1"/>
     <File name="RCinput.h" path="RCinput.h" type="1"/>
+    <File name="stm_lib/inc/stm32f30x_iwdg.h" path="stm_lib/inc/stm32f30x_iwdg.h" type="1"/>
     <File name="stdio/printf.c" path="stdio/printf.c" type="1"/>
     <File name="stm_lib/src/stm32f30x_spi.c" path="stm_lib/src/stm32f30x_spi.c" type="1"/>
     <File name="stm_lib/src/stm32f30x_iwdg.c" path="stm_lib/src/stm32f30x_iwdg.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_rcc.h" path="stm_lib/inc/stm32f30x_rcc.h" type="1"/>
     <File name="stm_lib/src/stm32f30x_rcc.c" path="stm_lib/src/stm32f30x_rcc.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_usart.h" path="stm_lib/inc/stm32f30x_usart.h" type="1"/>
-    <File name="stdio" path="" type="2"/>
     <File name="stm_lib/inc/stm32f30x_opamp.h" path="stm_lib/inc/stm32f30x_opamp.h" type="1"/>
+    <File name="stdio" path="" type="2"/>
     <File name="utils/stm32f3_discovery_lsm303dlhc.c" path="utils/stm32f3_discovery_lsm303dlhc.c" type="1"/>
-    <File name="cmsis/core_cmInstr.h" path="cmsis/core_cmInstr.h" type="1"/>
     <File name="cmsis_boot/stm32f30x.h" path="cmsis_boot/stm32f30x.h" type="1"/>
+    <File name="cmsis/core_cmInstr.h" path="cmsis/core_cmInstr.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_wwdg.h" path="stm_lib/inc/stm32f30x_wwdg.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_tim.h" path="stm_lib/inc/stm32f30x_tim.h" type="1"/>
     <File name="sensors.c" path="sensors.c" type="1"/>
     <File name="motor_output.c" path="motor_output.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_crc.h" path="stm_lib/inc/stm32f30x_crc.h" type="1"/>
-    <File name="control.h" path="control.h" type="1"/>
     <File name="system_stm32f30x.c" path="system_stm32f30x.c" type="1"/>
+    <File name="control.h" path="control.h" type="1"/>
     <File name="utils/stm32f3_discovery.h" path="utils/stm32f3_discovery.h" type="1"/>
     <File name="utils/stm32f3_discovery_l3gd20.c" path="utils/stm32f3_discovery_l3gd20.c" type="1"/>
-    <File name="stm_lib/inc/stm32f30x_dma.h" path="stm_lib/inc/stm32f30x_dma.h" type="1"/>
     <File name="stm_lib/src" path="" type="2"/>
+    <File name="stm_lib/inc/stm32f30x_dma.h" path="stm_lib/inc/stm32f30x_dma.h" type="1"/>
     <File name="cmsis" path="" type="2"/>
     <File name="stm_lib" path="" type="2"/>
     <File name="stm_lib/inc/stm32f30x_can.h" path="stm_lib/inc/stm32f30x_can.h" type="1"/>
@@ -150,13 +153,13 @@
     <File name="syscalls" path="" type="2"/>
     <File name="stm_lib/src/stm32f30x_rtc.c" path="stm_lib/src/stm32f30x_rtc.c" type="1"/>
     <File name="com.h" path="com.h" type="1"/>
+    <File name="stm_lib/inc/stm32f30x_dac.h" path="stm_lib/inc/stm32f30x_dac.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_flash.h" path="stm_lib/inc/stm32f30x_flash.h" type="1"/>
     <File name="stm_lib/src/stm32f30x_syscfg.c" path="stm_lib/src/stm32f30x_syscfg.c" type="1"/>
-    <File name="stm_lib/inc/stm32f30x_dac.h" path="stm_lib/inc/stm32f30x_dac.h" type="1"/>
     <File name="cmsis_boot/system_stm32f30x_temp.c" path="cmsis_boot/system_stm32f30x_temp.c" type="1"/>
     <File name="stm32f30x_conf.h" path="stm32f30x_conf.h" type="1"/>
-    <File name="stm_lib/inc/stm32f30x_pwr.h" path="stm_lib/inc/stm32f30x_pwr.h" type="1"/>
     <File name="stm_lib/inc" path="" type="2"/>
+    <File name="stm_lib/inc/stm32f30x_pwr.h" path="stm_lib/inc/stm32f30x_pwr.h" type="1"/>
     <File name="stm32f30x_it.c" path="stm32f30x_it.c" type="1"/>
     <File name="main.c" path="main.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_misc.h" path="stm_lib/inc/stm32f30x_misc.h" type="1"/>

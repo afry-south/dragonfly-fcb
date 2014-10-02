@@ -13,10 +13,26 @@
 #include "RCinput.h"
 #include "sensors.h"
 #include "motor_output.h"
+#include <math.h>
+
 /* Private variables ---------------------------------------------------------*/
 TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;	// TIM3 init struct
 float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Sensor readings arrays
+
 PWM_TimeTypeDef pwmTimes;	// 6-channel PWM input width in seconds
+/*	pwmTimes.PWM_Time1; // Throttle
+	pwmTimes.PWM_Time2; // Aileron
+	pwmTimes.PWM_Time3; // Elevator
+	pwmTimes.PWM_Time4; // Rudder
+	pwmTimes.PWM_Time5; // Function 1
+	pwmTimes.PWM_Time6; // Function 2
+*/
+
+// Physical control signals (Thrust force and roll/pitch/yaw moments)
+double U[4] = {0.0, 0.0, 0.0, 0.0};
+// Motor output PWM widths [s]
+double t_out[4] = {0.0, 0.0, 0.0, 0.0};
+double out_temp[4] = {0.0, 0.0, 0.0, 0.0};
 
 /* @TIM3_IRQHandler
  * @brief	Timer 3 interrupt handler.
@@ -37,16 +53,20 @@ void TIM3_IRQHandler()
 //		CompassReadMag(MagBuffer);		// BLOCKING...
 //		CompassReadAcc(AccBuffer);		// BLOCKING...
 
-		// TODO Everything counted in seconds, make microsends (10^(-6) s) to avoid using floats?
 		GetPWMInputTimes(&pwmTimes);
 
+		SetControlSignals();
+
+		ControlAllocation();
+
 		// Set motor output PWM
-		TIM4->CCR1 = GetPWM_CCR(pwmTimes.PWM_Time1);
-		TIM4->CCR2 = GetPWM_CCR(pwmTimes.PWM_Time2);
-		TIM4->CCR3 = GetPWM_CCR(pwmTimes.PWM_Time3);
-		TIM4->CCR4 = GetPWM_CCR(pwmTimes.PWM_Time4);
+		TIM4->CCR1 = GetPWM_CCR(t_out[0]);	// To motor 1 (PD12)
+		TIM4->CCR2 = GetPWM_CCR(t_out[1]);	// To motor 2 (PD13)
+		TIM4->CCR3 = GetPWM_CCR(t_out[2]);	// To motor 3 (PD14)
+		TIM4->CCR4 = GetPWM_CCR(t_out[3]);	// To motor 4 (PD15)
 		// TODO pwmTimes.PWM_Time5
 		// TODO pwmTimes.PWM_Time6
+
 	}
 }
 
@@ -81,7 +101,7 @@ void TIM3_Setup(void)
  */
 uint16_t GetPWM_CCR(float t)
 {
-	return (uint16_t) (t * SystemCoreClock/TIM_GetPrescaler(TIM4));
+	return (uint16_t) ((float)(t * SystemCoreClock/(TIM_GetPrescaler(TIM4)+1)));
 }
 
 /* TIM3_SetupIRQ
@@ -100,4 +120,82 @@ void TIM3_SetupIRQ(void)
     nvicStructure.NVIC_IRQChannelSubPriority = 0;
     nvicStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvicStructure);
+}
+
+void SetControlSignals(void)
+{
+	// Set thrust output (max thrust approx 48 N)
+	if(pwmTimes.PWM_Time1 >= 0.001)
+		U[0] = 48000*(pwmTimes.PWM_Time1-0.001);
+	else
+		U[0] = 0.0;
+
+	// Set roll output (max roll moment approx +/- 5.1 Nm)
+	if (pwmTimes.PWM_Time2 >= 0.001 && pwmTimes.PWM_Time2 < 0.002)
+		U[1] = -10200*(pwmTimes.PWM_Time2-0.0015);
+	else
+		U[1] = 0;
+
+	// Set pitch output (max pitch moment approx +/- 5.1 Nm)
+	if (pwmTimes.PWM_Time3 >= 0.001 && pwmTimes.PWM_Time3 < 0.002)
+		U[2] = 10200*(pwmTimes.PWM_Time3-0.0015);
+	else
+		U[2] = 0;
+
+	// Set yaw output (max yaw moment approx +/- 0.7 Nm)
+	if (pwmTimes.PWM_Time4 >= 0.001 && pwmTimes.PWM_Time4 < 0.002)
+		U[3] = -1400*(pwmTimes.PWM_Time4-0.0015);
+	else
+		U[3] = 0;
+}
+
+void ControlAllocation(void)
+{
+	out_temp[0] = (Bq*L*U[0] - 4*Bq*Ct*L - M_SQRT2*Bq*U[1] - M_SQRT2*Bq*U[2] - At*L*U[3]) / ((double)4*At*Bq*L);
+	out_temp[1] = (Bq*L*U[0] - 4*Bq*Ct*L - M_SQRT2*Bq*U[1] + M_SQRT2*Bq*U[2] + At*L*U[3]) / ((double)4*At*Bq*L);
+	out_temp[2] = (Bq*L*U[0] - 4*Bq*Ct*L + M_SQRT2*Bq*U[1] + M_SQRT2*Bq*U[2] + At*L*U[3]) / ((double)4*At*Bq*L);
+	out_temp[3] = (Bq*L*U[0] - 4*Bq*Ct*L + M_SQRT2*Bq*U[1] - M_SQRT2*Bq*U[2] - At*L*U[3]) / ((double)4*At*Bq*L);
+
+	if(out_temp[0] >= 0)
+		t_out[0] = sqrtf(out_temp[0]);
+	else
+		t_out[0] = 0;
+
+	if(out_temp[1] >= 0)
+		t_out[1] = sqrtf(out_temp[1]);
+	else
+		t_out[1] = 0;
+
+	if(out_temp[2] >= 0)
+		t_out[2] = sqrtf(out_temp[2]);
+	else
+		t_out[2] = 0;
+
+	if(out_temp[3] >= 0)
+		t_out[3] = sqrtf(out_temp[3]);
+	else
+		t_out[3] = 0;
+
+// Set ESC limits
+
+	if(t_out[0] < 0.001)
+		t_out[0] = 0.001;
+	else if(t_out[0] > 0.002)
+		t_out[0] = 0.002;
+
+	if(t_out[1] < 0.001)
+		t_out[1] = 0.001;
+	else if(t_out[0] > 0.002)
+		t_out[1] = 0.002;
+
+	if(t_out[2] < 0.001)
+		t_out[2] = 0.001;
+	else if(t_out[0] > 0.002)
+		t_out[2] = 0.002;
+
+	if(t_out[3] < 0.001)
+		t_out[3] = 0.001;
+	else if(t_out[0] > 0.002)
+		t_out[3] = 0.002;
+
 }

@@ -32,7 +32,6 @@ volatile uint16_t PWM_IN_DOWN[4] = {0, 0, 0, 0}; 	// Current falling edge (for P
 volatile uint16_t PWM_IN_UP[4] = {0, 0, 0, 0};		// Current rising edge (for PWM input 1, 2, 3, 4)
 volatile uint16_t PWM_IN_UP2[4] = {0, 0, 0, 0};		// Previous rising edge (for PWM input 1, 2, 3, 4)
 volatile char pulseState[4] = {0, 0, 0, 0};			// 0 = rising, 1 = falling detection (for PWM input 1, 2, 3, 4)
-//TODO implement getter for Duty and Period
 volatile uint16_t PWM_IN_DutyCycleTicks[4] = {0, 0, 0, 0};	// Number of PWM duty cycle ticks (for PWM input 1, 2, 3, 4)
 volatile uint16_t PWM_IN_PeriodTicks[4] = {0, 0, 0, 0};		// Number of PWM period ticks (for PWM input 1, 2, 3, 4)
 
@@ -288,6 +287,7 @@ void PWM_In_Setup(void) {
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 	GPIO_Init(GPIOD, &GPIO_InitStructure);
 
+	/* Debug/test pins (TODO: delete later) */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
