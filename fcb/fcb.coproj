@@ -110,12 +110,12 @@
     <File name="com.c" path="com.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_adc.h" path="stm_lib/inc/stm32f30x_adc.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_rtc.h" path="stm_lib/inc/stm32f30x_rtc.h" type="1"/>
-    <File name="libm.a" path="../Tools/gcc_arm_4.8_2014q1/arm-none-eabi/lib/armv7e-m/fpu/libm.a" type="1"/>
     <File name="stm_lib/inc/stm32f30x_syscfg.h" path="stm_lib/inc/stm32f30x_syscfg.h" type="1"/>
-    <File name="stm_lib/src/stm32f30x_tim.c" path="stm_lib/src/stm32f30x_tim.c" type="1"/>
+    <File name="libm.a" path="../Tools/gcc_arm_4.8_2014q1/arm-none-eabi/lib/armv7e-m/fpu/libm.a" type="1"/>
     <File name="stm_lib/src/stm32f30x_wwdg.c" path="stm_lib/src/stm32f30x_wwdg.c" type="1"/>
-    <File name="stm_lib/inc/stm32f30x_comp.h" path="stm_lib/inc/stm32f30x_comp.h" type="1"/>
+    <File name="stm_lib/src/stm32f30x_tim.c" path="stm_lib/src/stm32f30x_tim.c" type="1"/>
     <File name="motor_output.h" path="motor_output.h" type="1"/>
+    <File name="stm_lib/inc/stm32f30x_comp.h" path="stm_lib/inc/stm32f30x_comp.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_gpio.h" path="stm_lib/inc/stm32f30x_gpio.h" type="1"/>
     <File name="utils/stm32f3_discovery_lsm303dlhc.h" path="utils/stm32f3_discovery_lsm303dlhc.h" type="1"/>
     <File name="cmsis_boot/system_stm32f30x.h" path="cmsis_boot/system_stm32f30x.h" type="1"/>
@@ -151,10 +151,10 @@
     <File name="RCinput.c" path="RCinput.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_dbgmcu.h" path="stm_lib/inc/stm32f30x_dbgmcu.h" type="1"/>
     <File name="syscalls" path="" type="2"/>
-    <File name="stm_lib/src/stm32f30x_rtc.c" path="stm_lib/src/stm32f30x_rtc.c" type="1"/>
     <File name="com.h" path="com.h" type="1"/>
-    <File name="stm_lib/inc/stm32f30x_dac.h" path="stm_lib/inc/stm32f30x_dac.h" type="1"/>
+    <File name="stm_lib/src/stm32f30x_rtc.c" path="stm_lib/src/stm32f30x_rtc.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_flash.h" path="stm_lib/inc/stm32f30x_flash.h" type="1"/>
+    <File name="stm_lib/inc/stm32f30x_dac.h" path="stm_lib/inc/stm32f30x_dac.h" type="1"/>
     <File name="stm_lib/src/stm32f30x_syscfg.c" path="stm_lib/src/stm32f30x_syscfg.c" type="1"/>
     <File name="cmsis_boot/system_stm32f30x_temp.c" path="cmsis_boot/system_stm32f30x_temp.c" type="1"/>
     <File name="stm32f30x_conf.h" path="stm32f30x_conf.h" type="1"/>

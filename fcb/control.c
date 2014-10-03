@@ -159,22 +159,22 @@ void ControlAllocation(void)
 	if(out_temp[0] >= 0)
 		t_out[0] = sqrtf(out_temp[0]);
 	else
-		t_out[0] = 0;
+		t_out[0] = 0.001;
 
 	if(out_temp[1] >= 0)
 		t_out[1] = sqrtf(out_temp[1]);
 	else
-		t_out[1] = 0.0015;
+		t_out[1] = 0.001;
 
 	if(out_temp[2] >= 0)
 		t_out[2] = sqrtf(out_temp[2]);
 	else
-		t_out[2] = 0.0015;
+		t_out[2] = 0.001;
 
 	if(out_temp[3] >= 0)
 		t_out[3] = sqrtf(out_temp[3]);
 	else
-		t_out[3] = 0.0015;
+		t_out[3] = 0.001;
 
 // Set ESC limits
 
@@ -185,17 +185,17 @@ void ControlAllocation(void)
 
 	if(t_out[1] < 0.001)
 		t_out[1] = 0.001;
-	else if(t_out[0] > 0.002)
+	else if(t_out[1] > 0.002)
 		t_out[1] = 0.002;
 
 	if(t_out[2] < 0.001)
 		t_out[2] = 0.001;
-	else if(t_out[0] > 0.002)
+	else if(t_out[2] > 0.002)
 		t_out[2] = 0.002;
 
 	if(t_out[3] < 0.001)
 		t_out[3] = 0.001;
-	else if(t_out[0] > 0.002)
+	else if(t_out[3] > 0.002)
 		t_out[3] = 0.002;
 
 }
