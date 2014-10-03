@@ -18,6 +18,8 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;	// TIM3 init struct
 float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Sensor readings arrays
+float Attitude[3] = {0.0, 0.0, 0.0};	// Roll, pitch, yaw angles
+float h = 0.0; // Control sample time
 
 PWM_TimeTypeDef pwmTimes;	// 6-channel PWM input width in seconds
 /*	pwmTimes.PWM_Time1; // Throttle
@@ -28,11 +30,11 @@ PWM_TimeTypeDef pwmTimes;	// 6-channel PWM input width in seconds
 	pwmTimes.PWM_Time6; // Function 2
 */
 
-// Physical control signals (Thrust force and roll/pitch/yaw moments)
-double U[4] = {0.0, 0.0, 0.0, 0.0};
+// Physical control signals
+float U[4] = {0.0, 0.0, 0.0, 0.0}; // Thrust force, roll, pitch, yaw moments.
 // Motor output PWM widths [s]
-double t_out[4] = {0.0, 0.0, 0.0, 0.0};
-double out_temp[4] = {0.0, 0.0, 0.0, 0.0};
+float t_out[4] = {0.0, 0.0, 0.0, 0.0};
+float out_temp[4] = {0.0, 0.0, 0.0, 0.0};
 
 /* @TIM3_IRQHandler
  * @brief	Timer 3 interrupt handler.
@@ -47,11 +49,14 @@ void TIM3_IRQHandler()
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
 		/* Read Gyro Angular rate data */
-
 //		GyroReadAngRate(GyroBuffer);	// BLOCKING...
 		/* Read Compass data */
 //		CompassReadMag(MagBuffer);		// BLOCKING...
 //		CompassReadAcc(AccBuffer);		// BLOCKING...
+		/* The sensor .c files were modified slightly to avoid GCC compilation errors
+		 * Perhaps a revertion to the demo-version of them is advisable to combat the
+		 * errors.
+		 * */
 
 		GetPWMInputTimes(&pwmTimes);
 
@@ -83,12 +88,15 @@ void TIM3_Setup(void)
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 , ENABLE);
 
 	/* TIM3 Time Base configuration */
-	TIM_TimeBaseStructure3.TIM_Prescaler = SystemCoreClock/1000000 - 1;	// 72 MHz to 1 MHz
+	TIM_TimeBaseStructure3.TIM_Prescaler = SystemCoreClock/TIM3_FREQ - 1;	// Scaling of system clock freq
 	TIM_TimeBaseStructure3.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseStructure3.TIM_Period = 20000 - 1;						// 1 Mhz to 50 Hz
+	TIM_TimeBaseStructure3.TIM_Period = TIM3_FREQ/TIM3_CTRLFREQ - 1;		// Counter reset value
 	TIM_TimeBaseStructure3.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseStructure3.TIM_RepetitionCounter = 0;
 	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure3);
+
+	/* Set control sample time */
+	h = 1 / (SystemCoreClock/(TIM_GetPrescaler(TIM3)+1)/(TIM3->ARR+1));
 
 	/* TIM3 counter enable */
 	TIM_Cmd(TIM3, ENABLE);
@@ -101,7 +109,7 @@ void TIM3_Setup(void)
  */
 uint16_t GetPWM_CCR(float t)
 {
-	return (uint16_t) ((float)(t * SystemCoreClock/(TIM_GetPrescaler(TIM4)+1)));
+	return (uint16_t) ((float)(t * SystemCoreClock/((float)(TIM_GetPrescaler(TIM4)+1))));
 }
 
 /* TIM3_SetupIRQ
@@ -122,6 +130,16 @@ void TIM3_SetupIRQ(void)
     NVIC_Init(&nvicStructure);
 }
 
+void UpdateAttitude(void)
+{
+
+}
+
+/* SetControlSignals
+ * @brief  Calculates the desired forces and moments to actuate the system with.
+ * @param  None
+ * @retval None
+ */
 void SetControlSignals(void)
 {
 	// Set thrust output (max thrust approx 48 N)
@@ -149,6 +167,13 @@ void SetControlSignals(void)
 		U[3] = 0;
 }
 
+/* ControlAllocation
+ * @brief  Allocates the desired thrust force and moments to corresponding motor action.
+ * 		   Data has been fitted to map thrust force [N] and roll/pitch/yaw moments [Nm] to
+ * 		   motor output PWM widths [s] of each of the four motors.
+ * @param  None
+ * @retval None
+ */
 void ControlAllocation(void)
 {
 	out_temp[0] = (Bq*L*U[0] - 4*Bq*Ct*L - M_SQRT2*Bq*U[1] - M_SQRT2*Bq*U[2] - At*L*U[3]) / ((double)4*At*Bq*L);

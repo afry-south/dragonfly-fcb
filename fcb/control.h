@@ -1,8 +1,16 @@
-#define L 0.30				// Quadcopter arm length
-#define At (int) 4187385	// T = A*t_out^2+C
-#define Ct (-4.187385)		// (Thrust coeffs)
-#define Bq (int) 128305		// Q = B*t_out^2+D
-#define Dq (-0.128305)		// (drag torque coeffs, d not used?)
+/* Control sample time settings */
+#define TIM3_FREQ 		1000000	// Timer 3 (counter update) frequency [Hz]
+#define TIM3_CTRLFREQ	100		// Control output sample frequency [Hz]
+
+/* Data fitting variables to map physical outputs to PWM widths
+ * Thrust T = At*t_out^2 + Ct 		[Unit: N]
+ * Draq torque Q = Bq*t_out^2 + Dq	[Unit: Nm]
+ */
+#define L 	0.30		// Quadcopter arm length
+#define At 	4187385		// T = A*t_out^2+C
+#define Ct 	-4.187385	// (Thrust coeffs)
+#define Bq 	128305		// Q = B*t_out^2+D
+#define Dq 	-0.128305	// (drag torque coeffs, d not used?)
 
 #include "stm32f30x.h"
 #include "stm32f3_discovery.h"
