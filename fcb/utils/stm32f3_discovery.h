@@ -35,12 +35,7 @@
 #endif
                                               
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f30x.h"
-#include "stm32f30x_gpio.h"
-#include "stm32f30x_rcc.h"
-#include "stm32f30x_exti.h"
-#include "stm32f30x_syscfg.h"
-#include "stm32f30x_misc.h"
+ #include "stm32f30x.h"
    
 /** @addtogroup Utilities
   * @{

@@ -1,0 +1,336 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dependencies>
+   <includePath signature="/I..\..\..\..\..\Users\A501632\Dragonfly\demo\Test_STM32F303\stm_usb\inc /I..\..\..\..\..\Users\A501632\Dragonfly /I..\..\..\..\..\Users\A501632\Dragonfly\demo\Test_STM32F303\stm_lib /I..\..\..\..\..\Users\A501632\Dragonfly\demo /I..\..\..\..\..\Users\A501632\Dragonfly\demo\Test_STM32F303\stm_usb /I..\..\..\..\..\Users\A501632\Dragonfly\demo\Test_STM32F303 /I..\..\..\..\..\Users\A501632\Dragonfly\demo\Test_STM32F303\utils /I..\..\..\..\..\Users\A501632\Dragonfly\demo\Test_STM32F303\stm_lib\inc /I..\..\..\..\..\Users\A501632\Dragonfly\demo\Test_STM32F303\cmsis /I..\..\..\..\..\Users\A501632\Dragonfly\demo\Test_STM32F303\cmsis_boot">
+      <source file="..\..\..\stm_lib\inc\stm32f30x_syscfg.h" lastModified="148b1cac264">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\usb_pwr.c" lastModified="148b1cac582">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+         <include file="..\..\..\usb_conf.h"/>
+         <include file="..\..\..\usb_pwr.h"/>
+         <include file="..\..\..\hw_config.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_iwdg.c" lastModified="148b1cac278">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_iwdg.h"/>
+      </source>
+      <source file="..\..\..\platform_config.h" lastModified="148b1cac248">
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_dac.c" lastModified="148b1cac26d">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_dac.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_gpio.h" lastModified="148b1cac252">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\cmsis\core_cm4.h" lastModified="148b1cac520">
+         <include file="..\..\..\cmsis\core_cmInstr.h"/>
+         <include file="..\..\..\cmsis\core_cmFunc.h"/>
+         <include file="..\..\..\cmsis\core_cm4_simd.h"/>
+      </source>
+      <source file="..\..\..\hw_config.h" lastModified="148b1cac244">
+         <include file="..\..\..\stm_usb\inc\usb_type.h"/>
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\inc\usb_int.h" lastModified="148b1cac29c">
+      </source>
+      <source file="..\..\..\stm_usb\src\usb_regs.c" lastModified="148b1cac57b">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+      </source>
+      <source file="..\..\..\hw_config.c" lastModified="148b1cac244">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+         <include file="..\..\..\hw_config.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+         <include file="..\..\..\usb_desc.h"/>
+         <include file="..\..\..\usb_pwr.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+         <include file="..\..\..\platform_config.h"/>
+         <include file="..\..\..\utils\stm32f3_discovery.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\src\usb_init.c" lastModified="148b1cac579">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_iwdg.h" lastModified="148b1cac253">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\inc\usb_regs.h" lastModified="148b1cac576">
+      </source>
+      <source file="..\..\..\stm_usb\src\usb_int.c" lastModified="148b1cac57a">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\inc\usb_init.h" lastModified="148b1cac29c">
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_wwdg.c" lastModified="148b1cac291">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_wwdg.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\inc\usb_def.h" lastModified="148b1cac29b">
+      </source>
+      <source file="..\..\..\cmsis_boot\startup\startup_stm32f303.c" lastModified="148b1cac239">
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_flash.h" lastModified="148b1cac251">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\inc\usb_mem.h" lastModified="148b1cac29d">
+      </source>
+      <source file="..\..\..\stm_usb\inc\usb_sil.h" lastModified="148b1cac577">
+      </source>
+      <source file="..\..\..\usb_endp.c" lastModified="148b1cac57e">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+         <include file="..\..\..\usb_istr.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_spi.h" lastModified="148b1cac261">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_dma.h" lastModified="148b1cac250">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\utils\stm32f3_discovery.h" lastModified="148b1cac585">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\usb_istr.h" lastModified="148b1cac580">
+         <include file="..\..\..\usb_conf.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_usart.h" lastModified="148b1cac266">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_wwdg.h" lastModified="148b1cac266">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\utils\stm32f3_discovery.c" lastModified="148b1cac584">
+         <include file="..\..\..\utils\stm32f3_discovery.h"/>
+      </source>
+      <source file="..\..\..\usb_istr.c" lastModified="148b1cac57f">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+         <include file="..\..\..\usb_prop.h"/>
+         <include file="..\..\..\usb_pwr.h"/>
+         <include file="..\..\..\usb_istr.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_rcc.h" lastModified="148b1cac25e">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\usb_conf.h" lastModified="148b1cac57d">
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_flash.c" lastModified="148b1cac275">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_flash.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\inc\usb_type.h" lastModified="148b1cac577">
+         <include file="..\..\..\usb_conf.h"/>
+      </source>
+      <source file="..\..\..\cmsis\core_cmInstr.h" lastModified="148b1caca04">
+      </source>
+      <source file="..\..\..\cmsis_boot\stm32f30x_conf.h" lastModified="148b1cac240">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_adc.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_can.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_crc.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_comp.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_dac.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_dbgmcu.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_dma.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_exti.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_flash.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_gpio.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_syscfg.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_i2c.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_iwdg.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_opamp.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_pwr.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rtc.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_spi.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_tim.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_usart.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_wwdg.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_misc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_spi.c" lastModified="148b1cac28b">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_spi.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_dma.c" lastModified="148b1cac270">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_dma.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\src\usb_mem.c" lastModified="148b1cac57b">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_usart.c" lastModified="148b1cac290">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_usart.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\src\usb_sil.c" lastModified="148b1cac57c">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_rcc.c" lastModified="148b1cac27d">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_dbgmcu.c" lastModified="148b1cac26f">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_dbgmcu.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_comp.c" lastModified="148b1cac26b">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_comp.h"/>
+      </source>
+      <source file="..\..\..\stm32f30x_it.h" lastModified="148b1cac24a">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\utils\stm32f3_discovery_lsm303dlhc.h" lastModified="148b1cac59b">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_exti.c" lastModified="148b1cac271">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_exti.h"/>
+      </source>
+      <source file="..\..\..\cmsis\core_cmFunc.h" lastModified="148b1caca03">
+      </source>
+      <source file="..\..\..\cmsis_boot\stm32f30x.h" lastModified="148b1cac627">
+         <include file="..\..\..\cmsis\core_cm4.h"/>
+         <include file="..\..\..\cmsis_boot\system_stm32f30x.h"/>
+         <include file="..\..\..\cmsis_boot\stm32f30x_conf.h"/>
+      </source>
+      <source file="..\..\..\usb_prop.h" lastModified="148b1cac581">
+      </source>
+      <source file="..\..\..\stm32f30x_it.c" lastModified="148b1cac249">
+         <include file="..\..\..\stm32f30x_it.h"/>
+         <include file="..\..\..\main.h"/>
+         <include file="..\..\..\usb_istr.h"/>
+      </source>
+      <source file="..\..\..\utils\stm32f3_discovery_lsm303dlhc.c" lastModified="148b1cac59a">
+         <include file="..\..\..\utils\stm32f3_discovery_lsm303dlhc.h"/>
+      </source>
+      <source file="..\..\..\usb_prop.c" lastModified="148b1cac581">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+         <include file="..\..\..\usb_conf.h"/>
+         <include file="..\..\..\usb_prop.h"/>
+         <include file="..\..\..\usb_desc.h"/>
+         <include file="..\..\..\usb_pwr.h"/>
+         <include file="..\..\..\hw_config.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_crc.h" lastModified="148b1cac24e">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_adc.h" lastModified="148b1cac24b">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\usb_desc.h" lastModified="148b1cac57e">
+      </source>
+      <source file="..\..\..\usb_desc.c" lastModified="148b1cac57d">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+         <include file="..\..\..\usb_desc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_crc.c" lastModified="148b1cac26c">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_crc.h"/>
+      </source>
+      <source file="..\..\..\utils\stm32f3_discovery_l3gd20.h" lastModified="148b1cac599">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_adc.c" lastModified="148b1cac268">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_adc.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_comp.h" lastModified="148b1cac24d">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\cmsis_boot\system_stm32f30x.h" lastModified="148b1cac242">
+      </source>
+      <source file="..\..\..\utils\stm32f3_discovery_l3gd20.c" lastModified="148b1cac597">
+         <include file="..\..\..\utils\stm32f3_discovery_l3gd20.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\src\usb_core.c" lastModified="148b1cac578">
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_exti.h" lastModified="148b1cac250">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\cmsis_boot\system_stm32f30x.c" lastModified="148b1cac242">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\cmsis\core_cm4_simd.h" lastModified="148b1caca02">
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_syscfg.c" lastModified="148b1cac28d">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_syscfg.h"/>
+      </source>
+      <source file="..\..\..\stm_usb\inc\usb_core.h" lastModified="148b1cac29a">
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_i2c.h" lastModified="148b1cac252">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_misc.c" lastModified="148b1cac279">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_misc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_pwr.h" lastModified="148b1cac25d">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_can.h" lastModified="148b1cac24c">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_rtc.h" lastModified="148b1cac25f">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_dbgmcu.h" lastModified="148b1cac24f">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_tim.h" lastModified="148b1cac265">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\main.h" lastModified="148b1caca17">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+         <include file="..\..\..\utils\stm32f3_discovery.h"/>
+         <include file="..\..\..\utils\stm32f3_discovery_lsm303dlhc.h"/>
+         <include file="..\..\..\utils\stm32f3_discovery_l3gd20.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_lib.h"/>
+         <include file="..\..\..\hw_config.h"/>
+         <include file="..\..\..\usb_pwr.h"/>
+         <include file="..\..\..\platform_config.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_i2c.c" lastModified="148b1cac277">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_i2c.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\main.c" lastModified="148e5718f4d">
+         <include file="..\..\..\main.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_pwr.c" lastModified="148b1cac27b">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_pwr.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_can.c" lastModified="148b1cac26a">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_can.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_opamp.h" lastModified="148b1cac25c">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_gpio.c" lastModified="148b1cac276">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_gpio.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_rtc.c" lastModified="148b1cac280">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rtc.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_tim.c" lastModified="148b1cac28f">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_tim.h"/>
+         <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_misc.h" lastModified="148b1cac253">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+      <source file="..\..\..\usb_pwr.h" lastModified="148b1cac583">
+      </source>
+      <source file="..\..\..\stm_usb\inc\usb_lib.h" lastModified="148b1cac29d">
+         <include file="..\..\..\hw_config.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_type.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_regs.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_def.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_core.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_init.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_sil.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_mem.h"/>
+         <include file="..\..\..\stm_usb\inc\usb_int.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\src\stm32f30x_opamp.c" lastModified="148b1cac27a">
+         <include file="..\..\..\stm_lib\inc\stm32f30x_opamp.h"/>
+      </source>
+      <source file="..\..\..\stm_lib\inc\stm32f30x_dac.h" lastModified="148b1cac24f">
+         <include file="..\..\..\cmsis_boot\stm32f30x.h"/>
+      </source>
+   </includePath>
+</dependencies>

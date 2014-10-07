@@ -17,7 +17,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;	// TIM3 init struct
-float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Sensor readings arrays
+float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Body-frame sensor readings arrays
 float Attitude[3] = {0.0, 0.0, 0.0};	// Roll, pitch, yaw angles
 float h = 0.0; // Control sample time
 
@@ -48,15 +48,12 @@ void TIM3_IRQHandler()
 	{
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
-		/* Read Gyro Angular rate data */
-//		GyroReadAngRate(GyroBuffer);	// BLOCKING...
+		/* Read Gyro Angular rate data and update attitude */
+		GyroReadAngRate(GyroBuffer);
+		UpdateAttitude();
 		/* Read Compass data */
-//		CompassReadMag(MagBuffer);		// BLOCKING...
-//		CompassReadAcc(AccBuffer);		// BLOCKING...
-		/* The sensor .c files were modified slightly to avoid GCC compilation errors
-		 * Perhaps a revertion to the demo-version of them is advisable to combat the
-		 * errors.
-		 * */
+		CompassReadMag(MagBuffer);
+		CompassReadAcc(AccBuffer);
 
 		GetPWMInputTimes(&pwmTimes);
 
@@ -132,7 +129,10 @@ void TIM3_SetupIRQ(void)
 
 void UpdateAttitude(void)
 {
-
+	// Needs transformation of Gyro rate Body->Earth frame for accuracy
+	Attitude[0] = Attitude[0] + GyroBuffer[0]*1/TIM3_CTRLFREQ;
+	Attitude[1] = Attitude[1] + GyroBuffer[1]*1/TIM3_CTRLFREQ;
+	Attitude[2] = Attitude[2] + GyroBuffer[2]*1/TIM3_CTRLFREQ;
 }
 
 /* SetControlSignals

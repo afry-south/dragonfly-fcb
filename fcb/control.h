@@ -26,3 +26,4 @@ void TIM3_Setup(void);
 void TIM3_SetupIRQ(void);
 void ControlAllocation(void);
 void SetControlSignals(void);
+void UpdateAttitude(void);

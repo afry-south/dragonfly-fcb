@@ -27,10 +27,6 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3_discovery_lsm303dlhc.h"
-#include "stm32f30x_i2c.h"
-#include "stm32f30x_gpio.h"
-#include "stm32f30x_rcc.h"
-#include "stm32f30x_exti.h"
 
 /** @addtogroup Utilities
   * @{
@@ -81,7 +77,6 @@ __IO uint32_t  LSM303DLHC_Timeout = LSM303DLHC_LONG_TIMEOUT;
   * @{
   */
 static void LSM303DLHC_LowLevel_Init(void);
-uint32_t LSM303DLHC_TIMEOUT_UserCallback(void);
 /**
   * @}
   */
@@ -682,10 +677,6 @@ uint32_t LSM303DLHC_TIMEOUT_UserCallback(void)
   * @}
   */ 
   
-/**
-  * @}
-  */ 
-
 /**
   * @}
   */ 

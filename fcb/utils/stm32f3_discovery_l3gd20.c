@@ -27,9 +27,6 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3_discovery_l3gd20.h"
-#include "stm32f30x_gpio.h"
-#include "stm32f30x_rcc.h"
-#include "stm32f30x_spi.h"
 
 /** @addtogroup Utilities
   * @{
@@ -71,7 +68,7 @@
 /** @defgroup STM32F3_DISCOVERY_L3GD20_Private_Variables
   * @{
   */ 
-__IO uint32_t L3GD20Timeout = L3GD20_FLAG_TIMEOUT;
+__IO uint32_t  L3GD20Timeout = L3GD20_FLAG_TIMEOUT;  
 /**
   * @}
   */
@@ -81,10 +78,6 @@ __IO uint32_t L3GD20Timeout = L3GD20_FLAG_TIMEOUT;
   */
 static uint8_t L3GD20_SendByte(uint8_t byte);
 static void L3GD20_LowLevel_Init(void);
-
-#ifdef USE_DEFAULT_TIMEOUT_CALLBACK
-uint32_t L3GD20_TIMEOUT_UserCallback(void);
-#endif /* USE_DEFAULT_TIMEOUT_CALLBACK */
 /**
   * @}
   */
@@ -430,8 +423,7 @@ static void L3GD20_LowLevel_Init(void)
   
   GPIO_InitStructure.GPIO_Pin = L3GD20_SPI_INT2_PIN;
   GPIO_Init(L3GD20_SPI_INT2_GPIO_PORT, &GPIO_InitStructure);
-}
-
+}  
 
 /**
   * @brief  Sends a Byte through the SPI interface and return the Byte received 
@@ -441,7 +433,7 @@ static void L3GD20_LowLevel_Init(void)
   */
 static uint8_t L3GD20_SendByte(uint8_t byte)
 {
-  /* Loop while DR register is not empty */
+  /* Loop while DR register in not empty */
   L3GD20Timeout = L3GD20_FLAG_TIMEOUT;
   while (SPI_I2S_GetFlagStatus(L3GD20_SPI, SPI_I2S_FLAG_TXE) == RESET)
   {
@@ -472,7 +464,7 @@ uint32_t L3GD20_TIMEOUT_UserCallback(void)
 {
   /* Block communication and all processes */
   while (1)
-  {
+  {   
   }
 }
 #else
@@ -482,15 +474,10 @@ uint32_t L3GD20_TIMEOUT_UserCallback(void)
 }
 #endif /* USE_DEFAULT_TIMEOUT_CALLBACK */
 
-
 /**
   * @}
   */ 
 
-/**
-  * @}
-  */ 
-  
 /**
   * @}
   */ 

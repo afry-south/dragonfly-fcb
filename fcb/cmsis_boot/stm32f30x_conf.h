@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    TIM_Combined/stm32f30x_conf.h 
+  * @file    stm32f30x_conf.h 
   * @author  MCD Application Team
   * @version V1.1.0
   * @date    20-September-2012
@@ -41,6 +41,7 @@
 #include "stm32f30x_exti.h"
 #include "stm32f30x_flash.h"
 #include "stm32f30x_gpio.h"
+#include "stm32f30x_it.h"
 #include "stm32f30x_syscfg.h"
 #include "stm32f30x_i2c.h"
 #include "stm32f30x_iwdg.h"
@@ -58,7 +59,7 @@
 /* Exported constants --------------------------------------------------------*/
 /* Uncomment the line below to expanse the "assert_param" macro in the 
    Standard Peripheral Library drivers code */
-/*#define USE_FULL_ASSERT    1*/
+/* #define USE_FULL_ASSERT    1 */
 
 /* Exported macro ------------------------------------------------------------*/
 #ifdef  USE_FULL_ASSERT

@@ -41,7 +41,6 @@
   *
   * 5. This file configures the system clock as follows:
   *=============================================================================
-  *                         Supported STM32F30x device                          
   *-----------------------------------------------------------------------------
   *        System Clock source                    | PLL (HSE)
   *-----------------------------------------------------------------------------
@@ -104,11 +103,7 @@
 /**
   * @}
   */
-#define WEAK __attribute__ ((weak))
 
-void WEAK SystemInit(void);
-void WEAK SystemCoreClockUpdate(void);
-void WEAK SetSysClock(void);
 /** @addtogroup STM32F30x_System_Private_TypesDefinitions
   * @{
   */
@@ -122,7 +117,7 @@ void WEAK SetSysClock(void);
   */
 /*!< Uncomment the following line if you need to relocate your vector Table in
      Internal SRAM. */ 
-/* #define VECT_TAB_SRAM*/
+/* #define VECT_TAB_SRAM */
 #define VECT_TAB_OFFSET  0x0 /*!< Vector Table base offset field. 
                                   This value must be a multiple of 0x200. */  
 /**
@@ -141,9 +136,9 @@ void WEAK SetSysClock(void);
   * @{
   */
 
-  uint32_t WEAK SystemCoreClock = 72000000;
+  uint32_t SystemCoreClock = 72000000;
 
-  __I uint8_t WEAK AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
+  __I uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
 
 /**
   * @}
@@ -153,7 +148,7 @@ void WEAK SetSysClock(void);
   * @{
   */
 
-static void SetSysClock1(void);
+static void SetSysClock(void);
 
 /**
   * @}
@@ -170,7 +165,7 @@ static void SetSysClock1(void);
   * @param  None
   * @retval None
   */
-void SystemInit1(void)
+void SystemInit(void)
 {
   /* FPU settings ------------------------------------------------------------*/
   #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
@@ -204,13 +199,13 @@ void SystemInit1(void)
 
   /* Configure the System clock source, PLL Multiplier and Divider factors, 
      AHB/APBx prescalers and Flash settings ----------------------------------*/
-  SetSysClock1();
-
+  SetSysClock();
+  
 #ifdef VECT_TAB_SRAM
   SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM. */
 #else
   SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH. */
-#endif
+#endif  
 }
 
 /**
@@ -249,7 +244,7 @@ void SystemInit1(void)
   * @param  None
   * @retval None
   */
-void SystemCoreClockUpdate1 (void)
+void SystemCoreClockUpdate (void)
 {
   uint32_t tmp = 0, pllmull = 0, pllsource = 0, prediv1factor = 0;
 
@@ -301,7 +296,7 @@ void SystemCoreClockUpdate1 (void)
   * @param  None
   * @retval None
   */
-static void SetSysClock1(void)
+static void SetSysClock(void)
 {
   __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
 
@@ -373,9 +368,7 @@ static void SetSysClock1(void)
 /**
   * @}
   */
-#pragma weak SetSysClock = SetSysClock1
-#pragma weak SystemCoreClockUpdate = SystemCoreClockUpdate1
-#pragma weak SystemInit = SystemInit1
+
 /**
   * @}
   */

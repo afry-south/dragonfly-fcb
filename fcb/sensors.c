@@ -10,8 +10,6 @@
 **/
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f3_discovery_lsm303dlhc.h"
-#include "stm32f3_discovery_l3gd20.h"
 #include "sensors.h"
 
 /* Private variables ---------------------------------------------------------*/
@@ -96,8 +94,8 @@ void GyroReadAngRate(float* pfData)
   /* divide by sensitivity */
   for(i=0; i<3; i++)
   {
-	//pfData[i] = (float)RawData[i]/sensitivity;				// Output in degrees
-    pfData[i] = (float)RawData[i]/sensitivity * PI/180;		// Output in radians
+	//pfData[i] = (float)RawData[i]/sensitivity;		// Output in degrees/second
+    pfData[i] = (float)RawData[i]/sensitivity * PI/180;	// Output in radians/second
   }
 }
 
@@ -122,16 +120,16 @@ void CompassConfig(void)
    /* Fill the accelerometer structure */
   LSM303DLHCAcc_InitStructure.Power_Mode = LSM303DLHC_NORMAL_MODE;
   LSM303DLHCAcc_InitStructure.AccOutput_DataRate = LSM303DLHC_ODR_50_HZ;
-  LSM303DLHCAcc_InitStructure.Axes_Enable= LSM303DLHC_AXES_ENABLE;
+  LSM303DLHCAcc_InitStructure.Axes_Enable = LSM303DLHC_AXES_ENABLE;
   LSM303DLHCAcc_InitStructure.AccFull_Scale = LSM303DLHC_FULLSCALE_2G;
   LSM303DLHCAcc_InitStructure.BlockData_Update = LSM303DLHC_BlockUpdate_Continous;
-  LSM303DLHCAcc_InitStructure.Endianness=LSM303DLHC_BLE_LSB;
-  LSM303DLHCAcc_InitStructure.High_Resolution=LSM303DLHC_HR_ENABLE;
+  LSM303DLHCAcc_InitStructure.Endianness = LSM303DLHC_BLE_LSB;
+  LSM303DLHCAcc_InitStructure.High_Resolution = LSM303DLHC_HR_ENABLE;
   /* Configure the accelerometer main parameters */
   LSM303DLHC_AccInit(&LSM303DLHCAcc_InitStructure);
 
   /* Fill the accelerometer LPF structure */
-  LSM303DLHCFilter_InitStructure.HighPassFilter_Mode_Selection =LSM303DLHC_HPM_NORMAL_MODE;
+  LSM303DLHCFilter_InitStructure.HighPassFilter_Mode_Selection = LSM303DLHC_HPM_NORMAL_MODE;
   LSM303DLHCFilter_InitStructure.HighPassFilter_CutOff_Frequency = LSM303DLHC_HPFCF_16;
   LSM303DLHCFilter_InitStructure.HighPassFilter_AOI1 = LSM303DLHC_HPF_AOI1_DISABLE;
   LSM303DLHCFilter_InitStructure.HighPassFilter_AOI2 = LSM303DLHC_HPF_AOI2_DISABLE;
@@ -208,7 +206,8 @@ void CompassReadAcc(float* pfData)
   /* Obtain the mg value for the three axis */
   for(i=0; i<3; i++)
   {
-    pfData[i]=(float)pnRawData[i]/LSM_Acc_Sensitivity;
+    pfData[i]=(float)pnRawData[i]/LSM_Acc_Sensitivity;				// Output in mg (10^(-3) g)
+    pfData[i]=(float)pnRawData[i]/LSM_Acc_Sensitivity / 1000 * g;	// Output in mg (10^(-3) g)
   }
 
 }

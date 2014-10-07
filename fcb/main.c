@@ -10,7 +10,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <stdio.h>
 #include "motor_output.h"
 #include "control.h"
 #include "sensors.h"
@@ -19,9 +18,7 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
-
 /* Private variables ---------------------------------------------------------*/
-
 /* Private functions -----------------------------------------------*/
 
 
@@ -49,29 +46,31 @@ int main(void)
 
 static void Init(void)
 {
-		/* TIM GPIO configuration */
-		TIM4_IOconfig();
+	/* Setup sensors */
+	GyroConfig();
+	CompassConfig();
+	// TODO Calibrate sensors (calculate drift while standing still and level)
 
-		/* Setup Timer 4 (used for PWM output)*/
-	  	TIM4_Setup();
-		/* Setup Timer 4 OC registers (for PWM output) */
-		TIM4_SetupOC();
+	/* TIM GPIO configuration */
+	TIM4_IOconfig();
 
-		/* Setup Timer 3 (used for program periodic execution) */
-		TIM3_Setup();
-		/* Setup Timer 3 for interrupt generation */
-		TIM3_SetupIRQ();
+	/* Setup Timer 4 (used for PWM output)*/
+	TIM4_Setup();
+	/* Setup Timer 4 OC registers (for PWM output) */
+	TIM4_SetupOC();
 
-		/* Setup Timer 2 (used for PWM input) */
-		TIM2_Setup();
-		/* Setup PWM input (GPIO, NVIC settings) */
-		PWM_In_Setup();
+	/* Setup Timer 2 (used for PWM input) */
+	TIM2_Setup();
+	/* Setup and start PWM input (GPIO, NVIC settings) */
+	PWM_In_Setup();
+	// TODO Calibrate RC input (min, max, midpoint) and map to according position and angle references
+	// TODO Failsafe - what happens when no RC signal is received?
 
-		/* Setup sensors */
-		GyroConfig();
-		CompassConfig();
+	/* Setup Timer 3 (used for program periodic execution) */
+	TIM3_Setup();
+	/* Setup and start Timer 3 for interrupt generation */
+	TIM3_SetupIRQ(); // NEEDS TO BE STARTED AFTER SENSOR CONFIG
 }
-
 
 #ifdef  USE_FULL_ASSERT
 
