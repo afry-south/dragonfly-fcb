@@ -279,7 +279,7 @@ void PWM_In_Setup(void) {
 	/* GPIOD clock enable */
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
 
-	/* TIM2 GPIO pin configuration : CH1=PD3, C2=PD4, CH3=PD7, CH4=PD6 */
+	/* TIM2 GPIO pin configuration : CH1=PD3, CH2=PD4, CH3=PD7, CH4=PD6 */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_7 | GPIO_Pin_6;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;

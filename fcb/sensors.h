@@ -10,6 +10,10 @@
 #define LSM_Acc_Sensitivity_8g     (float)     0.25f           /*!< accelerometer sensitivity with 8 g full scale [LSB/mg] */
 #define LSM_Acc_Sensitivity_16g    (float)     0.0834f         /*!< accelerometer sensitivity with 12 g full scale [LSB/mg] */
 
+#define GYRO_CALIBRATION_SAMPLES   (int)	   500
+#define ACC_CALIBRATION_SAMPLES    (int)	   500
+#define MAG_CALIBRATION_SAMPLES    (int)	   500
+
 /* Includes */
 #include "stm32f30x.h"
 #include "stm32f3_discovery_lsm303dlhc.h"
@@ -26,3 +30,12 @@ void CompassConfig(void);
 void GyroReadAngRate(float* pfData);
 void CompassReadMag(float* pfData);
 void CompassReadAcc(float* pfData);
+void CalibrateGyro(void);
+void CalibrateAcc(void);
+void CalibrateMag(void);
+char GetGyroCalibrated(void);
+char GetAccCalibrated(void);
+void GetBodyAttitude(float *pfData, float h);
+void GetBodyVelocity(float *pfData, float h);
+float GetYawRate(void);
+void ReadSensors(void);
