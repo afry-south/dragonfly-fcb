@@ -14,17 +14,17 @@
 #include <stdlib.h>
 
 /* Private variables ---------------------------------------------------------*/
-float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Body-frame sensor readings arrays
+__IO float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Body-frame sensor readings arrays
 
 float GyroOffsets[3] = {0.0f};
 uint16_t GyroCalSample = 0;
 float CalRollSum = 0.0, CalPitchSum = 0.0, CalYawSum = 0.0;
-volatile char GyroCalibrated = 0;
+__IO char GyroCalibrated = 0;
 
 float AccOffsets[3] = {0.0f};
 uint16_t AccCalSample = 0;
 float CalAccXSum = 0.0, CalAccYSum = 0.0, CalAccZSum = 0.0;
-volatile char AccCalibrated = 0;
+__IO char AccCalibrated = 0;
 
 //float MagOffsets[3] = {0.0f};
 //uint16_t MagCalSample = 0;
@@ -66,7 +66,7 @@ void GyroConfig(void)
   * @param  pfData : Data out pointer
   * @retval None
   */
-void GyroReadAngRate(float* pfData)
+void GyroReadAngRate(__IO float* pfData)
 {
   uint8_t tmpbuffer[6] ={0};
   int16_t RawData[3] = {0};
@@ -195,7 +195,7 @@ void CompassConfig(void)
 * @param pnData: pointer to float buffer where to store data
 * @retval None
 */
-void CompassReadAcc(float* pfData)
+void CompassReadAcc(__IO float* pfData)
 {
   int16_t pnRawData[3];
   uint8_t ctrlx[2];
@@ -304,7 +304,7 @@ char GetAccCalibrated(void)
 * @param  pfData: pointer to the data out
   * @retval None
   */
-void CompassReadMag(float* pfData)
+void CompassReadMag(__IO float* pfData)
 {
   static uint8_t buffer[6] = {0};
   uint8_t CTRLB = 0;
@@ -447,4 +447,24 @@ void ReadSensors(void)
 	GyroReadAngRate(GyroBuffer);
 	CompassReadAcc(AccBuffer);
 	CompassReadMag(MagBuffer);
+}
+
+/**
+  * @brief  Basic management of the L3GD20 timeout situation.
+  * @param  None.
+  * @retval None.
+  */
+uint32_t L3GD20_TIMEOUT_UserCallback(void)
+{
+	return 0;
+}
+
+/**
+  * @brief  Basic management of the LSM303DLHC timeout situation.
+  * @param  None.
+  * @retval None.
+  */
+uint32_t LSM303DLHC_TIMEOUT_UserCallback(void)
+{
+	return 0;
 }

@@ -467,12 +467,7 @@ uint32_t L3GD20_TIMEOUT_UserCallback(void)
   {   
   }
 }
-#else
-uint32_t L3GD20_TIMEOUT_UserCallback(void)
-{
-	return 0;
-}
-#endif /* USE_DEFAULT_TIMEOUT_CALLBACK */
+#endif
 
 /**
   * @}

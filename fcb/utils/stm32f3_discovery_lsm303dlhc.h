@@ -110,7 +110,7 @@ typedef struct
    You may modify these timeout values depending on CPU frequency and application
    conditions (interrupts routines ...). */   
 #define LSM303DLHC_FLAG_TIMEOUT             ((uint32_t)0x1000)
-#define LSM303DLHC_LONG_TIMEOUT             ((uint32_t)(10 * LSM303DLHC_FLAG_TIMEOUT))  
+#define LSM303DLHC_LONG_TIMEOUT             ((uint32_t)(10 * LSM303DLHC_FLAG_TIMEOUT)) // was *10
 /**
   * @brief  LSM303DLHC I2C Interface pins
   */

@@ -650,11 +650,6 @@ static void LSM303DLHC_LowLevel_Init(void)
 }  
 
 #ifdef USE_DEFAULT_TIMEOUT_CALLBACK
-/**
-  * @brief  Basic management of the timeout situation.
-  * @param  None.
-  * @retval None.
-  */
 uint32_t LSM303DLHC_TIMEOUT_UserCallback(void)
 {
   /* Block communication and all processes */
@@ -662,12 +657,7 @@ uint32_t LSM303DLHC_TIMEOUT_UserCallback(void)
   {   
   }
 }
-#else
-uint32_t LSM303DLHC_TIMEOUT_UserCallback(void)
-{
-	return 0;
-}
-#endif /* USE_DEFAULT_TIMEOUT_CALLBACK */
+#endif
 
 /**
   * @}

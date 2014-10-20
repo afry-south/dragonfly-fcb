@@ -13,30 +13,30 @@
 #define Dq 		-0.128305	// (drag torque coeffs, d not used?)
 
 /* Vertical control parameters */
-#define Kvz 				16.0
+#define Kvz 				8.0
 #define TIvz				0.0
 #define TDvz				0.5
-#define BETAvz				1.0		// Proportional set-point weighting
-#define Nvz					20.0	// Max derivative gain (often 10-20)
-#define MAX_Z_VELOCITY		5.0		// Max vertical velocity (+/-) [m/s]
+#define BETAvz				0.875	// Proportional set-point weighting
+#define Nvz					15.0	// Max derivative gain (often 10-20)
+#define MAX_Z_VELOCITY		2.0		// Max vertical velocity (+/-) [m/s]
 
 /* Roll/pitch control parameters */
-#define Krp					16.0	// Roll/pitch angle controller parameters
+#define Krp					8.0		// Roll/pitch angle controller parameters
 #define TIrp				0.0
-#define TDrp				0.5
+#define TDrp				0.875
 #define BETArp				1.0		// Proportional set-point weighting
-#define Nrp					20.0	// Max derivative gain (often 10-20)
-#define MAX_ROLLPITCH_ANGLE 0.35	// Max vertical velocity (+/-) [rad] (NOTE! Not in deg!)
+#define Nrp					15.0	// Max derivative gain (often 10-20)
+#define MAX_ROLLPITCH_ANGLE 0.17	// Max vertical velocity (+/-) [rad] (NOTE! Not in deg!)
 
 /* Yaw control parameters */
-#define Kyr 				4.0
+#define Kyr 				2.0
 #define TIyr 				0.0
-#define TDyr				1.0
+#define TDyr				0.5
 #define BETAyr				1.0		// Proportional set-point weighting
-#define Nyr					20.0	// Max derivative gain (often 10-20)
-#define MAX_YAW_RATE		0.78	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
+#define Nyr					15.0	// Max derivative gain (often 10-20)
+#define MAX_YAW_RATE		0.17	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
-#define M		2.500		// Total mass of the quadcopter [kg]
+#define M		3.000		// Total mass of the quadcopter [kg]
 #define IXX		0.030		// X-axis moment of inertia [kg/(m^2)]
 #define IYY		0.030		// Y-axis moment of inertia [kg/(m^2)]
 #define IZZ		0.060		// Z-axis moment of inertia [kg/(m^2)]

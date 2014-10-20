@@ -120,9 +120,9 @@
     <File name="stm_lib/src/stm32f30x_dma.c" path="stm_lib/src/stm32f30x_dma.c" type="1"/>
     <File name="stm_lib/src/stm32f30x_tim.c" path="stm_lib/src/stm32f30x_tim.c" type="1"/>
     <File name="stm_lib/src/stm32f30x_wwdg.c" path="stm_lib/src/stm32f30x_wwdg.c" type="1"/>
+    <File name="stm_lib/inc/stm32f30x_gpio.h" path="stm_lib/inc/stm32f30x_gpio.h" type="1"/>
     <File name="motor_output.h" path="motor_output.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_comp.h" path="stm_lib/inc/stm32f30x_comp.h" type="1"/>
-    <File name="stm_lib/inc/stm32f30x_gpio.h" path="stm_lib/inc/stm32f30x_gpio.h" type="1"/>
     <File name="utils/stm32f3_discovery_lsm303dlhc.h" path="utils/stm32f3_discovery_lsm303dlhc.h" type="1"/>
     <File name="cmsis/core_sc000.h" path="cmsis/core_sc000.h" type="1"/>
     <File name="cmsis_boot/system_stm32f30x.h" path="cmsis_boot/system_stm32f30x.h" type="1"/>

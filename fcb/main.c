@@ -49,7 +49,8 @@ static void Init(void)
 	/* Setup sensors */
 	GyroConfig();
 	CompassConfig();
-	// TODO Calibrate sensors (calculate drift while standing still and level)
+
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
 	/* TIM GPIO configuration */
 	TIM4_IOconfig();

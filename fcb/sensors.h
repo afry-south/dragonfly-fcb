@@ -27,9 +27,9 @@
 
 void GyroConfig(void);
 void CompassConfig(void);
-void GyroReadAngRate(float* pfData);
-void CompassReadMag(float* pfData);
-void CompassReadAcc(float* pfData);
+void GyroReadAngRate(__IO float* pfData);
+void CompassReadMag(__IO float* pfData);
+void CompassReadAcc(__IO float* pfData);
 void CalibrateGyro(void);
 void CalibrateAcc(void);
 void CalibrateMag(void);

@@ -18,8 +18,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* Timer and sampling */
-TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;		// TIM3 init struct
-volatile float h = 1/((float)TIM3_CTRLFREQ);		// Control sample time
+__I float h = 1/((float)TIM3_CTRLFREQ);		// Control sample time
 
 /* Measured states */
 float BodyAttitude[3] = {0.0f};	// Body-frame Roll, pitch, yaw angles (you can't really talk about angles in the body frame,
@@ -44,7 +43,7 @@ float U[4] = {0.0, 0.0, 0.0, 0.0};	// Physical control signals
  *  U[2] Pitch moment, max +/- 5.1 Nm
  *  U[3] Yaw moment, max +/- 0.7 Nm (very uncertain)
  */
-float u[4] = {0.0, 0.0, 0.0, 0.0};	// Controller output signals
+
 float refs[4] = {0.0, 0.0, 0.0, 0.0};	// Controller reference signals
 /*	refs[0] Vertical velocity ref [m/s]
  *  refs[1] Roll angle ref [rad]
@@ -69,7 +68,13 @@ void TIM3_IRQHandler()
 {
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
 	{
+		GPIO_SetBits(GPIOA, GPIO_Pin_8); // DEBUG
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+
+		/* NOTE: DO MORE IN MAIN TO AVOID HEAVY INTERRUPT LOAD (WHICH CAUSES I2C TO FREEZE) */
+		/* ONLY UPDATE SHARED VALUES AND I/O WITH INTERRUPTS*/
+
+		/* Also be more clever about g, measure it while calibrating? */
 
 		GetPWMInputTimes(&PWMInputTimes);
 		SetReferenceSignals();
@@ -104,8 +109,9 @@ void TIM3_IRQHandler()
 			TIM4->CCR4 = GetPWM_CCR(t_out[3]);	// To motor 4 (PD15)
 			// TODO PWMInputTimes.PWM_Time5
 			// TODO PWMInputTimes.PWM_Time6
-		}
 
+			GPIO_ResetBits(GPIOA, GPIO_Pin_8); // DEBUG
+		}
 	}
 }
 
@@ -118,8 +124,21 @@ void TIM3_IRQHandler()
  */
 void TIM3_Setup(void)
 {
+	// TODO: delete later
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;		// TIM3 init struct
+
 	/* TIM3 clock enable */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+
+	/* Debug/test pins (TODO: delete later) */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 	/* TIM3 Time Base configuration */
 	TIM_TimeBaseStructure3.TIM_Prescaler = SystemCoreClock/TIM3_FREQ - 1;	// Scaling of system clock freq
@@ -228,15 +247,16 @@ void YawControl(void)
  */
 void TIM3_SetupIRQ(void)
 {
-	/* Interrupt config */
-	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 
+	/* Interrupt config */
     NVIC_InitTypeDef nvicStructure;
     nvicStructure.NVIC_IRQChannel = TIM3_IRQn;
-    nvicStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    nvicStructure.NVIC_IRQChannelSubPriority = 0;
+    nvicStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
+    nvicStructure.NVIC_IRQChannelSubPriority = 0x00;
     nvicStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvicStructure);
+
+    TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 }
 
 /* SetControlSignals
@@ -250,7 +270,7 @@ void SetReferenceSignals(void)
 	if(PWMInputTimes.PWM_Time1 >= 0.001 && PWMInputTimes.PWM_Time1 < 0.002)
 		refs[0] = 2*MAX_Z_VELOCITY*1000*(PWMInputTimes.PWM_Time1-0.0015);
 	else
-		refs[0] = 0.0;
+		refs[0] = -10*MAX_Z_VELOCITY;
 
 	// Set roll reference limits
 	if (PWMInputTimes.PWM_Time2 >= 0.001 && PWMInputTimes.PWM_Time2 < 0.002)
