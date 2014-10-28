@@ -18,13 +18,13 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* Timer and sampling */
-__I float h = 1/((float)TIM3_CTRLFREQ);		// Control sample time
+__I float h = 1/((float)TIM3_CTRLFREQ);	// Control sample time [s]
 
 /* Measured states */
-float BodyAttitude[3] = {0.0f};	// Body-frame Roll, pitch, yaw angles (you can't really talk about angles in the body frame,
-								// but these may be approximated to angles from the starting position. TODO: DCM needed.
-float BodyVelocity[3] = {0.0f};	// Body-frame velocities
+float BodyAttitude[3] = {0.0f};	// Body-frame roll, pitch, yaw angles [rad]
+float BodyVelocity[3] = {0.0f};	// Body-frame velocities [m/s]
 float YawRate = 0.0;
+float Heading = 0.0;
 
 /* RC input */
 PWM_TimeTypeDef PWMInputTimes;	// 6-channel PWM input width in seconds
@@ -44,7 +44,11 @@ float U[4] = {0.0, 0.0, 0.0, 0.0};	// Physical control signals
  *  U[3] Yaw moment, max +/- 0.7 Nm (very uncertain)
  */
 
-float refs[4] = {0.0, 0.0, 0.0, 0.0};	// Controller reference signals
+/* RC input limits - subject to calibration */
+float RCmin = 0.0010, RCmid = 0.0015, RCmax = 0.0020;
+
+/* Controller reference signals */
+float refs[4] = {0.0, 0.0, 0.0, 0.0};
 /*	refs[0] Vertical velocity ref [m/s]
  *  refs[1] Roll angle ref [rad]
  *  refs[2] Pitch angle ref [rad]
@@ -54,9 +58,11 @@ float refs[4] = {0.0, 0.0, 0.0, 0.0};	// Controller reference signals
 float Ivz = 0.0, Dvz = 0.0, Ir = 0.0, Dr = 0.0, Ip = 0.0, Dp = 0.0, Iy = 0.0, Dy = 0.0;
 float bodyZvelocityPrev = 0.0, bodyRollPrev = 0.0, bodyPitchPrev = 0.0, bodyYawRatePrev = 0.0;
 
-/* Motor output */
-float t_out[4] = {0.0, 0.0, 0.0, 0.0};		// Motor output PWM widths [s]
-float out_temp[4] = {0.0, 0.0, 0.0, 0.0};
+/* Motor output PWM widths [s] */
+float t_out[4] = {0.0f};
+
+/* Flight mode */
+char flightMode = ATTITUDE;
 
 /* @TIM3_IRQHandler
  * @brief	Timer 3 interrupt handler.
@@ -68,32 +74,62 @@ void TIM3_IRQHandler()
 {
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET)
 	{
-		GPIO_SetBits(GPIOA, GPIO_Pin_8); // DEBUG
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
-		/* NOTE: DO MORE IN MAIN TO AVOID HEAVY INTERRUPT LOAD (WHICH CAUSES I2C TO FREEZE) */
-		/* ONLY UPDATE SHARED VALUES AND I/O WITH INTERRUPTS*/
+		/* TODO bodyZVelocity calc? */
+		/* TODO Refine sensor settings and algorithm (extended Kalman? Kalman? Quaternions) */
+		/* TODO Port to STM32F4 (it has SPI (faster than I2C!) for accelerometer) and faster CPU - maybe later */
+		/* TODO Be more clever about g, measure it while calibrating? It may still have vertical offset? */
+		/* TODO dynamic h / dt in sensor integration and controller? (measure with GetCounter()) */
+		/* TODO Calibrate RC input (min, max, midpoint) and map to according position and angle references */
+		/* TODO Failsafe - what happens when no RC signal is received? Check receiver PWM - does it keep outputting the same after transmitter shutdown? */
+		/* TODO Use on-board LEDs to indicate calibration, warnings, modes etc. */
+		/* TODO PWM input chan 5 chan 6 (what controller input maps to chan 6?) - set mode (manual / control / autonomous) */
+		/* TODO Better identify drag coefficient (for yaw control allocation) and also thrust coefficient - experiment setup needed */
+		/* TODO If STM32F3Discovery not placed in middle of quadcopter, translate sensor rotations? - wait until FCB has been mounted, then measure distances */
+		/* TODO Control integration anti-windup */
+		/* TODO Control bumpless transfer between modes */
+		/* TODO Flight modes and control performance settings (slow, normal, aggressive) */
+		/* TODO Trajectory (from x, y, z and heading refs) and hold position at destinations */
+		/* TODO Calibration reset if not satisfactory */
+		/* TODO Magnetometer soft-iron distortion calibration scheme */
 
-		/* Also be more clever about g, measure it while calibrating? */
-
-		GetPWMInputTimes(&PWMInputTimes);
-		SetReferenceSignals();
-		ReadSensors();
-
-		if(!GetAccCalibrated() || !GetGyroCalibrated())
+		if(!GetMagCalibrated())
 		{
+			STM_EVAL_LEDOn(LED3);
+
+			ReadSensors();
+			CalibrateMag();
+
+			// Set motor output to lowest
+			t_out[0] = t_out[1] = t_out[2] = t_out[3] = MIN_ESC_VAL;
+			SetMotors();
+		}
+		else if(!GetAccCalibrated() || !GetGyroCalibrated())
+		{
+			STM_EVAL_LEDOn(LED5);
+
+			ReadSensors();
 			CalibrateAcc();
 			CalibrateGyro();
+
+			// Set motor output to lowest
+			t_out[0] = t_out[1] = t_out[2] = t_out[3] = MIN_ESC_VAL;
+			SetMotors();
 		}
-		else
+		else if(flightMode == ATTITUDE)
 		{
-			/* Read Magnetometer data */
-			//CompassReadMag(MagBuffer);
-			//Heading = GetHeading();	// Heading in rad (0 rad is north)
+			STM_EVAL_LEDOn(LED7);
+
+			ReadSensors();
 
 			GetBodyVelocity(BodyVelocity, h);
 			GetBodyAttitude(BodyAttitude, h);
 			YawRate = GetYawRate();
+			Heading = GetHeading();
+
+			GetPWMInputTimes(&PWMInputTimes);
+			SetReferenceSignals();
 
 			AltitudeControl();
 			RollControl();
@@ -101,55 +137,29 @@ void TIM3_IRQHandler()
 			YawControl();
 
 			ControlAllocation();
+			SetMotors();
+		}
+		else if(flightMode == SHUTDOWN){
+			// Set motor output to lowest
+			// TODO soft stop
 
-			// Set motor output PWM
-			TIM4->CCR1 = GetPWM_CCR(t_out[0]);	// To motor 1 (PD12)
-			TIM4->CCR2 = GetPWM_CCR(t_out[1]);	// To motor 2 (PD13)
-			TIM4->CCR3 = GetPWM_CCR(t_out[2]);	// To motor 3 (PD14)
-			TIM4->CCR4 = GetPWM_CCR(t_out[3]);	// To motor 4 (PD15)
-			// TODO PWMInputTimes.PWM_Time5
-			// TODO PWMInputTimes.PWM_Time6
+			GetBodyVelocity(BodyVelocity, h);
+			GetBodyAttitude(BodyAttitude, h);
+			YawRate = GetYawRate();
 
-			GPIO_ResetBits(GPIOA, GPIO_Pin_8); // DEBUG
+			GetPWMInputTimes(&PWMInputTimes);
+			SetReferenceSignals();
+
+			AltitudeControl();
+			RollControl();
+			PitchControl();
+			YawControl();
+
+			// Set motor output to lowest
+			t_out[0] = t_out[1] = t_out[2] = t_out[3] = MIN_ESC_VAL;
+			SetMotors();
 		}
 	}
-}
-
-/* @TIM3_Setup
- * @brief	Sets up the Timer 3 timebase. Timer 3 is responsible for
- * 			generating system interrupts at well-defined intervals used
- * 			to execute code at discrete time intervals.
- * @param	None.
- * @retval	None.
- */
-void TIM3_Setup(void)
-{
-	// TODO: delete later
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;		// TIM3 init struct
-
-	/* TIM3 clock enable */
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-
-	/* Debug/test pins (TODO: delete later) */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-	/* TIM3 Time Base configuration */
-	TIM_TimeBaseStructure3.TIM_Prescaler = SystemCoreClock/TIM3_FREQ - 1;	// Scaling of system clock freq
-	TIM_TimeBaseStructure3.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseStructure3.TIM_Period = TIM3_FREQ/TIM3_CTRLFREQ - 1;		// Counter reset value
-	TIM_TimeBaseStructure3.TIM_ClockDivision = TIM_CKD_DIV1;
-	TIM_TimeBaseStructure3.TIM_RepetitionCounter = 0;
-	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure3);
-
-	/* TIM3 counter enable */
-	TIM_Cmd(TIM3, ENABLE);
 }
 
 /* @AltitudeControl
@@ -167,8 +177,13 @@ void AltitudeControl(void)
 	// Backward difference, derivative part with zero set-point weighting
 	Dvz = TDvz/(TDvz+Nvz*h)*Dvz - Kvz*TDvz*Nvz/(TDvz+Nvz*h)*(bodyZvelocity - bodyZvelocityPrev);
 
-	// TODO: Saturation levels
-	U[0] = (Pvz + Ivz + Dvz + g) * M; // /cosf(BodyAttitude[0])*cosf(BodyAttitude[1]);
+	U[0] = (Pvz + Ivz + Dvz + g) * MASS; // /cosf(BodyAttitude[0])*cosf(BodyAttitude[1]) angle boost
+
+	// Saturation
+	if(U[0] < 0)
+		U[0] = 0;
+	else if(U[0] > MAX_THRUST)
+		U[0] = MAX_THRUST;
 
 	// Forward difference, so updated after control
 	if(TIvz != 0.0)
@@ -194,6 +209,7 @@ void RollControl(void)
 	// Forward difference, so updated after control
 	if(TIrp != 0.0)
 		Ir = Ir + Krp*h/TIrp * (refs[1] - BodyAttitude[0]);
+
 	bodyRollPrev = BodyAttitude[0];
 }
 
@@ -215,6 +231,7 @@ void PitchControl(void)
 	// Forward difference, so updated after control
 	if(TIrp != 0.0)
 		Ip = Ip + Krp*h/TIrp * (refs[2] - BodyAttitude[1]);
+
 	bodyPitchPrev = BodyAttitude[1];
 }
 
@@ -239,6 +256,129 @@ void YawControl(void)
 	bodyYawRatePrev = YawRate;
 }
 
+/* SetControlSignals
+ * @brief  Sets the reference values based on RC controller input
+ * @param  None
+ * @retval None
+ */
+void SetReferenceSignals(void)
+{
+	// Set velocity reference limits
+	if(PWMInputTimes.PWM_Time1 >= RCmin && PWMInputTimes.PWM_Time1 <= RCmax)
+		refs[0] = 2*MAX_Z_VELOCITY*1000*(PWMInputTimes.PWM_Time1-RCmid);
+	else
+		refs[0] = -MAX_Z_VELOCITY;
+
+	// Set roll reference limits
+	if (PWMInputTimes.PWM_Time2 >= RCmin && PWMInputTimes.PWM_Time2 < RCmax)
+		refs[1] = 2*MAX_ROLLPITCH_ANGLE*1000*(PWMInputTimes.PWM_Time2-RCmid);
+	else
+		refs[1] = 0;
+
+	// Set pitch reference limits
+	if (PWMInputTimes.PWM_Time3 >= RCmin && PWMInputTimes.PWM_Time3 < RCmax)
+		refs[2] = 2*MAX_ROLLPITCH_ANGLE*1000*(PWMInputTimes.PWM_Time3-RCmid);
+	else
+		refs[2] = 0;
+
+	// Set yaw rate reference limits
+	if (PWMInputTimes.PWM_Time4 >= RCmin && PWMInputTimes.PWM_Time4 < RCmax)
+		refs[3] = 2*MAX_YAW_RATE*1000*(PWMInputTimes.PWM_Time4-RCmid);
+	else
+		refs[3] = 0;
+}
+
+/* ControlAllocation
+ * @brief  Allocates the desired thrust force and moments to corresponding motor action.
+ * 		   Data has been fitted to map thrust force [N] and roll/pitch/yaw moments [Nm] to
+ * 		   motor output PWM widths [us] of each of the four motors.
+ * @param  None
+ * @retval None
+ */
+void ControlAllocation(void)
+{
+	t_out[0] = (BQ*LENGTH_ARM*U[0] - M_SQRT2*BQ*U[1] - M_SQRT2*BQ*U[2] - AT*LENGTH_ARM*U[3] - 4*BQ*CT*LENGTH_ARM) / ((float)4*AT*BQ*LENGTH_ARM);
+	t_out[1] = (BQ*LENGTH_ARM*U[0] + M_SQRT2*BQ*U[1] - M_SQRT2*BQ*U[2] + AT*LENGTH_ARM*U[3] - 4*BQ*CT*LENGTH_ARM) / ((float)4*AT*BQ*LENGTH_ARM);
+	t_out[2] = (BQ*LENGTH_ARM*U[0] + M_SQRT2*BQ*U[1] + M_SQRT2*BQ*U[2] - AT*LENGTH_ARM*U[3] - 4*BQ*CT*LENGTH_ARM) / ((float)4*AT*BQ*LENGTH_ARM);
+	t_out[3] = (BQ*LENGTH_ARM*U[0] - M_SQRT2*BQ*U[1] + M_SQRT2*BQ*U[2] + AT*LENGTH_ARM*U[3] - 4*BQ*CT*LENGTH_ARM) / ((float)4*AT*BQ*LENGTH_ARM);
+
+	if(t_out[0] > MAX_ESC_VAL)
+		t_out[0] = MAX_ESC_VAL;
+	else if(t_out[0] >= MIN_ESC_VAL)
+		t_out[0] = t_out[0];
+	else
+		t_out[0] = MIN_ESC_VAL;
+
+	if(t_out[1] > MAX_ESC_VAL)
+			t_out[1] = MAX_ESC_VAL;
+	else if(t_out[1] >= MIN_ESC_VAL)
+		t_out[1] = t_out[1];
+	else
+		t_out[1] = MIN_ESC_VAL;
+
+	if(t_out[2] > MAX_ESC_VAL)
+		t_out[2] = MAX_ESC_VAL;
+	else if(t_out[2] >= MIN_ESC_VAL)
+		t_out[2] = t_out[2];
+	else
+		t_out[2] = MIN_ESC_VAL;
+
+	if(t_out[3] > MAX_ESC_VAL)
+		t_out[3] = MAX_ESC_VAL;
+	else if(t_out[3] >= MIN_ESC_VAL)
+		t_out[3] = t_out[3];
+	else
+		t_out[3] = MIN_ESC_VAL;
+}
+
+/* @SetMotors
+ * @brief	Sets the motor PWM, which is sent to the ESCs
+ * @param	None.
+ * @retval	None.
+ */
+void SetMotors()
+{
+	TIM4->CCR1 = GetPWM_CCR(t_out[0]);	// To motor 1 (PD12)
+	TIM4->CCR2 = GetPWM_CCR(t_out[1]);	// To motor 2 (PD13)
+	TIM4->CCR3 = GetPWM_CCR(t_out[2]);	// To motor 3 (PD14)
+	TIM4->CCR4 = GetPWM_CCR(t_out[3]);	// To motor 4 (PD15)
+}
+
+/* @getPWM_CCR
+ * @brief	Recalculates a time pulse width to number of TIM4 clock ticks.
+ * @param	t is the pulse width in seconds.
+ * @retval	TIM4 clock ticks to be written to TIM4 CCR output.
+ */
+uint16_t GetPWM_CCR(float t)
+{
+	return (uint16_t) ((float)(t * SystemCoreClock/((float)(TIM_GetPrescaler(TIM4)+1))));
+}
+
+/* @TIM3_Setup
+ * @brief	Sets up the Timer 3 timebase. Timer 3 is responsible for
+ * 			generating system interrupts at well-defined intervals used
+ * 			to execute code at discrete time intervals.
+ * @param	None.
+ * @retval	None.
+ */
+void TIM3_Setup(void)
+{
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;		// TIM3 init struct
+
+	/* TIM3 clock enable */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+
+	/* TIM3 Time Base configuration */
+	TIM_TimeBaseStructure3.TIM_Prescaler = SystemCoreClock/TIM3_FREQ - 1;	// Scaling of system clock freq
+	TIM_TimeBaseStructure3.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseStructure3.TIM_Period = TIM3_FREQ/TIM3_CTRLFREQ - 1;		// Counter reset value
+	TIM_TimeBaseStructure3.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseStructure3.TIM_RepetitionCounter = 0;
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure3);
+
+	/* TIM3 counter enable */
+	TIM_Cmd(TIM3, ENABLE);
+}
 
 /* TIM3_SetupIRQ
  * @brief  Configures the Timer 3 IRQ Handler.
@@ -257,102 +397,4 @@ void TIM3_SetupIRQ(void)
     NVIC_Init(&nvicStructure);
 
     TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-}
-
-/* SetControlSignals
- * @brief  Sets the reference values based on RC controller input
- * @param  None
- * @retval None
- */
-void SetReferenceSignals(void)
-{
-	// Set velocity reference limits
-	if(PWMInputTimes.PWM_Time1 >= 0.001 && PWMInputTimes.PWM_Time1 < 0.002)
-		refs[0] = 2*MAX_Z_VELOCITY*1000*(PWMInputTimes.PWM_Time1-0.0015);
-	else
-		refs[0] = -10*MAX_Z_VELOCITY;
-
-	// Set roll reference limits
-	if (PWMInputTimes.PWM_Time2 >= 0.001 && PWMInputTimes.PWM_Time2 < 0.002)
-		refs[1] = 2*MAX_ROLLPITCH_ANGLE*1000*(PWMInputTimes.PWM_Time2-0.0015);
-	else
-		refs[1] = 0;
-
-	// Set pitch reference limits
-	if (PWMInputTimes.PWM_Time3 >= 0.001 && PWMInputTimes.PWM_Time3 < 0.002)
-		refs[2] = 2*MAX_ROLLPITCH_ANGLE*1000*(PWMInputTimes.PWM_Time3-0.0015);
-	else
-		refs[2] = 0;
-
-	// Set yaw rate reference limits
-	if (PWMInputTimes.PWM_Time4 >= 0.001 && PWMInputTimes.PWM_Time4 < 0.002)
-		refs[3] = 2*MAX_YAW_RATE*1000*(PWMInputTimes.PWM_Time4-0.0015);
-	else
-		refs[3] = 0;
-}
-
-/* ControlAllocation
- * @brief  Allocates the desired thrust force and moments to corresponding motor action.
- * 		   Data has been fitted to map thrust force [N] and roll/pitch/yaw moments [Nm] to
- * 		   motor output PWM widths [s] of each of the four motors.
- * @param  None
- * @retval None
- */
-void ControlAllocation(void)
-{
-	out_temp[0] = (Bq*L*U[0] - 4*Bq*Ct*L - M_SQRT2*Bq*U[1] - M_SQRT2*Bq*U[2] - At*L*U[3]) / ((double)4*At*Bq*L);
-	out_temp[1] = (Bq*L*U[0] - 4*Bq*Ct*L - M_SQRT2*Bq*U[1] + M_SQRT2*Bq*U[2] + At*L*U[3]) / ((double)4*At*Bq*L);
-	out_temp[2] = (Bq*L*U[0] - 4*Bq*Ct*L + M_SQRT2*Bq*U[1] + M_SQRT2*Bq*U[2] - At*L*U[3]) / ((double)4*At*Bq*L);
-	out_temp[3] = (Bq*L*U[0] - 4*Bq*Ct*L + M_SQRT2*Bq*U[1] - M_SQRT2*Bq*U[2] + At*L*U[3]) / ((double)4*At*Bq*L);
-
-	if(out_temp[0] >= 0)
-		t_out[0] = sqrtf(out_temp[0]);
-	else
-		t_out[0] = 0.001;
-
-	if(out_temp[1] >= 0)
-		t_out[1] = sqrtf(out_temp[1]);
-	else
-		t_out[1] = 0.001;
-
-	if(out_temp[2] >= 0)
-		t_out[2] = sqrtf(out_temp[2]);
-	else
-		t_out[2] = 0.001;
-
-	if(out_temp[3] >= 0)
-		t_out[3] = sqrtf(out_temp[3]);
-	else
-		t_out[3] = 0.001;
-
-// Set ESC limits
-	if(t_out[0] < 0.001)
-		t_out[0] = 0.001;
-	else if(t_out[0] > 0.002)
-		t_out[0] = 0.002;
-
-	if(t_out[1] < 0.001)
-		t_out[1] = 0.001;
-	else if(t_out[1] > 0.002)
-		t_out[1] = 0.002;
-
-	if(t_out[2] < 0.001)
-		t_out[2] = 0.001;
-	else if(t_out[2] > 0.002)
-		t_out[2] = 0.002;
-
-	if(t_out[3] < 0.001)
-		t_out[3] = 0.001;
-	else if(t_out[3] > 0.002)
-		t_out[3] = 0.002;
-}
-
-/* @getPWM_CCR
- * @brief	Recalculates a time pulse width to number of TIM4 clock ticks.
- * @param	t is the pulse width in seconds.
- * @retval	TIM4 clock ticks to be written to TIM4 CCR output.
- */
-uint16_t GetPWM_CCR(float t)
-{
-	return (uint16_t) ((float)(t * SystemCoreClock/((float)(TIM_GetPrescaler(TIM4)+1))));
 }

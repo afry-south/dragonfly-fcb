@@ -4,8 +4,8 @@
 * @author  ÅF Dragonfly - Embedded Systems
 * @version v. 0.0.1
 * @date    2014-09-26
-* @brief   Functions for the on-board MEMS sensor utilities
-* 		   NOTE: dps = degrees per second (angular velocity unit)
+* @brief   Functions for reading and filtering the on-board MEMS sensor
+* 		   utilities.
 ******************************************************************************
 **/
 
@@ -18,13 +18,25 @@ __IO float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};
 
 float GyroOffsets[3] = {0.0f};
 uint16_t GyroCalSample = 0;
-float CalRollSum = 0.0, CalPitchSum = 0.0, CalYawSum = 0.0;
+double CalRollSum = 0.0, CalPitchSum = 0.0, CalYawSum = 0.0;
 __IO char GyroCalibrated = 0;
 
 float AccOffsets[3] = {0.0f};
 uint16_t AccCalSample = 0;
 float CalAccXSum = 0.0, CalAccYSum = 0.0, CalAccZSum = 0.0;
 __IO char AccCalibrated = 0;
+
+float MagOffsets[3] = {0.0f};
+uint16_t MagCalSample = 0;
+float CalMagXMax = 1.0, CalMagXMin = -1.0, CalMagYMax = 1.0, CalMagYMin = -1.0, CalMagZMax = 1.0, CalMagZMin = -1.0;
+float MagXNorm = 1.0, MagYNorm = 1.0, MagZNorm = 1.0;;
+__IO char MagCalibrated = 0;
+
+uint8_t ctrlx[2];
+char ctrlxIsRead = 0;
+
+uint8_t ctrlb = 0;
+char ctrlbIsRead = 0;
 
 //float MagOffsets[3] = {0.0f};
 //uint16_t MagCalSample = 0;
@@ -46,16 +58,16 @@ void GyroConfig(void)
 
 	  /* Configure Mems L3GD20 (See datasheet for more info) */
 	  L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
-	  L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_2;
+	  L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_1;
 	  L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
-	  L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_2;
+	  L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_3;
 	  L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;
 	  L3GD20_InitStructure.Endianness = L3GD20_BLE_LSB;
 	  L3GD20_InitStructure.Full_Scale = L3GD20_FULLSCALE_250;
 	  L3GD20_Init(&L3GD20_InitStructure);
 
 	  L3GD20_FilterStructure.HighPassFilter_Mode_Selection = L3GD20_HPM_NORMAL_MODE_RES;
-	  L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency = L3GD20_HPFCF_9;
+	  L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency = L3GD20_HPFCF_0;
 	  L3GD20_FilterConfig(&L3GD20_FilterStructure) ;
 
 	  L3GD20_FilterCmd(L3GD20_HIGHPASSFILTER_ENABLE);
@@ -72,7 +84,7 @@ void GyroReadAngRate(__IO float* pfData)
   int16_t RawData[3] = {0};
   uint8_t tmpreg = 0;
   float sensitivity = 0;
-  int i =0;
+  int i = 0;
 
   L3GD20_Read(&tmpreg,L3GD20_CTRL_REG4_ADDR,1);
 
@@ -117,7 +129,7 @@ void GyroReadAngRate(__IO float* pfData)
 }
 
 /** CalibrateGyro
-  * @brief  Calculate the Gyroscope sensor offset (Median, TODO make 3-point median and then run average)
+  * @brief  Calculate the Gyroscope sensor offset
   * @param  None.
   * @retval None.
   */
@@ -125,7 +137,6 @@ void CalibrateGyro(void)
 {
 	if(!GyroCalibrated)
 	{
-		GyroReadAngRate(GyroBuffer);
 		CalRollSum += GyroBuffer[0];
 		CalPitchSum += GyroBuffer[1];
 		CalYawSum += GyroBuffer[2];
@@ -160,34 +171,35 @@ void CompassConfig(void)
 {
   LSM303DLHCMag_InitTypeDef LSM303DLHC_InitStructure;
   LSM303DLHCAcc_InitTypeDef LSM303DLHCAcc_InitStructure;
-  LSM303DLHCAcc_FilterConfigTypeDef LSM303DLHCFilter_InitStructure;
+//  LSM303DLHCAcc_FilterConfigTypeDef LSM303DLHCFilter_InitStructure;
 
   /* Configure MEMS magnetometer main parameters: temp, working mode, full Scale and Data rate */
   LSM303DLHC_InitStructure.Temperature_Sensor = LSM303DLHC_TEMPSENSOR_DISABLE;
   LSM303DLHC_InitStructure.MagOutput_DataRate = LSM303DLHC_ODR_75_HZ;
-  LSM303DLHC_InitStructure.MagFull_Scale = LSM303DLHC_FS_4_0_GA;
+  LSM303DLHC_InitStructure.MagFull_Scale = LSM303DLHC_FS_1_3_GA;
   LSM303DLHC_InitStructure.Working_Mode = LSM303DLHC_CONTINUOS_CONVERSION;
   LSM303DLHC_MagInit(&LSM303DLHC_InitStructure);
 
    /* Fill the accelerometer structure */
   LSM303DLHCAcc_InitStructure.Power_Mode = LSM303DLHC_NORMAL_MODE;
-  LSM303DLHCAcc_InitStructure.AccOutput_DataRate = LSM303DLHC_ODR_100_HZ;
+  LSM303DLHCAcc_InitStructure.AccOutput_DataRate = LSM303DLHC_ODR_50_HZ;
   LSM303DLHCAcc_InitStructure.Axes_Enable = LSM303DLHC_AXES_ENABLE;
   LSM303DLHCAcc_InitStructure.AccFull_Scale = LSM303DLHC_FULLSCALE_2G;
   LSM303DLHCAcc_InitStructure.BlockData_Update = LSM303DLHC_BlockUpdate_Continous;
   LSM303DLHCAcc_InitStructure.Endianness = LSM303DLHC_BLE_LSB;
-  LSM303DLHCAcc_InitStructure.High_Resolution = LSM303DLHC_HR_ENABLE;
+  LSM303DLHCAcc_InitStructure.High_Resolution = LSM303DLHC_HR_DISABLE;
   /* Configure the accelerometer main parameters */
   LSM303DLHC_AccInit(&LSM303DLHCAcc_InitStructure);
 
-  /* Fill the accelerometer LPF structure */
-  LSM303DLHCFilter_InitStructure.HighPassFilter_Mode_Selection = LSM303DLHC_HPM_NORMAL_MODE;
-  LSM303DLHCFilter_InitStructure.HighPassFilter_CutOff_Frequency = LSM303DLHC_HPFCF_64;
-  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI1 = LSM303DLHC_HPF_AOI1_DISABLE;
-  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI2 = LSM303DLHC_HPF_AOI2_DISABLE;
+  /* Fill the accelerometer HPF structure */
+//  LSM303DLHCFilter_InitStructure.HighPassFilter_Mode_Selection = LSM303DLHC_HPM_NORMAL_MODE;
+//  LSM303DLHCFilter_InitStructure.HighPassFilter_CutOff_Frequency = LSM303DLHC_HPFCF_8;
+//  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI1 = LSM303DLHC_HPF_AOI1_DISABLE;
+//  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI2 = LSM303DLHC_HPF_AOI2_DISABLE;
 
   /* Configure the accelerometer LPF main parameters */
-  LSM303DLHC_AccFilterConfig(&LSM303DLHCFilter_InitStructure);
+//  LSM303DLHC_AccFilterConfig(&LSM303DLHCFilter_InitStructure);
+  LSM303DLHC_AccFilterCmd(DISABLE);
 }
 
 /**
@@ -198,13 +210,18 @@ void CompassConfig(void)
 void CompassReadAcc(__IO float* pfData)
 {
   int16_t pnRawData[3];
-  uint8_t ctrlx[2];
   uint8_t buffer[6], cDivider;
   uint8_t i = 0;
   float LSM_Acc_Sensitivity = LSM_Acc_Sensitivity_2g;
 
   /* Read the register content */
-  LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlx,2);
+  if(ctrlxIsRead == 0)
+  {
+	  LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlx, 2);
+	  ctrlxIsRead = 1;
+  }
+
+  /* Read acceleration data */
   LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, buffer, 6);
 
   if(ctrlx[1]&0x40)
@@ -226,8 +243,7 @@ void CompassReadAcc(__IO float* pfData)
       pnRawData[i]=((int16_t)((uint16_t)buffer[2*i] << 8) + buffer[2*i+1])/cDivider;
   }
   /* Read the register content */
-  LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlx,2);
-
+  //LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlx, 2);
 
   if(ctrlx[1]&0x40)
   {
@@ -261,7 +277,6 @@ void CompassReadAcc(__IO float* pfData)
     pfData[0] = (float)pnRawData[0]/LSM_Acc_Sensitivity / 1000 * g - AccOffsets[0];		// Output in m/(s^2)
     pfData[1] = (float)pnRawData[1]/LSM_Acc_Sensitivity / 1000 * g - AccOffsets[1];
     pfData[2] = (float)pnRawData[2]/LSM_Acc_Sensitivity / 1000 * g - AccOffsets[2];
-
 }
 
 /** CalibrateAcc
@@ -273,7 +288,6 @@ void CalibrateAcc(void)
 {
 	if(!AccCalibrated)
 	{
-		CompassReadAcc(AccBuffer);
 		CalAccXSum += AccBuffer[0];
 		CalAccYSum += AccBuffer[1];
 		CalAccZSum += AccBuffer[2];
@@ -307,19 +321,18 @@ char GetAccCalibrated(void)
 void CompassReadMag(__IO float* pfData)
 {
   static uint8_t buffer[6] = {0};
-  uint8_t CTRLB = 0;
   uint16_t Magn_Sensitivity_XY = 0, Magn_Sensitivity_Z = 0;
-  uint8_t i =0;
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M, &CTRLB, 1);
 
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M, buffer, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_L_M, buffer+1, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_M, buffer+2, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_M, buffer+3, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_H_M, buffer+4, 1);
-  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_M, buffer+5, 1);
+  if(ctrlbIsRead == 0)
+  {
+	  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M, &ctrlb, 1);
+	  ctrlbIsRead = 1;
+  }
+
+  LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M, buffer, 6);
+
   /* Switch the sensitivity set in the CRTLB*/
-  switch(CTRLB & 0xE0)
+  switch(ctrlb & 0xE0)
   {
   case LSM303DLHC_FS_1_3_GA:
     Magn_Sensitivity_XY = LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
@@ -352,60 +365,63 @@ void CompassReadMag(__IO float* pfData)
   }
 
   // Outputs data in g (Gauss), measurement of magnetic flux density
-  for(i=0; i<2; i++)
-  {
-    pfData[i]=(float)((int16_t)(((uint16_t)buffer[2*i] << 8) + buffer[2*i+1])*1000)/Magn_Sensitivity_XY;
-  }
-  pfData[2]=(float)((int16_t)(((uint16_t)buffer[4] << 8) + buffer[5])*1000)/Magn_Sensitivity_Z;
+  pfData[0]=(float) (((int16_t)(((uint16_t)buffer[0] << 8) + buffer[1])*1000)/Magn_Sensitivity_XY - MagOffsets[0])/MagXNorm;
+  pfData[1]=(float) (((int16_t)(((uint16_t)buffer[4] << 8) + buffer[5])*1000)/Magn_Sensitivity_XY - MagOffsets[1])/MagYNorm;
+  pfData[2]=(float) (((int16_t)(((uint16_t)buffer[2] << 8) + buffer[3])*1000)/Magn_Sensitivity_Z - MagOffsets[2])/MagZNorm;
 }
 
 /** CalibrateMag
-  * @brief  Calculate the Magnetometer sensor offset
+  * @brief  Calibrate for the hard-iron distortion offset
   * @param  None.
   * @retval None.
   */
-//void CalibrateMag(void)
-//{
-//	if(!MagCalibrated)
-//	{
-//		CompassReadMag(MagBuffer);
-//		CalMagXSum += MagBuffer[0];
-//		CalMagYSum += MagBuffer[1];
-//		CalMagZSum += MagBuffer[2];
-//		MagCalSample++;
-//
-//		if(MagCalSample >= MAG_CALIBRATION_SAMPLES)
-//		{
-//			MagOffsets[0] = CalMagXSum/((float)MAG_CALIBRATION_SAMPLES);
-//			MagOffsets[1] = CalMagYSum/((float)MAG_CALIBRATION_SAMPLES);
-//			MagOffsets[2] = CalMagZSum/((float)MAG_CALIBRATION_SAMPLES);
-//
-//		    MagYawOffset = (float) (atan2f((float)MagOffsets[1], (float)MagOffsets[0]));
-//
-//			MagCalibrated = 1;
-//		}
-//	}
-//}
+void CalibrateMag(void)
+{
+	if(!MagCalibrated)
+	{
+		if(MagBuffer[0] > CalMagXMax)
+			CalMagXMax = MagBuffer[0];
+		if(MagBuffer[0] < CalMagXMin)
+			CalMagXMin = MagBuffer[0];
+
+		if(MagBuffer[1] > CalMagYMax)
+			CalMagYMax = MagBuffer[1];
+		if(MagBuffer[1] < CalMagYMin)
+			CalMagYMin = MagBuffer[1];
+
+		if(MagBuffer[2] > CalMagZMax)
+			CalMagZMax = MagBuffer[2];
+		if(MagBuffer[2] < CalMagZMin)
+			CalMagZMin = MagBuffer[2];
+
+		MagCalSample++;
+
+		if(MagCalSample >= MAG_CALIBRATION_SAMPLES)
+		{
+			/* Hard-iron distortion calibration */
+			MagOffsets[0] = (CalMagXMax+CalMagXMin)/2;
+			MagOffsets[1] = (CalMagYMax+CalMagYMin)/2;
+			// MagOffsets[2] = 0.0;
+
+			/* Scale factor calibration */
+			MagXNorm = CalMagXMax - MagOffsets[0];
+			MagYNorm = CalMagYMax - MagOffsets[1];
+			MagZNorm = -CalMagZMin;
+
+			MagCalibrated = 1;
+		}
+	}
+}
 
 /** GetMagCalibrated
   * @brief  Returns 1 if magnetometer has been calibrated
   * @param  None.
   * @retval None.
   */
-//char GetMagCalibrated(void)
-//{
-//	return MagCalibrated;
-//}
-
-/** GetMagYawOffset
-  * @brief  Returns they yaw angle offset (magnetometer)
-  * @param  None.
-  * @retval None.
-  */
-//float GetMagYawOffset(void)
-//{
-//	return MagYawOffset;
-//}
+char GetMagCalibrated(void)
+{
+	return MagCalibrated;
+}
 
 /* GetBodyAttitude
  * @brief  Discrete integration of angular rate
@@ -414,9 +430,9 @@ void CompassReadMag(__IO float* pfData)
  */
 void GetBodyAttitude(float *pfData, float h)
 {
-	/* Complementary sensor fusion filter. TODO: Possibly Kalman or Madgwick sensor filter */
-	pfData[0] += 0.98*GyroBuffer[0]*h; + 0.02*atan2f(-AccBuffer[1], AccBuffer[2]);	// Roll angle
-	pfData[1] += 0.98*GyroBuffer[1]*h; + 0.02*atan2f(AccBuffer[0], AccBuffer[2]);	// Pitch angle
+	/* Complementary sensor fusion filter. TODO: Kalman filter */
+	pfData[0] += GyroBuffer[0]*h; + atan2f(-AccBuffer[1], AccBuffer[2]);	// Roll angle
+	pfData[1] += GyroBuffer[1]*h; + atan2f(AccBuffer[0], AccBuffer[2]);	// Pitch angle
 	pfData[2] += GyroBuffer[2]*h; 													// Yaw angle
 }
 
@@ -435,6 +451,28 @@ void GetBodyVelocity(float *pfData, float h)
 float GetYawRate(void)
 {
 	return GyroBuffer[2];
+}
+
+float GetHeading(void)
+{
+	float fNormAcc = sqrt((AccBuffer[0]*AccBuffer[0])+(AccBuffer[1]*AccBuffer[1])+(AccBuffer[2]*AccBuffer[2]));
+
+	float fSinRoll = -AccBuffer[1]/fNormAcc;
+	float fCosRoll = sqrt(1.0-(fSinRoll * fSinRoll));
+	float fSinPitch = AccBuffer[0]/fNormAcc;
+	float fCosPitch = sqrt(1.0-(fSinPitch * fSinPitch));
+
+	float fTiltedX = MagBuffer[0]*fCosPitch + MagBuffer[2]*fSinPitch;
+	float fTiltedY = MagBuffer[0]*fSinRoll*fSinPitch + MagBuffer[1]*fCosRoll - MagBuffer[2]*fSinRoll*fCosPitch;
+
+	float HeadingValue = atan2f(fTiltedY, fTiltedX);
+
+	if (HeadingValue < 0)
+	{
+	  HeadingValue = HeadingValue + 2*PI;
+	}
+
+	return HeadingValue;
 }
 
 /* ReadSensors

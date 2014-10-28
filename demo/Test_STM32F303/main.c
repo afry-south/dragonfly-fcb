@@ -237,8 +237,10 @@ int main(void)
       DataReady = 0x00;
       
       /* Read Compass data */
+      GPIO_SetBits(GPIOA, GPIO_Pin_8); // DEBUG
       Demo_CompassReadMag(MagBuffer);
       Demo_CompassReadAcc(AccBuffer);
+      GPIO_ResetBits(GPIOA, GPIO_Pin_8); // DEBUG
       
       for(i=0;i<3;i++)
         AccBuffer[i] /= 100.0f;
@@ -531,6 +533,16 @@ void Demo_GyroReadAngRate (float* pfData)
   */
 void Demo_CompassConfig(void)
 {
+
+	GPIO_InitTypeDef  GPIO_InitStructure;
+	/* Debug/test pins (TODO: delete later) */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
   LSM303DLHCMag_InitTypeDef LSM303DLHC_InitStructure;
   LSM303DLHCAcc_InitTypeDef LSM303DLHCAcc_InitStructure;
   LSM303DLHCAcc_FilterConfigTypeDef LSM303DLHCFilter_InitStructure;

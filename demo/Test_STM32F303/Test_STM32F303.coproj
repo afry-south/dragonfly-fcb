@@ -77,21 +77,21 @@
     <File name="stm_usb/inc/usb_int.h" path="stm_usb/inc/usb_int.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_exti.h" path="stm_lib/inc/stm32f30x_exti.h" type="1"/>
     <File name="utils/stm32f3_discovery.c" path="utils/stm32f3_discovery.c" type="1"/>
-    <File name="stm_lib/src/stm32f30x_dbgmcu.c" path="stm_lib/src/stm32f30x_dbgmcu.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_spi.h" path="stm_lib/inc/stm32f30x_spi.h" type="1"/>
-    <File name="stm_usb/inc/usb_sil.h" path="stm_usb/inc/usb_sil.h" type="1"/>
+    <File name="stm_lib/src/stm32f30x_dbgmcu.c" path="stm_lib/src/stm32f30x_dbgmcu.c" type="1"/>
     <File name="stm_usb/inc/usb_init.h" path="stm_usb/inc/usb_init.h" type="1"/>
+    <File name="stm_usb/inc/usb_sil.h" path="stm_usb/inc/usb_sil.h" type="1"/>
     <File name="usb_istr.c" path="usb_istr.c" type="1"/>
     <File name="usb_prop.h" path="usb_prop.h" type="1"/>
-    <File name="cmsis/core_cm4_simd.h" path="cmsis/core_cm4_simd.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_i2c.h" path="stm_lib/inc/stm32f30x_i2c.h" type="1"/>
+    <File name="cmsis/core_cm4_simd.h" path="cmsis/core_cm4_simd.h" type="1"/>
     <File name="cmsis/core_cmFunc.h" path="cmsis/core_cmFunc.h" type="1"/>
     <File name="stm_usb/src/usb_mem.c" path="stm_usb/src/usb_mem.c" type="1"/>
     <File name="cmsis/arm_common_tables.h" path="cmsis/arm_common_tables.h" type="1"/>
     <File name="usb_pwr.c" path="usb_pwr.c" type="1"/>
     <File name="cmsis/core_cm0.h" path="cmsis/core_cm0.h" type="1"/>
-    <File name="stm_lib/src/stm32f30x_i2c.c" path="stm_lib/src/stm32f30x_i2c.c" type="1"/>
     <File name="main.h" path="main.h" type="1"/>
+    <File name="stm_lib/src/stm32f30x_i2c.c" path="stm_lib/src/stm32f30x_i2c.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_adc.h" path="stm_lib/inc/stm32f30x_adc.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_rtc.h" path="stm_lib/inc/stm32f30x_rtc.h" type="1"/>
     <File name="stm_lib/inc/stm32f30x_syscfg.h" path="stm_lib/inc/stm32f30x_syscfg.h" type="1"/>
@@ -132,8 +132,8 @@
     <File name="stm_lib/inc/stm32f30x_pwr.h" path="stm_lib/inc/stm32f30x_pwr.h" type="1"/>
     <File name="main.c" path="main.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_misc.h" path="stm_lib/inc/stm32f30x_misc.h" type="1"/>
-    <File name="stm_usb/inc/usb_core.h" path="stm_usb/inc/usb_core.h" type="1"/>
     <File name="stm_lib/src/stm32f30x_exti.c" path="stm_lib/src/stm32f30x_exti.c" type="1"/>
+    <File name="stm_usb/inc/usb_core.h" path="stm_usb/inc/usb_core.h" type="1"/>
     <File name="cmsis_boot/startup/startup_stm32f303.c" path="cmsis_boot/startup/startup_stm32f303.c" type="1"/>
     <File name="cmsis_boot" path="" type="2"/>
     <File name="utils/stm32f3_discovery_l3gd20.h" path="utils/stm32f3_discovery_l3gd20.h" type="1"/>
@@ -171,13 +171,13 @@
     <File name="stm_usb/inc/usb_lib.h" path="stm_usb/inc/usb_lib.h" type="1"/>
     <File name="stm_usb/src/usb_int.c" path="stm_usb/src/usb_int.c" type="1"/>
     <File name="stm_lib/inc/stm32f30x_dac.h" path="stm_lib/inc/stm32f30x_dac.h" type="1"/>
-    <File name="usb_istr.h" path="usb_istr.h" type="1"/>
     <File name="stm_lib/src/stm32f30x_comp.c" path="stm_lib/src/stm32f30x_comp.c" type="1"/>
-    <File name="stm_lib/src/stm32f30x_opamp.c" path="stm_lib/src/stm32f30x_opamp.c" type="1"/>
+    <File name="usb_istr.h" path="usb_istr.h" type="1"/>
     <File name="stm_lib/src/stm32f30x_flash.c" path="stm_lib/src/stm32f30x_flash.c" type="1"/>
+    <File name="stm_lib/src/stm32f30x_opamp.c" path="stm_lib/src/stm32f30x_opamp.c" type="1"/>
     <File name="stm_lib/inc" path="" type="2"/>
-    <File name="usb_endp.c" path="usb_endp.c" type="1"/>
     <File name="stm32f30x_it.c" path="stm32f30x_it.c" type="1"/>
+    <File name="usb_endp.c" path="usb_endp.c" type="1"/>
     <File name="stm_usb/inc" path="" type="2"/>
     <File name="usb_desc.c" path="usb_desc.c" type="1"/>
   </Files>

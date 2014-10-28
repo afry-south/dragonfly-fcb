@@ -49,11 +49,11 @@
       <target file="stm32f30x_rcc.o" lastModified="148e593f911">
          <source file="..\..\..\stm_lib\src\stm32f30x_rcc.c" lastModified="148b1cac27d"/>
       </target>
-      <target file="stm32f30x_dac.o" lastModified="148e59410f5">
-         <source file="..\..\..\stm_lib\src\stm32f30x_dac.c" lastModified="148b1cac26d"/>
-      </target>
       <target file="stm32f30x_can.o" lastModified="148e5940f24">
          <source file="..\..\..\stm_lib\src\stm32f30x_can.c" lastModified="148b1cac26a"/>
+      </target>
+      <target file="stm32f30x_dac.o" lastModified="148e59410f5">
+         <source file="..\..\..\stm_lib\src\stm32f30x_dac.c" lastModified="148b1cac26d"/>
       </target>
       <target file="hw_config.o" lastModified="148e593ff30">
          <source file="..\..\..\hw_config.c" lastModified="148b1cac244"/>
@@ -100,23 +100,23 @@
       <target file="stm32f30x_syscfg.o" lastModified="148e5940d17">
          <source file="..\..\..\stm_lib\src\stm32f30x_syscfg.c" lastModified="148b1cac28d"/>
       </target>
-      <target file="main.o" lastModified="148e594042e">
-         <source file="..\..\..\main.c" lastModified="148e5718f4d"/>
-      </target>
-      <target file="stm32f3_discovery_l3gd20.o" lastModified="148e5940b64">
-         <source file="..\..\..\utils\stm32f3_discovery_l3gd20.c" lastModified="148b1cac597"/>
+      <target file="main.o" lastModified="14932722326">
+         <source file="..\..\..\main.c" lastModified="14932721754"/>
       </target>
       <target file="stm32f3_discovery_lsm303dlhc.o" lastModified="148e593f9d1">
          <source file="..\..\..\utils\stm32f3_discovery_lsm303dlhc.c" lastModified="148b1cac59a"/>
       </target>
+      <target file="stm32f3_discovery_l3gd20.o" lastModified="148e5940b64">
+         <source file="..\..\..\utils\stm32f3_discovery_l3gd20.c" lastModified="148b1cac597"/>
+      </target>
       <target file="usb_int.o" lastModified="148e593fcf3">
          <source file="..\..\..\stm_usb\src\usb_int.c" lastModified="148b1cac57a"/>
       </target>
-      <target file="usb_pwr.o" lastModified="148e5940288">
-         <source file="..\..\..\usb_pwr.c" lastModified="148b1cac582"/>
-      </target>
       <target file="stm32f30x_opamp.o" lastModified="148e593f653">
          <source file="..\..\..\stm_lib\src\stm32f30x_opamp.c" lastModified="148b1cac27a"/>
+      </target>
+      <target file="usb_pwr.o" lastModified="148e5940288">
+         <source file="..\..\..\usb_pwr.c" lastModified="148b1cac582"/>
       </target>
       <target file="usb_mem.o" lastModified="148e5940fb3">
          <source file="..\..\..\stm_usb\src\usb_mem.c" lastModified="148b1cac57b"/>

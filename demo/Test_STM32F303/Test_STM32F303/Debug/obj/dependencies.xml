@@ -284,7 +284,7 @@
          <include file="..\..\..\stm_lib\inc\stm32f30x_i2c.h"/>
          <include file="..\..\..\stm_lib\inc\stm32f30x_rcc.h"/>
       </source>
-      <source file="..\..\..\main.c" lastModified="148e5718f4d">
+      <source file="..\..\..\main.c" lastModified="14932721754">
          <include file="..\..\..\main.h"/>
       </source>
       <source file="..\..\..\stm_lib\src\stm32f30x_pwr.c" lastModified="148b1cac27b">

@@ -15,28 +15,24 @@
 </folder>
 </info>
 </editorArea>
-<editor activePart="true" focus="true" id="org.coocox.builder.ui.editors.ConfigEditor" name="" partName="Configuration" title="Configuration" tooltip="" workbook="DefaultEditorWorkbook">
-<input factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="1" verticalPosition="0"/>
-</input>
+<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" partName="main.c" path="C:/Users/A501632/Dragonfly/demo/Test_STM32F303/main.c" title="main.c" tooltip="C:/Users/A501632/Dragonfly/demo/Test_STM32F303/main.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/Test_STM32F303/main.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="293" selectionOffset="3488" selectionTopPixel="1080"/>
 </editor>
 </editors>
 <views>
 <view id="org.eclipse.debug.ui.ExpressionView" partName="Expressions">
 <viewState>
-<ExpressionKeySet ExpKeys="Buffer[0],"/>
+<ExpressionKeySet ExpKeys="BodyVelocity,BodyAttitude,t_out,GyroBuffer,AccBuffer,Heading,HeadingValue,"/>
 </viewState>
 </view>
 <view id="org.coocox.builder.ui.views.ProjectView" partName="Project">
 <viewState CommonNavigator.LINKING_ENABLED="0" horizontalPosition="0" org.eclipse.ui.navigator.resources.workingSets.showTopLevelWorkingSets="0" verticalPosition="0">
 <expanded>
 <element path="/Test_STM32F303"/>
-<element path="/Test_STM32F303/cmsis"/>
-<element path="/Test_STM32F303/stm_lib"/>
-<element path="/Test_STM32F303/stm_lib/src"/>
 </expanded>
 <selection>
-<element path="/Test_STM32F303"/>
+<element path="/Test_STM32F303/main.c"/>
 </selection>
 </viewState>
 </view>
@@ -59,7 +55,7 @@
 </view>
 <view id="org.eclipse.debug.ui.VariableView" partName="Variables"/>
 </views>
-<perspectives activePart="org.coocox.builder.ui.views.ProjectView" activePerspective="org.coocox.builder.perspective.CoBuilder">
+<perspectives activePart="org.eclipse.cdt.ui.editor.CEditor" activePerspective="org.coocox.builder.perspective.CoBuilder">
 <perspective editorAreaTrimState="2" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.coocox.builder.ui.PerspectiveCoBuilder" id="org.coocox.builder.perspective.CoBuilder" label="CooCox CoBuilder"/>
 <alwaysOnActionSet id="org.coocox.component.ui.actionSet"/>
@@ -110,7 +106,7 @@
 <page content="org.eclipse.ui.internal.introview" label="LabelNotFound"/>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.ui.internal.ViewStack@178d933" ratio="0.69957536" ratioLeft="659" ratioRight="283" relationship="4" relative="org.eclipse.ui.internal.ViewStack@6dfd69">
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@178d933" ratio="0.799787" ratioLeft="751" ratioRight="188" relationship="4" relative="org.eclipse.ui.internal.ViewStack@6dfd69">
 <folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
 <page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
@@ -191,8 +187,8 @@
 <hide_toolbar_item_id id="org.eclipse.ui.edit.text.toggleShowSelectedElementOnly"/>
 <hide_toolbar_item_id id="org.coocox.builder.ui.build"/>
 <hide_toolbar_item_id id="org.coocox.welcome.ui.action.welcome"/>
-<hide_toolbar_item_id id="org.coocox.component.ui.ShowRepositoryAction"/>
 <hide_toolbar_item_id id="org.coocox.codebugger.configuration.coideProgramDownloadAction"/>
+<hide_toolbar_item_id id="org.coocox.component.ui.ShowRepositoryAction"/>
 <view id="org.eclipse.ui.console.ConsoleView"/>
 <view id="org.eclipse.debug.ui.DebugView"/>
 <view id="org.coocox.codebugger.trace.ui.traceview"/>
@@ -245,167 +241,17 @@
 <navigationHistory>
 <editors>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/Test_STM32F303/main.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/Test_STM32F303/utils/stm32f3_discovery_l3gd20.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/Test_STM32F303/stm_lib/src/stm32f30x_spi.c"/>
-<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="1" verticalPosition="0"/>
-</editor>
-<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="1" verticalPosition="0"/>
-</editor>
-<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="6" verticalPosition="0"/>
-</editor>
-<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="0" verticalPosition="0"/>
-</editor>
-<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="0" verticalPosition="0"/>
-</editor>
-<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="1" verticalPosition="0"/>
-</editor>
-<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="1" verticalPosition="0"/>
-</editor>
-<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor">
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="1" verticalPosition="0"/>
-</editor>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/Test_STM32F303/utils/stm32f3_discovery.c"/>
 </editors>
 <item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14301" y="0"/>
+<position info="not_deleted" x="3568" y="16"/>
 </item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14443" y="0"/>
+<item historyLabel="stm32f3_discovery.c" index="1">
+<position info="not_deleted" x="3387" y="839"/>
 </item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="6052" y="0"/>
+<item active="true" historyLabel="main.c" index="0">
+<position info="not_deleted" x="3568" y="16"/>
 </item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="6166" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="6052" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14125" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14155" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14184" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14207" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14233" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14248" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9284" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="14444" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9397" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9505" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9579" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="13720" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="13760" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="13964" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="14036" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="14076" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="14280" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="14329" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9685" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9806" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9851" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9873" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9685" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9960" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9981" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14301" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14443" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="6052" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="14248" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9284" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="9579" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="13720" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="13760" y="0"/>
-</item>
-<item historyLabel="stm32f3_discovery_l3gd20.c" index="1">
-<position info="not_deleted" x="13964" y="0"/>
-</item>
-<item historyLabel="stm32f30x_spi.c" index="2">
-<position info="not_deleted" x="34671" y="0"/>
-</item>
-<item historyLabel="stm32f30x_spi.c" index="2">
-<position info="not_deleted" x="34776" y="0"/>
-</item>
-<item historyLabel="stm32f30x_spi.c" index="2">
-<position info="not_deleted" x="34807" y="0"/>
-</item>
-<item historyLabel="Configuration" index="3"/>
-<item historyLabel="Configuration" index="4"/>
-<item historyLabel="Configuration" index="5"/>
-<item historyLabel="Configuration" index="6"/>
-<item historyLabel="Configuration" index="7"/>
-<item historyLabel="Configuration" index="8"/>
-<item historyLabel="Configuration" index="9"/>
-<item active="true" historyLabel="Configuration" index="10"/>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
 </page>
@@ -413,44 +259,14 @@
 <actionBarAdvisor/>
 </window>
 <mruList>
-<file factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor" name="" tooltip="">
-<persistable>
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="1" verticalPosition="0"/>
-</persistable>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3_discovery.c" tooltip="Test_STM32F303/utils/stm32f3_discovery.c">
+<persistable path="/Test_STM32F303/utils/stm32f3_discovery.c"/>
 </file>
-<file factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor" name="" tooltip="">
-<persistable>
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="1" verticalPosition="0"/>
-</persistable>
-</file>
-<file factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.builder.ui.editors.ConfigEditor" name="" tooltip="">
-<persistable>
-<org.coocox.builder.ui.editors.ConfigEditor horizontalPosition="0" subTagIndex="1" verticalPosition="0"/>
-</persistable>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="hw_config.c" tooltip="fcb/hw_config.c">
-<persistable path="/fcb/hw_config.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f30x.S" tooltip="fcb/cmsis_boot/startup/startup_stm32f30x.S">
-<persistable path="/fcb/cmsis_boot/startup/startup_stm32f30x.S"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.c" tooltip="fcb/sensors.c">
-<persistable path="/fcb/sensors.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="core_cm4.h" tooltip="fcb/cmsis/core_cm4.h">
-<persistable path="/fcb/cmsis/core_cm4.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.h" tooltip="fcb/main.h">
-<persistable path="/fcb/main.h"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="Test_STM32F303/main.c">
+<persistable path="/Test_STM32F303/main.c"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="fcb/main.c">
 <persistable path="/fcb/main.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="hw_config.h" tooltip="fcb/hw_config.h">
-<persistable path="/fcb/hw_config.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3_discovery_l3gd20.h" tooltip="fcb/utils/stm32f3_discovery_l3gd20.h">
-<persistable path="/fcb/utils/stm32f3_discovery_l3gd20.h"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="control.h" tooltip="fcb/control.h">
 <persistable path="/fcb/control.h"/>
@@ -458,11 +274,35 @@
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="control.c" tooltip="fcb/control.c">
 <persistable path="/fcb/control.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f30x.S" tooltip="fcb/cmsis_boot/startup/startup_stm32f30x.S">
-<persistable path="/fcb/cmsis_boot/startup/startup_stm32f30x.S"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3_discovery_l3gd20.h" tooltip="fcb/utils/stm32f3_discovery_l3gd20.h">
+<persistable path="/fcb/utils/stm32f3_discovery_l3gd20.h"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.c" tooltip="fcb/sensors.c">
-<persistable path="/fcb/sensors.c"/>
+<file factoryID="org.eclipse.cdt.ui.ExternalEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="math.h" tooltip="C:\Program Files (x86)\GNU Tools ARM Embedded\4.8 2014q2\arm-none-eabi\include\math.h">
+<persistable path="C:\Program Files (x86)\GNU Tools ARM Embedded\4.8 2014q2\arm-none-eabi\include\math.h" project="fcb"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="core_cm4.h" tooltip="fcb/cmsis/inc/core_cm4.h">
+<persistable path="/fcb/cmsis/inc/core_cm4.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x.h" tooltip="fcb/cmsis_boot/stm32f30x.h">
+<persistable path="/fcb/cmsis_boot/stm32f30x.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="arm_math.h" tooltip="fcb/cmsis/inc/arm_math.h">
+<persistable path="/fcb/cmsis/inc/arm_math.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="arm_cos_f32.c" tooltip="fcb/cmsis/dsp_lib/src/fast_math/arm_cos_f32.c">
+<persistable path="/fcb/cmsis/dsp_lib/src/fast_math/arm_cos_f32.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="hw_config.c" tooltip="Test_STM32F303/hw_config.c">
+<persistable path="/Test_STM32F303/hw_config.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3_discovery_lsm303dlhc.c" tooltip="fcb/utils/stm32f3_discovery_lsm303dlhc.c">
+<persistable path="/fcb/utils/stm32f3_discovery_lsm303dlhc.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3_discovery_l3gd20.c" tooltip="Test_STM32F303/utils/stm32f3_discovery_l3gd20.c">
+<persistable path="/Test_STM32F303/utils/stm32f3_discovery_l3gd20.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="arm_math.h" tooltip="fcb/cmsis/inc/arm_math.h">
+<persistable path="/fcb/cmsis/inc/arm_math.h"/>
 </file>
 </mruList>
 </workbench>

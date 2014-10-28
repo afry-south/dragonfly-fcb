@@ -20,9 +20,8 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private functions -----------------------------------------------*/
-
-
 static void Init(void);
+static void InitLEDs(void);
 
 /**
 * @brief  Main program.
@@ -46,10 +45,14 @@ int main(void)
 
 static void Init(void)
 {
+	/* Init on-board LEDs */
+	InitLEDs();
+
 	/* Setup sensors */
 	GyroConfig();
 	CompassConfig();
 
+	/* Config priority grouping setting */
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
 	/* TIM GPIO configuration */
@@ -64,13 +67,33 @@ static void Init(void)
 	TIM2_Setup();
 	/* Setup and start PWM input (GPIO, NVIC settings) */
 	PWM_In_Setup();
-	// TODO Calibrate RC input (min, max, midpoint) and map to according position and angle references
-	// TODO Failsafe - what happens when no RC signal is received?
 
 	/* Setup Timer 3 (used for program periodic execution) */
 	TIM3_Setup();
 	/* Setup and start Timer 3 for interrupt generation */
 	TIM3_SetupIRQ(); // NEEDS TO BE STARTED AFTER SENSOR CONFIG
+}
+
+static void InitLEDs(void)
+{
+	/* Initialize LEDs and User Button available on STM32F3-Discovery board */
+	STM_EVAL_LEDInit(LED3);
+	STM_EVAL_LEDInit(LED4);
+	STM_EVAL_LEDInit(LED5);
+	STM_EVAL_LEDInit(LED6);
+	STM_EVAL_LEDInit(LED7);
+	STM_EVAL_LEDInit(LED8);
+	STM_EVAL_LEDInit(LED9);
+	STM_EVAL_LEDInit(LED10);
+
+	STM_EVAL_LEDOff(LED3);
+	STM_EVAL_LEDOff(LED4);
+	STM_EVAL_LEDOff(LED5);
+	STM_EVAL_LEDOff(LED6);
+	STM_EVAL_LEDOff(LED7);
+	STM_EVAL_LEDOff(LED8);
+	STM_EVAL_LEDOff(LED9);
+	STM_EVAL_LEDOff(LED10);
 }
 
 #ifdef  USE_FULL_ASSERT

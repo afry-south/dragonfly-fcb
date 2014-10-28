@@ -514,7 +514,6 @@ uint16_t LSM303DLHC_Read(uint8_t DeviceAddr, uint8_t RegAddr, uint8_t* pBuffer, 
   if(NumByteToRead>1)
       RegAddr |= 0x80;
 
-  
   /* Send Register address */
   I2C_SendData(LSM303DLHC_I2C, (uint8_t)RegAddr);
   
@@ -523,8 +522,8 @@ uint16_t LSM303DLHC_Read(uint8_t DeviceAddr, uint8_t RegAddr, uint8_t* pBuffer, 
   while(I2C_GetFlagStatus(LSM303DLHC_I2C, I2C_ISR_TC) == RESET)
   {
     if((LSM303DLHC_Timeout--) == 0) return LSM303DLHC_TIMEOUT_UserCallback();
-  }  
-  
+  }
+
   /* Configure slave address, nbytes, reload, end mode and start or stop generation */
   I2C_TransferHandling(LSM303DLHC_I2C, DeviceAddr, NumByteToRead, I2C_AutoEnd_Mode, I2C_Generate_Start_Read);
   
@@ -570,7 +569,7 @@ static void LSM303DLHC_LowLevel_Init(void)
   GPIO_InitTypeDef GPIO_InitStructure;
   EXTI_InitTypeDef EXTI_InitStructure;
   I2C_InitTypeDef  I2C_InitStructure;
-  
+
   /* Enable the I2C periph */
   RCC_APB1PeriphClockCmd(LSM303DLHC_I2C_CLK, ENABLE);
   
@@ -633,10 +632,10 @@ static void LSM303DLHC_LowLevel_Init(void)
   
   /* Apply LSM303DLHC_I2C configuration after enabling it */
   I2C_Init(LSM303DLHC_I2C, &I2C_InitStructure);
-  
+
   /* LSM303DLHC_I2C Peripheral Enable */
   I2C_Cmd(LSM303DLHC_I2C, ENABLE);
-  
+
   /* Configure GPIO PINs to detect Interrupts */
   GPIO_InitStructure.GPIO_Pin = LSM303DLHC_I2C_INT1_PIN;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
