@@ -2,7 +2,7 @@
 <breakpoints>
 <breakpoint enabled="true" persistant="true" registered="true">
 <resource path="/fcb/control.c" type="1"/>
-<marker lineNumber="131" type="org.eclipse.cdt.debug.core.cLineBreakpointMarker">
+<marker lineNumber="80" type="org.eclipse.cdt.debug.core.cLineBreakpointMarker">
 <attrib name="enabled" value="true"/>
 <attrib name="org.eclipse.cdt.debug.core.condition" value=""/>
 <attrib name="org.eclipse.debug.core.id" value="org.eclipse.cdt.debug.core"/>
@@ -12,12 +12,12 @@
 <attrib name="persistant" value="true"/>
 <attrib name="org.eclipse.cdt.debug.core.breakpointType" value="0"/>
 <attrib name="workingset_id" value="org.eclipse.debug.ui.breakpointWorkingSet"/>
-<attrib name="message" value="Line breakpoint: control.c [line: 125]"/>
+<attrib name="message" value="Line breakpoint: control.c [line: 80]"/>
 <attrib name="registered" value="true"/>
 <attrib name="path" value="/fcb/control.c"/>
 <attrib name="org.eclipse.cdt.debug.core.sourceHandle" value="C:\Users\A501632\Dragonfly\fcb\control.c"/>
-<attrib name="org.eclipse.debug.core.enabled" value="true"/>
 <attrib name="org.eclipse.cdt.debug.core.ignoreCount" value="0"/>
+<attrib name="org.eclipse.debug.core.enabled" value="true"/>
 </marker>
 </breakpoint>
 </breakpoints>

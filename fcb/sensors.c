@@ -25,11 +25,12 @@ float AccOffsets[3] = {0.0f};
 uint16_t AccCalSample = 0;
 float CalAccXSum = 0.0, CalAccYSum = 0.0, CalAccZSum = 0.0;
 __IO char AccCalibrated = 0;
+char AccXCalibrated = 0, AccYCalibrated = 0, AccZCalibrated = 0;
 
 float MagOffsets[3] = {0.0f};
 uint16_t MagCalSample = 0;
 float CalMagXMax = 1.0, CalMagXMin = -1.0, CalMagYMax = 1.0, CalMagYMin = -1.0, CalMagZMax = 1.0, CalMagZMin = -1.0;
-float MagXNorm = 1.0, MagYNorm = 1.0, MagZNorm = 1.0;;
+float MagXNorm = 1.0, MagYNorm = 1.0, MagZNorm = 1.0;
 __IO char MagCalibrated = 0;
 
 uint8_t ctrlx[2];
@@ -37,12 +38,6 @@ char ctrlxIsRead = 0;
 
 uint8_t ctrlb = 0;
 char ctrlbIsRead = 0;
-
-//float MagOffsets[3] = {0.0f};
-//uint16_t MagCalSample = 0;
-//float CalMagXSum = 0.0, CalMagYSum = 0.0, CalMagZSum = 0.0;
-//volatile char MagCalibrated = 0;
-//volatile float MagYawOffset = 0.0;
 
 /* Private functions -----------------------------------------------*/
 
@@ -171,7 +166,7 @@ void CompassConfig(void)
 {
   LSM303DLHCMag_InitTypeDef LSM303DLHC_InitStructure;
   LSM303DLHCAcc_InitTypeDef LSM303DLHCAcc_InitStructure;
-//  LSM303DLHCAcc_FilterConfigTypeDef LSM303DLHCFilter_InitStructure;
+  LSM303DLHCAcc_FilterConfigTypeDef LSM303DLHCFilter_InitStructure;
 
   /* Configure MEMS magnetometer main parameters: temp, working mode, full Scale and Data rate */
   LSM303DLHC_InitStructure.Temperature_Sensor = LSM303DLHC_TEMPSENSOR_DISABLE;
@@ -184,7 +179,7 @@ void CompassConfig(void)
   LSM303DLHCAcc_InitStructure.Power_Mode = LSM303DLHC_NORMAL_MODE;
   LSM303DLHCAcc_InitStructure.AccOutput_DataRate = LSM303DLHC_ODR_50_HZ;
   LSM303DLHCAcc_InitStructure.Axes_Enable = LSM303DLHC_AXES_ENABLE;
-  LSM303DLHCAcc_InitStructure.AccFull_Scale = LSM303DLHC_FULLSCALE_2G;
+  LSM303DLHCAcc_InitStructure.AccFull_Scale = LSM303DLHC_FULLSCALE_4G;
   LSM303DLHCAcc_InitStructure.BlockData_Update = LSM303DLHC_BlockUpdate_Continous;
   LSM303DLHCAcc_InitStructure.Endianness = LSM303DLHC_BLE_LSB;
   LSM303DLHCAcc_InitStructure.High_Resolution = LSM303DLHC_HR_DISABLE;
@@ -192,14 +187,14 @@ void CompassConfig(void)
   LSM303DLHC_AccInit(&LSM303DLHCAcc_InitStructure);
 
   /* Fill the accelerometer HPF structure */
-//  LSM303DLHCFilter_InitStructure.HighPassFilter_Mode_Selection = LSM303DLHC_HPM_NORMAL_MODE;
-//  LSM303DLHCFilter_InitStructure.HighPassFilter_CutOff_Frequency = LSM303DLHC_HPFCF_8;
-//  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI1 = LSM303DLHC_HPF_AOI1_DISABLE;
-//  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI2 = LSM303DLHC_HPF_AOI2_DISABLE;
+  LSM303DLHCFilter_InitStructure.HighPassFilter_Mode_Selection = LSM303DLHC_HPM_NORMAL_MODE;
+  LSM303DLHCFilter_InitStructure.HighPassFilter_CutOff_Frequency = LSM303DLHC_HPFCF_8;
+  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI1 = LSM303DLHC_HPF_AOI1_DISABLE;
+  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI2 = LSM303DLHC_HPF_AOI2_DISABLE;
 
   /* Configure the accelerometer LPF main parameters */
-//  LSM303DLHC_AccFilterConfig(&LSM303DLHCFilter_InitStructure);
-  LSM303DLHC_AccFilterCmd(DISABLE);
+  LSM303DLHC_AccFilterConfig(&LSM303DLHCFilter_InitStructure);
+  LSM303DLHC_AccFilterCmd(ENABLE);
 }
 
 /**
@@ -315,7 +310,7 @@ char GetAccCalibrated(void)
 
 /**
   * @brief  calculate the magnetic field Magn.
-* @param  pfData: pointer to the data out
+  * @param  pfData: pointer to the data out
   * @retval None
   */
 void CompassReadMag(__IO float* pfData)
@@ -365,9 +360,9 @@ void CompassReadMag(__IO float* pfData)
   }
 
   // Outputs data in g (Gauss), measurement of magnetic flux density
-  pfData[0]=(float) (((int16_t)(((uint16_t)buffer[0] << 8) + buffer[1])*1000)/Magn_Sensitivity_XY - MagOffsets[0])/MagXNorm;
-  pfData[1]=(float) (((int16_t)(((uint16_t)buffer[4] << 8) + buffer[5])*1000)/Magn_Sensitivity_XY - MagOffsets[1])/MagYNorm;
-  pfData[2]=(float) (((int16_t)(((uint16_t)buffer[2] << 8) + buffer[3])*1000)/Magn_Sensitivity_Z - MagOffsets[2])/MagZNorm;
+  pfData[0] = (float) (((int16_t)(((uint16_t)buffer[0] << 8) + buffer[1])*1000)/Magn_Sensitivity_XY - MagOffsets[0])/MagXNorm;
+  pfData[1] = (float) (((int16_t)(((uint16_t)buffer[4] << 8) + buffer[5])*1000)/Magn_Sensitivity_XY - MagOffsets[1])/MagYNorm;
+  pfData[2] = (float) (((int16_t)(((uint16_t)buffer[2] << 8) + buffer[3])*1000)/Magn_Sensitivity_Z - MagOffsets[2])/MagZNorm;
 }
 
 /** CalibrateMag
@@ -399,14 +394,14 @@ void CalibrateMag(void)
 		if(MagCalSample >= MAG_CALIBRATION_SAMPLES)
 		{
 			/* Hard-iron distortion calibration */
-			MagOffsets[0] = (CalMagXMax+CalMagXMin)/2;
-			MagOffsets[1] = (CalMagYMax+CalMagYMin)/2;
-			// MagOffsets[2] = 0.0;
+			MagOffsets[0] = (CalMagXMax + CalMagXMin)/2.0;
+			MagOffsets[1] = (CalMagYMax + CalMagYMin)/2.0;
+			MagOffsets[2] = (CalMagZMax + CalMagZMin)/2.0;
 
 			/* Scale factor calibration */
-			MagXNorm = CalMagXMax - MagOffsets[0];
-			MagYNorm = CalMagYMax - MagOffsets[1];
-			MagZNorm = -CalMagZMin;
+			MagXNorm = (CalMagXMax - CalMagXMin)/2.0;
+			MagYNorm = (CalMagYMax - CalMagYMin)/2.0;
+			MagZNorm = (CalMagZMax - CalMagZMin)/2.0;
 
 			MagCalibrated = 1;
 		}
@@ -457,19 +452,20 @@ float GetHeading(void)
 {
 	float fNormAcc = sqrt((AccBuffer[0]*AccBuffer[0])+(AccBuffer[1]*AccBuffer[1])+(AccBuffer[2]*AccBuffer[2]));
 
+	/* TODO Use better estimates of roll pitch (from Extended Kalman) */
 	float fSinRoll = -AccBuffer[1]/fNormAcc;
-	float fCosRoll = sqrt(1.0-(fSinRoll * fSinRoll));
+	float fCosRoll = sqrtf(1.0-(fSinRoll * fSinRoll));
 	float fSinPitch = AccBuffer[0]/fNormAcc;
-	float fCosPitch = sqrt(1.0-(fSinPitch * fSinPitch));
+	float fCosPitch = sqrtf(1.0-(fSinPitch * fSinPitch));
 
-	float fTiltedX = MagBuffer[0]*fCosPitch + MagBuffer[2]*fSinPitch;
-	float fTiltedY = MagBuffer[0]*fSinRoll*fSinPitch + MagBuffer[1]*fCosRoll - MagBuffer[2]*fSinRoll*fCosPitch;
+	float fTiltedX = MagBuffer[0]*fCosPitch + MagBuffer[1]*fSinRoll*fSinPitch + MagBuffer[2]*fCosRoll*fSinPitch;
+	float fTiltedY = MagBuffer[1]*fCosRoll - MagBuffer[2]*fSinRoll;
 
-	float HeadingValue = atan2f(fTiltedY, fTiltedX);
+	float HeadingValue = atan2f(fTiltedY, fTiltedX) - COMPASS_DECLINATION;
 
 	if (HeadingValue < 0)
 	{
-	  HeadingValue = HeadingValue + 2*PI;
+	  HeadingValue = HeadingValue + 2.0*PI;
 	}
 
 	return HeadingValue;

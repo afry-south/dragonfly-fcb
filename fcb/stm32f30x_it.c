@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    TIM_Combined/stm32f30x_it.c 
+  * @file    stm32f30x_it.c 
   * @author  MCD Application Team
   * @version V1.1.0
   * @date    20-September-2012
@@ -28,13 +28,11 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f30x_it.h"
 #include "main.h"
+#include "usb_istr.h"
 
-/** @addtogroup STM32F3_Discovery_Peripheral_Examples
-  * @{
-  */
-
-/** @addtogroup TIM_Combined
+/** @addtogroup STM32F3-Discovery_Demo
   * @{
   */
 
@@ -42,6 +40,11 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+extern __IO uint32_t UserButtonPressed;
+extern __IO uint8_t DataReady;
+extern __IO uint32_t USBConnectTimeOut;
+__IO uint32_t i =0;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -144,6 +147,9 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
+  //TimingDelay_Decrement();
+  USBConnectTimeOut--;
+  DataReady ++;
 }
 
 /******************************************************************************/
@@ -152,6 +158,53 @@ void SysTick_Handler(void)
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f30x.s).                                            */
 /******************************************************************************/
+/**
+  * @brief  This function handles EXTI0_IRQ Handler.
+  * @param  None
+  * @retval None
+  */
+void EXTI0_IRQHandler(void)
+{ 
+  if ((EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) == SET)&&(STM_EVAL_PBGetState(BUTTON_USER) != RESET))
+  {
+    /* Delay */
+    for(i=0; i<0x7FFFF; i++);
+    
+    /* Wait for SEL button to be pressed  */
+    while(STM_EVAL_PBGetState(BUTTON_USER) != RESET); 
+    /* Delay */
+    for(i=0; i<0x7FFFF; i++);
+    UserButtonPressed++;
+    
+    if (UserButtonPressed > 0x2)
+    {
+      UserButtonPressed = 0x0;
+    }
+    
+    /* Clear the EXTI line pending bit */
+    EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
+  }
+}
+
+#if defined (USB_INT_DEFAULT)
+void USB_LP_CAN1_RX0_IRQHandler(void)
+#elif defined (USB_INT_REMAP)
+void USB_LP_IRQHandler(void)
+#endif
+{
+   USB_Istr();
+}
+
+#if defined (USB_INT_DEFAULT)
+void USBWakeUp_IRQHandler(void)
+#elif defined (USB_INT_REMAP)
+void USBWakeUp_RMP_IRQHandler(void)
+#endif
+{
+  /* Initiate external resume sequence (1 step) */
+  Resume(RESUME_EXTERNAL);  
+  EXTI_ClearITPendingBit(EXTI_Line18);
+}
 /**
   * @brief  This function handles PPP interrupt request.
   * @param  None
@@ -165,9 +218,5 @@ void SysTick_Handler(void)
   * @}
   */ 
 
-/**
-  * @}
-  */ 
-
-
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+

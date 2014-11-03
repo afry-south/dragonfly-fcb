@@ -1,3 +1,5 @@
+/* Define variables */
+
 /* Control sample time settings */
 #define TIM3_FREQ 		1000000	// Timer 3 (counter update) frequency [Hz]
 #define TIM3_CTRLFREQ	50		// Control output sample frequency [Hz]
@@ -67,6 +69,8 @@
 #include "stm32f30x_gpio.h"
 #include "stm32f30x_rcc.h"
 #include "stm32f30x_misc.h"
+
+/* Function prototype declarations */
 
 uint16_t GetPWM_CCR(float dutycycle);
 void TIM3_IRQHandler(void);

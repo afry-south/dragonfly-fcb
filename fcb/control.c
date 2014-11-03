@@ -13,6 +13,7 @@
 #include "RCinput.h"
 #include "sensors.h"
 #include "motor_output.h"
+#include "com.h"
 #include <math.h>
 
 /* Private variables ---------------------------------------------------------*/
@@ -76,26 +77,19 @@ void TIM3_IRQHandler()
 	{
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
-		/* TODO bodyZVelocity calc? */
-		/* TODO Refine sensor settings and algorithm (extended Kalman? Kalman? Quaternions) */
-		/* TODO Port to STM32F4 (it has SPI (faster than I2C!) for accelerometer) and faster CPU - maybe later */
-		/* TODO Be more clever about g, measure it while calibrating? It may still have vertical offset? */
-		/* TODO dynamic h / dt in sensor integration and controller? (measure with GetCounter()) */
-		/* TODO Calibrate RC input (min, max, midpoint) and map to according position and angle references */
-		/* TODO Failsafe - what happens when no RC signal is received? Check receiver PWM - does it keep outputting the same after transmitter shutdown? */
-		/* TODO Use on-board LEDs to indicate calibration, warnings, modes etc. */
-		/* TODO PWM input chan 5 chan 6 (what controller input maps to chan 6?) - set mode (manual / control / autonomous) */
-		/* TODO Better identify drag coefficient (for yaw control allocation) and also thrust coefficient - experiment setup needed */
-		/* TODO If STM32F3Discovery not placed in middle of quadcopter, translate sensor rotations? - wait until FCB has been mounted, then measure distances */
-		/* TODO Control integration anti-windup */
-		/* TODO Control bumpless transfer between modes */
-		/* TODO Flight modes and control performance settings (slow, normal, aggressive) */
-		/* TODO Trajectory (from x, y, z and heading refs) and hold position at destinations */
-		/* TODO Calibration reset if not satisfactory */
-		/* TODO Magnetometer soft-iron distortion calibration scheme */
+		// Read/write USB COM
+		//rwUSB();
 
 		if(!GetMagCalibrated())
 		{
+			/* _COMPASS CALIBRATION INSTRUCTIONS_
+			 * Rotate the quadcopter around each of the positive and negative 3D axes (6 directions)
+			 * at least 360 deg (not too fast).
+			 * The alignment does not need to be exact and further arbitrary rotatation will
+			 * only be beneficial for the calibration.
+			 * It does not matter in which direction the quadcopter is rotated.
+			 * */
+
 			STM_EVAL_LEDOn(LED3);
 
 			ReadSensors();
@@ -105,13 +99,35 @@ void TIM3_IRQHandler()
 			t_out[0] = t_out[1] = t_out[2] = t_out[3] = MIN_ESC_VAL;
 			SetMotors();
 		}
-		else if(!GetAccCalibrated() || !GetGyroCalibrated())
+		else if(!GetAccCalibrated())
 		{
+			/* _ACCELEROMETER CALIBRATION INSTRUCTIONS_
+			 * Hold the quadcopter still for a few seconds in each of the following positions:
+			 * Level, upside-down, left side down, right side down, front down, rear down.
+			 * */
+
 			STM_EVAL_LEDOn(LED5);
 
 			ReadSensors();
 			CalibrateAcc();
+
+			// Set motor output to lowest
+			t_out[0] = t_out[1] = t_out[2] = t_out[3] = MIN_ESC_VAL;
+			SetMotors();
+		}
+		else if(!GetGyroCalibrated())
+		{
+			/* _GYROSCOPE CALIBRATION INSTRUCTIONS_
+			 * Bla bla
+			 * */
+
+			STM_EVAL_LEDOn(LED7);
+
+			ReadSensors();
 			CalibrateGyro();
+			GetBodyAttitude(BodyAttitude, h);
+
+			// TODO Init attitude
 
 			// Set motor output to lowest
 			t_out[0] = t_out[1] = t_out[2] = t_out[3] = MIN_ESC_VAL;
@@ -119,9 +135,9 @@ void TIM3_IRQHandler()
 		}
 		else if(flightMode == ATTITUDE)
 		{
-			STM_EVAL_LEDOn(LED7);
+			STM_EVAL_LEDOn(LED9);
 
-			ReadSensors();
+			ReadSensors();	// Reads gyroscope, accelerometer and magnetometer
 
 			GetBodyVelocity(BodyVelocity, h);
 			GetBodyAttitude(BodyAttitude, h);
@@ -142,6 +158,8 @@ void TIM3_IRQHandler()
 		else if(flightMode == SHUTDOWN){
 			// Set motor output to lowest
 			// TODO soft stop
+
+			ReadSensors();
 
 			GetBodyVelocity(BodyVelocity, h);
 			GetBodyAttitude(BodyAttitude, h);

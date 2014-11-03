@@ -14,6 +14,7 @@
 #include "control.h"
 #include "sensors.h"
 #include "RCinput.h"
+#include "com.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -22,6 +23,30 @@
 /* Private functions -----------------------------------------------*/
 static void Init(void);
 static void InitLEDs(void);
+
+/* TODO bodyZVelocity calc? Rotate from roll/pitch/yaw estimates */
+/* TODO Refine sensor settings and algorithm (extended Kalman? Kalman? Quaternions?) */
+/* TODO Port to STM32F4 (it has SPI (faster than I2C!) for accelerometer) and faster CPU - maybe later */
+/* TODO Accelerometer calibration using g and axis rotation, use mean function and reset if deviation too large (+/- 2%?) */
+/* TODO dynamic h / dt in sensor integration and controller? (measure with GetCounter()) */
+/* TODO Calibrate RC input (min, max, midpoint) and map to according position and angle references */
+/* TODO Failsafe - what happens when no RC signal is received? Check receiver PWM - does it keep outputting the same after transmitter shutdown? */
+/* TODO Use on-board LEDs to indicate calibration, warnings, modes etc. */
+/* TODO PWM input chan 5 chan 6 (what controller input maps to chan 6?) - set mode (manual / control / autonomous / shutdown) */
+/* TODO Better identify drag coefficient (for yaw control allocation) and also thrust coefficient - experiment setup needed */
+/* TODO If STM32F3Discovery not placed in middle of quadcopter, translate sensor rotations? - wait until FCB has been mounted, then measure distances */
+/* TODO Control integration anti-windup */
+/* TODO Control bumpless transfer between modes */
+/* TODO Flight modes and control performance settings (slow, normal, aggressive) */
+/* TODO Trajectory (from x, y, z and heading refs) and hold position at destinations */
+/* TODO Calibration reset if not satisfactory */
+/* TODO Memory for storing settings and logging data (Use flash memory / SD card) */
+/* TODO Interface with PC for setup (USB connection): Virtual COM port CDC communication established */
+/* TODO Detect initial/take-off attitude (use gravity direction) */
+/* TODO GetBodyAttitude etc. also updates, make separate update functions in sensors.c */
+/* TODO Arm motors (both sticks bottom left (within 95% of min values) */
+/* TODO Proximity sensors ADC */
+/* TODO Glue pistol on stripboard bottom connections */
 
 /**
 * @brief  Main program.
@@ -51,6 +76,9 @@ static void Init(void)
 	/* Setup sensors */
 	GyroConfig();
 	CompassConfig();
+
+	/* Init USB com */
+	//initUSB();
 
 	/* Config priority grouping setting */
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);

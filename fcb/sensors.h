@@ -1,18 +1,22 @@
 /* Private define ------------------------------------------------------------*/
-#define L3G_Sensitivity_250dps     (float)   114.285f         /*!< gyroscope sensitivity with 250 dps full scale [LSB/dps] */
-#define L3G_Sensitivity_500dps     (float)    57.1429f        /*!< gyroscope sensitivity with 500 dps full scale [LSB/dps] */
-#define L3G_Sensitivity_2000dps    (float)    14.285f	      /*!< gyroscope sensitivity with 2000 dps full scale [LSB/dps] */
+#define L3G_Sensitivity_250dps		(float)   	114.285f         /*!< gyroscope sensitivity with 250 dps full scale [LSB/dps] */
+#define L3G_Sensitivity_500dps     	(float)    	57.1429f        /*!< gyroscope sensitivity with 500 dps full scale [LSB/dps] */
+#define L3G_Sensitivity_2000dps    	(float)    	14.285f	      /*!< gyroscope sensitivity with 2000 dps full scale [LSB/dps] */
 //#define PI                         (float)     3.14159265f
-#define g						   (float)	   9.815		  /* Gravitational acceleration constant */
+#define g						   	(float)	   	9.815		  /* Gravitational acceleration constant */
 
-#define LSM_Acc_Sensitivity_2g     (float)     1.0f            /*!< accelerometer sensitivity with 2 g full scale [LSB/mg] */
-#define LSM_Acc_Sensitivity_4g     (float)     0.5f            /*!< accelerometer sensitivity with 4 g full scale [LSB/mg] */
-#define LSM_Acc_Sensitivity_8g     (float)     0.25f           /*!< accelerometer sensitivity with 8 g full scale [LSB/mg] */
-#define LSM_Acc_Sensitivity_16g    (float)     0.0834f         /*!< accelerometer sensitivity with 12 g full scale [LSB/mg] */
+#define LSM_Acc_Sensitivity_2g     	(float)     1.0f            /*!< accelerometer sensitivity with 2 g full scale [LSB/mg] */
+#define LSM_Acc_Sensitivity_4g     	(float)     0.5f            /*!< accelerometer sensitivity with 4 g full scale [LSB/mg] */
+#define LSM_Acc_Sensitivity_8g     	(float)     0.25f           /*!< accelerometer sensitivity with 8 g full scale [LSB/mg] */
+#define LSM_Acc_Sensitivity_16g    	(float)     0.0834f         /*!< accelerometer sensitivity with 12 g full scale [LSB/mg] */
 
-#define GYRO_CALIBRATION_SAMPLES   (int)	   500
-#define ACC_CALIBRATION_SAMPLES    (int)	   500
-#define MAG_CALIBRATION_SAMPLES    (int)	   1000
+#define GYRO_CALIBRATION_SAMPLES   	(int)	   	500
+#define ACC_CALIBRATION_SAMPLES		(int)	   	500
+#define MAG_CALIBRATION_SAMPLES    	(int)		3000
+
+#define COMPASS_DECLINATION		   	(float)		3.226*PI/180.0	/* For Malmoe, Sweden the compass declination about 3 deg East
+ 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 * The inclination angle is about 70 deg
+ 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 * The total field strength is 50552 nT (505.52 mGauss) */
 
 /* Includes */
 #include "stm32f30x.h"

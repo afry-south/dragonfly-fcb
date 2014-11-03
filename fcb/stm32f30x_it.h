@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    TIM_Combined/stm32f30x_it.h 
+  * @file    stm32f30x_it.h 
   * @author  MCD Application Team
   * @version V1.1.0
   * @date    20-September-2012
@@ -50,6 +50,12 @@ void SVC_Handler(void);
 void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
+void EXTI0_IRQHandler(void);
+
+void USB_LP_CAN1_RX0_IRQHandler(void);
+void USB_LP_IRQHandler(void);
+void USBWakeUp_IRQHandler(void);
+void USBWakeUp_RMP_IRQHandler(void);
 
 #ifdef __cplusplus
 }
