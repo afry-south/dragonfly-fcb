@@ -14,24 +14,24 @@
 #include <stdlib.h>
 
 /* Private variables ---------------------------------------------------------*/
-__IO float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Body-frame sensor readings arrays
+volatile float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Body-frame sensor readings arrays
 
 float GyroOffsets[3] = {0.0f};
 uint16_t GyroCalSample = 0;
 double CalRollSum = 0.0, CalPitchSum = 0.0, CalYawSum = 0.0;
-__IO char GyroCalibrated = 0;
+volatile char GyroCalibrated = 1;
 
 float AccOffsets[3] = {0.0f};
 uint16_t AccCalSample = 0;
 float CalAccXSum = 0.0, CalAccYSum = 0.0, CalAccZSum = 0.0;
-__IO char AccCalibrated = 0;
 char AccXCalibrated = 0, AccYCalibrated = 0, AccZCalibrated = 0;
+volatile char AccCalibrated = 1; // TODO RESET TO 0
 
 float MagOffsets[3] = {0.0f};
 uint16_t MagCalSample = 0;
 float CalMagXMax = 1.0, CalMagXMin = -1.0, CalMagYMax = 1.0, CalMagYMin = -1.0, CalMagZMax = 1.0, CalMagZMin = -1.0;
 float MagXNorm = 1.0, MagYNorm = 1.0, MagZNorm = 1.0;
-__IO char MagCalibrated = 0;
+volatile char MagCalibrated = 1; // TODO RESET TO 0
 
 uint8_t ctrlx[2];
 char ctrlxIsRead = 0;
@@ -73,7 +73,7 @@ void GyroConfig(void)
   * @param  pfData : Data out pointer
   * @retval None
   */
-void GyroReadAngRate(__IO float* pfData)
+void GyroReadAngRate(volatile float* pfData)
 {
   uint8_t tmpbuffer[6] ={0};
   int16_t RawData[3] = {0};
@@ -202,7 +202,7 @@ void CompassConfig(void)
 * @param pnData: pointer to float buffer where to store data
 * @retval None
 */
-void CompassReadAcc(__IO float* pfData)
+void CompassReadAcc(volatile float* pfData)
 {
   int16_t pnRawData[3];
   uint8_t buffer[6], cDivider;
@@ -313,7 +313,7 @@ char GetAccCalibrated(void)
   * @param  pfData: pointer to the data out
   * @retval None
   */
-void CompassReadMag(__IO float* pfData)
+void CompassReadMag(volatile float* pfData)
 {
   static uint8_t buffer[6] = {0};
   uint16_t Magn_Sensitivity_XY = 0, Magn_Sensitivity_Z = 0;

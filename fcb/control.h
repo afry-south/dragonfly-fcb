@@ -1,8 +1,24 @@
+typedef struct
+{
+	float M1;
+	float M2;
+	float M3;
+	float M4;
+}PWMMotor_TimeTypeDef;
+
+typedef struct
+{
+	float Thrust;
+	float Roll;
+	float Pitch;
+	float Yaw;
+}CtrlSignals_TypeDef;
+
 /* Define variables */
 
 /* Control sample time settings */
-#define TIM3_FREQ 		1000000	// Timer 3 (counter update) frequency [Hz]
-#define TIM3_CTRLFREQ	50		// Control output sample frequency [Hz]
+#define TIM7_FREQ 		1000000	// Timer 3 (counter update) frequency [Hz]
+#define TIM7_CTRLFREQ	50		// Control output sample frequency [Hz]
 
 /* Physical properties of aircraft */
 #define LENGTH_ARM 	0.30		// Quadcopter arm length [m]
@@ -73,10 +89,11 @@
 /* Function prototype declarations */
 
 uint16_t GetPWM_CCR(float dutycycle);
-void TIM3_IRQHandler(void);
-void TIM3_Setup(void);
-void TIM3_SetupIRQ(void);
+void TIM7_IRQHandler(void);
+void TIM7_Setup(void);
+void TIM7_SetupIRQ(void);
 void ControlAllocation(void);
+void ManualModeAllocation(void);
 void SetReferenceSignals(void);
 void UpdateBodyAttitude(void);
 void UpdateBodyVelocity(void);
@@ -85,3 +102,4 @@ void RollControl(void);
 void PitchControl(void);
 void YawControl(void);
 void SetMotors(void);
+void SetFlightMode(void);

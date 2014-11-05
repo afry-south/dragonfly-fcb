@@ -26,27 +26,25 @@ static void InitLEDs(void);
 
 /* TODO bodyZVelocity calc? Rotate from roll/pitch/yaw estimates */
 /* TODO Refine sensor settings and algorithm (extended Kalman? Kalman? Quaternions?) */
-/* TODO Port to STM32F4 (it has SPI (faster than I2C!) for accelerometer) and faster CPU - maybe later */
-/* TODO Accelerometer calibration using g and axis rotation, use mean function and reset if deviation too large (+/- 2%?) */
+/* TODO Accelerometer calibration using g and axis rotation, use mean function and scale to g */
 /* TODO dynamic h / dt in sensor integration and controller? (measure with GetCounter()) */
-/* TODO Calibrate RC input (min, max, midpoint) and map to according position and angle references */
-/* TODO Failsafe - what happens when no RC signal is received? Check receiver PWM - does it keep outputting the same after transmitter shutdown? */
-/* TODO Use on-board LEDs to indicate calibration, warnings, modes etc. */
-/* TODO PWM input chan 5 chan 6 (what controller input maps to chan 6?) - set mode (manual / control / autonomous / shutdown) */
+/* TODO Calibrate RC input (min, max, midpoint for each stick) and map to according position and angle references (account for interval and midpoint offsets) */
+/* --> TODO PWM input chan 5 chan 6 - set mode (manual / control / autonomous / shutdown) */
 /* TODO Better identify drag coefficient (for yaw control allocation) and also thrust coefficient - experiment setup needed */
 /* TODO If STM32F3Discovery not placed in middle of quadcopter, translate sensor rotations? - wait until FCB has been mounted, then measure distances */
 /* TODO Control integration anti-windup */
-/* TODO Control bumpless transfer between modes */
+/* TODO Control bumpless transfer between control modes */
 /* TODO Flight modes and control performance settings (slow, normal, aggressive) */
-/* TODO Trajectory (from x, y, z and heading refs) and hold position at destinations */
+/* TODO Trajectory generation (from x, y, z and heading/yaw refs) and hold position at destinations (velocity/positional controller transfer) */
 /* TODO Calibration reset if not satisfactory */
-/* TODO Memory for storing settings and logging data (Use flash memory / SD card) */
+/* TODO Memory for storing settings and logging data (Use flash memory (EEPROM emulation) / SD card) */
 /* TODO Interface with PC for setup (USB connection): Virtual COM port CDC communication established */
 /* TODO Detect initial/take-off attitude (use gravity direction) */
 /* TODO GetBodyAttitude etc. also updates, make separate update functions in sensors.c */
-/* TODO Arm motors (both sticks bottom left (within 95% of min values) */
+/* TODO Arm motors (both sticks bottom left within 95% of min values) */
 /* TODO Proximity sensors ADC */
 /* TODO Glue pistol on stripboard bottom connections */
+/* --> TODO Calibration temporarily set to true with some offset values */
 
 /**
 * @brief  Main program.
@@ -91,15 +89,16 @@ static void Init(void)
 	/* Setup Timer 4 OC registers (for PWM output) */
 	TIM4_SetupOC();
 
-	/* Setup Timer 2 (used for PWM input) */
+	/* Setup Timers 2 and 3 (used for PWM input) */
 	TIM2_Setup();
+	TIM3_Setup();
 	/* Setup and start PWM input (GPIO, NVIC settings) */
 	PWM_In_Setup();
 
-	/* Setup Timer 3 (used for program periodic execution) */
-	TIM3_Setup();
-	/* Setup and start Timer 3 for interrupt generation */
-	TIM3_SetupIRQ(); // NEEDS TO BE STARTED AFTER SENSOR CONFIG
+	/* Setup Timer 7 (used for program periodic execution) */
+	TIM7_Setup();
+	/* Setup and start Timer 7 for interrupt generation */
+	TIM7_SetupIRQ(); // NEEDS TO BE STARTED AFTER SENSOR CONFIG
 }
 
 static void InitLEDs(void)

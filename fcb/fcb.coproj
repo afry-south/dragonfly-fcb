@@ -37,7 +37,7 @@
           <Memory name="IROM2" type="ReadOnly" size="" startValue=""/>
           <Memory name="IRAM2" type="ReadWrite" size="0x00002000" startValue="0x10000000"/>
         </MemoryAreas>
-        <LocateLinkFile path="../../../../../coocox/coide/configuration/programdata/fcb/arm-gcc-link.ld" type="0"/>
+        <LocateLinkFile path="../../../../coocox/coide/configuration/programdata/fcb/arm-gcc-link.ld" type="0"/>
       </Link>
       <Output>
         <Option name="OutputFileType" value="0"/>
