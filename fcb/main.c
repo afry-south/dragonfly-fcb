@@ -24,27 +24,28 @@
 static void Init(void);
 static void InitLEDs(void);
 
-/* TODO bodyZVelocity calc? Rotate from roll/pitch/yaw estimates */
-/* TODO Refine sensor settings and algorithm (extended Kalman? Kalman? Quaternions?) */
-/* TODO Accelerometer calibration using g and axis rotation, use mean function and scale to g */
-/* TODO dynamic h / dt in sensor integration and controller? (measure with GetCounter()) */
+/* TODO --> Calculation of velocity, especially vertical. Rotate from roll/pitch/yaw estimates and use better accelerometer calibration and filtering */
+/* TODO --> Refine sensor settings and algorithm (extended Kalman? Kalman? Quaternions?) */
+/* TODO --> Accelerometer calibration using g and axis rotation, use mean function and scale to g */
+/* Suggestion: TODO Setup interrupt routine to collect sensor updates (since I2C is slow and has to wait alot - may be run with lower priority so that it doesn't interfere with control) */
+/* Suggestion: TODO dynamic time step h in sensor integration and controller? (measure with GetCounter()) */
 /* TODO Calibrate RC input (min, max, midpoint for each stick) and map to according position and angle references (account for interval and midpoint offsets) */
-/* --> TODO PWM input chan 5 chan 6 - set mode (manual / control / autonomous / shutdown) */
-/* TODO Better identify drag coefficient (for yaw control allocation) and also thrust coefficient - experiment setup needed */
+/* Suggestion: TODO Better identify drag coefficient (for yaw control allocation) and also thrust coefficient - experiment setup needed */
 /* TODO If STM32F3Discovery not placed in middle of quadcopter, translate sensor rotations? - wait until FCB has been mounted, then measure distances */
 /* TODO Control integration anti-windup */
 /* TODO Control bumpless transfer between control modes */
-/* TODO Flight modes and control performance settings (slow, normal, aggressive) */
+/* Suggestion: TODO Flight modes and control performance settings (slow, normal, aggressive) */
 /* TODO Trajectory generation (from x, y, z and heading/yaw refs) and hold position at destinations (velocity/positional controller transfer) */
 /* TODO Calibration reset if not satisfactory */
 /* TODO Memory for storing settings and logging data (Use flash memory (EEPROM emulation) / SD card) */
 /* TODO Interface with PC for setup (USB connection): Virtual COM port CDC communication established */
-/* TODO Detect initial/take-off attitude (use gravity direction) */
+/* Suggestion: TODO Detect initial/take-off attitude (use gravity direction) */
 /* TODO GetBodyAttitude etc. also updates, make separate update functions in sensors.c */
-/* TODO Arm motors (both sticks bottom left within 95% of min values) */
+/* Suggestion: TODO Arm motors (both sticks bottom left within 95% of min values) */
 /* TODO Proximity sensors ADC */
-/* TODO Glue pistol on stripboard bottom connections */
+/* Suggestion: TODO Glue pistol on stripboard bottom connections */
 /* --> TODO Calibration temporarily set to true with some offset values */
+/* Suggestion: TODO define refs, states, controller param, Kalman param etc as struct typedefs */
 
 /**
 * @brief  Main program.
@@ -74,6 +75,7 @@ static void Init(void)
 	/* Setup sensors */
 	GyroConfig();
 	CompassConfig();
+	InitPIDControllers();
 
 	/* Init USB com */
 	//initUSB();

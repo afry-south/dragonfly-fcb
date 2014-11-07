@@ -11,6 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "sensors.h"
+#include "control.h"
 #include <stdlib.h>
 
 /* Private variables ---------------------------------------------------------*/
@@ -194,7 +195,7 @@ void CompassConfig(void)
 
   /* Configure the accelerometer LPF main parameters */
   LSM303DLHC_AccFilterConfig(&LSM303DLHCFilter_InitStructure);
-  LSM303DLHC_AccFilterCmd(ENABLE);
+  LSM303DLHC_AccFilterCmd(DISABLE);
 }
 
 /**
@@ -269,9 +270,9 @@ void CompassReadAcc(volatile float* pfData)
   /* Obtain the mg (g for gravitational acceleration) value for the three axis */
     // pfData[i] = (float) pnRawData[i]/LSM_Acc_Sensitivity - AccOffsets[i];			// Output in mg (10^(-3) g)
 
-    pfData[0] = (float)pnRawData[0]/LSM_Acc_Sensitivity / 1000 * g - AccOffsets[0];		// Output in m/(s^2)
-    pfData[1] = (float)pnRawData[1]/LSM_Acc_Sensitivity / 1000 * g - AccOffsets[1];
-    pfData[2] = (float)pnRawData[2]/LSM_Acc_Sensitivity / 1000 * g - AccOffsets[2];
+    pfData[0] = (float)pnRawData[0]/LSM_Acc_Sensitivity / 1000 * G_ACC - AccOffsets[0];		// Output in m/(s^2)
+    pfData[1] = (float)pnRawData[1]/LSM_Acc_Sensitivity / 1000 * G_ACC - AccOffsets[1];
+    pfData[2] = (float)pnRawData[2]/LSM_Acc_Sensitivity / 1000 * G_ACC - AccOffsets[2];
 }
 
 /** CalibrateAcc
@@ -292,7 +293,7 @@ void CalibrateAcc(void)
 		{
 			AccOffsets[0] = CalAccXSum/((float)ACC_CALIBRATION_SAMPLES);
 			AccOffsets[1] = CalAccYSum/((float)ACC_CALIBRATION_SAMPLES);
-			AccOffsets[2] = CalAccZSum/((float)ACC_CALIBRATION_SAMPLES) - g;
+			AccOffsets[2] = CalAccZSum/((float)ACC_CALIBRATION_SAMPLES) - G_ACC;
 			AccCalibrated = 1;
 		}
 	}
@@ -423,12 +424,14 @@ char GetMagCalibrated(void)
  * @param  None
  * @retval None
  */
-void GetBodyAttitude(float *pfData, float h)
+void GetBodyAttitude(float *pfData)
 {
+
+
 	/* Complementary sensor fusion filter. TODO: Kalman filter */
-	pfData[0] += GyroBuffer[0]*h; + atan2f(-AccBuffer[1], AccBuffer[2]);	// Roll angle
-	pfData[1] += GyroBuffer[1]*h; + atan2f(AccBuffer[0], AccBuffer[2]);	// Pitch angle
-	pfData[2] += GyroBuffer[2]*h; 													// Yaw angle
+	pfData[0] += GyroBuffer[0]*H; + atan2f(-AccBuffer[1], AccBuffer[2]);	// Roll angle
+	pfData[1] += GyroBuffer[1]*H; + atan2f(AccBuffer[0], AccBuffer[2]);		// Pitch angle
+	pfData[2] += GyroBuffer[2]*H; 											// Yaw angle
 }
 
 /* GetBodyVelocity
@@ -436,11 +439,11 @@ void GetBodyAttitude(float *pfData, float h)
  * @param  None
  * @retval None
  */
-void GetBodyVelocity(float *pfData, float h)
+void GetBodyVelocity(float *pfData)
 {
-	pfData[0] += AccBuffer[0]*h;
-	pfData[1] += AccBuffer[1]*h;
-	pfData[2] += (AccBuffer[2]-g)*h;
+	pfData[0] += AccBuffer[0]*H;
+	pfData[1] += AccBuffer[1]*H;
+	pfData[2] += (AccBuffer[2]-G_ACC)*H;
 }
 
 float GetYawRate(void)

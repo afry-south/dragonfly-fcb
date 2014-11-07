@@ -18,32 +18,21 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-/* Timer and sampling */
-volatile const float h = 1/((float)TIM7_CTRLFREQ);	// Control sample time [s]
-
 /* Measured states */
-float BodyAttitude[3] = {0.0f};	// Body-frame roll, pitch, yaw angles [rad]
+float BodyAttitude[3] = {0.0f};	// Body-frame roll, pitch, yaw angles from gyro integration [rad]
 float BodyVelocity[3] = {0.0f};	// Body-frame velocities [m/s]
 float YawRate = 0.0;
-float Heading = 0.0;
+float Heading = 0.0;			// Heading from magnetometer
 
 PWMRC_TimeTypeDef PWMInputTimes;	// 6-channel PWM input width in seconds
-
 CtrlSignals_TypeDef CtrlSignals;	// Physical control signals
+RefSignals_TypeDef RefSignals;		// Control reference signals
+PWMMotor_TimeTypeDef PWMMotorTimes;	// Motor output PWM widths [s]
 
-/* Controller reference signals */
-float refs[4] = {0.0, 0.0, 0.0, 0.0};
-/*	refs[0] Vertical velocity ref [m/s]
- *  refs[1] Roll angle ref [rad]
- *  refs[2] Pitch angle ref [rad]
- *  refs[3] Yaw angular rate ref [rad/s]
- */
-
-float Ivz = 0.0, Dvz = 0.0, Ir = 0.0, Dr = 0.0, Ip = 0.0, Dp = 0.0, Iy = 0.0, Dy = 0.0;
-float bodyZvelocityPrev = 0.0, bodyRollPrev = 0.0, bodyPitchPrev = 0.0, bodyYawRatePrev = 0.0;
-
-/* Motor output PWM widths [s] */
-PWMMotor_TimeTypeDef PWMMotorTimes;
+PIDController_TypeDef AltCtrl;
+PIDController_TypeDef RollCtrl;
+PIDController_TypeDef PitchCtrl;
+PIDController_TypeDef YawCtrl;
 
 /* Flight mode */
 char flightMode = MANUAL;
@@ -61,6 +50,7 @@ void TIM7_IRQHandler()
 		TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
 
 		ReadSensors();	// Reads gyroscope, accelerometer and magnetometer
+		// UpdateStates(); TODO
 		GetPWMInputTimes(&PWMInputTimes);	// Get 6 channel RC input pulse widths
 		SetFlightMode();
 
@@ -111,7 +101,7 @@ void TIM7_IRQHandler()
 			STM_EVAL_LEDOn(LED7);
 
 			CalibrateGyro();
-			GetBodyAttitude(BodyAttitude, h);
+			GetBodyAttitude(BodyAttitude);
 
 			// TODO Init attitude
 
@@ -126,8 +116,8 @@ void TIM7_IRQHandler()
 			STM_EVAL_LEDOff(LED10);
 			STM_EVAL_LEDOn(LED9);
 
-			GetBodyVelocity(BodyVelocity, h);
-			GetBodyAttitude(BodyAttitude, h);
+			GetBodyVelocity(BodyVelocity);
+			GetBodyAttitude(BodyAttitude);
 			YawRate = GetYawRate();
 			Heading = GetHeading();
 
@@ -147,8 +137,8 @@ void TIM7_IRQHandler()
 			STM_EVAL_LEDOff(LED9);
 			STM_EVAL_LEDOn(LED10);
 
-			GetBodyVelocity(BodyVelocity, h);
-			GetBodyAttitude(BodyAttitude, h);
+			GetBodyVelocity(BodyVelocity);
+			GetBodyAttitude(BodyAttitude);
 			YawRate = GetYawRate();
 
 			// Set motor output to lowest
@@ -162,8 +152,8 @@ void TIM7_IRQHandler()
 			STM_EVAL_LEDOff(LED10);
 			STM_EVAL_LEDOn(LED8);
 
-			GetBodyVelocity(BodyVelocity, h);
-			GetBodyAttitude(BodyAttitude, h);
+			GetBodyVelocity(BodyVelocity);
+			GetBodyAttitude(BodyAttitude);
 			YawRate = GetYawRate();
 
 			// Set motor output to lowest
@@ -182,24 +172,24 @@ void AltitudeControl(void)
 {
 	float bodyZvelocity = BodyVelocity[2]*cosf(BodyAttitude[0])*cosf(BodyAttitude[1]);
 
-	// Need inertial (vertical body velocity)
-	float Pvz = Kvz*(BETAvz*refs[0] - bodyZvelocity);
+	AltCtrl.P = AltCtrl.K*(AltCtrl.B*RefSignals.ZVelocity - bodyZvelocity);
 
 	// Backward difference, derivative part with zero set-point weighting
-	Dvz = TDvz/(TDvz+Nvz*h)*Dvz - Kvz*TDvz*Nvz/(TDvz+Nvz*h)*(bodyZvelocity - bodyZvelocityPrev);
+	AltCtrl.D = AltCtrl.Td/(AltCtrl.Td+AltCtrl.N*H)*AltCtrl.D - AltCtrl.K*AltCtrl.Td*AltCtrl.N/(AltCtrl.Td+AltCtrl.N*H)*(bodyZvelocity - AltCtrl.PreState);
 
-	CtrlSignals.Thrust = (Pvz + Ivz + Dvz + g) * MASS; // /cosf(BodyAttitude[0])*cosf(BodyAttitude[1]) angle boost
+	CtrlSignals.Thrust = (AltCtrl.P + AltCtrl.I + AltCtrl.D + G_ACC) * MASS;
 
-	// Saturation
+	// Saturate controller output
 	if(CtrlSignals.Thrust < 0)
 		CtrlSignals.Thrust = 0;
 	else if(CtrlSignals.Thrust > MAX_THRUST)
 		CtrlSignals.Thrust = MAX_THRUST;
 
 	// Forward difference, so updated after control
-	if(TIvz != 0.0)
-		Ivz = Ivz + Kvz*h/TIvz * (refs[0] - bodyZvelocity);
-	bodyZvelocityPrev = bodyZvelocity;
+	if(AltCtrl.Ti != 0.0)
+		AltCtrl.I = AltCtrl.I + AltCtrl.K*H/AltCtrl.Ti * (RefSignals.ZVelocity - bodyZvelocity);
+
+	AltCtrl.PreState = bodyZvelocity;
 }
 
 /* @RollControl
@@ -209,19 +199,24 @@ void AltitudeControl(void)
  */
 void RollControl(void)
 {
-	float Pr = Krp*(BETArp*refs[1] - BodyAttitude[0]);
+	RollCtrl.P = RollCtrl.K*(RollCtrl.B*RefSignals.RollAngle - BodyAttitude[0]);
 
 	// Backward difference, derivative part with zero set-point weighting
-	Dr = TDrp/(TDrp+Nrp*h)*Dr - Krp*TDrp*Nrp/(TDrp+Nrp*h)*(BodyAttitude[0] - bodyRollPrev);
+	RollCtrl.D = RollCtrl.Td/(RollCtrl.Td+RollCtrl.N*H)*RollCtrl.D - RollCtrl.K*RollCtrl.Td*RollCtrl.N/(RollCtrl.Td+RollCtrl.N*H)*(BodyAttitude[0] - RollCtrl.PreState);
 
-	// TODO: Saturation levels
-	CtrlSignals.Roll = (Pr + Ir + Dr) * IXX;
+	CtrlSignals.Roll = (RollCtrl.P + RollCtrl.I + RollCtrl.D) * IXX;
+
+	// Saturate controller output
+	if(CtrlSignals.Roll < -MAX_ROLLPITCH_MOM)
+		CtrlSignals.Roll = -MAX_ROLLPITCH_MOM;
+	else if(CtrlSignals.Roll > MAX_ROLLPITCH_MOM)
+		CtrlSignals.Roll = MAX_ROLLPITCH_MOM;
 
 	// Forward difference, so updated after control
-	if(TIrp != 0.0)
-		Ir = Ir + Krp*h/TIrp * (refs[1] - BodyAttitude[0]);
+	if(RollCtrl.Ti != 0.0)
+		RollCtrl.I = RollCtrl.I + RollCtrl.K*H/RollCtrl.Ti * (RefSignals.RollAngle - BodyAttitude[0]);
 
-	bodyRollPrev = BodyAttitude[0];
+	RollCtrl.PreState = BodyAttitude[0];
 }
 
 /* @PitchControl
@@ -231,40 +226,51 @@ void RollControl(void)
  */
 void PitchControl(void)
 {
-	float Pp = Krp*(BETArp*refs[2] - BodyAttitude[1]);
+	PitchCtrl.P = PitchCtrl.K*(PitchCtrl.B*RefSignals.PitchAngle - BodyAttitude[1]);
 
 	// Backward difference, derivative part with zero set-point weighting
-	Dp = TDrp/(TDrp+Nrp*h)*Dp - Krp*TDrp*Nrp/(TDrp+Nrp*h)*(BodyAttitude[1] - bodyPitchPrev);
+	PitchCtrl.D = PitchCtrl.Td/(PitchCtrl.Td+PitchCtrl.N*H)*PitchCtrl.D - PitchCtrl.K*PitchCtrl.Td*PitchCtrl.N/(PitchCtrl.Td+PitchCtrl.N*H)*(BodyAttitude[1] - PitchCtrl.PreState);
 
-	// TODO: Saturation levels
-	CtrlSignals.Pitch = (Pp + Ip + Dp) * IYY;
+	CtrlSignals.Pitch = (PitchCtrl.P + PitchCtrl.I + PitchCtrl.D) * IYY;
+
+	// Saturate controller output
+	if(CtrlSignals.Pitch < -MAX_ROLLPITCH_MOM)
+		CtrlSignals.Pitch = -MAX_ROLLPITCH_MOM;
+	else if(CtrlSignals.Pitch > MAX_ROLLPITCH_MOM)
+		CtrlSignals.Pitch = MAX_ROLLPITCH_MOM;
 
 	// Forward difference, so updated after control
-	if(TIrp != 0.0)
-		Ip = Ip + Krp*h/TIrp * (refs[2] - BodyAttitude[1]);
+	if(PitchCtrl.Ti != 0.0)
+		PitchCtrl.I = PitchCtrl.I + PitchCtrl.K*H/PitchCtrl.Ti * (RefSignals.PitchAngle - BodyAttitude[1]);
 
-	bodyPitchPrev = BodyAttitude[1];
+	PitchCtrl.PreState = BodyAttitude[1];
 }
 
 /* @YawControl
- * @brief	Controls the yaw moment to achieve a desired yaw rate
+ * @brief	Controls the yaw moment to achieve desired yaw rate
  * @param	None.
  * @retval	None.
  */
 void YawControl(void)
 {
-	float Py = Kyr*(BETAyr*refs[3] - YawRate);
+	YawCtrl.P = YawCtrl.K*(YawCtrl.B*RefSignals.YawRate - YawRate);
 
 	// Backward difference
-	Dy = TDyr/(TDyr+Nyr*h)*Dy - Kyr*TDyr*Nyr/(TDyr+Nyr*h)*(YawRate - bodyYawRatePrev);
+	YawCtrl.D = YawCtrl.Td/(YawCtrl.Td+YawCtrl.N*H)*YawCtrl.D - YawCtrl.K*YawCtrl.Td*YawCtrl.N/(YawCtrl.Td+YawCtrl.N*H)*(YawRate - YawCtrl.PreState);
 
-	// TODO: Saturation levels
-	CtrlSignals.Yaw = (Py + Iy + Dy) * IZZ;
+	CtrlSignals.Yaw = (YawCtrl.P + YawCtrl.I + YawCtrl.D) * IZZ;
+
+	// Saturate controller output
+	if(CtrlSignals.Yaw < -MAX_YAW_RATE)
+		CtrlSignals.Yaw = -MAX_YAW_RATE;
+	else if(CtrlSignals.Yaw > MAX_YAW_RATE)
+		CtrlSignals.Yaw = MAX_YAW_RATE;
 
 	// Forward difference, so updated after control
-	if(TIyr != 0.0)
-		Iy = Iy + Kyr*h/TIyr * (refs[3] - YawRate);
-	bodyYawRatePrev = YawRate;
+	if(YawCtrl.Ti != 0.0)
+		YawCtrl.I = YawCtrl.I + YawCtrl.K*H/YawCtrl.Ti * (RefSignals.YawRate - YawRate);
+
+	YawCtrl.PreState = YawRate;
 }
 
 /* SetControlSignals
@@ -276,27 +282,27 @@ void SetReferenceSignals(void)
 {
 	// Set velocity reference limits
 	if(PWMInputTimes.Throttle >= GetRCmin() && PWMInputTimes.Throttle <= GetRCmax())
-		refs[0] = 2*MAX_Z_VELOCITY*1000*(PWMInputTimes.Throttle-GetRCmid());
+		RefSignals.ZVelocity = 2*MAX_Z_VELOCITY*1000*(PWMInputTimes.Throttle-GetRCmid());
 	else
-		refs[0] = -MAX_Z_VELOCITY;
+		RefSignals.ZVelocity = -MAX_Z_VELOCITY;
 
 	// Set roll reference limits
 	if (PWMInputTimes.Aileron >= GetRCmin() && PWMInputTimes.Aileron <= GetRCmax())
-		refs[1] = 2*MAX_ROLLPITCH_ANGLE*1000*(PWMInputTimes.Aileron-GetRCmid());
+		RefSignals.RollAngle = 2*MAX_ROLLPITCH_ANGLE*1000*(PWMInputTimes.Aileron-GetRCmid());
 	else
-		refs[1] = GetRCmid();
+		RefSignals.RollAngle = GetRCmid();
 
 	// Set pitch reference limits
 	if (PWMInputTimes.Elevator >= GetRCmin() && PWMInputTimes.Elevator <= GetRCmax())
-		refs[2] = 2*MAX_ROLLPITCH_ANGLE*1000*(PWMInputTimes.Elevator-GetRCmid());
+		RefSignals.PitchAngle = 2*MAX_ROLLPITCH_ANGLE*1000*(PWMInputTimes.Elevator-GetRCmid());
 	else
-		refs[2] = GetRCmid();
+		RefSignals.PitchAngle = GetRCmid();
 
 	// Set yaw rate reference limits
 	if (PWMInputTimes.Rudder >= GetRCmin() && PWMInputTimes.Rudder <= GetRCmax())
-		refs[3] = 2*MAX_YAW_RATE*1000*(PWMInputTimes.Rudder-GetRCmid());
+		RefSignals.YawRate = 2*MAX_YAW_RATE*1000*(PWMInputTimes.Rudder-GetRCmid());
 	else
-		refs[3] = GetRCmid();
+		RefSignals.YawRate = GetRCmid();
 }
 
 /* ControlAllocation
@@ -424,6 +430,58 @@ void SetFlightMode()
 uint16_t GetPWM_CCR(float t)
 {
 	return (uint16_t) ((float)(t * SystemCoreClock/((float)(TIM_GetPrescaler(TIM4)+1))));
+}
+
+/* @InitPIDControllers
+ * @brief	Initializes the PID controllers, i.e. sets controller parameters.
+ * @param	None.
+ * @retval	None.
+ */
+void InitPIDControllers()
+{
+	/* Initialize Altitude Controller */
+	AltCtrl.K = K_VZ;
+	AltCtrl.Ti = TI_VZ;
+	AltCtrl.Td = TD_VZ;
+	AltCtrl.B = BETA_VZ;
+	AltCtrl.N = N_VZ;
+	AltCtrl.P = 0.0;
+	AltCtrl.I = 0.0;
+	AltCtrl.D = 0.0;
+	AltCtrl.PreState = 0.0;
+
+	/* Initialize Roll Controller */
+	RollCtrl.K = K_RP;
+	RollCtrl.Ti = TI_RP;
+	RollCtrl.Td = TD_RP;
+	RollCtrl.B = BETA_RP;
+	RollCtrl.N = N_RP;
+	RollCtrl.P = 0.0;
+	RollCtrl.I = 0.0;
+	RollCtrl.D = 0.0;
+	RollCtrl.PreState = 0.0;	// TODO Set initial estimate
+
+	/* Initialize Pitch Controller */
+	PitchCtrl.K = K_RP;
+	PitchCtrl.Ti = TI_RP;
+	PitchCtrl.Td = TD_RP;
+	PitchCtrl.B = BETA_RP;
+	PitchCtrl.N = N_RP;
+	PitchCtrl.P = 0.0;
+	PitchCtrl.I = 0.0;
+	PitchCtrl.D = 0.0;
+	PitchCtrl.PreState = 0.0;	// TODO Set initial estimate
+
+	/* Initialize Yaw Controller */
+	YawCtrl.K = K_YR;
+	YawCtrl.Ti = TI_YR;
+	YawCtrl.Td = TD_YR;
+	YawCtrl.B = BETA_YR;
+	YawCtrl.N = N_YR;
+	YawCtrl.P = 0.0;
+	YawCtrl.I = 0.0;
+	YawCtrl.D = 0.0;
+	YawCtrl.PreState = 0.0;		// TODO Set initial estimate
 }
 
 /* @TIM6_Setup

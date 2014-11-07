@@ -1,3 +1,7 @@
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __CONTROL_H
+#define __CONTROL_H
+
 typedef struct
 {
 	float M1;
@@ -14,11 +18,33 @@ typedef struct
 	float Yaw;
 }CtrlSignals_TypeDef;
 
+typedef struct
+{
+	float ZVelocity;	// [m/s]
+	float RollAngle;	// [rad]
+	float PitchAngle;	// [rad]
+	float YawRate;		// [rad/s]
+}RefSignals_TypeDef;
+
+typedef struct
+{
+	float K;		// PID gain parameter
+	float Ti;		// PID integration time parameter
+	float Td;		// PID derivative time parameter
+	float B;		// Set-point weighting 0-1
+	float N;		// Derivative action filter constant
+	float P;		// Proportional control part
+	float I;		// Integration control part
+	float D;		// Derivative control part
+	float PreState;	// Previous value of control variable state
+}PIDController_TypeDef;
+
 /* Define variables */
 
 /* Control sample time settings */
-#define TIM7_FREQ 		1000000	// Timer 3 (counter update) frequency [Hz]
-#define TIM7_CTRLFREQ	50		// Control output sample frequency [Hz]
+#define TIM7_FREQ 		1000000				// Timer 3 (counter update) frequency [Hz]
+#define TIM7_CTRLFREQ	50					// Control output sample frequency [Hz]
+#define H 				1/TIM7_CTRLFREQ		// Control sample time [s]
 
 /* Physical properties of aircraft */
 #define LENGTH_ARM 	0.30		// Quadcopter arm length [m]
@@ -37,29 +63,29 @@ typedef struct
 #define DQ 			-0.577590
 
 /* Vertical control parameters */
-#define Kvz 				8.0
-#define TIvz				0.0
-#define TDvz				0.5
-#define BETAvz				1.0			// Proportional set-point weighting
-#define Nvz					15.0		// Max derivative gain (often 10-20)
+#define K_VZ 				8.0
+#define TI_VZ				0.0
+#define TD_VZ				0.5
+#define BETA_VZ				1.0			// Proportional set-point weighting
+#define N_VZ				15.0		// Max derivative gain (often 10-20)
 #define MAX_Z_VELOCITY		2.0			// Max vertical velocity (+/-) [m/s]
-#define MAX_THRUST			49.60		// Maximal upward thrust [N]
+#define MAX_THRUST			49.60		// Maximal upward thrust from all four motors combined [N]
 
 /* Roll/pitch control parameters */
-#define Krp					8.0			// Roll/pitch angle controller parameters
-#define TIrp				0.0
-#define TDrp				0.875
-#define BETArp				1.0			// Proportional set-point weighting
-#define Nrp					15.0		// Max derivative gain (often 10-20)
+#define K_RP				8.0			// Roll/pitch angle controller parameters
+#define TI_RP				0.0
+#define TD_RP				0.875
+#define BETA_RP				1.0			// Proportional set-point weighting
+#define N_RP				15.0		// Max derivative gain (often 10-20)
 #define MAX_ROLLPITCH_ANGLE 10*PI/180	// Max roll/pitch angle (+/-) [rad] (NOTE! Not in deg!)
 #define MAX_ROLLPITCH_MOM	MAX_THRUST*1.4142*LENGTH_ARM
 
 /* Yaw control parameters */
-#define Kyr 				2.0
-#define TIyr 				0.0
-#define TDyr				0.5
-#define BETAyr				1.0			// Proportional set-point weighting
-#define Nyr					15.0		// Max derivative gain (often 10-20)
+#define K_YR 				2.0
+#define TI_YR 				0.0
+#define TD_YR				0.5
+#define BETA_YR				1.0			// Proportional set-point weighting
+#define N_YR					15.0		// Max derivative gain (often 10-20)
 #define MAX_YAW_RATE		10*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
 /* ESC range */
@@ -103,3 +129,8 @@ void PitchControl(void);
 void YawControl(void);
 void SetMotors(void);
 void SetFlightMode(void);
+void InitPIDControllers(void);
+
+#endif /* __CONTROL_H */
+
+/* **** END OF FILE ****/
