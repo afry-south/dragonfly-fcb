@@ -1,7 +1,7 @@
 /**
 ******************************************************************************
 * @file    fcb/sensors.c
-* @author  ÅF Dragonfly - Embedded Systems
+* @author  ÅF Dragonfly - Daniel Stenberg, Embedded Systems
 * @version v. 0.0.1
 * @date    2014-09-26
 * @brief   Functions for reading and filtering the on-board MEMS sensor
@@ -15,12 +15,13 @@
 #include <stdlib.h>
 
 /* Private variables ---------------------------------------------------------*/
-volatile float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f};	// Body-frame sensor readings arrays
 
-float GyroOffsets[3] = {0.0f};
+/* Sensor */
+volatile float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f}, AccAttitudeBuffer[2] = {0.0f};
+
 uint16_t GyroCalSample = 0;
 double CalRollSum = 0.0, CalPitchSum = 0.0, CalYawSum = 0.0;
-volatile char GyroCalibrated = 1;
+volatile char GyroCalibrated = 1; // TODO RESET TO 0
 
 float AccOffsets[3] = {0.0f};
 uint16_t AccCalSample = 0;
@@ -34,6 +35,18 @@ float CalMagXMax = 1.0, CalMagXMin = -1.0, CalMagYMax = 1.0, CalMagYMin = -1.0, 
 float MagXNorm = 1.0, MagYNorm = 1.0, MagZNorm = 1.0;
 volatile char MagCalibrated = 1; // TODO RESET TO 0
 
+float InitRollSum = 0.0, InitPitchSum = 0.0, InitYawSum = 0.0;
+uint16_t InitSample = 0;
+volatile char StatesInitialized = 0;
+
+StateVector_TypeDef States;
+
+KalmanFilter_TypeDef RollEstimator;
+KalmanFilter_TypeDef PitchEstimator;
+KalmanFilter_TypeDef YawRateEstimator;
+KalmanFilter_TypeDef ZVelocityEstimator;
+
+/* Data acquisition variables */
 uint8_t ctrlx[2];
 char ctrlxIsRead = 0;
 
@@ -52,7 +65,7 @@ void GyroConfig(void)
 	  L3GD20_InitTypeDef L3GD20_InitStructure;
 	  L3GD20_FilterConfigTypeDef L3GD20_FilterStructure;
 
-	  /* Configure Mems L3GD20 (See datasheet for more info) */
+	  /* Configure MEMS L3GD20 (See datasheet for more info) */
 	  L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
 	  L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_1;
 	  L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
@@ -119,9 +132,9 @@ void GyroReadAngRate(volatile float* pfData)
   }
 
   /* Divide by sensitivity */
-    pfData[0] = -(float)RawData[1]/sensitivity * PI/180 - GyroOffsets[0];	// Output in radians/second
-    pfData[1] = (float)RawData[0]/sensitivity * PI/180 - GyroOffsets[1];	// Raw data index inverted and minus sign introduced
-    pfData[2] = (float)RawData[2]/sensitivity * PI/180 - GyroOffsets[2];	// to align gyroscope with board directions
+    pfData[0] = -(float)RawData[1]/sensitivity * PI/180;	// Output in radians/second
+    pfData[1] = (float)RawData[0]/sensitivity * PI/180;		// Raw data index inverted and minus sign introduced
+    pfData[2] = (float)RawData[2]/sensitivity * PI/180;		// to align gyroscope with board directions
 }
 
 /** CalibrateGyro
@@ -140,9 +153,9 @@ void CalibrateGyro(void)
 
 		if(GyroCalSample >= GYRO_CALIBRATION_SAMPLES)
 		{
-			GyroOffsets[0] = CalRollSum/((float)GYRO_CALIBRATION_SAMPLES);
-			GyroOffsets[1] = CalPitchSum/((float)GYRO_CALIBRATION_SAMPLES);
-			GyroOffsets[2] = CalYawSum/((float)GYRO_CALIBRATION_SAMPLES);
+			States.rollRateBias = CalRollSum/((float)GYRO_CALIBRATION_SAMPLES);
+			States.pitchRateBias = CalPitchSum/((float)GYRO_CALIBRATION_SAMPLES);
+			States.yawRateBias = CalYawSum/((float)GYRO_CALIBRATION_SAMPLES);
 			GyroCalibrated = 1;
 		}
 	}
@@ -180,7 +193,7 @@ void CompassConfig(void)
   LSM303DLHCAcc_InitStructure.Power_Mode = LSM303DLHC_NORMAL_MODE;
   LSM303DLHCAcc_InitStructure.AccOutput_DataRate = LSM303DLHC_ODR_50_HZ;
   LSM303DLHCAcc_InitStructure.Axes_Enable = LSM303DLHC_AXES_ENABLE;
-  LSM303DLHCAcc_InitStructure.AccFull_Scale = LSM303DLHC_FULLSCALE_4G;
+  LSM303DLHCAcc_InitStructure.AccFull_Scale = LSM303DLHC_FULLSCALE_2G;
   LSM303DLHCAcc_InitStructure.BlockData_Update = LSM303DLHC_BlockUpdate_Continous;
   LSM303DLHCAcc_InitStructure.Endianness = LSM303DLHC_BLE_LSB;
   LSM303DLHCAcc_InitStructure.High_Resolution = LSM303DLHC_HR_DISABLE;
@@ -268,15 +281,28 @@ void CompassReadAcc(volatile float* pfData)
   }
 
   /* Obtain the mg (g for gravitational acceleration) value for the three axis */
-    // pfData[i] = (float) pnRawData[i]/LSM_Acc_Sensitivity - AccOffsets[i];			// Output in mg (10^(-3) g)
+    pfData[0] = (float)pnRawData[0]/LSM_Acc_Sensitivity / 1000 - AccOffsets[0];		// Output in g (grav. acc. const.)
+    pfData[1] = (float)pnRawData[1]/LSM_Acc_Sensitivity / 1000 - AccOffsets[1];
+    pfData[2] = (float)pnRawData[2]/LSM_Acc_Sensitivity / 1000 - AccOffsets[2];
+}
 
-    pfData[0] = (float)pnRawData[0]/LSM_Acc_Sensitivity / 1000 * G_ACC - AccOffsets[0];		// Output in m/(s^2)
-    pfData[1] = (float)pnRawData[1]/LSM_Acc_Sensitivity / 1000 * G_ACC - AccOffsets[1];
-    pfData[2] = (float)pnRawData[2]/LSM_Acc_Sensitivity / 1000 * G_ACC - AccOffsets[2];
+/** AccAttitude
+  * @brief  Calculates attitude (roll and pitch) estimate based on accelerometer reading
+  * @param  pfData: pointer to the data out
+  * @retval None
+  */
+void AccAttitude(volatile float* pfData)
+{
+	float SinAccRoll = -AccBuffer[1];
+	float CosAccRoll = sqrtf(1-SinAccRoll*SinAccRoll);
+	float SinAccPitch = AccBuffer[0]/CosAccRoll;
+
+	pfData[0] = asinf(fSinAccRoll);
+	pfData[1] = asinf(fSinAccPitch);
 }
 
 /** CalibrateAcc
-  * @brief  Calculate the Accelerometer sensor offset
+  * @brief  Calculates the Accelerometer sensor offset and magnitude scaling error
   * @param  None.
   * @retval None.
   */
@@ -284,18 +310,48 @@ void CalibrateAcc(void)
 {
 	if(!AccCalibrated)
 	{
-		CalAccXSum += AccBuffer[0];
-		CalAccYSum += AccBuffer[1];
-		CalAccZSum += AccBuffer[2];
-		AccCalSample++;
+		float accSamples[6][3] = {0.0f};
+		float accSumSq[3] = {0.0f}; // TODO move
+		float accSum[3] = {0.0f};
 
-		if(AccCalSample >= ACC_CALIBRATION_SAMPLES)
+		// First ACC_MEANVAR_SAMPLES samples used to determine mean and variance
+		if(GetUserButton() >= 0x01 && AccMeanVarSample <= ACC_MEANVAR_SAMPLES)
 		{
-			AccOffsets[0] = CalAccXSum/((float)ACC_CALIBRATION_SAMPLES);
-			AccOffsets[1] = CalAccYSum/((float)ACC_CALIBRATION_SAMPLES);
-			AccOffsets[2] = CalAccZSum/((float)ACC_CALIBRATION_SAMPLES) - G_ACC;
-			AccCalibrated = 1;
+			// Insert delay/wait/timeout 1-2 seconds before first measurement
+
+			accSum[0] += AccBuffer[0];
+			accSum[1] += AccBuffer[1];
+			accSum[2] += AccBuffer[2];
+
+			accSumSq[0] += AccBuffer[0]*AccBuffer[0];
+			accSumSq[1] += AccBuffer[1]*AccBuffer[1];
+			accSumSq[2] += AccBuffer[2]*AccBuffer[2];
+
+			if(AccMeanVarSample >= ACC_CALIBRATION_SAMPLES)
+			{
+				accSamples[GetUserButton()-1][0] = accSum[0]/ACC_CALIBRATION_SAMPLES;
+				accSamples[GetUserButton()-1][1] = accSum[1]/ACC_CALIBRATION_SAMPLES;
+				accSamples[GetUserButton()-1][2] = accSum[2]/ACC_CALIBRATION_SAMPLES;
+				if(GetUserButton() >= 0x06)
+					AccCalSampled = 1;
+			}
 		}
+
+		if(AccCalSampled)
+		{
+			if(change >= eps && iterations < MAX_ACCCAL_ITERATIONS)
+			{
+				CalcAccCalMatrices();
+				GetDelta();
+
+				AccOffsets[0] -= delta_acc[0];
+				AccOffsets[1] -= delta_acc[1];
+				AccOffsets[2] -= delta_acc[2];
+
+				change = delta_acc[0]*delta_acc[0] + delta_acc[1]*delta_acc[1] + delta_acc[2]*delta_acc[2];
+			}
+		}
+
 	}
 }
 
@@ -309,7 +365,7 @@ char GetAccCalibrated(void)
 	return AccCalibrated;
 }
 
-/**
+/** CompassReadMag
   * @brief  calculate the magnetic field Magn.
   * @param  pfData: pointer to the data out
   * @retval None
@@ -419,50 +475,207 @@ char GetMagCalibrated(void)
 	return MagCalibrated;
 }
 
-/* GetBodyAttitude
- * @brief  Discrete integration of angular rate
+/** InitializeStates
+  * @brief  Initializes the attitude states
+  * @param  None.
+  * @retval None.
+  */
+void InitializeStateEstimation(void)
+{
+	if(!StatesInitialized)
+	{
+		InitRollSum += AccAttitudeBuffer[0];
+		InitPitchSum += AccAttitudeBuffer[1];
+		InitYawSum += GetHeading();
+		InitSample++;
+
+		if(InitSample >= INIT_SAMPLES)
+		{
+			States.roll = InitRollSum/((float)INIT_SAMPLES);
+			States.pitch = InitPitchSum/((float)INIT_SAMPLES);
+			States.yaw = InitYawSum/((float)INIT_SAMPLES);
+
+			// TODO Estimate variances, use with motor running to take vibrations into account?
+			// Or do it offline somehow?
+			InitRollEstimator();
+			InitPitchEstimator();
+			//InitYawEstimator();
+			//InitZVelocityEstimator();
+
+			StatesInitialized = 1;
+		}
+	}
+}
+
+/** GetStatesInitialized
+  * @brief  Returns 1 if accelerometer has been calibrated
+  * @param  None.
+  * @retval None.
+  */
+char GetStatesInitialized(void)
+{
+	return StatesInitialized;
+}
+
+/* InitRollEstimator
+ * @brief  Initializes the roll state Kalman estimator
  * @param  None
  * @retval None
  */
-void GetBodyAttitude(float *pfData)
+void InitRollEstimator(void)
 {
+	RollEstimator.p11 = 1.0;
+	RollEstimator.p12 = 0.0;
+	RollEstimator.p21 = 0.0;
+	RollEstimator.p22 = 1.0;
 
-
-	/* Complementary sensor fusion filter. TODO: Kalman filter */
-	pfData[0] += GyroBuffer[0]*H; + atan2f(-AccBuffer[1], AccBuffer[2]);	// Roll angle
-	pfData[1] += GyroBuffer[1]*H; + atan2f(AccBuffer[0], AccBuffer[2]);		// Pitch angle
-	pfData[2] += GyroBuffer[2]*H; 											// Yaw angle
+	RollEstimator.q1 = 0.5;
+	RollEstimator.q2 = 0.05;
+	RollEstimator.r1 = 1.5;
 }
 
-/* GetBodyVelocity
- * @brief  Discrete integration of linear acceleration
+/* UpdateRoll
+ * @brief  Updates the roll state estimate using Kalman filtering
  * @param  None
  * @retval None
  */
-void GetBodyVelocity(float *pfData)
+void UpdateRollEstimate(void)
 {
-	pfData[0] += AccBuffer[0]*H;
-	pfData[1] += AccBuffer[1]*H;
-	pfData[2] += (AccBuffer[2]-G_ACC)*H;
+	/* Get roll rate from sensors: RollRate = p + (q*sinRoll+r*cosRoll)*tanPitch */
+	float rollRateGyro = GyroBuffer[0] + (GyroBuffer[1]*sinf(States.roll) + GyroBuffer[1]*cosf(States.roll))*tanf(States.pitch);
+
+	/* Prediction */
+	States.roll = States.roll + H*rollRateGyro - H*States.rollRateBias;
+	States.rollRateBias = States.rollRateBias;
+
+	RollEstimator.p11 = RollEstimator.p11-RollEstimator.p21*H - H*(RollEstimator.p12-RollEstimator.p22*H) + RollEstimator.q1;
+	RollEstimator.p12 = RollEstimator.p12 - RollEstimator.p22*H;
+	RollEstimator.p21 = RollEstimator.p21 - RollEstimator.p22*H;
+	RollEstimator.p22 = RollEstimator.p22 + RollEstimator.q2;
+
+	/* Correction */
+	RollEstimator.k1 = RollEstimator.p11/(RollEstimator.p11+RollEstimator.r1);
+	RollEstimator.k2 = RollEstimator.p21/(RollEstimator.p11+RollEstimator.r1);
+
+	States.roll = States.roll + RollEstimator.k1*(AccAttitudeBuffer[0]-States.roll);
+	States.rollRateBias = States.rollRateBias + RollEstimator.k2*(AccAttitudeBuffer[0]-States.roll);
+
+	RollEstimator.p11 = RollEstimator.p11*(1-RollEstimator.k1);
+	RollEstimator.p12 = RollEstimator.p12*(1-RollEstimator.k1);
+	RollEstimator.p21 = RollEstimator.p21 - RollEstimator.k2*RollEstimator.p11;
+	RollEstimator.p22 = RollEstimator.p22 - RollEstimator.k2*RollEstimator.p12;
 }
+
+/* InitPitchEstimator
+ * @brief  Initializes the pitch state Kalman estimator
+ * @param  None
+ * @retval None
+ */
+void InitPitchEstimator(void)
+{
+	PitchEstimator.p11 = 1.0;
+	PitchEstimator.p12 = 0.0;
+	PitchEstimator.p21 = 0.0;
+	PitchEstimator.p22 = 1.0;
+
+	PitchEstimator.q1 = 0.5;
+	PitchEstimator.q2 = 0.05;
+	PitchEstimator.r1 = 1.5;
+}
+
+/* UpdatePitch
+ * @brief  Updates the pitch state estimate using Kalman filtering
+ * @param  None
+ * @retval None
+ */
+void UpdatePitchEstimate(void)
+{
+	/* Get pitch rate from sensors: PitchRate = q*cosRoll - r*sinRoll */
+	float pitchRateGyro = GyroBuffer[1]*cosf(States.roll) - GyroBuffer[1]*sinf(States.roll);
+
+	/* Prediction */
+	States.pitch = States.pitch + H*pitchRateGyro - H*States.pitchRateBias;
+	States.pitchRateBias = States.pitchRateBias;
+
+	PitchEstimator.p11 = PitchEstimator.p11-PitchEstimator.p21*H - H*(PitchEstimator.p12-PitchEstimator.p22*H) + PitchEstimator.q1;
+	PitchEstimator.p12 = PitchEstimator.p12 - PitchEstimator.p22*H;
+	PitchEstimator.p21 = PitchEstimator.p21 - PitchEstimator.p22*H;
+	PitchEstimator.p22 = PitchEstimator.p22 + PitchEstimator.q2;
+
+	/* Correction */
+	PitchEstimator.k1 = PitchEstimator.p11/(PitchEstimator.p11+PitchEstimator.r1);
+	PitchEstimator.k2 = PitchEstimator.p21/(PitchEstimator.p11+PitchEstimator.r1);
+
+	States.pitch = States.pitch + PitchEstimator.k1*(AccAttitudeBuffer[1]-States.pitch);
+	States.pitchRateBias = States.pitchRateBias + PitchEstimator.k2*(AccAttitudeBuffer[1]-States.pitch);
+
+	PitchEstimator.p11 = PitchEstimator.p11*(1-PitchEstimator.k1);
+	PitchEstimator.p12 = PitchEstimator.p12*(1-PitchEstimator.k1);
+	PitchEstimator.p21 = PitchEstimator.p21 - PitchEstimator.k2*RollEstimator.p11;
+	PitchEstimator.p22 = PitchEstimator.p22 - PitchEstimator.k2*PitchEstimator.p12;
+}
+
+/* GetRoll
+ * @brief  Gets the roll angle
+ * @param  None
+ * @retval Roll angle state
+ */
+float GetRoll(void)
+{
+	return States.roll;
+}
+
+/* GetPitch
+ * @brief  Gets the pitch angle
+ * @param  None
+ * @retval Pitch angle state
+ */
+float GetPitch(void)
+{
+	return States.pitch;
+}
+
+void UpdateYawRateEstimate(void)
+{
+	States.yawRate = (GyroBuffer[1]*sinf(States.roll)+GyroBuffer[2]*cosf(States.roll))/cosf(States.pitch);
+}
+
+/* GetYawRate
+ * @brief  Gets the yaw angular rate
+ * @param  None
+ * @retval Yaw angular rate state
+ */
 
 float GetYawRate(void)
 {
-	return GyroBuffer[2];
+	return States.yawRate;
+}
+
+/* UpdateZVelocity
+ * @brief  Updates the Z velocity state
+ * @param  None
+ * @retval None
+ */
+void UpdateZVelocityEstimate(void)
+{
+	float ZAcc = (-AccBuffer[0]*sinf(States.pitch)+AccBuffer[1]*sinf(States.roll)*cosf(States.pitch)+AccBuffer[2]*cosf(States.roll)*cosf(States.pitch))*G_ACC - G_ACC;
+	States.ZVelocity += ZAcc*H;
+}
+
+/* GetZVelocity
+ * @brief  Gets the vertical z velocity
+ * @param  None
+ * @retval Z velocity state
+ */
+float GetZVelocity(void)
+{
+	return States.ZVelocity;
 }
 
 float GetHeading(void)
 {
-	float fNormAcc = sqrt((AccBuffer[0]*AccBuffer[0])+(AccBuffer[1]*AccBuffer[1])+(AccBuffer[2]*AccBuffer[2]));
-
-	/* TODO Use better estimates of roll pitch (from Extended Kalman) */
-	float fSinRoll = -AccBuffer[1]/fNormAcc;
-	float fCosRoll = sqrtf(1.0-(fSinRoll * fSinRoll));
-	float fSinPitch = AccBuffer[0]/fNormAcc;
-	float fCosPitch = sqrtf(1.0-(fSinPitch * fSinPitch));
-
-	float fTiltedX = MagBuffer[0]*fCosPitch + MagBuffer[1]*fSinRoll*fSinPitch + MagBuffer[2]*fCosRoll*fSinPitch;
-	float fTiltedY = MagBuffer[1]*fCosRoll - MagBuffer[2]*fSinRoll;
+	float fTiltedX = MagBuffer[0]*cosf(States.pitch) + MagBuffer[1]*sinf(States.roll)*sinf(States.pitch) + MagBuffer[2]*cosf(States.roll)*sinf(States.pitch);
+	float fTiltedY = MagBuffer[1]*cosf(States.roll) - MagBuffer[2]*sinf(States.roll);
 
 	float HeadingValue = atan2f(fTiltedY, fTiltedX) - COMPASS_DECLINATION;
 
@@ -484,6 +697,20 @@ void ReadSensors(void)
 	GyroReadAngRate(GyroBuffer);
 	CompassReadAcc(AccBuffer);
 	CompassReadMag(MagBuffer);
+	AccAttitude(AccAttitudeBuffer);
+}
+
+/* UpdateStates
+ * @brief  Updates the state estimates
+ * @param  None
+ * @retval None
+ */
+void UpdateStates(void)
+{
+	UpdateRollEstimate();
+	UpdatePitchEstimate();
+	UpdateYawRateEstimate();
+	UpdateZVelocityEstimate();
 }
 
 /**

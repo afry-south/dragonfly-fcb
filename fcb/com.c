@@ -1,7 +1,7 @@
 /**
 ******************************************************************************
 * @file    fcb/com.c
-* @author  ÅF Dragonfly - Embedded Systems
+* @author  ÅF Dragonfly - Daniel Stenberg, Embedded Systems
 * @version v. 0.0.1
 * @date    2014-09-29
 * @brief   Flight Control program for the ÅF Dragonfly quadcopter.
@@ -24,7 +24,6 @@
 RCC_ClocksTypeDef RCC_Clocks;
 __IO uint32_t TimingDelay = 0;
 __IO uint32_t USBConnectTimeOut = 100;
-__IO uint32_t UserButtonPressed = 0;
 __IO uint8_t DataReady = 0;
 
 /* Extern variables ----------------------------------------------------------*/

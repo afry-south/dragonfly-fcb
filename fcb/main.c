@@ -1,7 +1,7 @@
 /**
 ******************************************************************************
 * @file    fcb/main.c
-* @author  ÅF Dragonfly - Embedded Systems
+* @author  ÅF Dragonfly - Daniel Nilsson and Daniel Stenberg, Embedded Systems
 * @version v. 0.0.1
 * @date    2014-09-26
 * @brief   Flight Control program for the ÅF Dragonfly quadcopter
@@ -20,6 +20,8 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+__IO uint32_t UserButtonPressed = 0;
+
 /* Private functions -----------------------------------------------*/
 static void Init(void);
 static void InitLEDs(void);
@@ -39,13 +41,12 @@ static void InitLEDs(void);
 /* TODO Calibration reset if not satisfactory */
 /* TODO Memory for storing settings and logging data (Use flash memory (EEPROM emulation) / SD card) */
 /* TODO Interface with PC for setup (USB connection): Virtual COM port CDC communication established */
-/* Suggestion: TODO Detect initial/take-off attitude (use gravity direction) */
-/* TODO GetBodyAttitude etc. also updates, make separate update functions in sensors.c */
 /* Suggestion: TODO Arm motors (both sticks bottom left within 95% of min values) */
-/* TODO Proximity sensors ADC */
 /* Suggestion: TODO Glue pistol on stripboard bottom connections */
 /* --> TODO Calibration temporarily set to true with some offset values */
-/* Suggestion: TODO define refs, states, controller param, Kalman param etc as struct typedefs */
+/* Suggestion: TODO Re-check execution time using GPIO set and reset bits */
+/* Suggestion: TODO cos and sin of pitch, roll, yaw performed repeatedly - store them once for each iteration. Use lookup-table for sin/cos/tan? */
+/* Suggestion: TODO Barometer altimeter, proximity sensors, voltage sensor to monitor battery level or can the ~5V onboard be monitored? */
 
 /**
 * @brief  Main program.
@@ -76,6 +77,9 @@ static void Init(void)
 	GyroConfig();
 	CompassConfig();
 	InitPIDControllers();
+
+	/* Reset UserButton_Pressed variable */
+	UserButtonPressed = 0x00;
 
 	/* Init USB com */
 	//initUSB();
@@ -123,6 +127,16 @@ static void InitLEDs(void)
 	STM_EVAL_LEDOff(LED8);
 	STM_EVAL_LEDOff(LED9);
 	STM_EVAL_LEDOff(LED10);
+}
+
+void GetUserButton(void)
+{
+	return UserButtonPressed;
+}
+
+void ResetUserButton(void)
+{
+	UserButtonPressed = 0x00;
 }
 
 #ifdef  USE_FULL_ASSERT

@@ -85,7 +85,7 @@ typedef struct
 #define TI_YR 				0.0
 #define TD_YR				0.5
 #define BETA_YR				1.0			// Proportional set-point weighting
-#define N_YR					15.0		// Max derivative gain (often 10-20)
+#define N_YR				15.0		// Max derivative gain (often 10-20)
 #define MAX_YAW_RATE		10*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
 /* ESC range */

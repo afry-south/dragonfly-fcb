@@ -1,7 +1,7 @@
 /**
 ******************************************************************************
 * @file    fcb/control.c
-* @author  ÅF Dragonfly - Embedded Systems
+* @author  ÅF Dragonfly - Daniel Stenberg, Embedded Systems
 * @version v. 0.0.1
 * @date    2014-09-29
 * @brief   Flight Control program for the ÅF Dragonfly quadcopter
@@ -17,13 +17,6 @@
 #include <math.h>
 
 /* Private variables ---------------------------------------------------------*/
-
-/* Measured states */
-float BodyAttitude[3] = {0.0f};	// Body-frame roll, pitch, yaw angles from gyro integration [rad]
-float BodyVelocity[3] = {0.0f};	// Body-frame velocities [m/s]
-float YawRate = 0.0;
-float Heading = 0.0;			// Heading from magnetometer
-
 PWMRC_TimeTypeDef PWMInputTimes;	// 6-channel PWM input width in seconds
 CtrlSignals_TypeDef CtrlSignals;	// Physical control signals
 RefSignals_TypeDef RefSignals;		// Control reference signals
@@ -49,8 +42,7 @@ void TIM7_IRQHandler()
 	{
 		TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
 
-		ReadSensors();	// Reads gyroscope, accelerometer and magnetometer
-		// UpdateStates(); TODO
+		ReadSensors();						// Reads gyroscope, accelerometer and magnetometer
 		GetPWMInputTimes(&PWMInputTimes);	// Get 6 channel RC input pulse widths
 		SetFlightMode();
 
@@ -68,8 +60,8 @@ void TIM7_IRQHandler()
 			 * */
 
 			STM_EVAL_LEDOn(LED3);
+			ResetUserButton();	// Reset user button
 
-			ReadSensors();
 			CalibrateMag();
 
 			// Set motor output to lowest
@@ -79,12 +71,12 @@ void TIM7_IRQHandler()
 		else if(!GetAccCalibrated())
 		{
 			/* _ACCELEROMETER CALIBRATION INSTRUCTIONS_
-			 * Hold the quadcopter still for a few seconds in each of the following positions:
-			 * Level, upside-down, left side down, right side down, front down, rear down.
-			 * TODO Not implemented yet...
+			 * Hold the quadcopter as still as possible for a few seconds in each of the following positions:
+			 * Level, upside-down, left side down, right side down, front down, rear down. (Does not need to be exact)
 			 * */
 
 			STM_EVAL_LEDOn(LED5);
+			ResetUserButton();	// Reset user button
 
 			CalibrateAcc();
 
@@ -95,15 +87,24 @@ void TIM7_IRQHandler()
 		else if(!GetGyroCalibrated())
 		{
 			/* _GYROSCOPE CALIBRATION INSTRUCTIONS_
-			 * Bla bla
+			 * Hold the quadcopter completely still, put it on the ground or equivalent.
 			 * */
 
 			STM_EVAL_LEDOn(LED7);
+			ResetUserButton();	// Reset user button
 
 			CalibrateGyro();
-			GetBodyAttitude(BodyAttitude);
 
-			// TODO Init attitude
+			// Set motor output to lowest
+			PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
+			SetMotors();
+		}
+		else if(!GetStatesInitialized())
+		{
+			STM_EVAL_LEDOn(LED9);
+			ResetUserButton();	// Reset user button
+
+			InitializeStateEstimation();
 
 			// Set motor output to lowest
 			PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
@@ -113,13 +114,11 @@ void TIM7_IRQHandler()
 		{
 			STM_EVAL_LEDOff(LED7);
 			STM_EVAL_LEDOff(LED8);
-			STM_EVAL_LEDOff(LED10);
-			STM_EVAL_LEDOn(LED9);
+			STM_EVAL_LEDOff(LED9);
+			STM_EVAL_LEDOff(LED11);
+			STM_EVAL_LEDOn(LED10);
 
-			GetBodyVelocity(BodyVelocity);
-			GetBodyAttitude(BodyAttitude);
-			YawRate = GetYawRate();
-			Heading = GetHeading();
+			UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
 
 			SetReferenceSignals();
 			AltitudeControl();
@@ -135,12 +134,10 @@ void TIM7_IRQHandler()
 			STM_EVAL_LEDOff(LED7);
 			STM_EVAL_LEDOff(LED8);
 			STM_EVAL_LEDOff(LED9);
-			STM_EVAL_LEDOn(LED10);
+			STM_EVAL_LEDOff(LED10);
+			STM_EVAL_LEDOn(LED11);
 
-			GetBodyVelocity(BodyVelocity);
-			GetBodyAttitude(BodyAttitude);
-			YawRate = GetYawRate();
-
+			UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
 			// Set motor output to lowest
 			ManualModeAllocation();
 			SetMotors();
@@ -152,9 +149,7 @@ void TIM7_IRQHandler()
 			STM_EVAL_LEDOff(LED10);
 			STM_EVAL_LEDOn(LED8);
 
-			GetBodyVelocity(BodyVelocity);
-			GetBodyAttitude(BodyAttitude);
-			YawRate = GetYawRate();
+			UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
 
 			// Set motor output to lowest
 			PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
@@ -170,12 +165,12 @@ void TIM7_IRQHandler()
  */
 void AltitudeControl(void)
 {
-	float bodyZvelocity = BodyVelocity[2]*cosf(BodyAttitude[0])*cosf(BodyAttitude[1]);
+	float ZVelocity = GetZVelocity();
 
-	AltCtrl.P = AltCtrl.K*(AltCtrl.B*RefSignals.ZVelocity - bodyZvelocity);
+	AltCtrl.P = AltCtrl.K*(AltCtrl.B*RefSignals.ZVelocity - ZVelocity);
 
 	// Backward difference, derivative part with zero set-point weighting
-	AltCtrl.D = AltCtrl.Td/(AltCtrl.Td+AltCtrl.N*H)*AltCtrl.D - AltCtrl.K*AltCtrl.Td*AltCtrl.N/(AltCtrl.Td+AltCtrl.N*H)*(bodyZvelocity - AltCtrl.PreState);
+	AltCtrl.D = AltCtrl.Td/(AltCtrl.Td+AltCtrl.N*H)*AltCtrl.D - AltCtrl.K*AltCtrl.Td*AltCtrl.N/(AltCtrl.Td+AltCtrl.N*H)*(ZVelocity - AltCtrl.PreState);
 
 	CtrlSignals.Thrust = (AltCtrl.P + AltCtrl.I + AltCtrl.D + G_ACC) * MASS;
 
@@ -187,9 +182,9 @@ void AltitudeControl(void)
 
 	// Forward difference, so updated after control
 	if(AltCtrl.Ti != 0.0)
-		AltCtrl.I = AltCtrl.I + AltCtrl.K*H/AltCtrl.Ti * (RefSignals.ZVelocity - bodyZvelocity);
+		AltCtrl.I = AltCtrl.I + AltCtrl.K*H/AltCtrl.Ti * (RefSignals.ZVelocity - ZVelocity);
 
-	AltCtrl.PreState = bodyZvelocity;
+	AltCtrl.PreState = ZVelocity;
 }
 
 /* @RollControl
@@ -199,10 +194,12 @@ void AltitudeControl(void)
  */
 void RollControl(void)
 {
-	RollCtrl.P = RollCtrl.K*(RollCtrl.B*RefSignals.RollAngle - BodyAttitude[0]);
+	float RollAngle = GetRoll();
+
+	RollCtrl.P = RollCtrl.K*(RollCtrl.B*RefSignals.RollAngle - RollAngle);
 
 	// Backward difference, derivative part with zero set-point weighting
-	RollCtrl.D = RollCtrl.Td/(RollCtrl.Td+RollCtrl.N*H)*RollCtrl.D - RollCtrl.K*RollCtrl.Td*RollCtrl.N/(RollCtrl.Td+RollCtrl.N*H)*(BodyAttitude[0] - RollCtrl.PreState);
+	RollCtrl.D = RollCtrl.Td/(RollCtrl.Td+RollCtrl.N*H)*RollCtrl.D - RollCtrl.K*RollCtrl.Td*RollCtrl.N/(RollCtrl.Td+RollCtrl.N*H)*(RollAngle - RollCtrl.PreState);
 
 	CtrlSignals.Roll = (RollCtrl.P + RollCtrl.I + RollCtrl.D) * IXX;
 
@@ -214,9 +211,9 @@ void RollControl(void)
 
 	// Forward difference, so updated after control
 	if(RollCtrl.Ti != 0.0)
-		RollCtrl.I = RollCtrl.I + RollCtrl.K*H/RollCtrl.Ti * (RefSignals.RollAngle - BodyAttitude[0]);
+		RollCtrl.I = RollCtrl.I + RollCtrl.K*H/RollCtrl.Ti * (RefSignals.RollAngle - RollAngle);
 
-	RollCtrl.PreState = BodyAttitude[0];
+	RollCtrl.PreState = RollAngle;
 }
 
 /* @PitchControl
@@ -226,10 +223,12 @@ void RollControl(void)
  */
 void PitchControl(void)
 {
-	PitchCtrl.P = PitchCtrl.K*(PitchCtrl.B*RefSignals.PitchAngle - BodyAttitude[1]);
+	float PitchAngle = GetPitch();
+
+	PitchCtrl.P = PitchCtrl.K*(PitchCtrl.B*RefSignals.PitchAngle - PitchAngle);
 
 	// Backward difference, derivative part with zero set-point weighting
-	PitchCtrl.D = PitchCtrl.Td/(PitchCtrl.Td+PitchCtrl.N*H)*PitchCtrl.D - PitchCtrl.K*PitchCtrl.Td*PitchCtrl.N/(PitchCtrl.Td+PitchCtrl.N*H)*(BodyAttitude[1] - PitchCtrl.PreState);
+	PitchCtrl.D = PitchCtrl.Td/(PitchCtrl.Td+PitchCtrl.N*H)*PitchCtrl.D - PitchCtrl.K*PitchCtrl.Td*PitchCtrl.N/(PitchCtrl.Td+PitchCtrl.N*H)*(PitchAngle - PitchCtrl.PreState);
 
 	CtrlSignals.Pitch = (PitchCtrl.P + PitchCtrl.I + PitchCtrl.D) * IYY;
 
@@ -241,9 +240,9 @@ void PitchControl(void)
 
 	// Forward difference, so updated after control
 	if(PitchCtrl.Ti != 0.0)
-		PitchCtrl.I = PitchCtrl.I + PitchCtrl.K*H/PitchCtrl.Ti * (RefSignals.PitchAngle - BodyAttitude[1]);
+		PitchCtrl.I = PitchCtrl.I + PitchCtrl.K*H/PitchCtrl.Ti * (RefSignals.PitchAngle - PitchAngle);
 
-	PitchCtrl.PreState = BodyAttitude[1];
+	PitchCtrl.PreState = PitchAngle;
 }
 
 /* @YawControl
@@ -253,6 +252,8 @@ void PitchControl(void)
  */
 void YawControl(void)
 {
+	float YawRate = GetYawRate();
+
 	YawCtrl.P = YawCtrl.K*(YawCtrl.B*RefSignals.YawRate - YawRate);
 
 	// Backward difference

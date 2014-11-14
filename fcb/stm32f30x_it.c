@@ -149,7 +149,7 @@ void SysTick_Handler(void)
 {
   //TimingDelay_Decrement();
   USBConnectTimeOut--;
-  DataReady ++;
+  DataReady++;
 }
 
 /******************************************************************************/
@@ -176,7 +176,7 @@ void EXTI0_IRQHandler(void)
     for(i=0; i<0x7FFFF; i++);
     UserButtonPressed++;
     
-    if (UserButtonPressed > 0x2)
+    if (UserButtonPressed > 0x6)
     {
       UserButtonPressed = 0x0;
     }
