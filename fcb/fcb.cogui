@@ -14,30 +14,25 @@
 <part id="1"/>
 <part id="2"/>
 <part id="3"/>
-<part id="4"/>
 </presentation>
 </folder>
 </info>
 </editorArea>
-<editor id="org.eclipse.cdt.ui.editor.CEditor" name="control.h" partName="control.h" path="C:/Users/A501632/Dragonfly/fcb/control.h" title="control.h" tooltip="C:/Users/A501632/Dragonfly/fcb/control.h" workbook="DefaultEditorWorkbook">
-<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/control.h"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="2784" selectionTopPixel="0"/>
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x_dma.h" partName="stm32f30x_dma.h" path="C:/Users/A501632/Dragonfly/fcb/stm_lib/inc/stm32f30x_dma.h" title="stm32f30x_dma.h" tooltip="C:/Users/A501632/Dragonfly/fcb/stm_lib/inc/stm32f30x_dma.h" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/stm_lib/inc/stm32f30x_dma.h"/>
+<editorState selectionHorizontalPixel="0" selectionLength="21" selectionOffset="5272" selectionTopPixel="1455"/>
 </editor>
-<editor id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.c" partName="sensors.c" path="C:/Users/A501632/Dragonfly/fcb/sensors.c" title="sensors.c" tooltip="C:/Users/A501632/Dragonfly/fcb/sensors.c" workbook="DefaultEditorWorkbook">
-<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/sensors.c"/>
-<editorState selectionHorizontalPixel="0" selectionLength="9" selectionOffset="10167" selectionTopPixel="4538"/>
-</editor>
-<editor id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.h" partName="sensors.h" path="C:/Users/A501632/Dragonfly/fcb/sensors.h" title="sensors.h" tooltip="C:/Users/A501632/Dragonfly/fcb/sensors.h" workbook="DefaultEditorWorkbook">
-<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/sensors.h"/>
-<editorState selectionHorizontalPixel="0" selectionLength="23" selectionOffset="1662" selectionTopPixel="293"/>
-</editor>
-<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" partName="main.c" path="C:/Users/A501632/Dragonfly/fcb/main.c" title="main.c" tooltip="C:/Users/A501632/Dragonfly/fcb/main.c" workbook="DefaultEditorWorkbook">
-<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/main.c"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="2892" selectionTopPixel="338"/>
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x_dma.c" partName="stm32f30x_dma.c" path="C:/Users/A501632/Dragonfly/fcb/stm_lib/src/stm32f30x_dma.c" title="stm32f30x_dma.c" tooltip="C:/Users/A501632/Dragonfly/fcb/stm_lib/src/stm32f30x_dma.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/stm_lib/src/stm32f30x_dma.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="1896"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="control.c" partName="control.c" path="C:/Users/A501632/Dragonfly/fcb/control.c" title="control.c" tooltip="C:/Users/A501632/Dragonfly/fcb/control.c" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/control.c"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
+<editorState selectionHorizontalPixel="0" selectionLength="4" selectionOffset="16909" selectionTopPixel="7241"/>
+</editor>
+<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.c" partName="sensors.c" path="C:/Users/A501632/Dragonfly/fcb/sensors.c" title="sensors.c" tooltip="C:/Users/A501632/Dragonfly/fcb/sensors.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/sensors.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1743" selectionTopPixel="270"/>
 </editor>
 </editors>
 <views>
@@ -53,9 +48,12 @@
 <viewState CommonNavigator.LINKING_ENABLED="0" horizontalPosition="0" org.eclipse.ui.navigator.resources.workingSets.showTopLevelWorkingSets="0" verticalPosition="0">
 <expanded>
 <element path="/fcb"/>
+<element path="/fcb/cmsis_boot"/>
+<element path="/fcb/stm_lib"/>
+<element path="/fcb/utils"/>
 </expanded>
 <selection>
-<element path="/fcb/control.c"/>
+<element path="/fcb/main.c"/>
 </selection>
 </viewState>
 </view>
@@ -64,7 +62,6 @@
 </view>
 <view id="org.eclipse.search.ui.views.SearchView" partName="Search">
 <viewState isPinned="false">
-<view IMemento.internal.id="org.eclipse.cdt.ui.pdomSearchViewPage" definitionColumnWidth="150" locationColumnWidth="300" matchColumnWidth="300" org.eclipse.search.lastActivation="1" org.eclipse.search.resultpage.layout="2" showEnclosingDefinitions="true"/>
 <view IMemento.internal.id="" org.eclipse.search.lastActivation="0"/>
 </viewState>
 </view>
@@ -134,7 +131,7 @@
 </folder>
 </info>
 <info folder="true" part="org.eclipse.ui.internal.ViewStack@fa09b5" ratio="0.7481032" ratioLeft="493" ratioRight="166" relationship="4" relative="org.eclipse.ui.internal.ViewStack@1750516">
-<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
+<folder activePageID="org.eclipse.search.ui.views.SearchView" appearance="2" expanded="2">
 <page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
 <page content="org.eclipse.search.ui.views.SearchView" label="Search"/>
 <page content="org.eclipse.debug.ui.ExpressionView" label="Expressions"/>
@@ -291,168 +288,166 @@
 <navigationHistory>
 <editors>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/sensors.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/main.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/control.c"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/control.h"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/stm32f30x_it.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/sensors.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/stm_lib/inc/stm32f30x_dma.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/utils/stm32f3_discovery_lsm303dlhc.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/stm_lib/src/stm32f30x_dma.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/utils/stm32f3_discovery_lsm303dlhc.c"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/control.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/main.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/control.h"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/control.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/control.h"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/sensors.h"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/sensors.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/sensors.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/main.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/sensors.h"/>
 </editors>
 <item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="10334" y="0"/>
+<position info="not_deleted" x="5683" y="29"/>
+</item>
+<item historyLabel="stm32f3_discovery_lsm303dlhc.h" index="3">
+<position/>
 </item>
 <item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="11191" y="0"/>
+<position/>
 </item>
-<item historyLabel="stm32f30x_it.c" index="4">
-<position info="not_deleted" x="3996" y="0"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="11191" y="0"/>
-</item>
-<item historyLabel="control.c" index="2">
-<position info="not_deleted" x="3454" y="0"/>
-</item>
-<item historyLabel="main.c" index="1">
-<position info="not_deleted" x="5508" y="0"/>
-</item>
-<item historyLabel="control.h" index="3">
-<position info="not_deleted" x="2784" y="0"/>
-</item>
-<item historyLabel="control.c" index="2">
-<position info="not_deleted" x="3787" y="0"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="11191" y="0"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="11158" y="0"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="11159" y="0"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="10183" y="0"/>
-</item>
-<item historyLabel="sensors.h" index="5">
-<position info="not_deleted" x="1694" y="0"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="10096" y="0"/>
-</item>
-<item historyLabel="control.c" index="6">
-<position info="not_deleted" x="3787" y="0"/>
-</item>
-<item historyLabel="main.c" index="7">
-<position info="not_deleted" x="5508" y="0"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="11131" y="4"/>
-</item>
-<item historyLabel="control.h" index="8">
-<position info="not_deleted" x="2784" y="0"/>
-</item>
-<item historyLabel="control.c" index="6">
-<position info="not_deleted" x="3823" y="12"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="11131" y="4"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="10071" y="0"/>
-</item>
-<item historyLabel="sensors.h" index="5">
-<position info="not_deleted" x="1694" y="0"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="10071" y="0"/>
-</item>
-<item historyLabel="control.c" index="6">
-<position info="not_deleted" x="3823" y="12"/>
-</item>
-<item historyLabel="sensors.h" index="5">
-<position info="not_deleted" x="1694" y="0"/>
-</item>
-<item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="10071" y="0"/>
-</item>
-<item historyLabel="control.c" index="9">
+<item historyLabel="stm32f30x_dma.c" index="4">
 <position info="not_deleted" x="0" y="0"/>
 </item>
 <item historyLabel="sensors.c" index="0">
-<position info="not_deleted" x="10071" y="0"/>
+<position/>
 </item>
-<item historyLabel="control.c" index="9">
+<item historyLabel="stm32f3_discovery_lsm303dlhc.c" index="5">
+<position/>
+</item>
+<item historyLabel="stm32f3_discovery_lsm303dlhc.h" index="3">
+<position/>
+</item>
+<item historyLabel="sensors.c" index="0">
+<position/>
+</item>
+<item historyLabel="stm32f30x_dma.h" index="2">
+<position info="not_deleted" x="1748" y="22"/>
+</item>
+<item historyLabel="sensors.c" index="0">
+<position/>
+</item>
+<item historyLabel="stm32f30x_dma.h" index="2">
+<position info="not_deleted" x="1748" y="22"/>
+</item>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="9563" y="15"/>
+</item>
+<item historyLabel="stm32f3_discovery_lsm303dlhc.h" index="3">
+<position/>
+</item>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="9547" y="15"/>
+</item>
+<item historyLabel="stm32f3_discovery_lsm303dlhc.c" index="5">
+<position/>
+</item>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="13161" y="0"/>
+</item>
+<item historyLabel="stm32f3_discovery_lsm303dlhc.c" index="5">
 <position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="main.c" index="7">
-<position info="not_deleted" x="5508" y="0"/>
+<item historyLabel="stm32f3_discovery_lsm303dlhc.h" index="3">
+<position info="not_deleted" x="25333" y="0"/>
 </item>
-<item historyLabel="sensors.h" index="5">
-<position info="not_deleted" x="1694" y="0"/>
+<item historyLabel="stm32f3_discovery_lsm303dlhc.c" index="5">
+<position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="main.c" index="7">
-<position info="not_deleted" x="5508" y="0"/>
+<item historyLabel="stm32f30x_dma.c" index="4">
+<position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="control.h" index="10">
-<position info="not_deleted" x="2784" y="0"/>
+<item historyLabel="stm32f30x_dma.h" index="2">
+<position info="not_deleted" x="1748" y="22"/>
 </item>
-<item historyLabel="sensors.h" index="11">
-<position info="not_deleted" x="1697" y="0"/>
+<item historyLabel="control.h" index="1">
+<position/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="10071" y="0"/>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="13161" y="0"/>
 </item>
-<item historyLabel="main.c" index="7">
-<position info="not_deleted" x="3896" y="0"/>
+<item historyLabel="stm32f30x_dma.h" index="2">
+<position info="not_deleted" x="1748" y="22"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="10071" y="0"/>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="9045" y="0"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="10952" y="0"/>
+<item historyLabel="stm32f30x_dma.h" index="2">
+<position info="not_deleted" x="4218" y="15"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="11064" y="0"/>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="7773" y="15"/>
 </item>
-<item historyLabel="sensors.h" index="11">
-<position info="not_deleted" x="1662" y="23"/>
+<item historyLabel="stm32f30x_dma.h" index="2">
+<position info="not_deleted" x="8290" y="15"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="11010" y="0"/>
+<item historyLabel="stm32f3_discovery_lsm303dlhc.c" index="5">
+<position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="10132" y="0"/>
+<item historyLabel="stm32f30x_dma.h" index="2">
+<position info="not_deleted" x="8290" y="15"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="11374" y="0"/>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="8036" y="21"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="11368" y="0"/>
+<item historyLabel="stm32f30x_dma.h" index="2">
+<position info="not_deleted" x="5272" y="21"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="11140" y="0"/>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="8972" y="0"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="11157" y="0"/>
+<item historyLabel="control.h" index="1">
+<position/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="11368" y="0"/>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="8972" y="0"/>
 </item>
-<item historyLabel="sensors.c" index="12">
-<position info="not_deleted" x="10167" y="9"/>
+<item historyLabel="control.h" index="1">
+<position info="not_deleted" x="0" y="0"/>
 </item>
-<item historyLabel="control.h" index="10">
-<position info="not_deleted" x="2784" y="0"/>
+<item historyLabel="sensors.c" index="0">
+<position info="not_deleted" x="8972" y="0"/>
 </item>
-<item active="true" historyLabel="main.c" index="7">
-<position info="not_deleted" x="3896" y="0"/>
+<item historyLabel="control.c" index="6">
+<position info="not_deleted" x="16909" y="4"/>
+</item>
+<item historyLabel="sensors.c" index="7">
+<position info="not_deleted" x="5353" y="1809"/>
+</item>
+<item historyLabel="sensors.h" index="8">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="sensors.c" index="7">
+<position info="not_deleted" x="8639" y="0"/>
+</item>
+<item historyLabel="stm32f30x_dma.h" index="2">
+<position info="not_deleted" x="5272" y="21"/>
+</item>
+<item historyLabel="sensors.h" index="8">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="sensors.c" index="7">
+<position info="not_deleted" x="8215" y="0"/>
+</item>
+<item historyLabel="main.c" index="9">
+<position info="not_deleted" x="1452" y="0"/>
+</item>
+<item historyLabel="sensors.c" index="7">
+<position info="not_deleted" x="8215" y="0"/>
+</item>
+<item historyLabel="sensors.h" index="10">
+<position info="not_deleted" x="1208" y="0"/>
+</item>
+<item historyLabel="sensors.c" index="7">
+<position info="not_deleted" x="0" y="380"/>
+</item>
+<item historyLabel="sensors.h" index="10">
+<position info="not_deleted" x="246" y="0"/>
+</item>
+<item active="true" historyLabel="sensors.c" index="7">
+<position info="not_deleted" x="0" y="380"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
@@ -461,17 +456,41 @@
 <actionBarAdvisor/>
 </window>
 <mruList>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="fcb/main.c">
+<persistable path="/fcb/main.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.h" tooltip="fcb/sensors.h">
+<persistable path="/fcb/sensors.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.c" tooltip="fcb/sensors.c">
+<persistable path="/fcb/sensors.c"/>
+</file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="control.c" tooltip="fcb/control.c">
 <persistable path="/fcb/control.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="fcb/main.c">
-<persistable path="/fcb/main.c"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="control.h" tooltip="fcb/control.h">
+<persistable path="/fcb/control.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3_discovery_lsm303dlhc.h" tooltip="fcb/utils/stm32f3_discovery_lsm303dlhc.h">
+<persistable path="/fcb/utils/stm32f3_discovery_lsm303dlhc.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3_discovery_lsm303dlhc.c" tooltip="fcb/utils/stm32f3_discovery_lsm303dlhc.c">
+<persistable path="/fcb/utils/stm32f3_discovery_lsm303dlhc.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x_dma.c" tooltip="fcb/stm_lib/src/stm32f30x_dma.c">
+<persistable path="/fcb/stm_lib/src/stm32f30x_dma.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x_dma.h" tooltip="fcb/stm_lib/inc/stm32f30x_dma.h">
+<persistable path="/fcb/stm_lib/inc/stm32f30x_dma.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f30x.S" tooltip="fcb/cmsis_boot/startup/startup_stm32f30x.S">
+<persistable path="/fcb/cmsis_boot/startup/startup_stm32f30x.S"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x_it.c" tooltip="fcb/stm32f30x_it.c">
 <persistable path="/fcb/stm32f30x_it.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.h" tooltip="fcb/sensors.h">
-<persistable path="/fcb/sensors.h"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x_i2c.h" tooltip="fcb/stm_lib/inc/stm32f30x_i2c.h">
+<persistable path="/fcb/stm_lib/inc/stm32f30x_i2c.h"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="motor_output.c" tooltip="fcb/motor_output.c">
 <persistable path="/fcb/motor_output.c"/>
@@ -481,30 +500,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="lsm303_compass.c" tooltip="fcb/lsm303_compass.c">
 <persistable path="/fcb/lsm303_compass.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="l3gd20_gyroscope.c" tooltip="fcb/l3gd20_gyroscope.c">
-<persistable path="/fcb/l3gd20_gyroscope.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="com.c" tooltip="fcb/com.c">
-<persistable path="/fcb/com.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3_discovery_lsm303dlhc.h" tooltip="fcb/utils/stm32f3_discovery_lsm303dlhc.h">
-<persistable path="/fcb/utils/stm32f3_discovery_lsm303dlhc.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.h" tooltip="fcb/main.h">
-<persistable path="/fcb/main.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.c" tooltip="fcb/sensors.c">
-<persistable path="/fcb/sensors.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="core_cm4.h" tooltip="fcb/cmsis/core_cm4.h">
-<persistable path="/fcb/cmsis/core_cm4.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x.h" tooltip="fcb/cmsis_boot/stm32f30x.h">
-<persistable path="/fcb/cmsis_boot/stm32f30x.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f30x.S" tooltip="fcb/cmsis_boot/startup/startup_stm32f30x.S">
-<persistable path="/fcb/cmsis_boot/startup/startup_stm32f30x.S"/>
 </file>
 </mruList>
 </workbench>

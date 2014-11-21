@@ -29,7 +29,7 @@ static void InitLEDs(void);
 /* TODO --> Calculation of velocity, especially vertical. Rotate from roll/pitch/yaw estimates and use better accelerometer calibration and filtering */
 /* TODO --> Refine sensor settings and algorithm (extended Kalman? Kalman? Quaternions?) */
 /* TODO --> Accelerometer calibration using g and axis rotation, use mean function and scale to g */
-/* Suggestion: TODO Setup interrupt routine to collect sensor updates (since I2C is slow and has to wait alot - may be run with lower priority so that it doesn't interfere with control) */
+/* --> Suggestion: TODO Setup interrupt routine/DMA to collect sensor updates (since I2C is slow and has to wait alot) */
 /* Suggestion: TODO dynamic time step h in sensor integration and controller? (measure with GetCounter()) */
 /* TODO Calibrate RC input (min, max, midpoint for each stick) and map to according position and angle references (account for interval and midpoint offsets) */
 /* Suggestion: TODO Better identify drag coefficient (for yaw control allocation) and also thrust coefficient - experiment setup needed */

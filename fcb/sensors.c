@@ -1,13 +1,11 @@
-/**
-******************************************************************************
+/****************************************************************************
 * @file    fcb/sensors.c
 * @author  ÅF Dragonfly - Daniel Stenberg, Embedded Systems
 * @version v. 0.0.1
 * @date    2014-09-26
 * @brief   Functions for reading and filtering the on-board MEMS sensor
 * 		   utilities.
-******************************************************************************
-**/
+*****************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
 #include "sensors.h"
@@ -171,50 +169,107 @@ char GetGyroCalibrated(void)
 	return GyroCalibrated;
 }
 
-/**
-  * @brief  Configure the Mems to compass application.
+/** CompassConfig
+  * @brief  Configure the MEMS to compass application.
   * @param  None
   * @retval None
   */
 void CompassConfig(void)
 {
-  LSM303DLHCMag_InitTypeDef LSM303DLHC_InitStructure;
-  LSM303DLHCAcc_InitTypeDef LSM303DLHCAcc_InitStructure;
-  LSM303DLHCAcc_FilterConfigTypeDef LSM303DLHCFilter_InitStructure;
+	LSM303DLHCMag_InitTypeDef LSM303DLHC_InitStructure;
+	LSM303DLHCAcc_InitTypeDef LSM303DLHCAcc_InitStructure;
+	LSM303DLHCAcc_FilterConfigTypeDef LSM303DLHCFilter_InitStructure;
 
-  /* Configure MEMS magnetometer main parameters: temp, working mode, full Scale and Data rate */
-  LSM303DLHC_InitStructure.Temperature_Sensor = LSM303DLHC_TEMPSENSOR_DISABLE;
-  LSM303DLHC_InitStructure.MagOutput_DataRate = LSM303DLHC_ODR_75_HZ;
-  LSM303DLHC_InitStructure.MagFull_Scale = LSM303DLHC_FS_1_3_GA;
-  LSM303DLHC_InitStructure.Working_Mode = LSM303DLHC_CONTINUOS_CONVERSION;
-  LSM303DLHC_MagInit(&LSM303DLHC_InitStructure);
+	/* Configure MEMS magnetometer main parameters: temp, working mode, full Scale and Data rate */
+	LSM303DLHC_InitStructure.Temperature_Sensor = LSM303DLHC_TEMPSENSOR_DISABLE;
+	LSM303DLHC_InitStructure.MagOutput_DataRate = LSM303DLHC_ODR_75_HZ;
+	LSM303DLHC_InitStructure.MagFull_Scale = LSM303DLHC_FS_1_3_GA;
+	LSM303DLHC_InitStructure.Working_Mode = LSM303DLHC_CONTINUOS_CONVERSION;
+	LSM303DLHC_MagInit(&LSM303DLHC_InitStructure);
 
-   /* Fill the accelerometer structure */
-  LSM303DLHCAcc_InitStructure.Power_Mode = LSM303DLHC_NORMAL_MODE;
-  LSM303DLHCAcc_InitStructure.AccOutput_DataRate = LSM303DLHC_ODR_50_HZ;
-  LSM303DLHCAcc_InitStructure.Axes_Enable = LSM303DLHC_AXES_ENABLE;
-  LSM303DLHCAcc_InitStructure.AccFull_Scale = LSM303DLHC_FULLSCALE_2G;
-  LSM303DLHCAcc_InitStructure.BlockData_Update = LSM303DLHC_BlockUpdate_Continous;
-  LSM303DLHCAcc_InitStructure.Endianness = LSM303DLHC_BLE_LSB;
-  LSM303DLHCAcc_InitStructure.High_Resolution = LSM303DLHC_HR_DISABLE;
-  /* Configure the accelerometer main parameters */
-  LSM303DLHC_AccInit(&LSM303DLHCAcc_InitStructure);
+	/* Fill the accelerometer structure */
+	LSM303DLHCAcc_InitStructure.Power_Mode = LSM303DLHC_NORMAL_MODE;
+	LSM303DLHCAcc_InitStructure.AccOutput_DataRate = LSM303DLHC_ODR_50_HZ;
+	LSM303DLHCAcc_InitStructure.Axes_Enable = LSM303DLHC_AXES_ENABLE;
+	LSM303DLHCAcc_InitStructure.AccFull_Scale = LSM303DLHC_FULLSCALE_2G;
+	LSM303DLHCAcc_InitStructure.BlockData_Update = LSM303DLHC_BlockUpdate_Continous;
+	LSM303DLHCAcc_InitStructure.Endianness = LSM303DLHC_BLE_LSB;
+	LSM303DLHCAcc_InitStructure.High_Resolution = LSM303DLHC_HR_DISABLE;
+	/* Configure the accelerometer main parameters */
+	LSM303DLHC_AccInit(&LSM303DLHCAcc_InitStructure);
 
-  /* Fill the accelerometer HPF structure */
-  LSM303DLHCFilter_InitStructure.HighPassFilter_Mode_Selection = LSM303DLHC_HPM_NORMAL_MODE;
-  LSM303DLHCFilter_InitStructure.HighPassFilter_CutOff_Frequency = LSM303DLHC_HPFCF_8;
-  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI1 = LSM303DLHC_HPF_AOI1_DISABLE;
-  LSM303DLHCFilter_InitStructure.HighPassFilter_AOI2 = LSM303DLHC_HPF_AOI2_DISABLE;
+	/* Fill the accelerometer HPF structure */
+	LSM303DLHCFilter_InitStructure.HighPassFilter_Mode_Selection = LSM303DLHC_HPM_NORMAL_MODE;
+	LSM303DLHCFilter_InitStructure.HighPassFilter_CutOff_Frequency = LSM303DLHC_HPFCF_8;
+	LSM303DLHCFilter_InitStructure.HighPassFilter_AOI1 = LSM303DLHC_HPF_AOI1_DISABLE;
+	LSM303DLHCFilter_InitStructure.HighPassFilter_AOI2 = LSM303DLHC_HPF_AOI2_DISABLE;
 
-  /* Configure the accelerometer LPF main parameters */
-  LSM303DLHC_AccFilterConfig(&LSM303DLHCFilter_InitStructure);
-  LSM303DLHC_AccFilterCmd(DISABLE);
+	/* Configure the accelerometer LPF main parameters */
+	LSM303DLHC_AccFilterConfig(&LSM303DLHCFilter_InitStructure);
+	LSM303DLHC_AccFilterCmd(DISABLE);
 }
 
-/**
-* @brief Read LSM303DLHC output register, and calculate the acceleration ACC=(1/SENSITIVITY)* (out_h*256+out_l)/16 (12 bit representation)
-* @param pnData: pointer to float buffer where to store data
-* @retval None
+/** CompassDMAConfig
+  * @brief  Configures DMA (Direct Memory Access) to read from the compass.
+  * @param  None
+  * @retval None
+  */
+void CompassDMAConfig(void)
+{
+	NVIC_InitTypeDef NVIC_InitStructure;
+	DMA_InitTypeDef  DMA_InitStructure;
+
+	DMA_DeInit(MPU6050_DMA_Channel); //reset DMA1 channe1 to default values;
+
+	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t) 0x40005424; 	// = 0x40005424 : address of data reading register of I2C1
+	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)I2C_Rx_Buffer;		//variable to store data
+	DMA_InitStructure.DMA_M2M = DMA_M2M_Disable; 						//channel will be used for peripheral to memory transfer
+	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;						//setting normal mode (non circular)
+	DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;				//medium priority
+	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;					//Location assigned to peripheral register will be source
+	DMA_InitStructure.DMA_BufferSize = 15;								//number of data bytes to be transfered from accelerometer and magnetometer
+	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable; 	//automatic memory increment disable for peripheral
+	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;				//automatic memory increment enable for memory
+	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;	//source peripheral data size = 8bit
+	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;		//destination memory data size = 8bit
+	DMA_Init(MPU6050_DMA_Channel, &DMA_InitStructure);
+	DMA_ITConfig(MPU6050_DMA_Channel, DMA_IT_TC, ENABLE);
+
+	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel7_IRQn; //I2C1 connect to channel 7 of DMA1
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+}
+
+void DMA1_Channel7_IRQHandler(void)
+{
+	if (DMA_GetFlagStatus(DMA1_FLAG_TC7))
+	{
+	/* Clear transmission complete flag */
+	DMA_ClearFlag(DMA1_FLAG_TC7);
+
+//	I2C_DMACmd(MPU6050_I2C, DISABLE);
+//	/* Send I2C1 STOP Condition */
+//	I2C_GenerateSTOP(MPU6050_I2C, ENABLE);
+//	/* Disable DMA channel*/
+//	DMA_Cmd(MPU6050_DMA_Channel, DISABLE);
+
+	//Read Accel data from byte 0 to byte 2
+//	for(i=0; i<3; i++)
+//	AccelGyro[i]=((s16)((u16)I2C_Rx_Buffer[2*i] << 8) + I2C_Rx_Buffer[2*i+1]);
+//	//Skip byte 3 of temperature data
+//	//Read Gyro data from byte 4 to byte 6
+//	for(i=4; i<7; i++)
+//	AccelGyro[i-1]=((s16)((u16)I2C_Rx_Buffer[2*i] << 8) + I2C_Rx_Buffer[2*i+1]);
+
+	}
+}
+
+/** CompassReadAcc
+  * @brief Read LSM303DLHC output register, and calculate the acceleration ACC=(1/SENSITIVITY)* (out_h*256+out_l)/16 (12 bit representation)
+  * @param pnData: pointer to float buffer where to store data
+  * @retval None
 */
 void CompassReadAcc(volatile float* pfData)
 {
@@ -251,8 +306,6 @@ void CompassReadAcc(volatile float* pfData)
     for(i=0; i<3; i++)
       pnRawData[i]=((int16_t)((uint16_t)buffer[2*i] << 8) + buffer[2*i+1])/cDivider;
   }
-  /* Read the register content */
-  //LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlx, 2);
 
   if(ctrlx[1]&0x40)
   {
@@ -351,7 +404,6 @@ void CalibrateAcc(void)
 				change = delta_acc[0]*delta_acc[0] + delta_acc[1]*delta_acc[1] + delta_acc[2]*delta_acc[2];
 			}
 		}
-
 	}
 }
 

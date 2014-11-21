@@ -1,3 +1,11 @@
+/****************************************************************************
+* @file    fcb/sensors.h
+* @author  ÅF Dragonfly - Daniel Stenberg, Embedded Systems
+* @version v. 0.0.1
+* @date    2014-09-26
+* @brief   Header file for sensors.c
+*****************************************************************************/
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __SENSORS_H
 #define __SENSORS_H
