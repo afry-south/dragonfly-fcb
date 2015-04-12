@@ -17,7 +17,7 @@
  *
  * PB.03 TRACESWO
  * PB.04 TIM3_CH1 (Receiver PWM input)
- * PB.05 TIM3_CH1 (Receiver PWM input)
+ * PB.05 TIM3_CH2 (Receiver PWM input)
  * PB.06 I2C1_SCL (LSM303 Accelerometer/Magnetometer)
  * PB.07 I2C1_SDA (LSM303 Accelerometer/Magnetometer)
  *
