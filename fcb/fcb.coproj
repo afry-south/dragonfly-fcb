@@ -72,16 +72,16 @@
   <Components path="./"/>
   <LocalComponents/>
   <Files>
-    <File name="discovery_utils" path="" type="2"/>
-    <File name="usb_conf/src/usb_prop.c" path="usb_conf/src/usb_prop.c" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/inc/usb_lib.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_lib.h" type="1"/>
+    <File name="usb_conf/src/usb_prop.c" path="usb_conf/src/usb_prop.c" type="1"/>
+    <File name="discovery_utils" path="" type="2"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_dma.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_dma.c" type="1"/>
     <File name="usb_conf/inc/usb_prop.h" path="usb_conf/inc/usb_prop.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_crc.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_crc.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_can.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_can.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_syscfg.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_syscfg.c" type="1"/>
-    <File name="CMSIS" path="" type="2"/>
     <File name="usb_conf/src/usb_pwr.c" path="usb_conf/src/usb_pwr.c" type="1"/>
+    <File name="CMSIS" path="" type="2"/>
     <File name="CMSIS_BOOT/src" path="" type="2"/>
     <File name="fcb/src/stm32f30x_it.c" path="fcb/src/stm32f30x_it.c" type="1"/>
     <File name="fcb" path="" type="2"/>
@@ -91,20 +91,20 @@
     <File name="STM32_USB-FS-Device_Driver/src/usb_core.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/src/usb_core.c" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/inc/usb_mem.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_mem.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_dbgmcu.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_dbgmcu.c" type="1"/>
-    <File name="fcb/src" path="" type="2"/>
     <File name="STM32F30x_StdPeriph_Driver" path="" type="2"/>
+    <File name="fcb/src" path="" type="2"/>
     <File name="CMSIS/core_cm4.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_cm4.h" type="1"/>
     <File name="CMSIS/core_cmInstr.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_cmInstr.h" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/inc/usb_regs.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_regs.h" type="1"/>
-    <File name="CMSIS/core_sc000.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_sc000.h" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/inc" path="" type="2"/>
+    <File name="CMSIS/core_sc000.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_sc000.h" type="1"/>
     <File name="fcb/src/control.c" path="fcb/src/control.c" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_rtc.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_rtc.c" type="1"/>
     <File name="fcb/inc/platform_config.h" path="fcb/inc/platform_config.h" type="1"/>
     <File name="CMSIS/core_cmFunc.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_cmFunc.h" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/src/usb_sil.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/src/usb_sil.c" type="1"/>
-    <File name="STM32_USB-FS-Device_Driver/inc/usb_def.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_def.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_iwdg.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_iwdg.c" type="1"/>
+    <File name="STM32_USB-FS-Device_Driver/inc/usb_def.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_def.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_spi.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_spi.h" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/inc/usb_type.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_type.h" type="1"/>
     <File name="CMSIS_BOOT" path="" type="2"/>
@@ -130,14 +130,14 @@
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_adc.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_adc.h" type="1"/>
     <File name="usb_conf/inc" path="" type="2"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_usart.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_usart.c" type="1"/>
-    <File name="CMSIS_BOOT/stm32f30x_conf.h" path="CMSIS_BOOT/stm32f30x_conf.h" type="1"/>
     <File name="fcb/src/motor_output.c" path="fcb/src/motor_output.c" type="1"/>
+    <File name="CMSIS_BOOT/stm32f30x_conf.h" path="CMSIS_BOOT/stm32f30x_conf.h" type="1"/>
     <File name="fcb/src/lsm303_compass.c" path="fcb/src/lsm303_compass.c" type="1"/>
     <File name="CMSIS_BOOT/inc/stm32f30x.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Include/stm32f30x.h" type="1"/>
+    <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_misc.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_misc.h" type="1"/>
     <File name="discovery_utils/src/stm32f3_discovery_l3gd20.c" path="discovery_utils/stm32f3_discovery_l3gd20.c" type="1"/>
     <File name="usb_conf/src" path="" type="2"/>
     <File name="CMSIS/core_cm4_simd.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_cm4_simd.h" type="1"/>
-    <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_misc.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_misc.h" type="1"/>
     <File name="fcb/src/RCinput.c" path="fcb/src/RCinput.c" type="1"/>
     <File name="CMSIS_BOOT/inc/system_stm32f30x.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Include/system_stm32f30x.h" type="1"/>
     <File name="CMSIS/arm_math.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/arm_math.h" type="1"/>
@@ -146,15 +146,15 @@
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_opamp.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_opamp.c" type="1"/>
     <File name="usb_conf/src/usb_endp.c" path="usb_conf/src/usb_endp.c" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_flash.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_flash.c" type="1"/>
-    <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.c" type="1"/>
     <File name="CMSIS/core_cm0.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_cm0.h" type="1"/>
+    <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_pwr.c" type="1"/>
     <File name="fcb/inc" path="" type="2"/>
-    <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_can.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_can.c" type="1"/>
     <File name="fcb/inc/main.h" path="fcb/inc/main.h" type="1"/>
+    <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_can.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_can.c" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_exti.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_exti.c" type="1"/>
     <File name="fcb/inc/control.h" path="fcb/inc/control.h" type="1"/>
-    <File name="usb_conf/src/usb_desc.c" path="usb_conf/src/usb_desc.c" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/inc/usb_core.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_core.h" type="1"/>
+    <File name="usb_conf/src/usb_desc.c" path="usb_conf/src/usb_desc.c" type="1"/>
     <File name="fcb/src/hw_config.c" path="fcb/src/hw_config.c" type="1"/>
     <File name="fcb/inc/RCinput.h" path="fcb/inc/RCinput.h" type="1"/>
     <File name="fcb/src/sensors.c" path="fcb/src/sensors.c" type="1"/>
@@ -170,21 +170,21 @@
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_syscfg.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_syscfg.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_comp.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_comp.c" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_flash.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_flash.h" type="1"/>
-    <File name="STM32_USB-FS-Device_Driver/inc/usb_init.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_init.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_pwr.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_pwr.h" type="1"/>
+    <File name="STM32_USB-FS-Device_Driver/inc/usb_init.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_init.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_iwdg.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_iwdg.h" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/inc/usb_int.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_int.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_rcc.c" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_exti.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_exti.h" type="1"/>
-    <File name="STM32_USB-FS-Device_Driver/src/usb_int.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/src/usb_int.c" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_wwdg.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_wwdg.c" type="1"/>
+    <File name="STM32_USB-FS-Device_Driver/src/usb_int.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/src/usb_int.c" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_i2c.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_i2c.h" type="1"/>
+    <File name="CMSIS_BOOT/src/system_stm32f30x.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Source/Templates/system_stm32f30x.c" type="1"/>
     <File name="discovery_utils/src/stm32f3_discovery.c" path="discovery_utils/stm32f3_discovery.c" type="1"/>
     <File name="usb_conf/inc/usb_istr.h" path="usb_conf/inc/usb_istr.h" type="1"/>
-    <File name="CMSIS_BOOT/src/system_stm32f30x.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Device/ST/STM32F30x/Source/Templates/system_stm32f30x.c" type="1"/>
     <File name="CMSIS/arm_common_tables.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/arm_common_tables.h" type="1"/>
-    <File name="STM32F30x_StdPeriph_Driver/src" path="" type="2"/>
     <File name="discovery_utils/src" path="" type="2"/>
+    <File name="STM32F30x_StdPeriph_Driver/src" path="" type="2"/>
     <File name="STM32_USB-FS-Device_Driver/src/usb_mem.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/src/usb_mem.c" type="1"/>
     <File name="STM32_USB-FS-Device_Driver" path="" type="2"/>
     <File name="CMSIS/core_cm3.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_cm3.h" type="1"/>
@@ -194,8 +194,8 @@
     <File name="fcb/src/l3gd20_gyroscope.c" path="fcb/src/l3gd20_gyroscope.c" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/inc/usb_sil.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/inc/usb_sil.h" type="1"/>
     <File name="STM32_USB-FS-Device_Driver/src/usb_regs.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32_USB-FS-Device_Driver/src/usb_regs.c" type="1"/>
-    <File name="discovery_utils/inc/stm32f3_discovery_l3gd20.h" path="discovery_utils/stm32f3_discovery_l3gd20.h" type="1"/>
     <File name="usb_conf/inc/usb_conf.h" path="usb_conf/inc/usb_conf.h" type="1"/>
+    <File name="discovery_utils/inc/stm32f3_discovery_l3gd20.h" path="discovery_utils/stm32f3_discovery_l3gd20.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_gpio.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_gpio.h" type="1"/>
     <File name="CMSIS/core_sc300.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_sc300.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.c" type="1"/>

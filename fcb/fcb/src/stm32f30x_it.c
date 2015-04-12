@@ -30,6 +30,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f30x_it.h"
 #include "main.h"
+#include "RCinput.h"
+#include "control.h"
 #include "usb_istr.h"
 
 /** @addtogroup STM32F3-Discovery_Demo
@@ -158,14 +160,77 @@ void SysTick_Handler(void)
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32f30x.s).                                            */
 /******************************************************************************/
+
+/*
+ * @brief       Timer 2 interrupt handler.
+ */
+void TIM2_IRQHandler(void)
+{
+
+  /* If interrupt concerns TIM2 CH1 */
+  if (TIM2->SR & TIM_IT_CC1)
+    {
+      TIM2->SR &= (~TIM_IT_CC1);
+      UpdateThrottleChannel();
+    }
+  /* If interrupt concerns TIM2 CH2 */
+  if (TIM2->SR & TIM_IT_CC2)
+    {
+      TIM2->SR &= (~TIM_IT_CC2);
+      UpdateAileronChannel();
+    }
+
+  /* If interrupt concerns TIM2 CH3 */
+  if (TIM2->SR & TIM_IT_CC3)
+    {
+      TIM2->SR &= (~TIM_IT_CC3);
+      UpdateElevatorChannel();
+    }
+
+  /* If interrupt concerns TIM2 CH4 */
+  if (TIM2->SR & TIM_IT_CC4)
+    {
+      TIM2->SR &= (~TIM_IT_CC4);
+      UpdateRudderChannel();
+    }
+}
+
+/*
+ * @brief       Timer 3 interrupt handler.
+ */
+void TIM3_IRQHandler(void)
+{
+  /* If interrupt concerns TIM3 CH1 */
+  if (TIM3->SR & TIM_IT_CC1)
+    {
+      TIM3->SR &= (~TIM_IT_CC1);
+      UpdateGearChannel();
+    }
+  /* If interrupt concerns TIM3 CH2 */
+  if (TIM3->SR & TIM_IT_CC2)
+    {
+      TIM3->SR &= (~TIM_IT_CC2);
+      UpdateAuxiliaryChannel();
+    }
+}
+
+/*
+ * @brief       Timer 7 interrupt handler.
+ */
+void TIM7_IRQHandler(void)
+{
+  if (TIM_GetITStatus(TIM7, TIM_IT_Update) != RESET)
+    {
+      UpdateControl();
+    }
+}
+
 /**
   * @brief  This function handles EXTI0_IRQ Handler.
-  * @param  None
-  * @retval None
   */
 void EXTI0_IRQHandler(void)
 { 
-  if ((EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) == SET)&&(STM_EVAL_PBGetState(BUTTON_USER) != RESET))
+  if ((EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) == SET) && (STM_EVAL_PBGetState(BUTTON_USER) != RESET))
   {
     /* Delay */
     for(i=0; i<0x7FFFF; i++);

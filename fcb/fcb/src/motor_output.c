@@ -1,13 +1,11 @@
-/**
-******************************************************************************
+/*****************************************************************************
 * @file    fcb/motor_output.c
 * @author  ÅF Dragonfly - Daniel Stenberg, Embedded Systems
 * @version v. 0.0.1
 * @date    2014-09-29
 * @brief   Flight Control program for the ÅF Dragonfly quadcopter
 *          File contains pwm output
-******************************************************************************
-**/
+******************************************************************************/
 
 /* @TIM4_IOconfig
  * @brief	Initializes and configures output pins used to

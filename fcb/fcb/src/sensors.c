@@ -210,12 +210,12 @@ void CompassConfig(void)
 	LSM303DLHC_AccFilterCmd(DISABLE);
 }
 
-void DMA1_Channel7_IRQHandler(void)
-{
-	if (DMA_GetFlagStatus(DMA1_FLAG_TC7))
-	{
-	/* Clear transmission complete flag */
-	DMA_ClearFlag(DMA1_FLAG_TC7);
+//void DMA1_Channel7_IRQHandler(void)
+//{
+//	if (DMA_GetFlagStatus(DMA1_FLAG_TC7))
+//	{
+//	/* Clear transmission complete flag */
+//	DMA_ClearFlag(DMA1_FLAG_TC7);
 
 //	I2C_DMACmd(MPU6050_I2C, DISABLE);
 //	/* Send I2C1 STOP Condition */
@@ -230,9 +230,9 @@ void DMA1_Channel7_IRQHandler(void)
 //	//Read Gyro data from byte 4 to byte 6
 //	for(i=4; i<7; i++)
 //	AccelGyro[i-1]=((s16)((u16)I2C_Rx_Buffer[2*i] << 8) + I2C_Rx_Buffer[2*i+1]);
-
-	}
-}
+//
+//	}
+//}
 
 /** CompassReadAcc
   * @brief Read LSM303DLHC output register, and calculate the acceleration ACC=(1/SENSITIVITY)* (out_h*256+out_l)/16 (12 bit representation)

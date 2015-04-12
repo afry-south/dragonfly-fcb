@@ -115,7 +115,7 @@ typedef struct
 /* Function prototype declarations */
 
 uint16_t GetPWM_CCR(float dutycycle);
-void TIM7_IRQHandler(void);
+void UpdateControl(void);
 void TIM7_Setup(void);
 void TIM7_SetupIRQ(void);
 void ControlAllocation(void);
