@@ -28,7 +28,7 @@ PIDController_TypeDef PitchCtrl;
 PIDController_TypeDef YawCtrl;
 
 /* Flight mode */
-FlightControlMode flightMode = MANUAL_FLIGHT;
+enum FlightControlMode flightMode = MANUAL_FLIGHT;
 /*
  * @brief       Performs program duties with regular intervals.
  */
@@ -74,7 +74,7 @@ void UpdateControl(void)
     SetMotors();
     return;
 
-  case SHUTDOWN:
+  case SHUTDOWN_MOTORS:
     STM_EVAL_LEDOff(LED7);
     STM_EVAL_LEDOff(LED9);
     STM_EVAL_LEDOff(LED10);
@@ -551,4 +551,28 @@ void TIM7_SetupIRQ(void)
   NVIC_Init(&nvicStructure);
 
   TIM_ITConfig(TIM7, TIM_IT_Update, ENABLE);
+}
+
+/* @SetMotors
+ * @brief       Sets the motor PWM, which is sent to the ESCs
+ * @param       None.
+ * @retval      None.
+ */
+void SetMotors()
+{
+  TIM_SetCompare1(TIM4, GetPWM_CCR(PWMMotorTimes.M1)); // To motor 1 (PD12)
+  TIM_SetCompare2(TIM4, GetPWM_CCR(PWMMotorTimes.M2)); // To motor 2 (PD13)
+  TIM_SetCompare3(TIM4, GetPWM_CCR(PWMMotorTimes.M3)); // To motor 3 (PD14)
+  TIM_SetCompare4(TIM4, GetPWM_CCR(PWMMotorTimes.M4)); // To motor 4 (PD15)
+}
+
+/* @getPWM_CCR
+ * @brief       Recalculates a time pulse width to number of TIM4 clock ticks.
+ * @param       t is the pulse width in seconds.
+ * @retval      TIM4 clock ticks to be written to TIM4 CCR output.
+ */
+uint16_t GetPWM_CCR(float t)
+{
+  return (uint16_t)(
+      (float) (t * SystemCoreClock / ((float) (TIM_GetPrescaler(TIM4) + 1))));
 }

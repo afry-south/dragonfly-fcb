@@ -18,8 +18,6 @@
 /* Function prototypes */
 void TIM4_IOconfig(void);
 void TIM4_Setup(void);
-void SetMotors(void);
-uint16_t GetPWM_CCR(float dutycycle);
 void TIM4_SetupOC(void);
 
 #endif /* __MOTOR_OUTPUT_H */

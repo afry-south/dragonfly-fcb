@@ -12,7 +12,7 @@
 #ifndef __CONTROL_H
 #define __CONTROL_H
 
-typedef enum FlightControlMode {
+enum FlightControlMode {
 CALIBRATE_SENSORS,
 INITIALIZE_STATES,
 ATTITUDE_CONTROL,
@@ -127,19 +127,28 @@ typedef struct
 /* Function prototype declarations */
 
 void UpdateControl(void);
+
 void TIM7_Setup(void);
 void TIM7_SetupIRQ(void);
+
 void ControlAllocation(void);
 void ManualModeAllocation(void);
+
 void SetReferenceSignals(void);
 void UpdateBodyAttitude(void);
 void UpdateBodyVelocity(void);
+
 void AltitudeControl(void);
 void RollControl(void);
 void PitchControl(void);
 void YawControl(void);
+
 void SetFlightMode(void);
+
 void InitPIDControllers(void);
+
+void SetMotors(void);
+uint16_t GetPWM_CCR(float dutycycle);
 
 #endif /* __CONTROL_H */
 
