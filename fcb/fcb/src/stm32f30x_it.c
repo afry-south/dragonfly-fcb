@@ -149,7 +149,7 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
-  TimingDelay_Decrement();
+  Millisecond_Update();
   USBConnectTimeOut--;
   DataReady++;
 }
@@ -168,29 +168,29 @@ void TIM2_IRQHandler(void)
 {
 
   /* If interrupt concerns TIM2 CH1 */
-  if (TIM2->SR & TIM_IT_CC1)
+  if (TIM_GetITStatus(TIM2, TIM_IT_CC1) != RESET)
     {
-      TIM2->SR &= (~TIM_IT_CC1);
+      TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
       UpdateThrottleChannel();
     }
   /* If interrupt concerns TIM2 CH2 */
-  if (TIM2->SR & TIM_IT_CC2)
+  if (TIM_GetITStatus(TIM2, TIM_IT_CC2) != RESET)
     {
-      TIM2->SR &= (~TIM_IT_CC2);
+      TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
       UpdateAileronChannel();
     }
 
   /* If interrupt concerns TIM2 CH3 */
-  if (TIM2->SR & TIM_IT_CC3)
+  if (TIM_GetITStatus(TIM2, TIM_IT_CC3) != RESET)
     {
-      TIM2->SR &= (~TIM_IT_CC3);
+      TIM_ClearITPendingBit(TIM2, TIM_IT_CC3);
       UpdateElevatorChannel();
     }
 
   /* If interrupt concerns TIM2 CH4 */
-  if (TIM2->SR & TIM_IT_CC4)
+  if (TIM_GetITStatus(TIM2, TIM_IT_CC4) != RESET)
     {
-      TIM2->SR &= (~TIM_IT_CC4);
+      TIM_ClearITPendingBit(TIM2, TIM_IT_CC4);
       UpdateRudderChannel();
     }
 }
@@ -201,15 +201,15 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* If interrupt concerns TIM3 CH1 */
-  if (TIM3->SR & TIM_IT_CC1)
+  if (TIM_GetITStatus(TIM3, TIM_IT_CC1) != RESET)
     {
-      TIM3->SR &= (~TIM_IT_CC1);
+      TIM_ClearITPendingBit(TIM3, TIM_IT_CC1);
       UpdateGearChannel();
     }
   /* If interrupt concerns TIM3 CH2 */
-  if (TIM3->SR & TIM_IT_CC2)
+  if (TIM_GetITStatus(TIM3, TIM_IT_CC2) != RESET)
     {
-      TIM3->SR &= (~TIM_IT_CC2);
+      TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
       UpdateAuxiliaryChannel();
     }
 }
@@ -221,6 +221,7 @@ void TIM7_IRQHandler(void)
 {
   if (TIM_GetITStatus(TIM7, TIM_IT_Update) != RESET)
     {
+      TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
       UpdateControl();
     }
 }

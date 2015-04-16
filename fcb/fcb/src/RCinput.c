@@ -1,6 +1,8 @@
 /******************************************************************************
  * @file    fcb/RCinput.c
- * @author  ÅF Dragonfly - Daniel Nilsson and Daniel Stenberg, Embedded Systems
+ * @author  ÅF Dragonfly
+ * Daniel Nilsson, Embedded Systems
+ * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.2
  * @date    2014-11-05
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter

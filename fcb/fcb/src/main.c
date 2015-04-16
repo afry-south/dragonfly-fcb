@@ -1,6 +1,8 @@
 /******************************************************************************
  * @file    fcb/main.c
- * @author  ÅF Dragonfly - Daniel Nilsson and Daniel Stenberg, Embedded Systems
+ * @author  ÅF Dragonfly
+ * Daniel Nilsson, Embedded Systems
+ * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.2
  * @date    2015-04-12
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
@@ -62,16 +64,15 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static __IO uint32_t MilliDelay;
+__IO uint32_t SystemTimer = 0;              // Counts the number of millis since system startup
+
 __IO uint32_t UserButtonPressed = 0;
 
 /* Private functions -----------------------------------------------*/
-static void
-Init_System(void);
-static void
-Init_LEDs(void);
+static void Init_System(void);
+static void Init_LEDs(void);
 
 /* TODO MOVE ALL THIS TO SOME SORT OF TICKET/ISSUE HANDLING SYSTEM IN ONE/TFS */
-/* TODO Move IRQ handlers to stm32f30x_it.c */
 /* TODO --> Calculation of velocity, especially vertical. Rotate from roll/pitch/yaw estimates and use better accelerometer calibration and filtering */
 /* TODO --> Refine sensor settings and algorithm (extended Kalman? Kalman? Quaternions?) */
 /* TODO --> Accelerometer calibration using g and axis rotation, use mean function and scale to g */
@@ -95,7 +96,6 @@ Init_LEDs(void);
 /* Suggestion: TODO Barometer altimeter, proximity sensors, voltage sensor to monitor battery level or can the ~5V onboard be monitored? ADC? PVD? */
 /* TODO Reads acc/magn and gyro sensors through interrupt routines (Data ready/DRDY interrupts), setup EXTI for pins. DMA reading beneficial? */
 /* Suggestion: Make use of an RTOS? There is support in CMSIS for threads, semaphores etc */
-/* Review header file and defines to prevent recursive inclusion */
 
 /**
  * @brief  Main program.
@@ -114,8 +114,7 @@ int main(void)
   Init_System();
 
   // Infinite loop keeps the program alive.
-  while (1)
-    ;
+  while (1);
 }
 
 static void Init_System(void)
@@ -195,17 +194,18 @@ void ResetUserButton(void)
 void Delay(uint32_t mTime)
 {
   MilliDelay = mTime;
-  while (MilliDelay != 0)
-    ;
+  while (MilliDelay != 0);
 }
 
-/** MilliDelay_Decrement
+/** Millisecond_Update
  * @brief  Decrements the millisecond timer variables.
  */
-void TimingDelay_Decrement(void)
+void Millisecond_Update(void)
 {
   if (MilliDelay != 0x00)
     MilliDelay--;
+
+  SystemTimer++;
 }
 
 #ifdef  USE_FULL_ASSERT

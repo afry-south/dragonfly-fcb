@@ -1,7 +1,7 @@
-/**
- ******************************************************************************
+/******************************************************************************
  * @file    fcb/control.c
- * @author  ÅF Dragonfly - Daniel Stenberg, Embedded Systems
+ * @author  ÅF Dragonfly:
+ * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.1
  * @date    2014-09-29
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
@@ -28,132 +28,154 @@ PIDController_TypeDef PitchCtrl;
 PIDController_TypeDef YawCtrl;
 
 /* Flight mode */
-char flightMode = MANUAL;
-
+FlightControlMode flightMode = MANUAL_FLIGHT;
 /*
  * @brief       Performs program duties with regular intervals.
  */
 void UpdateControl(void)
 {
-  TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
-
   ReadSensors(); // Reads gyroscope, accelerometer and magnetometer
   GetPWMInputTimes(&PWMInputTimes); // Get 6 channel RC input pulse widths
-  SetFlightMode();
 
   // Read/write USB Virtual COM
   //rwUSB();
 
-  if (!GetMagCalibrated())
+  SetFlightMode();
+
+  switch(flightMode)
+  {
+  case MANUAL_FLIGHT:
+    STM_EVAL_LEDOff(LED7);
+    STM_EVAL_LEDOff(LED8);
+    STM_EVAL_LEDOff(LED9);
+    STM_EVAL_LEDOff(LED10);
+
+    UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
+    // Set motor output to lowest
+    ManualModeAllocation();
+    SetMotors();
+    return;
+
+  case ATTITUDE_CONTROL:
+    STM_EVAL_LEDOff(LED7);
+    STM_EVAL_LEDOff(LED8);
+    STM_EVAL_LEDOff(LED9);
+    STM_EVAL_LEDOn(LED10);
+
+    UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
+
+    SetReferenceSignals();
+    AltitudeControl();
+    RollControl();
+    PitchControl();
+    YawControl();
+
+    ControlAllocation();
+    SetMotors();
+    return;
+
+  case SHUTDOWN:
+    STM_EVAL_LEDOff(LED7);
+    STM_EVAL_LEDOff(LED9);
+    STM_EVAL_LEDOff(LED10);
+    STM_EVAL_LEDOn(LED8);
+
+    UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
+
+    // Set motor output to lowest
+    PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
+    SetMotors();
+    return;
+
+  case INITIALIZE_STATES:
+    STM_EVAL_LEDOn(LED9);
+    ResetUserButton(); // Reset user button
+
+    InitializeStateEstimation();
+
+    // Set motor output to lowest
+    PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
+    SetMotors();
+    return;
+
+  case CALIBRATE_SENSORS:
+    if (!GetMagCalibrated())
+      {
+        /* _COMPASS CALIBRATION INSTRUCTIONS_
+         * Rotate the quadcopter around each of the positive and negative 3D axes (6 directions)
+         * at least 360 deg (not too fast).
+         * The alignment does not need to be exact and further arbitrary rotatation will
+         * only be beneficial for the calibration.
+         * It does not matter in which direction the quadcopter is rotated.
+         * */
+
+        STM_EVAL_LEDOn(LED3);
+        ResetUserButton(); // Reset user button
+
+        CalibrateMag();
+
+        // Set motor output to lowest
+        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
+            PWMMotorTimes.M4 = MIN_ESC_VAL;
+        SetMotors();
+      }
+    else if (!GetAccCalibrated())
+      {
+        /* _ACCELEROMETER CALIBRATION INSTRUCTIONS_
+         * Hold the quadcopter as still as possible for a few seconds in each of the following positions:
+         * Level, upside-down, left side down, right side down, front down, rear down. (Does not need to be exact)
+         * */
+
+        STM_EVAL_LEDOn(LED5);
+        ResetUserButton(); // Reset user button
+
+        CalibrateAcc();
+
+        // Set motor output to lowest
+        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
+            PWMMotorTimes.M4 = MIN_ESC_VAL;
+        SetMotors();
+      }
+    else if (!GetGyroCalibrated())
+      {
+        /* _GYROSCOPE CALIBRATION INSTRUCTIONS_
+         * Hold the quadcopter completely still, put it on the ground or equivalent.
+         * */
+
+        STM_EVAL_LEDOn(LED7);
+        ResetUserButton(); // Reset user button
+
+        CalibrateGyro();
+
+        // Set motor output to lowest
+        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
+            PWMMotorTimes.M4 = MIN_ESC_VAL;
+        SetMotors();
+      }
+    return;
+
+  default:
+    return;
+  }
+}
+
+/* @SetFlightMode
+ * @brief       Sets the Flight Mode - handles transitions between flight modes.
+ * @param       None.
+ * @retval      None.
+ */
+void SetFlightMode()
+{
+  if (CheckRCConnection())
     {
-      /* _COMPASS CALIBRATION INSTRUCTIONS_
-       * Rotate the quadcopter around each of the positive and negative 3D axes (6 directions)
-       * at least 360 deg (not too fast).
-       * The alignment does not need to be exact and further arbitrary rotatation will
-       * only be beneficial for the calibration.
-       * It does not matter in which direction the quadcopter is rotated.
-       * */
-
-      STM_EVAL_LEDOn(LED3);
-      ResetUserButton(); // Reset user button
-
-      CalibrateMag();
-
-      // Set motor output to lowest
-      PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-          PWMMotorTimes.M4 = MIN_ESC_VAL;
-      SetMotors();
+      if (PWMInputTimes.Gear >= GetRCmid())
+        flightMode = ATTITUDE_CONTROL;
+      else if (PWMInputTimes.Gear < GetRCmid() && PWMInputTimes.Gear >= 0.0)
+        flightMode = MANUAL_FLIGHT;
     }
-  else if (!GetAccCalibrated())
+  else
     {
-      /* _ACCELEROMETER CALIBRATION INSTRUCTIONS_
-       * Hold the quadcopter as still as possible for a few seconds in each of the following positions:
-       * Level, upside-down, left side down, right side down, front down, rear down. (Does not need to be exact)
-       * */
-
-      STM_EVAL_LEDOn(LED5);
-      ResetUserButton(); // Reset user button
-
-      CalibrateAcc();
-
-      // Set motor output to lowest
-      PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-          PWMMotorTimes.M4 = MIN_ESC_VAL;
-      SetMotors();
-    }
-  else if (!GetGyroCalibrated())
-    {
-      /* _GYROSCOPE CALIBRATION INSTRUCTIONS_
-       * Hold the quadcopter completely still, put it on the ground or equivalent.
-       * */
-
-      STM_EVAL_LEDOn(LED7);
-      ResetUserButton(); // Reset user button
-
-      CalibrateGyro();
-
-      // Set motor output to lowest
-      PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-          PWMMotorTimes.M4 = MIN_ESC_VAL;
-      SetMotors();
-    }
-  else if (!GetStatesInitialized())
-    {
-      STM_EVAL_LEDOn(LED9);
-      ResetUserButton(); // Reset user button
-
-      InitializeStateEstimation();
-
-      // Set motor output to lowest
-      PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-          PWMMotorTimes.M4 = MIN_ESC_VAL;
-      SetMotors();
-    }
-  else if (flightMode == ATTITUDE)
-    {
-      STM_EVAL_LEDOff(LED7);
-      STM_EVAL_LEDOff(LED8);
-      STM_EVAL_LEDOff(LED9);
-      // STM_EVAL_LEDOff(LED11);
-      STM_EVAL_LEDOn(LED10);
-
-      UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
-
-      SetReferenceSignals();
-      AltitudeControl();
-      RollControl();
-      PitchControl();
-      YawControl();
-
-      ControlAllocation();
-      SetMotors();
-    }
-  else if (flightMode == MANUAL)
-    {
-      STM_EVAL_LEDOff(LED7);
-      STM_EVAL_LEDOff(LED8);
-      STM_EVAL_LEDOff(LED9);
-      STM_EVAL_LEDOff(LED10);
-      // STM_EVAL_LEDOn(LED11);
-
-      UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
-      // Set motor output to lowest
-      ManualModeAllocation();
-      SetMotors();
-    }
-  else if (flightMode == SHUTDOWN)
-    {
-      STM_EVAL_LEDOff(LED7);
-      STM_EVAL_LEDOff(LED9);
-      STM_EVAL_LEDOff(LED10);
-      STM_EVAL_LEDOn(LED8);
-
-      UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
-
-      // Set motor output to lowest
-      PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-          PWMMotorTimes.M4 = MIN_ESC_VAL;
-      SetMotors();
+      flightMode = SHUTDOWN_MOTORS;
     }
 }
 
@@ -162,8 +184,7 @@ void UpdateControl(void)
  * @param	None.
  * @retval	None.
  */
-void
-AltitudeControl(void)
+void AltitudeControl(void)
 {
   float ZVelocity = GetZVelocity();
 
@@ -195,8 +216,7 @@ AltitudeControl(void)
  * @param	None.
  * @retval	None.
  */
-void
-RollControl(void)
+void RollControl(void)
 {
   float RollAngle = GetRoll();
 
@@ -228,8 +248,7 @@ RollControl(void)
  * @param	None.
  * @retval	None.
  */
-void
-PitchControl(void)
+void PitchControl(void)
 {
   float PitchAngle = GetPitch();
 
@@ -263,8 +282,7 @@ PitchControl(void)
  * @param	None.
  * @retval	None.
  */
-void
-YawControl(void)
+void YawControl(void)
 {
   float YawRate = GetYawRate();
 
@@ -296,8 +314,7 @@ YawControl(void)
  * @param  None
  * @retval None
  */
-void
-SetReferenceSignals(void)
+void SetReferenceSignals(void)
 {
   // Set velocity reference limits
   if (PWMInputTimes.Throttle >= GetRCmin()
@@ -338,8 +355,7 @@ SetReferenceSignals(void)
  * @param  None
  * @retval None
  */
-void
-ControlAllocation(void)
+void ControlAllocation(void)
 {
   PWMMotorTimes.M1 = (BQ * LENGTH_ARM * CtrlSignals.Thrust
       - M_SQRT2 * BQ * CtrlSignals.Roll - M_SQRT2 * BQ * CtrlSignals.Pitch
@@ -392,8 +408,7 @@ ControlAllocation(void)
  * @param  None
  * @retval None
  */
-void
-ManualModeAllocation(void)
+void ManualModeAllocation(void)
 {
   PWMMotorTimes.M1 = 0.9
       * (PWMInputTimes.Throttle - 2 * (PWMInputTimes.Aileron - GetRCmid())
@@ -441,60 +456,12 @@ ManualModeAllocation(void)
     PWMMotorTimes.M4 = MIN_ESC_VAL;
 }
 
-/* @SetMotors
- * @brief	Sets the motor PWM, which is sent to the ESCs
- * @param	None.
- * @retval	None.
- */
-void
-SetMotors()
-{
-  TIM4->CCR1 = GetPWM_CCR(PWMMotorTimes.M1); // To motor 1 (PD12)
-  TIM4->CCR2 = GetPWM_CCR(PWMMotorTimes.M2); // To motor 2 (PD13)
-  TIM4->CCR3 = GetPWM_CCR(PWMMotorTimes.M3); // To motor 3 (PD14)
-  TIM4->CCR4 = GetPWM_CCR(PWMMotorTimes.M4); // To motor 4 (PD15)
-}
-
-/* @SetFlightMode
- * @brief	Sets the Flight Mode.
- * @param	None.
- * @retval	None.
- */
-void
-SetFlightMode()
-{
-  if (CheckRCConnection())
-    {
-      if (PWMInputTimes.Gear >= GetRCmid())
-        flightMode = ATTITUDE;
-      else if (PWMInputTimes.Gear < GetRCmid() && PWMInputTimes.Gear >= 0.0)
-        flightMode = MANUAL;
-    }
-  else
-    {
-      flightMode = SHUTDOWN;
-    }
-}
-
-/* @getPWM_CCR
- * @brief	Recalculates a time pulse width to number of TIM4 clock ticks.
- * @param	t is the pulse width in seconds.
- * @retval	TIM4 clock ticks to be written to TIM4 CCR output.
- */
-uint16_t
-GetPWM_CCR(float t)
-{
-  return (uint16_t)(
-      (float) (t * SystemCoreClock / ((float) (TIM_GetPrescaler(TIM4) + 1))));
-}
-
 /* @InitPIDControllers
  * @brief	Initializes the PID controllers, i.e. sets controller parameters.
  * @param	None.
  * @retval	None.
  */
-void
-InitPIDControllers()
+void InitPIDControllers()
 {
   /* Initialize Altitude Controller */
   AltCtrl.K = K_VZ;
@@ -548,8 +515,7 @@ InitPIDControllers()
  * @param	None.
  * @retval	None.
  */
-void
-TIM7_Setup(void)
+void TIM7_Setup(void)
 {
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure7; // TIM7 init struct
 
@@ -573,8 +539,7 @@ TIM7_Setup(void)
  * @param  None
  * @retval None
  */
-void
-TIM7_SetupIRQ(void)
+void TIM7_SetupIRQ(void)
 {
 
   /* Interrupt config */

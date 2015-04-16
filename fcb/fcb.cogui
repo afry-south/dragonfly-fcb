@@ -15,9 +15,9 @@
 </folder>
 </info>
 </editorArea>
-<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x_it.c" partName="stm32f30x_it.c" path="C:/Users/A501632/Code/Dragonfly/fcb/fcb/src/stm32f30x_it.c" title="stm32f30x_it.c" tooltip="C:/Users/A501632/Code/Dragonfly/fcb/fcb/src/stm32f30x_it.c" workbook="DefaultEditorWorkbook">
-<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/src/stm32f30x_it.c"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1427" selectionTopPixel="361"/>
+<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" partName="main.c" path="C:/Users/A501632/Code/Dragonfly/fcb/fcb/src/main.c" title="main.c" tooltip="C:/Users/A501632/Code/Dragonfly/fcb/fcb/src/main.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/src/main.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="934"/>
 </editor>
 </editors>
 <views>
@@ -26,7 +26,11 @@
 <expanded>
 <element path="/fcb"/>
 <element path="/fcb/fcb"/>
+<element path="/fcb/fcb/src"/>
 </expanded>
+<selection>
+<element path="/fcb/fcb/src/main.c"/>
+</selection>
 </viewState>
 </view>
 <view id="org.eclipse.search.ui.views.SearchView" partName="Search">
@@ -126,22 +130,9 @@
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/stm32f30x_it.c"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/RCinput.c"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/inc/RCinput.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/main.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/stm32f30x_it.c"/>
 </editors>
-<item historyLabel="stm32f30x_it.h" index="2">
-<position info="not_deleted" x="0" y="0"/>
-</item>
-<item historyLabel="stm32f30x_it.c" index="3">
-<position info="not_deleted" x="5594" y="51"/>
-</item>
-<item historyLabel="stm32f30x_it.h" index="2">
-<position info="not_deleted" x="0" y="0"/>
-</item>
-<item historyLabel="stm32f30x_it.c" index="3">
-<position info="not_deleted" x="4519" y="0"/>
-</item>
-<item historyLabel="RCinput.c" index="1">
-<position info="not_deleted" x="2761" y="0"/>
-</item>
 <item historyLabel="stm32f30x_it.h" index="2">
 <position info="not_deleted" x="0" y="0"/>
 </item>
@@ -274,8 +265,23 @@
 <item historyLabel="stm32f30x_it.c" index="3">
 <position info="not_deleted" x="4915" y="0"/>
 </item>
-<item active="true" historyLabel="stm32f30x_it.c" index="3">
+<item historyLabel="stm32f30x_it.c" index="3">
 <position info="not_deleted" x="5762" y="24"/>
+</item>
+<item historyLabel="main.c" index="6">
+<position info="not_deleted" x="1618" y="0"/>
+</item>
+<item historyLabel="stm32f30x_it.c" index="7">
+<position info="not_deleted" x="5074" y="0"/>
+</item>
+<item historyLabel="main.c" index="6">
+<position info="not_deleted" x="2367" y="0"/>
+</item>
+<item historyLabel="stm32f30x_it.c" index="7">
+<position info="not_deleted" x="5074" y="0"/>
+</item>
+<item active="true" historyLabel="main.c" index="6">
+<position info="not_deleted" x="0" y="0"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
@@ -284,6 +290,9 @@
 <actionBarAdvisor/>
 </window>
 <mruList>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="fcb/fcb/src/main.c">
+<persistable path="/fcb/fcb/src/main.c"/>
+</file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f30x_it.c" tooltip="fcb/fcb/src/stm32f30x_it.c">
 <persistable path="/fcb/fcb/src/stm32f30x_it.c"/>
 </file>
@@ -316,9 +325,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.h" tooltip="fcb/fcb/inc/main.h">
 <persistable path="/fcb/fcb/inc/main.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="fcb/fcb/src/main.c">
-<persistable path="/fcb/fcb/src/main.c"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f30x.S" tooltip="fcb/CMSIS_BOOT/startup_stm32f30x.S">
 <persistable path="/fcb/CMSIS_BOOT/startup_stm32f30x.S"/>

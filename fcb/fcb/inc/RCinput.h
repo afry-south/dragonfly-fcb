@@ -1,3 +1,12 @@
+/******************************************************************************
+ * @file    fcb/RCinput.h
+ * @author  ÅF Dragonfly - Daniel Nilsson and Daniel Stenberg, Embedded Systems
+ * @version v. 0.0.2
+ * @date    2015-04-16
+ * @brief   Flight Control program for the ÅF Dragonfly quadcopter
+ *          Header file for reading signals from the RC receiver
+ ******************************************************************************/
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __RCINPUT_H
 #define __RCINPUT_H

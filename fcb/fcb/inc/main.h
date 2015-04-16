@@ -28,7 +28,7 @@
 __IO uint32_t GetUserButton(void);
 void ResetUserButton(void);
 void Delay(uint32_t mTime);
-void TimingDelay_Decrement(void);
+void Millisecond_Update(void);
 
 #endif /* __MAIN_H */
 

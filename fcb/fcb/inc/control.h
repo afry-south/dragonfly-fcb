@@ -1,6 +1,25 @@
+/******************************************************************************
+ * @file    fcb/control.h
+ * @author  ÅF Dragonfly:
+ * Daniel Stenberg, Embedded Systems
+ * @version v. 0.0.1
+ * @date    2014-09-29
+ * @brief   Flight Control program for the ÅF Dragonfly quadcopter
+ *          Header file for flight controller
+ ******************************************************************************/
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __CONTROL_H
 #define __CONTROL_H
+
+typedef enum FlightControlMode {
+CALIBRATE_SENSORS,
+INITIALIZE_STATES,
+ATTITUDE_CONTROL,
+MANUAL_FLIGHT,
+AUTONOMOUS_FLIGHT,
+SHUTDOWN_MOTORS
+};
 
 typedef struct
 {
@@ -92,13 +111,6 @@ typedef struct
 #define MAX_ESC_VAL 0.002
 #define MIN_ESC_VAL 0.001
 
-/* Flight modes */
-#define SHUTDOWN 	0
-#define MANUAL		1
-#define ATTITUDE	2
-#define VELOCITY	3
-#define	AUTONOMOUS	4
-
 /* Flight performance */
 #define SLOW_FLIGHT 	0
 #define NORMAL_FLIGHT	1
@@ -114,7 +126,6 @@ typedef struct
 
 /* Function prototype declarations */
 
-uint16_t GetPWM_CCR(float dutycycle);
 void UpdateControl(void);
 void TIM7_Setup(void);
 void TIM7_SetupIRQ(void);
@@ -127,7 +138,6 @@ void AltitudeControl(void);
 void RollControl(void);
 void PitchControl(void);
 void YawControl(void);
-void SetMotors(void);
 void SetFlightMode(void);
 void InitPIDControllers(void);
 

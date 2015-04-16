@@ -558,7 +558,8 @@ uint16_t LSM303DLHC_Read(uint8_t DeviceAddr, uint8_t RegAddr, uint8_t* pBuffer, 
   
   /* If all operations OK */
   return LSM303DLHC_OK;  
-}  
+}
+
 /**
 * @brief  Initializes the low level interface used to drive the LSM303DLHC
 * @param  None
