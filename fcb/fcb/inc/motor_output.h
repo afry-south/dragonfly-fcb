@@ -11,6 +11,9 @@
 #ifndef __MOTOR_OUTPUT_H
 #define __MOTOR_OUTPUT_H
 
+/* Includes */
+#include "stm32f30x.h"
+
 /* Defines */
 #define MOTOR_OUT_SAMPLECLOCK (int) 24000000
 #define TIM4_Period (int) 60000

@@ -13,61 +13,61 @@
 #define __CONTROL_H
 
 enum FlightControlMode {
-CALIBRATE_SENSORS,
-INITIALIZE_STATES,
-ATTITUDE_CONTROL,
-MANUAL_FLIGHT,
-AUTONOMOUS_FLIGHT,
-SHUTDOWN_MOTORS
+  CALIBRATE_SENSORS,
+  INITIALIZE_STATES,
+  ATTITUDE_CONTROL,
+  MANUAL_FLIGHT,
+  AUTONOMOUS_FLIGHT,
+  SHUTDOWN_MOTORS
 };
 
 typedef struct
 {
-	float M1;
-	float M2;
-	float M3;
-	float M4;
+  float M1;
+  float M2;
+  float M3;
+  float M4;
 }PWMMotor_TimeTypeDef;
 
 typedef struct
 {
-	float Thrust;
-	float Roll;
-	float Pitch;
-	float Yaw;
+  float Thrust;
+  float Roll;
+  float Pitch;
+  float Yaw;
 }CtrlSignals_TypeDef;
 
 typedef struct
 {
-	float ZVelocity;	// [m/s]
-	float RollAngle;	// [rad]
-	float PitchAngle;	// [rad]
-	float YawRate;		// [rad/s]
+  float ZVelocity;	// [m/s]
+  float RollAngle;	// [rad]
+  float PitchAngle;	// [rad]
+  float YawRate;		// [rad/s]
 }RefSignals_TypeDef;
 
 typedef struct
 {
-	float K;		// PID gain parameter
-	float Ti;		// PID integration time parameter
-	float Td;		// PID derivative time parameter
-	float B;		// Set-point weighting 0-1
-	float N;		// Derivative action filter constant
-	float P;		// Proportional control part
-	float I;		// Integration control part
-	float D;		// Derivative control part
-	float PreState;	// Previous value of control variable state
+  float K;		// PID gain parameter
+  float Ti;		// PID integration time parameter
+  float Td;		// PID derivative time parameter
+  float B;		// Set-point weighting 0-1
+  float N;		// Derivative action filter constant
+  float P;		// Proportional control part
+  float I;		// Integration control part
+  float D;		// Derivative control part
+  float PreState;	// Previous value of control variable state
 }PIDController_TypeDef;
 
 /* Define variables */
 
 /* Control sample time settings */
-#define TIM7_FREQ 		1000000				// Timer 3 (counter update) frequency [Hz]
-#define TIM7_CTRLFREQ	50					// Control output sample frequency [Hz]
-#define H 				1/TIM7_CTRLFREQ		// Control sample time [s]
+#define TIM7_FREQ 		        1000000				// Timer 3 (counter update) frequency [Hz]
+#define TIM7_CTRLFREQ	                50					// Control output sample frequency [Hz]
+#define CONTROL_SAMPLE_PERTIOD 		1/TIM7_CTRLFREQ		// Control sample time [s]
 
 /* Physical properties of aircraft */
-#define LENGTH_ARM 	0.30		// Quadcopter arm length [m]
-#define MASS		2.100		// Total mass of the quadcopter [kg]
+#define LENGTH_ARM 	        0.30		// Quadcopter arm length [m]
+#define MASS		        2.100		// Total mass of the quadcopter [kg]
 #define IXX			0.030		// X-axis moment of inertia [kg/(m^2)]
 #define IYY			0.030		// Y-axis moment of inertia [kg/(m^2)]
 #define IZZ			0.060		// Z-axis moment of inertia [kg/(m^2)]
@@ -108,8 +108,9 @@ typedef struct
 #define MAX_YAW_RATE		10*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
 /* ESC range */
-#define MAX_ESC_VAL 0.002
-#define MIN_ESC_VAL 0.001
+#define MAX_ESC_VAL 0.0020
+#define MID_ESC_CAL 0.0015
+#define MIN_ESC_VAL 0.0010
 
 /* Flight performance */
 #define SLOW_FLIGHT 	0

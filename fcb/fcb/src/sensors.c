@@ -331,8 +331,8 @@ void AccAttitude(volatile float* pfData)
  */
 void CalibrateAcc(void)
 {
-  if(!AccCalibrated)
-    {
+//  if(!AccCalibrated)
+//    {
       //		float accSamples[6][3] = {0.0f};
       //		float accSumSq[3] = {0.0f}; // TODO move
       //		float accSum[3] = {0.0f};
@@ -374,7 +374,7 @@ void CalibrateAcc(void)
       //				change = delta_acc[0]*delta_acc[0] + delta_acc[1]*delta_acc[1] + delta_acc[2]*delta_acc[2];
       //			}
       //		}
-    }
+//    }
 }
 
 /** GetAccCalibrated
@@ -567,12 +567,12 @@ void UpdateRollEstimate(void)
   float rollRateGyro = GyroBuffer[0] + (GyroBuffer[1]*sinf(States.roll) + GyroBuffer[1]*cosf(States.roll))*tanf(States.pitch);
 
   /* Prediction */
-  States.roll = States.roll + H*rollRateGyro - H*States.rollRateBias;
+  States.roll = States.roll + CONTROL_SAMPLE_PERTIOD*rollRateGyro - CONTROL_SAMPLE_PERTIOD*States.rollRateBias;
   States.rollRateBias = States.rollRateBias;
 
-  RollEstimator.p11 = RollEstimator.p11-RollEstimator.p21*H - H*(RollEstimator.p12-RollEstimator.p22*H) + RollEstimator.q1;
-  RollEstimator.p12 = RollEstimator.p12 - RollEstimator.p22*H;
-  RollEstimator.p21 = RollEstimator.p21 - RollEstimator.p22*H;
+  RollEstimator.p11 = RollEstimator.p11-RollEstimator.p21*CONTROL_SAMPLE_PERTIOD - CONTROL_SAMPLE_PERTIOD*(RollEstimator.p12-RollEstimator.p22*CONTROL_SAMPLE_PERTIOD) + RollEstimator.q1;
+  RollEstimator.p12 = RollEstimator.p12 - RollEstimator.p22*CONTROL_SAMPLE_PERTIOD;
+  RollEstimator.p21 = RollEstimator.p21 - RollEstimator.p22*CONTROL_SAMPLE_PERTIOD;
   RollEstimator.p22 = RollEstimator.p22 + RollEstimator.q2;
 
   /* Correction */
@@ -616,12 +616,12 @@ void UpdatePitchEstimate(void)
   float pitchRateGyro = GyroBuffer[1]*cosf(States.roll) - GyroBuffer[1]*sinf(States.roll);
 
   /* Prediction */
-  States.pitch = States.pitch + H*pitchRateGyro - H*States.pitchRateBias;
+  States.pitch = States.pitch + CONTROL_SAMPLE_PERTIOD*pitchRateGyro - CONTROL_SAMPLE_PERTIOD*States.pitchRateBias;
   States.pitchRateBias = States.pitchRateBias;
 
-  PitchEstimator.p11 = PitchEstimator.p11-PitchEstimator.p21*H - H*(PitchEstimator.p12-PitchEstimator.p22*H) + PitchEstimator.q1;
-  PitchEstimator.p12 = PitchEstimator.p12 - PitchEstimator.p22*H;
-  PitchEstimator.p21 = PitchEstimator.p21 - PitchEstimator.p22*H;
+  PitchEstimator.p11 = PitchEstimator.p11-PitchEstimator.p21*CONTROL_SAMPLE_PERTIOD - CONTROL_SAMPLE_PERTIOD*(PitchEstimator.p12-PitchEstimator.p22*CONTROL_SAMPLE_PERTIOD) + PitchEstimator.q1;
+  PitchEstimator.p12 = PitchEstimator.p12 - PitchEstimator.p22*CONTROL_SAMPLE_PERTIOD;
+  PitchEstimator.p21 = PitchEstimator.p21 - PitchEstimator.p22*CONTROL_SAMPLE_PERTIOD;
   PitchEstimator.p22 = PitchEstimator.p22 + PitchEstimator.q2;
 
   /* Correction */
@@ -681,7 +681,7 @@ float GetYawRate(void)
 void UpdateZVelocityEstimate(void)
 {
   float ZAcc = (-AccBuffer[0]*sinf(States.pitch)+AccBuffer[1]*sinf(States.roll)*cosf(States.pitch)+AccBuffer[2]*cosf(States.roll)*cosf(States.pitch))*G_ACC - G_ACC;
-  States.ZVelocity += ZAcc*H;
+  States.ZVelocity += ZAcc*CONTROL_SAMPLE_PERTIOD;
 }
 
 /* GetZVelocity

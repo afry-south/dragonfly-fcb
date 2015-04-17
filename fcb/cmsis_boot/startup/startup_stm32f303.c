@@ -139,7 +139,7 @@ extern void _eram;               /*!< End address for ram                     */
 
 /*----------Function prototypes-----------------------------------------------*/
 extern int main(void);           /*!< The entry point for the application.    */
-//extern void SystemInit(void);    /*!< Setup the microcontroller system(CMSIS) */
+extern void SystemInit(void);    /*!< Setup the microcontroller system(CMSIS) */
 void Default_Reset_Handler(void);   /*!< Default reset handler                */
 static void Default_Handler(void);  /*!< Default exception handler            */
 

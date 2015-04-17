@@ -161,7 +161,6 @@
     <File name="discovery_utils/inc/stm32f3_discovery.h" path="discovery_utils/stm32f3_discovery.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_wwdg.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_wwdg.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_tim.c" type="1"/>
-    <File name="CMSIS_BOOT/startup_stm32f303.c" path="CMSIS_BOOT/startup/startup_stm32f303.c" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/inc/stm32f30x_rtc.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/inc/stm32f30x_rtc.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_dac.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_dac.c" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_gpio.c" type="1"/>
@@ -200,6 +199,7 @@
     <File name="CMSIS/core_sc300.h" path="STM32F3-Discovery_FW_V1.1.0/Libraries/CMSIS/Include/core_sc300.h" type="1"/>
     <File name="STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.c" path="STM32F3-Discovery_FW_V1.1.0/Libraries/STM32F30x_StdPeriph_Driver/src/stm32f30x_spi.c" type="1"/>
     <File name="discovery_utils/inc" path="" type="2"/>
+    <File name="CMSIS_BOOT/startup_stm32f30x.S" path="CMSIS_BOOT/startup/startup_stm32f30x.S" type="1"/>
   </Files>
   <Bookmarks/>
 </Project>

@@ -132,8 +132,7 @@ void UpdateControl(void)
         CalibrateAcc();
 
         // Set motor output to lowest
-        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-            PWMMotorTimes.M4 = MIN_ESC_VAL;
+        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
         SetMotors();
       }
     else if (!GetGyroCalibrated())
@@ -191,8 +190,8 @@ void AltitudeControl(void)
   AltCtrl.P = AltCtrl.K * (AltCtrl.B * RefSignals.ZVelocity - ZVelocity);
 
   // Backward difference, derivative part with zero set-point weighting
-  AltCtrl.D = AltCtrl.Td / (AltCtrl.Td + AltCtrl.N * H) * AltCtrl.D
-      - AltCtrl.K * AltCtrl.Td * AltCtrl.N / (AltCtrl.Td + AltCtrl.N * H)
+  AltCtrl.D = AltCtrl.Td / (AltCtrl.Td + AltCtrl.N * CONTROL_SAMPLE_PERTIOD) * AltCtrl.D
+      - AltCtrl.K * AltCtrl.Td * AltCtrl.N / (AltCtrl.Td + AltCtrl.N * CONTROL_SAMPLE_PERTIOD)
           * (ZVelocity - AltCtrl.PreState);
 
   CtrlSignals.Thrust = (AltCtrl.P + AltCtrl.I + AltCtrl.D + G_ACC) * MASS;
@@ -206,7 +205,7 @@ void AltitudeControl(void)
   // Forward difference, so updated after control
   if (AltCtrl.Ti != 0.0)
     AltCtrl.I = AltCtrl.I
-        + AltCtrl.K * H / AltCtrl.Ti * (RefSignals.ZVelocity - ZVelocity);
+        + AltCtrl.K * CONTROL_SAMPLE_PERTIOD / AltCtrl.Ti * (RefSignals.ZVelocity - ZVelocity);
 
   AltCtrl.PreState = ZVelocity;
 }
@@ -223,8 +222,8 @@ void RollControl(void)
   RollCtrl.P = RollCtrl.K * (RollCtrl.B * RefSignals.RollAngle - RollAngle);
 
   // Backward difference, derivative part with zero set-point weighting
-  RollCtrl.D = RollCtrl.Td / (RollCtrl.Td + RollCtrl.N * H) * RollCtrl.D
-      - RollCtrl.K * RollCtrl.Td * RollCtrl.N / (RollCtrl.Td + RollCtrl.N * H)
+  RollCtrl.D = RollCtrl.Td / (RollCtrl.Td + RollCtrl.N * CONTROL_SAMPLE_PERTIOD) * RollCtrl.D
+      - RollCtrl.K * RollCtrl.Td * RollCtrl.N / (RollCtrl.Td + RollCtrl.N * CONTROL_SAMPLE_PERTIOD)
           * (RollAngle - RollCtrl.PreState);
 
   CtrlSignals.Roll = (RollCtrl.P + RollCtrl.I + RollCtrl.D) * IXX;
@@ -238,7 +237,7 @@ void RollControl(void)
   // Forward difference, so updated after control
   if (RollCtrl.Ti != 0.0)
     RollCtrl.I = RollCtrl.I
-        + RollCtrl.K * H / RollCtrl.Ti * (RefSignals.RollAngle - RollAngle);
+        + RollCtrl.K * CONTROL_SAMPLE_PERTIOD / RollCtrl.Ti * (RefSignals.RollAngle - RollAngle);
 
   RollCtrl.PreState = RollAngle;
 }
@@ -256,9 +255,9 @@ void PitchControl(void)
       * (PitchCtrl.B * RefSignals.PitchAngle - PitchAngle);
 
   // Backward difference, derivative part with zero set-point weighting
-  PitchCtrl.D = PitchCtrl.Td / (PitchCtrl.Td + PitchCtrl.N * H) * PitchCtrl.D
+  PitchCtrl.D = PitchCtrl.Td / (PitchCtrl.Td + PitchCtrl.N * CONTROL_SAMPLE_PERTIOD) * PitchCtrl.D
       - PitchCtrl.K * PitchCtrl.Td * PitchCtrl.N
-          / (PitchCtrl.Td + PitchCtrl.N * H)
+          / (PitchCtrl.Td + PitchCtrl.N * CONTROL_SAMPLE_PERTIOD)
           * (PitchAngle - PitchCtrl.PreState);
 
   CtrlSignals.Pitch = (PitchCtrl.P + PitchCtrl.I + PitchCtrl.D) * IYY;
@@ -272,7 +271,7 @@ void PitchControl(void)
   // Forward difference, so updated after control
   if (PitchCtrl.Ti != 0.0)
     PitchCtrl.I = PitchCtrl.I
-        + PitchCtrl.K * H / PitchCtrl.Ti * (RefSignals.PitchAngle - PitchAngle);
+        + PitchCtrl.K * CONTROL_SAMPLE_PERTIOD / PitchCtrl.Ti * (RefSignals.PitchAngle - PitchAngle);
 
   PitchCtrl.PreState = PitchAngle;
 }
@@ -289,8 +288,8 @@ void YawControl(void)
   YawCtrl.P = YawCtrl.K * (YawCtrl.B * RefSignals.YawRate - YawRate);
 
   // Backward difference
-  YawCtrl.D = YawCtrl.Td / (YawCtrl.Td + YawCtrl.N * H) * YawCtrl.D
-      - YawCtrl.K * YawCtrl.Td * YawCtrl.N / (YawCtrl.Td + YawCtrl.N * H)
+  YawCtrl.D = YawCtrl.Td / (YawCtrl.Td + YawCtrl.N * CONTROL_SAMPLE_PERTIOD) * YawCtrl.D
+      - YawCtrl.K * YawCtrl.Td * YawCtrl.N / (YawCtrl.Td + YawCtrl.N * CONTROL_SAMPLE_PERTIOD)
           * (YawRate - YawCtrl.PreState);
 
   CtrlSignals.Yaw = (YawCtrl.P + YawCtrl.I + YawCtrl.D) * IZZ;
@@ -304,7 +303,7 @@ void YawControl(void)
   // Forward difference, so updated after control
   if (YawCtrl.Ti != 0.0)
     YawCtrl.I = YawCtrl.I
-        + YawCtrl.K * H / YawCtrl.Ti * (RefSignals.YawRate - YawRate);
+        + YawCtrl.K * CONTROL_SAMPLE_PERTIOD / YawCtrl.Ti * (RefSignals.YawRate - YawRate);
 
   YawCtrl.PreState = YawRate;
 }
@@ -573,6 +572,5 @@ void SetMotors()
  */
 uint16_t GetPWM_CCR(float t)
 {
-  return (uint16_t)(
-      (float) (t * SystemCoreClock / ((float) (TIM_GetPrescaler(TIM4) + 1))));
+  return (uint16_t)((float) (t * SystemCoreClock / ((float) (TIM_GetPrescaler(TIM4) + 1))));
 }
