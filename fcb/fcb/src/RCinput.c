@@ -8,17 +8,12 @@
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
  *          File contains functionality for reading signals from the RC receiver
  ******************************************************************************/
+
+#include "RCinput.h"
 #include <stdio.h>
 #include <string.h>
 #include "stm32f30x.h"
-#include "stm32f3_discovery.h"
-#include "stm32f30x_it.h"
-#include "stm32f30x_tim.h"
-#include "stm32f30x_gpio.h"
-#include "stm32f30x_rcc.h"
-#include "stm32f30x_misc.h"
-#include "RCinput.h"
-#include "control.h"
+#include "flight_control.h"
 
 #define PWM_INPUT_SAMPLE_CLOCK 2400000
 

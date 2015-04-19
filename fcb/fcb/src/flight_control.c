@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    fcb/control.c
+ * @file    fcb/flight_control.c
  * @author  ÅF Dragonfly:
  * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.1
@@ -9,11 +9,11 @@
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include "control.h"
+#include "flight_control.h"
+#include "main.h"
 #include "RCinput.h"
 #include "sensors.h"
-#include "motor_output.h"
-#include "com.h"
+#include "motor_control.h"
 #include <math.h>
 
 /* Private variables ---------------------------------------------------------*/

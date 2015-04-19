@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    fcb/control.h
+ * @file    fcb/flight_control.h
  * @author  ÅF Dragonfly:
  * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.1

@@ -1,5 +1,5 @@
 /*****************************************************************************
-* @file    fcb/motor_output.h
+* @file    fcb/motor_control.h
 * @author  ÅF Dragonfly - Daniel Stenberg, Embedded Systems
 * @version v. 0.0.1
 * @date    2014-09-29

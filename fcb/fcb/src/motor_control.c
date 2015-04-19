@@ -1,5 +1,5 @@
 /*****************************************************************************
- * @file    fcb/motor_output.c
+ * @file    fcb/motor_control.c
  * @author  ÅF Dragonfly
  * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.1
@@ -14,7 +14,7 @@
  * @param	None.
  * @retval	None.
  */
-#include "motor_output.h"
+#include "motor_control.h"
 
 void TIM4_IOconfig(void)
 {

@@ -31,7 +31,7 @@
 #include "stm32f30x_it.h"
 #include "main.h"
 #include "RCinput.h"
-#include "control.h"
+#include "flight_control.h"
 
 /** @addtogroup STM32F3-Discovery_Demo
   * @{
