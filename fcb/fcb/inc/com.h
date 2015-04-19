@@ -4,7 +4,7 @@
   * Daniel Stenberg, Embedded Systems
   * @version v. 0.0.1
   * @date    30-October-2014
-  * @brief   Header for com.c module
+  * @brief   Header file for com.c module
   *****************************************************************************/
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -17,10 +17,7 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
-
 /* Exported functions ------------------------------------------------------- */
-void initUSB(void);
-void rwUSB(void);
 
 #endif /* __COM_H */
 
