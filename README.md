@@ -2,9 +2,9 @@
 
 ## Installation and configuration
 
-1. Download (ARM GCC)[https://launchpad.net/gcc-arm-embedded/]
-2. Download (CoIDE)[http://www.coocox.com/CoIDE/CoIDE_Updates.htm]
-3. Download (STM32 ST-LINK Utility)[http://www.st.com/web/en/catalog/tools/PF258168]
+1. Download [ARM GCC](https://launchpad.net/gcc-arm-embedded/)
+2. Download [CoIDE](http://www.coocox.com/CoIDE/CoIDE_Updates.htm)
+3. Download [STM32 ST-LINK Utility](http://www.st.com/web/en/catalog/tools/PF258168)
 4. Install ARM GCC
 5. Install CoIDE
 6. Configure CoIDE to point to ARM GCC (http://www.coocox.com/CoIDE/Compiler_Settings.html)
