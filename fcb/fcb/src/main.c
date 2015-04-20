@@ -53,8 +53,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "motor_output.h"
-#include "control.h"
+#include "motor_control.h"
+#include "flight_control.h"
 #include "sensors.h"
 #include "RCinput.h"
 #include "com.h"

@@ -11,7 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "sensors.h"
-#include "control.h"
+#include "flight_control.h"
 #include <stdlib.h>
 #include <math.h>
 

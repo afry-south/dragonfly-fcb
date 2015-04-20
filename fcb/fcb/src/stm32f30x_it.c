@@ -31,8 +31,7 @@
 #include "stm32f30x_it.h"
 #include "main.h"
 #include "RCinput.h"
-#include "control.h"
-#include "usb_istr.h"
+#include "flight_control.h"
 
 /** @addtogroup STM32F3-Discovery_Demo
   * @{
@@ -120,9 +119,9 @@ void UsageFault_Handler(void)
   * @param  None
   * @retval None
   */
-void SVC_Handler(void)
-{
-}
+//void SVC_Handler(void)
+//{
+//}
 
 /**
   * @brief  This function handles Debug Monitor exception.
@@ -138,9 +137,9 @@ void DebugMon_Handler(void)
   * @param  None
   * @retval None
   */
-void PendSV_Handler(void)
-{
-}
+//void PendSV_Handler(void)
+//{
+//}
 
 /**
   * @brief  This function handles SysTick Handler.
@@ -150,8 +149,6 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   Millisecond_Update();
-  USBConnectTimeOut--;
-  DataReady++;
 }
 
 /******************************************************************************/
@@ -252,25 +249,6 @@ void EXTI0_IRQHandler(void)
   }
 }
 
-#if defined (USB_INT_DEFAULT)
-void USB_LP_CAN1_RX0_IRQHandler(void)
-#elif defined (USB_INT_REMAP)
-void USB_LP_IRQHandler(void)
-#endif
-{
-   USB_Istr();
-}
-
-#if defined (USB_INT_DEFAULT)
-void USBWakeUp_IRQHandler(void)
-#elif defined (USB_INT_REMAP)
-void USBWakeUp_RMP_IRQHandler(void)
-#endif
-{
-  /* Initiate external resume sequence (1 step) */
-  Resume(RESUME_EXTERNAL);  
-  EXTI_ClearITPendingBit(EXTI_Line18);
-}
 /**
   * @brief  This function handles PPP interrupt request.
   * @param  None

@@ -16,10 +16,6 @@
 #include "stm32f30x.h"
 #include "stm32f3_discovery.h"
 #include <stdio.h>
-#include "usb_lib.h"
-#include "hw_config.h"
-#include "usb_pwr.h"
-#include "platform_config.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
