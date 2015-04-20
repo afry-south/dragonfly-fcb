@@ -29,8 +29,6 @@ unsigned long pulStack[STACK_SIZE];
 /*----------Macro definition--------------------------------------------------*/
 #define WEAK __attribute__ ((weak))
 
-
-
 /*----------Declaration of the default fault handlers-------------------------*/
 /* System exception vector handler */
 void WEAK  Reset_Handler(void);
@@ -295,6 +293,7 @@ void Default_Reset_Handler(void)
 #endif	
 
   /* Call the application's entry point.*/
+  SystemInit();	// Initialize system
   main();
 }
 

@@ -72,31 +72,6 @@ __IO uint32_t UserButtonPressed = 0;
 static void Init_System(void);
 static void Init_LEDs(void);
 
-/* TODO MOVE ALL THIS TO SOME SORT OF TICKET/ISSUE HANDLING SYSTEM IN ONE/TFS */
-/* TODO --> Calculation of velocity, especially vertical. Rotate from roll/pitch/yaw estimates and use better accelerometer calibration and filtering */
-/* TODO --> Refine sensor settings and algorithm (extended Kalman? Kalman? Quaternions?) */
-/* TODO --> Accelerometer calibration using g and axis rotation, use mean function and scale to g */
-/* --> Suggestion: TODO Setup interrupt routine/DMA to collect sensor updates (since I2C is slow and has to wait alot) */
-/* Suggestion: TODO dynamic time step h in sensor integration and controller? (measure with GetCounter()) */
-/* TODO Calibrate RC input (min, max, midpoint for each stick) and map to according position and angle references (account for interval and midpoint offsets) */
-/* Suggestion: TODO Better identify drag coefficient (for yaw control allocation) and also thrust coefficient - experiment setup needed */
-/* TODO If STM32F3Discovery not placed in middle of quadcopter, translate sensor rotations? - wait until FCB has been mounted, then measure distances */
-/* TODO Control integration anti-windup */
-/* TODO Control bumpless transfer between control modes */
-/* Suggestion: TODO Flight modes and control performance settings (slow, normal, aggressive) */
-/* TODO Trajectory generation (from x, y, z and heading/yaw refs) and hold position at destinations (velocity/positional controller transfer) */
-/* TODO Calibration reset if not satisfactory */
-/* TODO Memory for storing settings and logging data (Use flash memory (EEPROM emulation) / SD card) */
-/* TODO Interface with PC for setup (USB connection): Virtual COM port CDC communication established */
-/* Suggestion: TODO Arm motors procedure (both sticks bottom left within 95% of min values for 10 seconds before motors can be used) */
-/* Suggestion: TODO Glue pistol on breadboard bottom connections */
-/* --> TODO Calibration temporarily set to true with some offset values */
-/* Suggestion: TODO Re-check execution time using GPIO set and reset bits */
-/* Suggestion: TODO cos and sin of pitch, roll, yaw performed repeatedly - store them once for each iteration. Use lookup-table for sin/cos/tan? */
-/* Suggestion: TODO Barometer altimeter, proximity sensors, voltage sensor to monitor battery level or can the ~5V onboard be monitored? ADC? PVD? */
-/* TODO Reads acc/magn and gyro sensors through interrupt routines (Data ready/DRDY interrupts), setup EXTI for pins. DMA reading beneficial? */
-/* Suggestion: Make use of an RTOS? There is support in CMSIS for threads, semaphores etc */
-
 /**
  * @brief  Main program.
  * @param  None
@@ -106,7 +81,7 @@ int main(void)
 {
   /* At this stage the microcontroller clock setting is already configured,
    * this is done through SystemInit() function which is called from startup
-   * file (startup_stm32f30x.s) before to branch to application main.
+   * file (startup_stm32f303.c) before to branch to application main.
    * To reconfigure the default setting of SystemInit() function, refer to
    * system_stm32f30x.c file
    */
