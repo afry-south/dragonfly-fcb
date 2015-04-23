@@ -1,5 +1,4 @@
-/**
-  ******************************************************************************
+/********************************************************************************
   * @file    usbd_cdc_if_template.c
   * @author  MCD Application Team
   * @version V2.2.0
@@ -22,8 +21,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   *
-  ******************************************************************************
-  */ 
+  *******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
@@ -120,14 +118,14 @@ static int8_t TEMPLATE_DeInit(void)
 
 
 /**
-  * @brief  TEMPLATE_Control
+  * @brief  CDC_Itf_Control
   *         Manage the CDC class requests
   * @param  Cmd: Command code            
   * @param  Buf: Buffer containing command data (request parameters)
   * @param  Len: Number of data to be sent (in bytes)
   * @retval Result of the opeartion: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t TEMPLATE_Control  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
+static int8_t CDC_Itf_Control  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 { 
   switch (cmd)
   {

@@ -12,7 +12,7 @@
 #define __MOTOR_OUTPUT_H
 
 /* Includes */
-#include "stm32f30x.h"
+#include "stm32f3xx.h"
 
 /* Defines */
 #define MOTOR_OUT_SAMPLECLOCK (int) 24000000

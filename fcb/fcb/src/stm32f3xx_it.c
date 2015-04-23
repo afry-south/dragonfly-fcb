@@ -1,16 +1,16 @@
 /**
   ******************************************************************************
-  * @file    stm32f30x_it.c 
+  * @file    Demonstrations/Src/stm32f3xx_it.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    20-September-2012
+  * @version V1.0.0
+  * @date    18-June-2014
   * @brief   Main Interrupt Service Routines.
-  *          This file provides template for all exceptions handler and 
+  *          This file provides all exceptions handler and 
   *          peripherals interrupt service routine.
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT 2012 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
   *
   * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
   * You may not use this file except in compliance with the License.
@@ -28,29 +28,25 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f30x_it.h"
 #include "main.h"
-#include "RCinput.h"
-#include "flight_control.h"
+#include "stm32f3xx_it.h"
 
-/** @addtogroup STM32F3-Discovery_Demo
+/** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
   * @{
   */
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
+
 /* Private variables ---------------------------------------------------------*/
-extern __IO uint32_t UserButtonPressed;
-extern __IO uint8_t DataReady;
-extern __IO uint32_t USBConnectTimeOut;
-__IO uint32_t i =0;
+extern PCD_HandleTypeDef hpcd;
 
 /* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
+
 
 /******************************************************************************/
-/*            Cortex-M4 Processor Exceptions Handlers                         */
+/*             Cortex-M4 Processor Exceptions Handlers                         */
 /******************************************************************************/
 
 /**
@@ -59,8 +55,7 @@ __IO uint32_t i =0;
   * @retval None
   */
 void NMI_Handler(void)
-{
-}
+{}
 
 /**
   * @brief  This function handles Hard Fault exception.
@@ -71,8 +66,7 @@ void HardFault_Handler(void)
 {
   /* Go to infinite loop when Hard Fault exception occurs */
   while (1)
-  {
-  }
+  {}
 }
 
 /**
@@ -84,8 +78,7 @@ void MemManage_Handler(void)
 {
   /* Go to infinite loop when Memory Manage exception occurs */
   while (1)
-  {
-  }
+  {}
 }
 
 /**
@@ -97,8 +90,7 @@ void BusFault_Handler(void)
 {
   /* Go to infinite loop when Bus Fault exception occurs */
   while (1)
-  {
-  }
+  {}
 }
 
 /**
@@ -110,18 +102,8 @@ void UsageFault_Handler(void)
 {
   /* Go to infinite loop when Usage Fault exception occurs */
   while (1)
-  {
-  }
+  {}
 }
-
-/**
-  * @brief  This function handles SVCall exception.
-  * @param  None
-  * @retval None
-  */
-//void SVC_Handler(void)
-//{
-//}
 
 /**
   * @brief  This function handles Debug Monitor exception.
@@ -129,17 +111,23 @@ void UsageFault_Handler(void)
   * @retval None
   */
 void DebugMon_Handler(void)
-{
-}
+{}
 
 /**
-  * @brief  This function handles PendSVC exception.
+  * @brief  This function handles SVCall exception.
+  * @param  None
+  * @retval None
+  */
+//void SVC_Handler(void)
+//{}
+
+/**
+  * @brief  This function handles PendSV_Handler exception.
   * @param  None
   * @retval None
   */
 //void PendSV_Handler(void)
-//{
-//}
+//{}
 
 /**
   * @brief  This function handles SysTick Handler.
@@ -148,14 +136,14 @@ void DebugMon_Handler(void)
   */
 void SysTick_Handler(void)
 {
-  Millisecond_Update();
+   HAL_IncTick();
 }
 
 /******************************************************************************/
-/*                 STM32F30x Peripherals Interrupt Handlers                   */
+/*                 STM32F3xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
 /*  available peripheral interrupt handler's name please refer to the startup */
-/*  file (startup_stm32f30x.s).                                            */
+/*  file (startup_stm32f3xx.s).                                               */
 /******************************************************************************/
 
 /*
@@ -163,33 +151,33 @@ void SysTick_Handler(void)
  */
 void TIM2_IRQHandler(void)
 {
-
-  /* If interrupt concerns TIM2 CH1 */
-  if (TIM_GetITStatus(TIM2, TIM_IT_CC1) != RESET)
-    {
-      TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
-      UpdateThrottleChannel();
-    }
-  /* If interrupt concerns TIM2 CH2 */
-  if (TIM_GetITStatus(TIM2, TIM_IT_CC2) != RESET)
-    {
-      TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
-      UpdateAileronChannel();
-    }
-
-  /* If interrupt concerns TIM2 CH3 */
-  if (TIM_GetITStatus(TIM2, TIM_IT_CC3) != RESET)
-    {
-      TIM_ClearITPendingBit(TIM2, TIM_IT_CC3);
-      UpdateElevatorChannel();
-    }
-
-  /* If interrupt concerns TIM2 CH4 */
-  if (TIM_GetITStatus(TIM2, TIM_IT_CC4) != RESET)
-    {
-      TIM_ClearITPendingBit(TIM2, TIM_IT_CC4);
-      UpdateRudderChannel();
-    }
+//
+//  /* If interrupt concerns TIM2 CH1 */
+//  if (TIM_GetITStatus(TIM2, TIM_IT_CC1) != RESET)
+//    {
+//      TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
+//      UpdateThrottleChannel();
+//    }
+//  /* If interrupt concerns TIM2 CH2 */
+//  if (TIM_GetITStatus(TIM2, TIM_IT_CC2) != RESET)
+//    {
+//      TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
+//      UpdateAileronChannel();
+//    }
+//
+//  /* If interrupt concerns TIM2 CH3 */
+//  if (TIM_GetITStatus(TIM2, TIM_IT_CC3) != RESET)
+//    {
+//      TIM_ClearITPendingBit(TIM2, TIM_IT_CC3);
+//      UpdateElevatorChannel();
+//    }
+//
+//  /* If interrupt concerns TIM2 CH4 */
+//  if (TIM_GetITStatus(TIM2, TIM_IT_CC4) != RESET)
+//    {
+//      TIM_ClearITPendingBit(TIM2, TIM_IT_CC4);
+//      UpdateRudderChannel();
+//    }
 }
 
 /*
@@ -197,18 +185,18 @@ void TIM2_IRQHandler(void)
  */
 void TIM3_IRQHandler(void)
 {
-  /* If interrupt concerns TIM3 CH1 */
-  if (TIM_GetITStatus(TIM3, TIM_IT_CC1) != RESET)
-    {
-      TIM_ClearITPendingBit(TIM3, TIM_IT_CC1);
-      UpdateGearChannel();
-    }
-  /* If interrupt concerns TIM3 CH2 */
-  if (TIM_GetITStatus(TIM3, TIM_IT_CC2) != RESET)
-    {
-      TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
-      UpdateAuxiliaryChannel();
-    }
+//  /* If interrupt concerns TIM3 CH1 */
+//  if (TIM_GetITStatus(TIM3, TIM_IT_CC1) != RESET)
+//    {
+//      TIM_ClearITPendingBit(TIM3, TIM_IT_CC1);
+//      UpdateGearChannel();
+//    }
+//  /* If interrupt concerns TIM3 CH2 */
+//  if (TIM_GetITStatus(TIM3, TIM_IT_CC2) != RESET)
+//    {
+//      TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
+//      UpdateAuxiliaryChannel();
+//    }
 }
 
 /*
@@ -216,37 +204,39 @@ void TIM3_IRQHandler(void)
  */
 void TIM7_IRQHandler(void)
 {
-  if (TIM_GetITStatus(TIM7, TIM_IT_Update) != RESET)
-    {
-      TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
-      UpdateControl();
-    }
+//  if (TIM_GetITStatus(TIM7, TIM_IT_Update) != RESET)
+//    {
+//      TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
+//      UpdateControl();
+//    }
 }
 
 /**
-  * @brief  This function handles EXTI0_IRQ Handler.
+  * @brief  This function handles USB Handler.
+  * @param  None
+  * @retval None
   */
-void EXTI0_IRQHandler(void)
-{ 
-  if ((EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) == SET) && (STM_EVAL_PBGetState(BUTTON_USER) != RESET))
-  {
-    /* Delay */
-    for(i=0; i<0x7FFFF; i++);
-    
-    /* Wait for SEL button to be pressed  */
-    while(STM_EVAL_PBGetState(BUTTON_USER) != RESET); 
-    /* Delay */
-    for(i=0; i<0x7FFFF; i++);
-    UserButtonPressed++;
-    
-    if (UserButtonPressed > 0x6)
-    {
-      UserButtonPressed = 0x0;
-    }
-    
-    /* Clear the EXTI line pending bit */
-    EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
-  }
+#if defined (USE_USB_INTERRUPT_DEFAULT)
+void USB_LP_CAN_RX0_IRQHandler(void)
+#elif defined (USE_USB_INTERRUPT_REMAPPED)
+void USB_LP_IRQHandler(void)
+#endif
+{
+//  HAL_PCD_IRQHandler(&hpcd);
+}
+
+/**
+  * @brief  This function handles USB WakeUp interrupt request.
+  * @param  None
+  * @retval None
+  */
+#if defined (USE_USB_INTERRUPT_DEFAULT)
+void USBWakeUp_IRQHandler(void)
+#elif defined (USE_USB_INTERRUPT_REMAPPED)
+void USBWakeUp_RMP_IRQHandler(void)
+#endif
+{
+  __HAL_USB_EXTI_CLEAR_FLAG();
 }
 
 /**
@@ -254,13 +244,12 @@ void EXTI0_IRQHandler(void)
   * @param  None
   * @retval None
   */
-/*void PPP_IRQHandler(void)
-{
-}*/
+void EXTI0_IRQHandler(void)
+{ 
+  HAL_GPIO_EXTI_IRQHandler(USER_BUTTON_PIN);
+}
 
 /**
   * @}
   */ 
-
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-

@@ -37,18 +37,15 @@ void UpdateControl(void)
   ReadSensors(); // Reads gyroscope, accelerometer and magnetometer
   GetPWMInputTimes(&PWMInputTimes); // Get 6 channel RC input pulse widths
 
-  // Read/write USB Virtual COM
-  //rwUSB();
-
   SetFlightMode();
 
   switch(flightMode)
   {
   case MANUAL_FLIGHT:
-    STM_EVAL_LEDOff(LED7);
-    STM_EVAL_LEDOff(LED8);
-    STM_EVAL_LEDOff(LED9);
-    STM_EVAL_LEDOff(LED10);
+    BSP_LED_Off(LED7);
+    BSP_LED_Off(LED8);
+    BSP_LED_Off(LED9);
+    BSP_LED_Off(LED10);
 
     UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
     // Set motor output to lowest
@@ -57,10 +54,10 @@ void UpdateControl(void)
     return;
 
   case ATTITUDE_CONTROL:
-    STM_EVAL_LEDOff(LED7);
-    STM_EVAL_LEDOff(LED8);
-    STM_EVAL_LEDOff(LED9);
-    STM_EVAL_LEDOn(LED10);
+    BSP_LED_Off(LED7);
+    BSP_LED_Off(LED8);
+    BSP_LED_Off(LED9);
+    BSP_LED_On(LED10);
 
     UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
 
@@ -75,10 +72,10 @@ void UpdateControl(void)
     return;
 
   case SHUTDOWN_MOTORS:
-    STM_EVAL_LEDOff(LED7);
-    STM_EVAL_LEDOff(LED9);
-    STM_EVAL_LEDOff(LED10);
-    STM_EVAL_LEDOn(LED8);
+    BSP_LED_Off(LED7);
+    BSP_LED_Off(LED9);
+    BSP_LED_Off(LED10);
+    BSP_LED_On(LED8);
 
     UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
 
@@ -88,8 +85,7 @@ void UpdateControl(void)
     return;
 
   case INITIALIZE_STATES:
-    STM_EVAL_LEDOn(LED9);
-    ResetUserButton(); // Reset user button
+    BSP_LED_On(LED9);
 
     InitializeStateEstimation();
 
@@ -109,8 +105,8 @@ void UpdateControl(void)
          * It does not matter in which direction the quadcopter is rotated.
          * */
 
-        STM_EVAL_LEDOn(LED3);
-        ResetUserButton(); // Reset user button
+        BSP_LED_On(LED3);
+        // ResetUserButton(); // Reset user button
 
         CalibrateMag();
 
@@ -126,8 +122,8 @@ void UpdateControl(void)
          * Level, upside-down, left side down, right side down, front down, rear down. (Does not need to be exact)
          * */
 
-        STM_EVAL_LEDOn(LED5);
-        ResetUserButton(); // Reset user button
+        BSP_LED_On(LED5);
+        // ResetUserButton(); // Reset user button
 
         CalibrateAcc();
 
@@ -141,8 +137,8 @@ void UpdateControl(void)
          * Hold the quadcopter completely still, put it on the ground or equivalent.
          * */
 
-        STM_EVAL_LEDOn(LED7);
-        ResetUserButton(); // Reset user button
+        BSP_LED_On(LED7);
+        // ResetUserButton(); // Reset user button
 
         CalibrateGyro();
 
@@ -516,21 +512,21 @@ void InitPIDControllers()
  */
 void TIM7_Setup(void)
 {
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure7; // TIM7 init struct
-
-  /* TIM7 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, ENABLE);
-
-  /* TIM7 Time Base configuration */
-  TIM_TimeBaseStructure7.TIM_Prescaler = SystemCoreClock / TIM7_FREQ - 1; // Scaling of system clock freq
-  TIM_TimeBaseStructure7.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseStructure7.TIM_Period = TIM7_FREQ / TIM7_CTRLFREQ - 1; // Counter reset value
-  TIM_TimeBaseStructure7.TIM_ClockDivision = TIM_CKD_DIV1;
-  TIM_TimeBaseStructure7.TIM_RepetitionCounter = 0;
-  TIM_TimeBaseInit(TIM7, &TIM_TimeBaseStructure7);
-
-  /* TIM7 counter enable */
-  TIM_Cmd(TIM7, ENABLE);
+//  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure7; // TIM7 init struct
+//
+//  /* TIM7 clock enable */
+//  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, ENABLE);
+//
+//  /* TIM7 Time Base configuration */
+//  TIM_TimeBaseStructure7.TIM_Prescaler = SystemCoreClock / TIM7_FREQ - 1; // Scaling of system clock freq
+//  TIM_TimeBaseStructure7.TIM_CounterMode = TIM_CounterMode_Up;
+//  TIM_TimeBaseStructure7.TIM_Period = TIM7_FREQ / TIM7_CTRLFREQ - 1; // Counter reset value
+//  TIM_TimeBaseStructure7.TIM_ClockDivision = TIM_CKD_DIV1;
+//  TIM_TimeBaseStructure7.TIM_RepetitionCounter = 0;
+//  TIM_TimeBaseInit(TIM7, &TIM_TimeBaseStructure7);
+//
+//  /* TIM7 counter enable */
+//  TIM_Cmd(TIM7, ENABLE);
 }
 
 /* TIM7_SetupIRQ
@@ -540,16 +536,16 @@ void TIM7_Setup(void)
  */
 void TIM7_SetupIRQ(void)
 {
-
-  /* Interrupt config */
-  NVIC_InitTypeDef nvicStructure;
-  nvicStructure.NVIC_IRQChannel = TIM7_IRQn;
-  nvicStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-  nvicStructure.NVIC_IRQChannelSubPriority = 0x00;
-  nvicStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&nvicStructure);
-
-  TIM_ITConfig(TIM7, TIM_IT_Update, ENABLE);
+//
+//  /* Interrupt config */
+//  NVIC_InitTypeDef nvicStructure;
+//  nvicStructure.NVIC_IRQChannel = TIM7_IRQn;
+//  nvicStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
+//  nvicStructure.NVIC_IRQChannelSubPriority = 0x00;
+//  nvicStructure.NVIC_IRQChannelCmd = ENABLE;
+//  NVIC_Init(&nvicStructure);
+//
+//  TIM_ITConfig(TIM7, TIM_IT_Update, ENABLE);
 }
 
 /* @SetMotors
@@ -559,10 +555,10 @@ void TIM7_SetupIRQ(void)
  */
 void SetMotors()
 {
-  TIM_SetCompare1(TIM4, GetPWM_CCR(PWMMotorTimes.M1)); // To motor 1 (PD12)
-  TIM_SetCompare2(TIM4, GetPWM_CCR(PWMMotorTimes.M2)); // To motor 2 (PD13)
-  TIM_SetCompare3(TIM4, GetPWM_CCR(PWMMotorTimes.M3)); // To motor 3 (PD14)
-  TIM_SetCompare4(TIM4, GetPWM_CCR(PWMMotorTimes.M4)); // To motor 4 (PD15)
+//  TIM_SetCompare1(TIM4, GetPWM_CCR(PWMMotorTimes.M1)); // To motor 1 (PD12)
+//  TIM_SetCompare2(TIM4, GetPWM_CCR(PWMMotorTimes.M2)); // To motor 2 (PD13)
+//  TIM_SetCompare3(TIM4, GetPWM_CCR(PWMMotorTimes.M3)); // To motor 3 (PD14)
+//  TIM_SetCompare4(TIM4, GetPWM_CCR(PWMMotorTimes.M4)); // To motor 4 (PD15)
 }
 
 /* @getPWM_CCR
@@ -572,5 +568,6 @@ void SetMotors()
  */
 uint16_t GetPWM_CCR(float t)
 {
-  return (uint16_t)((float) (t * SystemCoreClock / ((float) (TIM_GetPrescaler(TIM4) + 1))));
+//  return (uint16_t)((float) (t * SystemCoreClock / ((float) (TIM_GetPrescaler(TIM4) + 1))));
+  return 0;
 }

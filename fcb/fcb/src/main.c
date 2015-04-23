@@ -6,49 +6,6 @@
  * @version v. 0.0.2
  * @date    2015-04-12
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
- *
- * @I/O pin mapping overview:
- * PA.00 USER pushbutton
- * PA.05 SPI1_SCK (L3GD20 Gyroscope)
- * PA.06 SPI1_MISO (L3GD20 Gyroscope)
- * PA.07 SPI1_MOSI (L3GD20 Gyroscope)
- * PA.11 USBDM
- * PA.12 USBDP
- * PA.13 SWDAT
- * PA.14 SWCLK
- *
- * PB.03 TRACESWO
- * PB.04 TIM3_CH1 (Receiver PWM input)
- * PB.05 TIM3_CH2 (Receiver PWM input)
- * PB.06 I2C1_SCL (LSM303 Accelerometer/Magnetometer)
- * PB.07 I2C1_SDA (LSM303 Accelerometer/Magnetometer)
- *
- * PC.14 OSC32_IN
- * PC.15 OSC32_OUT
- *
- * PD.03 TIM2_CH1 (Receiver PWM input)
- * PD.04 TIM2_CH2 (Receiver PWM input)
- * PD.06 TIM2_CH4 (Receiver PWM input)
- * PD.07 TIM2_CH3 (Receiver PWM input)
- * PD.12 TIM4_CH1 (ESC/Motor PWM output)
- * PD.13 TIM4_CH2 (ESC/Motor PWM output)
- * PD.14 TIM4_CH3 (ESC/Motor PWM output)
- * PD.15 TIM4_CH4 (ESC/Motor PWM output)
- *
- * PE.00 L3GD20 INT1 (Interrupt 1)
- * PE.01 L3GD20 DRDY/INT2 (Data ready/interrupt 2)
- * PE.02 LSM303 DRDY (Data ready)
- * PE.03 L3GD20 CS_I2C/SPI (Chip select I2C/SPI)
- * PE.04 LSM303 INT1 (Interrupt 1)
- * PE.05 LSM303 INT2 (Interrupt 2)
- * PE.08 LD4 (BLUE LED)
- * PE.09 LD3 (RED LED)
- * PE.10 LD5 (ORANGE LED)
- * PE.11 LD7 (GREEN LED)
- * PE.12 LD9 (BLUE LED)
- * PE.13 LD10 (RED LED)
- * PE.14 LD8 (ORANGE LED)
- * PE.15 LD6 (GREEN LED)
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
@@ -62,11 +19,9 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-static __IO uint32_t MilliDelay;
-__IO uint32_t SystemTimer = 0;              // Counts the number of millis since system startup
 
-__IO uint32_t UserButtonPressed = 0;
+/* Private variables ---------------------------------------------------------*/
+Button_TypeDef UserButton;
 
 /* Private functions -----------------------------------------------*/
 static void Init_System(void);
@@ -86,10 +41,15 @@ int main(void)
    * system_stm32f30x.c file
    */
 
+  HAL_Init();
   Init_System();
 
   // Infinite loop keeps the program alive.
-  while (1);
+  while (1)
+    {
+      BSP_LED_On(LED3);
+      BSP_LED_On(LED6);
+    }
 }
 
 static void Init_System(void)
@@ -97,90 +57,57 @@ static void Init_System(void)
   /* Init on-board LEDs */
   Init_LEDs();
 
+  /* Init User button */
+  BSP_PB_Init(UserButton, BUTTON_MODE_EXTI);
+
   /* Setup sensors */
   GyroConfig();
   CompassConfig();
   InitPIDControllers();
 
-  /* Reset UserButton_Pressed variable */
-  UserButtonPressed = 0x00;
-
   /* Init USB com */
   //initUSB();
-  /* Config priority grouping setting */
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
-
-  /* TIM GPIO configuration */
-  TIM4_IOconfig();
-
-  /* Setup Timer 4 (used for PWM output)*/
-  TIM4_Setup();
-  /* Setup Timer 4 OC registers (for PWM output) */
-  TIM4_SetupOC();
-
-  /* Setup Timers 2 and 3 (used for PWM input) */
-  TIM2_Setup();
-  TIM3_Setup();
-  /* Setup and start PWM input (GPIO, NVIC settings) */
-  PWM_In_Setup();
-
-  /* Setup Timer 7 (used for program periodic execution) */
-  TIM7_Setup();
-  /* Setup and start Timer 7 for interrupt generation */
-  TIM7_SetupIRQ(); // NEEDS TO BE STARTED AFTER SENSOR CONFIG
+//
+//  /* TIM GPIO configuration */
+//  TIM4_IOconfig();
+//
+//  /* Setup Timer 4 (used for PWM output)*/
+//  TIM4_Setup();
+//  /* Setup Timer 4 OC registers (for PWM output) */
+//  TIM4_SetupOC();
+//
+//  /* Setup Timers 2 and 3 (used for PWM input) */
+//  TIM2_Setup();
+//  TIM3_Setup();
+//  /* Setup and start PWM input (GPIO, NVIC settings) */
+//  PWM_In_Setup();
+//
+//  /* Setup Timer 7 (used for program periodic execution) */
+//  TIM7_Setup();
+//  /* Setup and start Timer 7 for interrupt generation */
+//  TIM7_SetupIRQ(); // NEEDS TO BE STARTED AFTER SENSOR CONFIG
 }
 
 static void Init_LEDs(void)
 {
   /* Initialize LEDs and User Button available on STM32F3-Discovery board */
-  STM_EVAL_LEDInit(LED3);
-  STM_EVAL_LEDInit(LED4);
-  STM_EVAL_LEDInit(LED5);
-  STM_EVAL_LEDInit(LED6);
-  STM_EVAL_LEDInit(LED7);
-  STM_EVAL_LEDInit(LED8);
-  STM_EVAL_LEDInit(LED9);
-  STM_EVAL_LEDInit(LED10);
+  BSP_LED_Init(LED3);
+  BSP_LED_Init(LED4);
+  BSP_LED_Init(LED5);
+  BSP_LED_Init(LED6);
+  BSP_LED_Init(LED7);
+  BSP_LED_Init(LED8);
+  BSP_LED_Init(LED9);
+  BSP_LED_Init(LED10);
 
-  STM_EVAL_LEDOff(LED3);
-  STM_EVAL_LEDOff(LED4);
-  STM_EVAL_LEDOff(LED5);
-  STM_EVAL_LEDOff(LED6);
-  STM_EVAL_LEDOff(LED7);
-  STM_EVAL_LEDOff(LED8);
-  STM_EVAL_LEDOff(LED9);
-  STM_EVAL_LEDOff(LED10);
-}
-
-__IO uint32_t GetUserButton(void)
-{
-  return UserButtonPressed;
-}
-
-void ResetUserButton(void)
-{
-  UserButtonPressed = 0x00;
-}
-
-/** Delay
- * @brief  Inserts a delay time in milliseconds (0.001 s).
- * @param  mTime: specifies the delay time length, in milliseconds.
- */
-void Delay(uint32_t mTime)
-{
-  MilliDelay = mTime;
-  while (MilliDelay != 0);
-}
-
-/** Millisecond_Update
- * @brief  Decrements the millisecond timer variables.
- */
-void Millisecond_Update(void)
-{
-  if (MilliDelay != 0x00)
-    MilliDelay--;
-
-  SystemTimer++;
+  BSP_LED_Off(LED3);
+  BSP_LED_Off(LED4);
+  BSP_LED_Off(LED5);
+  BSP_LED_Off(LED6);
+  BSP_LED_Off(LED7);
+  BSP_LED_Off(LED8);
+  BSP_LED_Off(LED9);
+  BSP_LED_Off(LED10);
 }
 
 #ifdef  USE_FULL_ASSERT

@@ -13,7 +13,7 @@
 #define __MAIN_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f30x.h"
+#include "stm32f3xx.h"
 #include "stm32f3_discovery.h"
 #include <stdio.h>
 
@@ -21,10 +21,6 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-__IO uint32_t GetUserButton(void);
-void ResetUserButton(void);
-void Delay(uint32_t mTime);
-void Millisecond_Update(void);
 
 #endif /* __MAIN_H */
 
