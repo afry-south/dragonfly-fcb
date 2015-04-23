@@ -4,7 +4,7 @@
   * @author    Coocox
   * @version   V1.0
   * @date      03/05/2012
-  * @brief     STM32F4xx Devices vector table for RIDE7 toolchain. 
+  * @brief     STM32F3xx Devices vector table for RIDE7 toolchain.
   *            This module performs:
   *                - Set the initial SP
   *                - Set the initial PC == Reset_Handler,
@@ -28,8 +28,6 @@ unsigned long pulStack[STACK_SIZE];
 
 /*----------Macro definition--------------------------------------------------*/
 #define WEAK __attribute__ ((weak))
-
-
 
 /*----------Declaration of the default fault handlers-------------------------*/
 /* System exception vector handler */
@@ -295,6 +293,7 @@ void Default_Reset_Handler(void)
 #endif	
 
   /* Call the application's entry point.*/
+  SystemInit();	// Initialize system
   main();
 }
 
