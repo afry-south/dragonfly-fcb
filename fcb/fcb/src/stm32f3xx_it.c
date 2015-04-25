@@ -41,6 +41,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd;
+extern USBD_HandleTypeDef hUSBDDevice;
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -222,7 +223,7 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 void USB_LP_IRQHandler(void)
 #endif
 {
-//  HAL_PCD_IRQHandler(&hpcd);
+  HAL_PCD_IRQHandler(&hpcd);
 }
 
 /**

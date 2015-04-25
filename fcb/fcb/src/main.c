@@ -21,9 +21,11 @@
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
+USBD_HandleTypeDef hUSBDDevice;
 Button_TypeDef UserButton;
 
-/* Private functions -----------------------------------------------*/
+/* Private function prototypes -----------------------------------------------*/
+static void SystemClock_Config(void);
 static void Init_System(void);
 static void Init_LEDs(void);
 
@@ -42,6 +44,22 @@ int main(void)
    */
 
   HAL_Init();
+
+  /* Configure the system clock to 72 Mhz */
+  SystemClock_Config();
+
+  /* Init Device Library */
+  USBD_Init(&hUSBDDevice, &VCP_Desc, 0);
+
+  /* Add Supported Class */
+  USBD_RegisterClass(&hUSBDDevice, &USBD_CDC);
+
+  /* Add CDC Interface Class */
+  USBD_CDC_RegisterInterface(&hUSBDDevice, &USBD_CDC_fops);
+
+  /* Start Device Process */
+  USBD_Start(&hUSBDDevice);
+
   Init_System();
 
   // Infinite loop keeps the program alive.
@@ -108,6 +126,52 @@ static void Init_LEDs(void)
   BSP_LED_Off(LED8);
   BSP_LED_Off(LED9);
   BSP_LED_Off(LED10);
+}
+
+/**
+  * @brief  System Clock Configuration
+  *         The system Clock is configured as follow :
+  *            System Clock source            = PLL (HSI)
+  *            SYSCLK(Hz)                     = 72000000
+  *            HCLK(Hz)                       = 72000000
+  *            AHB Prescaler                  = 1
+  *            APB1 Prescaler                 = 2
+  *            APB2 Prescaler                 = 1
+  *            HSE Frequency(Hz)              = 8000000
+  *            HSE PREDIV                     = 1
+  *            PLLMUL                         = RCC_PLL_MUL9 (9)
+  *            Flash Latency(WS)              = 2
+  * @param  None
+  * @retval None
+  */
+static void SystemClock_Config(void)
+{
+  RCC_ClkInitTypeDef RCC_ClkInitStruct;
+  RCC_OscInitTypeDef RCC_OscInitStruct;
+  RCC_PeriphCLKInitTypeDef  RCC_PeriphClkInit;
+
+  /* Enable HSI Oscillator and activate PLL with HSI as source */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSEState = RCC_HSE_OFF;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  HAL_RCC_OscConfig(&RCC_OscInitStruct);
+
+  /* Configures the USB clock */
+  HAL_RCCEx_GetPeriphCLKConfig(&RCC_PeriphClkInit);
+  RCC_PeriphClkInit.USBClockSelection = RCC_USBPLLCLK_DIV1_5;
+  HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit);
+
+  /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
+  clocks dividers */
+  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;     // APB1 is limited to 36 MHz according to reference manual
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
 }
 
 #ifdef  USE_FULL_ASSERT
