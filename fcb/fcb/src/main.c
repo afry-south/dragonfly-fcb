@@ -131,7 +131,7 @@ static void Init_LEDs(void)
 /**
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow :
-  *            System Clock source            = PLL (HSI)
+  *            System Clock source            = PLL (HSE)
   *            SYSCLK(Hz)                     = 72000000
   *            HCLK(Hz)                       = 72000000
   *            AHB Prescaler                  = 1
@@ -150,18 +150,19 @@ static void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_PeriphCLKInitTypeDef  RCC_PeriphClkInit;
 
-  /* Enable HSI Oscillator and activate PLL with HSI as source */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSEState = RCC_HSE_OFF;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  /* Enable HSE Oscillator and activate PLL with HSE as source */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  RCC_OscInitStruct.HSIState = RCC_HSI_OFF;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   HAL_RCC_OscConfig(&RCC_OscInitStruct);
 
   /* Configures the USB clock */
   HAL_RCCEx_GetPeriphCLKConfig(&RCC_PeriphClkInit);
-  RCC_PeriphClkInit.USBClockSelection = RCC_USBPLLCLK_DIV1_5;
+  RCC_PeriphClkInit.USBClockSelection = RCC_USBPLLCLK_DIV1_5;   // 72/1.5 = 48 MHz USB clock
   HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit);
 
   /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
