@@ -207,6 +207,15 @@ static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
   return (USBD_OK);
 }
 
+uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
+{
+  uint8_t result = USBD_OK;
+  memcpy(UserTxBuffer, Buf, sizeof(char) * Len);
+  USBD_CDC_SetTxBuffer(&hUSBDDevice, UserTxBuffer, Len);
+  result = USBD_CDC_TransmitPacket(&hUSBDDevice);
+  return result;
+}
+
 /**
   * @brief  This function is executed in case of error occurrence.
   * @param  None
