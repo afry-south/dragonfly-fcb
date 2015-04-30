@@ -61,11 +61,12 @@ int main(void)
   /* Start Device Process */
   USBD_Start(&hUSBDDevice);
 
-  HAL_Delay(1000);
-//  char HelloString[32] = "Hello Dragonfly\n";
-//  CDC_Transmit_FS((uint8_t*) HelloString, sizeof(HelloString));
-
   Init_System();
+
+  HAL_Delay(10000);
+
+  char HelloString[32] = "Hello Dragonfly\n";
+  CDC_Transmit_FS((uint8_t*) HelloString, sizeof(HelloString));
 
   // Infinite loop keeps the program alive.
   while (1)

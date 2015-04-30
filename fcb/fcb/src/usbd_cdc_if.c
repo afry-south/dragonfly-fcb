@@ -27,8 +27,8 @@
 #include "usbd_cdc_if.h"
 
 /* Private define ------------------------------------------------------------*/
-#define APP_RX_DATA_SIZE  2048
-#define APP_TX_DATA_SIZE  2048
+#define APP_RX_DATA_SIZE  128
+#define APP_TX_DATA_SIZE  128
 
 /* USB handler declaration */
 extern USBD_HandleTypeDef  hUSBDDevice;
