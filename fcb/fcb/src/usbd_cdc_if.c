@@ -27,8 +27,10 @@
 #include "usbd_cdc_if.h"
 
 /* Private define ------------------------------------------------------------*/
-#define APP_RX_DATA_SIZE  128
-#define APP_TX_DATA_SIZE  128
+#define APP_RX_DATA_SIZE  2048
+#define APP_TX_DATA_SIZE  2048
+
+// TODO: FIFO Buffers
 
 /* USB handler declaration */
 extern USBD_HandleTypeDef  hUSBDDevice;
@@ -157,42 +159,6 @@ static int8_t CDC_Itf_Control (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 }
 
 /**
-  * @brief  TIM period elapsed callback
-  * @param  htim: TIM handle
-  * @retval None
-  */
-//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-//{
-//  uint32_t buffptr;
-//  uint32_t buffsize;
-//
-//  if(UserTxBufPtrOut != UserTxBufPtrIn)
-//  {
-//    if(UserTxBufPtrOut > UserTxBufPtrIn) /* rollback */
-//    {
-//      buffsize = APP_RX_DATA_SIZE - UserTxBufPtrOut;
-//    }
-//    else
-//    {
-//      buffsize = UserTxBufPtrIn - UserTxBufPtrOut;
-//    }
-//
-//    buffptr = UserTxBufPtrOut;
-//
-//    USBD_CDC_SetTxBuffer(&hUSBDDevice, (uint8_t*)&UserTxBuffer[buffptr], buffsize);
-//
-//    if(USBD_CDC_TransmitPacket(&hUSBDDevice) == USBD_OK)
-//    {
-//      UserTxBufPtrOut += buffsize;
-//      if (UserTxBufPtrOut == APP_RX_DATA_SIZE)
-//      {
-//        UserTxBufPtrOut = 0;
-//      }
-//    }
-//  }
-//}
-
-/**
   * @brief  CDC_Itf_DataRx
   *         Data received over USB OUT endpoint sent over CDC interface
   *         through this function.
@@ -202,17 +168,26 @@ static int8_t CDC_Itf_Control (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   */
 static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
 {
+  uint8_t result = USBD_FAIL;
+  if(hUSBDDevice.dev_state == USBD_STATE_CONFIGURED)
+    {
   // Read out received data from Buf
-  // USBD_CDC_ReceivePacket(&hUSBDDevice);
-  return (USBD_OK);
+  // USBD_CDC_SetRxBuffer(&hUSBDDevice, UserRxBuffer + UserRxBufLen);
+      CDC_Transmit_FS(UserRxBuffer, 32);
+      result = USBD_CDC_ReceivePacket(&hUSBDDevice);
+    }
+  return result;
 }
 
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 {
-  uint8_t result = USBD_OK;
-  memcpy(UserTxBuffer, Buf, sizeof(char) * Len);
-  USBD_CDC_SetTxBuffer(&hUSBDDevice, UserTxBuffer, Len);
-  result = USBD_CDC_TransmitPacket(&hUSBDDevice);
+  uint8_t result = USBD_FAIL;
+  if(hUSBDDevice.dev_state == USBD_STATE_CONFIGURED)
+    {
+      memcpy(UserTxBuffer, Buf, sizeof(char) * Len);
+      USBD_CDC_SetTxBuffer(&hUSBDDevice, UserTxBuffer, Len);
+      result = USBD_CDC_TransmitPacket(&hUSBDDevice);
+    }
   return result;
 }
 

@@ -63,16 +63,19 @@ int main(void)
 
   Init_System();
 
-  HAL_Delay(10000);
-
-  char HelloString[32] = "Hello Dragonfly\n";
-  CDC_Transmit_FS((uint8_t*) HelloString, sizeof(HelloString));
-
   // Infinite loop keeps the program alive.
+  uint32_t cntr = 0;
+
   while (1)
     {
-      BSP_LED_On(LED3);
-      BSP_LED_On(LED6);
+      HAL_Delay(2000);
+
+      BSP_LED_Off((cntr+7) % 8);
+      BSP_LED_On(cntr % 8);
+      cntr++;
+
+//      char String[32] = "Hello, this is Dragonfly\n";
+//      CDC_Transmit_FS((uint8_t*) String, sizeof(String));
     }
 }
 

@@ -59,7 +59,7 @@ defined in linker script */
 
 .equ  BootRAM,        0xF1E0F85F
 
-#define __HEAP_SIZE 	0x4000
+#define __HEAP_SIZE 	0x2000
 #define __STACK_SIZE	0x2000
 
 	.section .stack
