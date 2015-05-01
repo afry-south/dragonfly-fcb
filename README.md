@@ -1,4 +1,4 @@
-# STM32F3-Discovery - Getting started
+# STM32F3-Discovery - Getting started template
 
 ## Installation and configuration
 
@@ -10,14 +10,13 @@
 6. Configure CoIDE to point to ARM GCC (http://www.coocox.com/CoIDE/Compiler_Settings.html)
 7. Install STM32 ST-LINK Utility
 8. Plug in USB cable from PC to ST-LINK on discovery board
-9. If STM32 ST-LINK isn't discovered by Windows, try another USB port.
-   On my laptop I have to use the ones on the right side.
 
+# Flight Control Board (FCB) TEMPLATE
 
-# Flight Control Board (FCB)
+The fcb-hal-template branch is used as a template project for getting started with the STM32 board and STM32Cube HAL Drivers.
 
-The fcb-bring-up branch is currently used as a branch to get things up and running.
+Board startup code is available in startup_stm32f30x.S, where SystemInit() is called before proceeding to main().
 
-The fcb project contains an empty main file and a bunch of STM drivers etc.
+The code includes some basic initialization and makes use of the on-board push button and some LEDs.
 
-The demo\Test_STM32F303 project contains a demo project found online. It's based on the STM32F4Discovery demo.
+More demos and projects are available in the STM32Cube folder.

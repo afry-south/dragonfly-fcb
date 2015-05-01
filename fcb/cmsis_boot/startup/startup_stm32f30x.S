@@ -1,10 +1,9 @@
-/**
-  ******************************************************************************
+/*******************************************************************************
   * @file      startup_stm32f30x.s
   * @author    MCD Application Team
   * @version   V1.0.0
   * @date      04-Spetember-2012
-  * @brief     STM32F30x Devices vector table for RIDE7 toolchain. 
+  * @brief     STM32F30x Devices vector table for GCC toolchain.
   *            This module performs:
   *                - Set the initial SP
   *                - Set the initial PC == Reset_Handler,
@@ -33,13 +32,15 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   *
-  ******************************************************************************
-  */
+  ******************************************************************************/
     
   .syntax unified
   .cpu cortex-m4
   .fpu softvfp
   .thumb
+
+#define __HEAP_SIZE 	0x1000
+#define __STACK_SIZE	0x1000
 
 .global  g_pfnVectors
 .global  Default_Handler
@@ -59,8 +60,8 @@ defined in linker script */
 
 .equ  BootRAM,        0xF1E0F85F
 
-#define __HEAP_SIZE 	0x2000
-#define __STACK_SIZE	0x2000
+#define __HEAP_SIZE 	0x1000
+#define __STACK_SIZE	0x1000
 
 	.section .stack
 	.align	3

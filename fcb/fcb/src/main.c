@@ -1,21 +1,15 @@
 /******************************************************************************
  * @file    fcb/main.c
  * @author  ÅF Dragonfly
- * Daniel Nilsson, Embedded Systems
  * Daniel Stenberg, Embedded Systems
- * @version v. 0.0.2
- * @date    2015-04-12
- * @brief   Flight Control program for the ÅF Dragonfly quadcopter
+ * @version v. 1.0.0
+ * @date    2015-05-01
+ * @brief   Dragonfly template project demonstration. Makes use of the board
+ *          user push button and LED circle
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "usbd_cdc_if.h"
-#include "motor_control.h"
-#include "flight_control.h"
-#include "sensors.h"
-#include "RCinput.h"
-#include "com.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -23,12 +17,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 USBD_HandleTypeDef hUSBDDevice;
-Button_TypeDef UserButton;
+__IO uint8_t UserButtonPressed;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Init_System(void);
 static void Init_LEDs(void);
+static void LEDs_Off(void);
+static void ToggleLEDs();
 
 /**
  * @brief  Main program.
@@ -44,75 +40,39 @@ int main(void)
    * system_stm32f30x.c file
    */
 
-  HAL_Init();
-
-  /* Configure the system clock to 72 Mhz */
-  SystemClock_Config();
-
-  /* Init Device Library */
-  USBD_Init(&hUSBDDevice, &VCP_Desc, 0);
-
-  /* Add Supported Class */
-  USBD_RegisterClass(&hUSBDDevice, &USBD_CDC);
-
-  /* Add CDC Interface Class */
-  USBD_CDC_RegisterInterface(&hUSBDDevice, &USBD_CDC_fops);
-
-  /* Start Device Process */
-  USBD_Start(&hUSBDDevice);
-
   Init_System();
 
-  // Infinite loop keeps the program alive.
-  uint32_t cntr = 0;
+  HAL_Delay(1000); // A 1 second delay
 
+  // Infinite loop keeps the program alive.
   while (1)
     {
-      HAL_Delay(2000);
-
-      BSP_LED_Off((cntr+7) % 8);
-      BSP_LED_On(cntr % 8);
-      cntr++;
-
-//      char String[32] = "Hello, this is Dragonfly\n";
-//      CDC_Transmit_FS((uint8_t*) String, sizeof(String));
+      ToggleLEDs();
     }
 }
 
 static void Init_System(void)
 {
+  /* STM32F3xx HAL library initialization:
+         - Configure the Flash prefetch
+         - Systick timer is configured by default as source of time base, but user
+           can eventually implement his proper time base source (a general purpose
+           timer for example or other time source), keeping in mind that Time base
+           duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and
+           handled in milliseconds basis.
+         - Set NVIC Group Priority to 4
+         - Low Level Initialization
+   */
+  HAL_Init();
+
+  /* Configure the system clock to 72 Mhz */
+  SystemClock_Config();
+
   /* Init on-board LEDs */
   Init_LEDs();
 
   /* Init User button */
-  BSP_PB_Init(UserButton, BUTTON_MODE_EXTI);
-
-  /* Setup sensors */
-  GyroConfig();
-  CompassConfig();
-  InitPIDControllers();
-
-  /* Init USB com */
-  //initUSB();
-//
-//  /* TIM GPIO configuration */
-//  TIM4_IOconfig();
-//
-//  /* Setup Timer 4 (used for PWM output)*/
-//  TIM4_Setup();
-//  /* Setup Timer 4 OC registers (for PWM output) */
-//  TIM4_SetupOC();
-//
-//  /* Setup Timers 2 and 3 (used for PWM input) */
-//  TIM2_Setup();
-//  TIM3_Setup();
-//  /* Setup and start PWM input (GPIO, NVIC settings) */
-//  PWM_In_Setup();
-//
-//  /* Setup Timer 7 (used for program periodic execution) */
-//  TIM7_Setup();
-//  /* Setup and start Timer 7 for interrupt generation */
-//  TIM7_SetupIRQ(); // NEEDS TO BE STARTED AFTER SENSOR CONFIG
+  BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 }
 
 static void Init_LEDs(void)
@@ -127,6 +87,16 @@ static void Init_LEDs(void)
   BSP_LED_Init(LED9);
   BSP_LED_Init(LED10);
 
+  LEDs_Off();
+}
+
+/**
+  * @brief  Turns off all the LEDs
+  * @param  None
+  * @retval None
+  */
+static void LEDs_Off(void)
+{
   BSP_LED_Off(LED3);
   BSP_LED_Off(LED4);
   BSP_LED_Off(LED5);
@@ -182,6 +152,77 @@ static void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;     // APB1 is limited to 36 MHz according to reference manual
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
+}
+
+/**
+  * @brief Toggles the LEDs based on User Button presses
+  * @param None
+  * @retval None
+  */
+void ToggleLEDs(void)
+{
+  switch(UserButtonPressed)
+  {
+  case 0:
+    LEDs_Off();
+    BSP_LED_On(LED3);
+    break;
+
+  case 1:
+    LEDs_Off();
+    BSP_LED_On(LED4);
+    break;
+
+  case 2:
+    LEDs_Off();
+    BSP_LED_On(LED5);
+    break;
+
+  case 3:
+    LEDs_Off();
+    BSP_LED_On(LED6);
+    break;
+
+  case 4:
+    LEDs_Off();
+    BSP_LED_On(LED7);
+    break;
+
+  case 5:
+    LEDs_Off();
+    BSP_LED_On(LED8);
+    break;
+
+  case 6:
+    LEDs_Off();
+    BSP_LED_On(LED9);
+    break;
+
+  case 7:
+    LEDs_Off();
+    BSP_LED_On(LED10);
+    break;
+
+  default:
+    break;
+  }
+}
+
+/**
+  * @brief EXTI line detection callbacks
+  * @param GPIO_Pin: Specifies the pins connected EXTI line
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin == USER_BUTTON_PIN)
+  {
+   UserButtonPressed++;
+   if (UserButtonPressed > 0x7)
+    {
+      UserButtonPressed = 0x0;
+    }
+  }
 }
 
 #ifdef  USE_FULL_ASSERT
