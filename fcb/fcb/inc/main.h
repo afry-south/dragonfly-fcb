@@ -16,10 +16,10 @@
 #include "stm32f3xx.h"
 #include "stm32f3_discovery.h"
 
-#include "usbd_conf.h"
-#include "usbd_desc.h"
 #include "usbd_core.h"
+#include "usbd_desc.h"
 #include "usbd_cdc.h"
+#include "usbd_cdc_if.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

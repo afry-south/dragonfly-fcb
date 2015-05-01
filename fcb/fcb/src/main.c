@@ -35,7 +35,7 @@ int main(void)
 {
   /* At this stage the microcontroller clock setting is already configured,
    * this is done through SystemInit() function which is called from startup
-   * file (startup_stm32f303.c) before to branch to application main.
+   * file (startup_stm32f30x.S) before to branch to application main.
    * To reconfigure the default setting of SystemInit() function, refer to
    * system_stm32f30x.c file
    */
@@ -67,6 +67,18 @@ static void Init_System(void)
 
   /* Configure the system clock to 72 Mhz */
   SystemClock_Config();
+
+  /* Init Device Library */
+  USBD_Init(&hUSBDDevice, &VCP_Desc, 0);
+
+  /* Add Supported Class */
+  USBD_RegisterClass(&hUSBDDevice, &USBD_CDC);
+
+  /* Add CDC Interface Class */
+  USBD_CDC_RegisterInterface(&hUSBDDevice, &USBD_CDC_fops);
+
+  /* Start Device Process */
+  USBD_Start(&hUSBDDevice);
 
   /* Init on-board LEDs */
   Init_LEDs();

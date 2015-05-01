@@ -39,8 +39,8 @@
   .fpu softvfp
   .thumb
 
-#define __HEAP_SIZE 	0x1000
-#define __STACK_SIZE	0x1000
+#define __HEAP_SIZE 	0x2000
+#define __STACK_SIZE	0x2000
 
 .global  g_pfnVectors
 .global  Default_Handler
@@ -59,9 +59,6 @@ defined in linker script */
 /* stack used for SystemInit_ExtMemCtl; always internal RAM used */
 
 .equ  BootRAM,        0xF1E0F85F
-
-#define __HEAP_SIZE 	0x1000
-#define __STACK_SIZE	0x1000
 
 	.section .stack
 	.align	3

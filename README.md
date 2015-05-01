@@ -19,4 +19,12 @@ Board startup code is available in startup_stm32f30x.S, where SystemInit() is ca
 
 The code includes some basic initialization and makes use of the on-board push button and some LEDs.
 
+It also sets up a Virtual COM port over USB (requires STM32 VCP drivers) which simply echoes back entered data. To use it, the USB User
+must be connected at board startup. Data can then be sent/received using a serial terminal program such as Putty or Termite with settings:
+- Baudrate: 115200
+- Data bits: 8
+- Stop bits: 1
+- Parity bit: None
+- Flow control: None
+
 More demos and projects are available in the STM32Cube folder.
