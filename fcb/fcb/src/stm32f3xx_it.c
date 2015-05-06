@@ -13,6 +13,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_it.h"
+#include "cmsis_os.h"
 
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
   * @{
@@ -126,6 +127,11 @@ void DebugMon_Handler(void)
 void SysTick_Handler(void)
 {
   HAL_IncTick();
+
+   if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+     xPortSysTickHandler();
+   }
+
 }
 
 /******************************************************************************/
