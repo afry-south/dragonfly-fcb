@@ -102,7 +102,11 @@ void run_dragon_threads(void) {
 	  /* Start thread 2 */
 	  LEDThread2Handle = osThreadCreate(osThread(LED4), NULL);
 
-	  /* Start scheduler    */
+	  /* Start scheduler
+	   *
+	   * since we use heap1.c, we must create all tasks and queues before the OS kernel
+	   * is started according to ST UM1722 manual section 1.6
+	   */
 	  osKernelStart(NULL, NULL);
 
 	  /* We should never get here as control is now taken by the scheduler */
