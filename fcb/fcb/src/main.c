@@ -92,16 +92,7 @@ static void Init_System(void)
   CompassConfig();
   InitPIDControllers();
 
-  /* Init USB com */
-  //initUSB();
-//
-//  /* TIM GPIO configuration */
-//  TIM4_IOconfig();
-//
-//  /* Setup Timer 4 (used for PWM output)*/
-//  TIM4_Setup();
-//  /* Setup Timer 4 OC registers (for PWM output) */
-//  TIM4_SetupOC();
+  MotorControl_Config();
 //
 //  /* Setup Timers 2 and 3 (used for PWM input) */
 //  TIM2_Setup();
@@ -263,6 +254,21 @@ static void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;     // APB1 is limited to 36 MHz according to reference manual
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
+}
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @param  None
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  LEDs_Off();
+  /* Turn LED3 on */
+  BSP_LED_On(LED3);
+  while(1)
+  {
+  }
 }
 
 #ifdef  USE_FULL_ASSERT
