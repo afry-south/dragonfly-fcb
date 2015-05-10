@@ -38,11 +38,14 @@
 #define MOTOR_OUTPUT_SAMPLECLOCK                24000000
 #define MOTOR_OUTPUT_PERIOD                     60000
 
+#define ESC_MAX_OUTPUT                          48000 // 2.0 ms pulse
+#define ESC_MIN_OUTPUT                          24000 // 1.0 ms pulse
+
 /* Function prototypes */
 void MotorControl_Config(void);
-void SetMotor1(uint16_t ccrVal);
-void SetMotor2(uint16_t ccrVal);
-void SetMotor3(uint16_t ccrVal);
-void SetMotor4(uint16_t ccrVal);
+void SetMotor1(uint16_t ctrlVal);
+void SetMotor2(uint16_t ctrlVal);
+void SetMotor3(uint16_t ctrlVal);
+void SetMotor4(uint16_t ctrlVal);
 
 #endif /* __MOTOR_OUTPUT_H */

@@ -5,21 +5,23 @@
  * @version v. 0.0.1
  * @date    2014-09-29
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
- *          File contains pwm output
+ *          File contains PWM output configuration and handling functions. PWM
+ *          pulse of ~1-2 ms is used to control the ESC:s, which in turn control
+ *          Dragonfly's motors.
  ******************************************************************************/
 
-/* @TIM4_IOconfig
- * @brief	Initializes and configures output pins used to
- * 			physically transmit PWM motor control signals.
- * @param	None.
- * @retval	None.
- */
 #include "motor_control.h"
 #include "main.h"
 
 /* Timer handler declaration */
 TIM_HandleTypeDef    TimHandle;
 
+/*
+ * @brief	Initializes and configures the timer used to produce PWM output
+ *              to control the ESC:s with.
+ * @param	None.
+ * @retval	None.
+ */
 void MotorControl_Config(void)
 {
   /*##-1- Configure the TIM peripheral #######################################*/
@@ -104,22 +106,46 @@ void MotorControl_Config(void)
     }
 }
 
-void SetMotor1(uint16_t ccrVal)
+/*
+ * @brief       Sets the motor control PWM (sent to ESC) for motor 1
+ * @param       ctrlVal: value 0x0000-0xFFFF indicating amount of motor thrust
+ * @retval      None.
+ */
+void SetMotor1(uint16_t ctrlVal)
 {
-  __HAL_TIM_SetCompare(&TimHandle, MOTOR1_CHANNEL, ccrVal);
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/0xFFFF;
+  __HAL_TIM_SetCompare(&TimHandle, MOTOR1_CHANNEL, (uint16_t)ccrVal);
 }
 
-void SetMotor2(uint16_t ccrVal)
+/*
+ * @brief       Sets the motor control PWM (sent to ESC) for motor 2
+ * @param       ctrlVal: value 0x0000-0xFFFF indicating amount of motor thrust
+ * @retval      None.
+ */
+void SetMotor2(uint16_t ctrlVal)
 {
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/0xFFFF;
   __HAL_TIM_SetCompare(&TimHandle, MOTOR2_CHANNEL, ccrVal);
 }
 
-void SetMotor3(uint16_t ccrVal)
+/*
+ * @brief       Sets the motor control PWM (sent to ESC) for motor 3
+ * @param       ctrlVal: value 0x0000-0xFFFF indicating amount of motor thrust
+ * @retval      None.
+ */
+void SetMotor3(uint16_t ctrlVal)
 {
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/0xFFFF;
   __HAL_TIM_SetCompare(&TimHandle, MOTOR3_CHANNEL, ccrVal);
 }
 
-void SetMotor4(uint16_t ccrVal)
+/*
+ * @brief       Sets the motor control PWM (sent to ESC) for motor 4
+ * @param       ctrlVal: value 0x0000-0xFFFF indicating amount of motor thrust
+ * @retval      None.
+ */
+void SetMotor4(uint16_t ctrlVal)
 {
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/0xFFFF;
   __HAL_TIM_SetCompare(&TimHandle, MOTOR4_CHANNEL, ccrVal);
 }

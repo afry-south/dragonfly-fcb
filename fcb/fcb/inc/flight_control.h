@@ -107,11 +107,6 @@ typedef struct
 #define N_YR				15.0		// Max derivative gain (often 10-20)
 #define MAX_YAW_RATE		10*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
-/* ESC range */
-#define MAX_ESC_VAL 0.0020
-#define MID_ESC_CAL 0.0015
-#define MIN_ESC_VAL 0.0010
-
 /* Flight performance */
 #define SLOW_FLIGHT 	0
 #define NORMAL_FLIGHT	1
@@ -142,9 +137,6 @@ void YawControl(void);
 void SetFlightMode(void);
 
 void InitPIDControllers(void);
-
-void SetMotors(void);
-uint16_t GetPWM_CCR(float dutycycle);
 
 #endif /* __CONTROL_H */
 
