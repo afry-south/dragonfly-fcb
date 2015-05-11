@@ -1,0 +1,64 @@
+// This file contains message definitions for FCB to FSM
+// communications
+
+message SensorSamples {
+	optional float gyroRoll = 1;
+	optional float gyroPitch = 2;
+	optional float gyroYaw = 3;
+	optional float accX = 4;
+	optional float accY = 5;
+	optional float accZ = 6;
+	optional float magX = 7;
+	optional float magY = 8;
+	optional float magZ = 9;
+}
+
+message QuadcopterConfig {
+	optional float Mass = 1;  // why float?
+	optional float Ixx = 2;
+	optional float Iyy = 3;
+	optional float Izz = 4;
+}
+
+message RCConfig {
+	optional uint32 throttleMinMicros = 1;
+	optional uint32 throttleMaxMicros = 2;
+	optional uint32 aileronMinMicros = 3;
+	optional uint32 aileronMaxMicros = 4;
+	optional uint32 elevatorMinMicros = 5;
+	optional uint32 elevatorMaxMicros = 6;
+	optional uint32 rudderMinMicros = 7;
+	optional uint32 rudderMaxMicros = 8;
+	optional uint32 gearOnMicros = 9;
+	optional uint32 gearOffMicros = 10;
+	optional uint32 auxOnMicros = 11;
+	optional uint32 auxOffMicros = 12;
+}
+
+message RCSamples {
+	optional uint32 throttleMicros = 1;
+	optional uint32 aileronMicros = 2;
+	optional uint32 elevatorMicros = 3;
+	optional uint32 rudderMicros = 4;
+	optional uint32 gearMicros = 5;
+	optional uint32 auxMicros = 6;
+}
+
+message MotorSamples {
+	optional uint32 Motor1Nanos = 1;
+	optional uint32 Motor2Nanos = 2;
+	optional uint32 Motor3Nanos = 3;
+	optional uint32 Motor4Nanos = 4;
+}
+
+message FlightControl {
+	optional float AltitudeCtrl_K = 1;
+	optional float AltitudeCtrl_Ti = 2;
+	optional float AltitudeCtrl_Td = 3;
+	optional float RollPitchCtrl_K = 4;
+	optional float RollPitchCtrl_Ti = 5;
+	optional float RollPitchCtrl_Td = 6;
+	optional float YawCtrl_K = 7;
+	optional float YawCtrl_Ti = 8;
+	optional float YawCtrl_Td = 9;
+}
