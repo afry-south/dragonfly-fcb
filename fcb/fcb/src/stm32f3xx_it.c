@@ -26,6 +26,7 @@
 /* Private variables ---------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd;
 extern USBD_HandleTypeDef hUSBDDevice;
+extern void xPortSysTickHandler(void);
 
 extern TIM_HandleTypeDef PrimaryReceiverTimHandle;
 extern TIM_HandleTypeDef AuxReceiverTimHandle;
