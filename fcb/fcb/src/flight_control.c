@@ -50,7 +50,7 @@ void UpdateControl(void)
     UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
     // Set motor output to lowest
     ManualModeAllocation();
-    SetMotors();
+    //SetMotors();
     return;
 
   case ATTITUDE_CONTROL:
@@ -68,7 +68,7 @@ void UpdateControl(void)
     YawControl();
 
     ControlAllocation();
-    SetMotors();
+    //SetMotors();
     return;
 
   case SHUTDOWN_MOTORS:
@@ -80,8 +80,8 @@ void UpdateControl(void)
     UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
 
     // Set motor output to lowest
-    PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
-    SetMotors();
+    // PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
+    //SetMotors();
     return;
 
   case INITIALIZE_STATES:
@@ -90,8 +90,8 @@ void UpdateControl(void)
     InitializeStateEstimation();
 
     // Set motor output to lowest
-    PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
-    SetMotors();
+//    PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
+    //SetMotors();
     return;
 
   case CALIBRATE_SENSORS:
@@ -111,9 +111,9 @@ void UpdateControl(void)
         CalibrateMag();
 
         // Set motor output to lowest
-        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-            PWMMotorTimes.M4 = MIN_ESC_VAL;
-        SetMotors();
+//        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
+//            PWMMotorTimes.M4 = MIN_ESC_VAL;
+        //SetMotors();
       }
     else if (!GetAccCalibrated())
       {
@@ -128,8 +128,8 @@ void UpdateControl(void)
         CalibrateAcc();
 
         // Set motor output to lowest
-        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
-        SetMotors();
+//        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
+        //SetMotors();
       }
     else if (!GetGyroCalibrated())
       {
@@ -143,9 +143,9 @@ void UpdateControl(void)
         CalibrateGyro();
 
         // Set motor output to lowest
-        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-            PWMMotorTimes.M4 = MIN_ESC_VAL;
-        SetMotors();
+//        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
+//            PWMMotorTimes.M4 = MIN_ESC_VAL;
+        //SetMotors();
       }
     return;
 
@@ -369,33 +369,33 @@ void ControlAllocation(void)
       + AT * LENGTH_ARM * CtrlSignals.Yaw - 4 * BQ * CT * LENGTH_ARM)
       / ((float) 4 * AT * BQ * LENGTH_ARM);
 
-  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
-    PWMMotorTimes.M1 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
-    PWMMotorTimes.M1 = PWMMotorTimes.M1;
-  else
-    PWMMotorTimes.M1 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
-    PWMMotorTimes.M2 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
-    PWMMotorTimes.M2 = PWMMotorTimes.M2;
-  else
-    PWMMotorTimes.M2 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
-    PWMMotorTimes.M3 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
-    PWMMotorTimes.M3 = PWMMotorTimes.M3;
-  else
-    PWMMotorTimes.M3 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
-    PWMMotorTimes.M4 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
-    PWMMotorTimes.M4 = PWMMotorTimes.M4;
-  else
-    PWMMotorTimes.M4 = MIN_ESC_VAL;
+//  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
+//    PWMMotorTimes.M1 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M1 = PWMMotorTimes.M1;
+//  else
+//    PWMMotorTimes.M1 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
+//    PWMMotorTimes.M2 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M2 = PWMMotorTimes.M2;
+//  else
+//    PWMMotorTimes.M2 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
+//    PWMMotorTimes.M3 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M3 = PWMMotorTimes.M3;
+//  else
+//    PWMMotorTimes.M3 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
+//    PWMMotorTimes.M4 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M4 = PWMMotorTimes.M4;
+//  else
+//    PWMMotorTimes.M4 = MIN_ESC_VAL;
 }
 
 /* ManualModeAllocation
@@ -422,33 +422,33 @@ void ManualModeAllocation(void)
           + 2 * (PWMInputTimes.Elevator - GetRCmid())
           + 2 * (PWMInputTimes.Rudder - GetRCmid()));
 
-  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
-    PWMMotorTimes.M1 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
-    PWMMotorTimes.M1 = PWMMotorTimes.M1;
-  else
-    PWMMotorTimes.M1 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
-    PWMMotorTimes.M2 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
-    PWMMotorTimes.M2 = PWMMotorTimes.M2;
-  else
-    PWMMotorTimes.M2 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
-    PWMMotorTimes.M3 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
-    PWMMotorTimes.M3 = PWMMotorTimes.M3;
-  else
-    PWMMotorTimes.M3 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
-    PWMMotorTimes.M4 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
-    PWMMotorTimes.M4 = PWMMotorTimes.M4;
-  else
-    PWMMotorTimes.M4 = MIN_ESC_VAL;
+//  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
+//    PWMMotorTimes.M1 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M1 = PWMMotorTimes.M1;
+//  else
+//    PWMMotorTimes.M1 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
+//    PWMMotorTimes.M2 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M2 = PWMMotorTimes.M2;
+//  else
+//    PWMMotorTimes.M2 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
+//    PWMMotorTimes.M3 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M3 = PWMMotorTimes.M3;
+//  else
+//    PWMMotorTimes.M3 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
+//    PWMMotorTimes.M4 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M4 = PWMMotorTimes.M4;
+//  else
+//    PWMMotorTimes.M4 = MIN_ESC_VAL;
 }
 
 /* @InitPIDControllers
@@ -546,28 +546,4 @@ void TIM7_SetupIRQ(void)
 //  NVIC_Init(&nvicStructure);
 //
 //  TIM_ITConfig(TIM7, TIM_IT_Update, ENABLE);
-}
-
-/* @SetMotors
- * @brief       Sets the motor PWM, which is sent to the ESCs
- * @param       None.
- * @retval      None.
- */
-void SetMotors()
-{
-//  TIM_SetCompare1(TIM4, GetPWM_CCR(PWMMotorTimes.M1)); // To motor 1 (PD12)
-//  TIM_SetCompare2(TIM4, GetPWM_CCR(PWMMotorTimes.M2)); // To motor 2 (PD13)
-//  TIM_SetCompare3(TIM4, GetPWM_CCR(PWMMotorTimes.M3)); // To motor 3 (PD14)
-//  TIM_SetCompare4(TIM4, GetPWM_CCR(PWMMotorTimes.M4)); // To motor 4 (PD15)
-}
-
-/* @getPWM_CCR
- * @brief       Recalculates a time pulse width to number of TIM4 clock ticks.
- * @param       t is the pulse width in seconds.
- * @retval      TIM4 clock ticks to be written to TIM4 CCR output.
- */
-uint16_t GetPWM_CCR(float t)
-{
-//  return (uint16_t)((float) (t * SystemCoreClock / ((float) (TIM_GetPrescaler(TIM4) + 1))));
-  return 0;
 }

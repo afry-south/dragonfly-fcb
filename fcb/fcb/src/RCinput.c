@@ -378,12 +378,12 @@ void PWM_In_Setup(void) {
 //  NVIC_InitTypeDef NVIC_InitStructure;
 
   /* Init PWM input values */
-  PWMTimes.Throttle = MIN_ESC_VAL;
-  PWMTimes.Aileron = MID_ESC_CAL;
-  PWMTimes.Elevator = MID_ESC_CAL;
-  PWMTimes.Rudder = MID_ESC_CAL;
-  PWMTimes.Gear = 0.0;
-  PWMTimes.Auxiliary = 0.0;
+//  PWMTimes.Throttle = MIN_ESC_VAL;
+//  PWMTimes.Aileron = MID_ESC_CAL;
+//  PWMTimes.Elevator = MID_ESC_CAL;
+//  PWMTimes.Rudder = MID_ESC_CAL;
+//  PWMTimes.Gear = 0.0;
+//  PWMTimes.Auxiliary = 0.0;
 
 //  /* GPIOD clock enable */
 //  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
