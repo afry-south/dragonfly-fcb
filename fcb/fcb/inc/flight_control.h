@@ -85,9 +85,9 @@ typedef struct
 #define K_VZ 				8.0
 #define TI_VZ				0.0
 #define TD_VZ				0.5
-#define BETA_VZ				1.0			// Proportional set-point weighting
+#define BETA_VZ				1.0		// Proportional set-point weighting
 #define N_VZ				15.0		// Max derivative gain (often 10-20)
-#define MAX_Z_VELOCITY		2.0			// Max vertical velocity (+/-) [m/s]
+#define MAX_Z_VELOCITY		        2.0	        // Max vertical velocity (+/-) [m/s]
 #define MAX_THRUST			49.60		// Maximal upward thrust from all four motors combined [N]
 
 /* Roll/pitch control parameters */
@@ -105,12 +105,7 @@ typedef struct
 #define TD_YR				0.5
 #define BETA_YR				1.0			// Proportional set-point weighting
 #define N_YR				15.0		// Max derivative gain (often 10-20)
-#define MAX_YAW_RATE		10*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
-
-/* ESC range */
-#define MAX_ESC_VAL 0.0020
-#define MID_ESC_CAL 0.0015
-#define MIN_ESC_VAL 0.0010
+#define MAX_YAW_RATE		        10*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
 /* Flight performance */
 #define SLOW_FLIGHT 	0

@@ -38,6 +38,11 @@
 #define MOTOR_OUTPUT_SAMPLECLOCK                24000000
 #define MOTOR_OUTPUT_PERIOD                     60000
 
+/* ESC range */
+#define MAX_ESC_VAL                             2000
+#define MID_ESC_CAL                             1500
+#define MIN_ESC_VAL                             1000
+
 /* Function prototypes */
 void MotorControl_Config(void);
 void SetMotor1(uint16_t ccrVal);

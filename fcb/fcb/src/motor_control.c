@@ -5,21 +5,22 @@
  * @version v. 0.0.1
  * @date    2014-09-29
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
- *          File contains pwm output
+ *          File contains PWM output configuration. The PWM is sent to the ESC:s
+ *          which in turn control the motors.
  ******************************************************************************/
 
-/* @TIM4_IOconfig
- * @brief	Initializes and configures output pins used to
- * 			physically transmit PWM motor control signals.
- * @param	None.
- * @retval	None.
- */
 #include "motor_control.h"
 #include "main.h"
 
 /* Timer handler declaration */
 TIM_HandleTypeDef    TimHandle;
 
+/*
+ * @brief	Initializes and configures timer output to generate PWM signals
+ * 			to control the motors with.
+ * @param	None.
+ * @retval	None.
+ */
 void MotorControl_Config(void)
 {
   /*##-1- Configure the TIM peripheral #######################################*/
@@ -104,6 +105,11 @@ void MotorControl_Config(void)
     }
 }
 
+/*
+ * @brief	Sets motor output
+ * @param	dutycycle value between 0 and 65535
+ * @retval	None.
+ */
 void SetMotor1(uint16_t ccrVal)
 {
   __HAL_TIM_SetCompare(&TimHandle, MOTOR1_CHANNEL, ccrVal);
