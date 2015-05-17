@@ -47,9 +47,9 @@ void UpdateControl(void)
     BSP_LED_Off(LED9);
     BSP_LED_Off(LED10);
 
-    UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
+    // UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
     // Set motor output to lowest
-    ManualModeAllocation();
+    ManualModeMotorAllocation();
     //SetMotors();
     return;
 

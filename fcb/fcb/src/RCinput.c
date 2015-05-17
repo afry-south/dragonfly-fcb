@@ -32,8 +32,8 @@ uint16_t PWM_IN_DOWN_PRE_2 = 0;
 uint16_t RCTimeOut = 50;
 uint16_t RCTimeOutCount = 0;
 
-/* RC input limits - TODO subject to calibration */
-float RCmin = 0.00108, RCmid = 0.00150, RCmax = 0.00192;
+/* RC input limits in microseconds */
+float RCmin = 1080, RCmid = 1500, RCmax = 1920;
 
 volatile PWMRC_TimeTypeDef PWMTimes;
 PWMRC_TimeTypeDef PWMTimesTemp;
