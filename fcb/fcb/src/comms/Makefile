@@ -10,7 +10,7 @@ PROTO_HDR := $(PROTO_FILES:.proto=.pb.h)
 
 
 $(PROTO_SRC) $(PROTO_HDR) : $(PROTO_FILES)
-	myprotoc  --nanopb_out=. $<
+	protoc  --nanopb_out=. $<
 
 # use this for workstation evaluation by uncommenting
 # a main.c file using the generated result must be
