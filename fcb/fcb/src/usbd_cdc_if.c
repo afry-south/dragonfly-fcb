@@ -166,11 +166,19 @@ static int8_t CDC_Itf_Control (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
 {
   uint8_t result = USBD_OK;
+
   if(hUSBDDevice.dev_state == USBD_STATE_CONFIGURED)
     {
       result = USBD_CDC_ReceivePacket(&hUSBDDevice);
-      if(result == USBD_OK)
-        CDC_Transmit_FS(Buf, *Len);
+      if(result == USBD_OK) {
+    	  char affirmation[] = " understood captain\n";
+    	  size_t aff_len = strlen(affirmation);
+    	  uint8_t replyBuf[aff_len + *Len + 1];
+    	  memcpy(replyBuf, Buf, *Len);
+    	  memcpy(replyBuf + *Len, affirmation, aff_len);
+    	  // replyBuf[aff_len + *Len] = '\0';
+        CDC_Transmit_FS(replyBuf, aff_len + *Len + 1);
+      }
     }
   else
     result = USBD_FAIL;
