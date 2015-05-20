@@ -49,7 +49,7 @@ void UpdateControl(void)
 
     // UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
     // Set motor output to lowest
-    ManualModeMotorAllocation();
+    // ManualModeMotorAllocation();
     //SetMotors();
     return;
 

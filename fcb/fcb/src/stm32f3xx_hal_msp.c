@@ -143,17 +143,21 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
       GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
       GPIO_InitStruct.Alternate = MOTOR_TIM_AF;
 
+      /* Motor channel 1 pin */
       GPIO_InitStruct.Pin = MOTOR_GPIO_PIN_CHANNEL1;
-      HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+      HAL_GPIO_Init(MOTOR_PIN_PORT, &GPIO_InitStruct);
 
+      /* Motor channel 2 pin */
       GPIO_InitStruct.Pin = MOTOR_GPIO_PIN_CHANNEL2;
-      HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+      HAL_GPIO_Init(MOTOR_PIN_PORT, &GPIO_InitStruct);
 
+      /* Motor channel 3 pin */
       GPIO_InitStruct.Pin = MOTOR_GPIO_PIN_CHANNEL3;
-      HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+      HAL_GPIO_Init(MOTOR_PIN_PORT, &GPIO_InitStruct);
 
+      /* Motor channel 4 pin */
       GPIO_InitStruct.Pin = MOTOR_GPIO_PIN_CHANNEL4;
-      HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+      HAL_GPIO_Init(MOTOR_PIN_PORT, &GPIO_InitStruct);
     }
 }
 

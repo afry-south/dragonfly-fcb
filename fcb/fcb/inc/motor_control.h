@@ -22,6 +22,7 @@
 /* Defines for Motor TIM channel pins */
 #define MOTOR_TIM_CHANNEL_GPIO_PORT()           __GPIOD_CLK_ENABLE()
 #define MOTOR_TIM_AF                            GPIO_AF2_TIM4
+#define MOTOR_PIN_PORT                          GPIOD
 #define MOTOR_GPIO_PIN_CHANNEL1                 GPIO_PIN_12
 #define MOTOR_GPIO_PIN_CHANNEL2                 GPIO_PIN_13
 #define MOTOR_GPIO_PIN_CHANNEL3                 GPIO_PIN_14
