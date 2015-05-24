@@ -1,5 +1,5 @@
 /*****************************************************************************
-* @file    fcb/motor_control.h
+* @file    motor_control.h
 * @author  ÅF Embedded Systems SydDragonfly
 *          Daniel Stenberg
 * @version v. 1.0.0
@@ -14,6 +14,10 @@
 
 /* Includes */
 #include "stm32f3xx.h"
+
+/* Exported types ------------------------------------------------------------*/
+/* Exported constants --------------------------------------------------------*/
+/* Exported macro ------------------------------------------------------------*/
 
 /* Defines for Motor TIM clock source */
 #define TIM_MOTOR                               TIM4
@@ -42,7 +46,7 @@
 #define ESC_MAX_OUTPUT                          48000 // 2.0 ms pulse
 #define ESC_MIN_OUTPUT                          24000 // 1.0 ms pulse
 
-/* Function prototypes */
+/* Exported functions ------------------------------------------------------- */
 void MotorControl_Config(void);
 void SetMotor1(uint16_t ctrlVal);
 void SetMotor2(uint16_t ctrlVal);

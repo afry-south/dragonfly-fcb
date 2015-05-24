@@ -13,11 +13,7 @@
 #include "motor_control.h"
 #include "flight_control.h"
 #include "sensors.h"
-#include "RCinput.h"
-
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
+#include "rc_input.h"
 
 /* Private variables ---------------------------------------------------------*/
 USBD_HandleTypeDef hUSBDDevice;
@@ -92,7 +88,15 @@ static void Init_System(void)
   CompassConfig();
   InitPIDControllers();
 
+  /* Setup motor output timer */
   MotorControl_Config();
+
+  /* Setup receiver primary channels timer */
+  PrimaryReceiverInput_Config();
+
+  /* Setup receiver aux channels timer */
+  AuxReceiverInput_Config();
+
 //
 //  /* Setup Timers 2 and 3 (used for PWM input) */
 //  TIM2_Setup();

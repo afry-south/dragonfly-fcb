@@ -1,5 +1,5 @@
 /*****************************************************************************
- * @file    fcb/motor_control.c
+ * @file    motor_control.c
  * @author  ÅF Dragonfly
  * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.1
@@ -10,6 +10,7 @@
  *          Dragonfly's motors.
  ******************************************************************************/
 
+/* Includes */
 #include "motor_control.h"
 #include "main.h"
 

@@ -1,35 +1,19 @@
 /**
   ******************************************************************************
-  * @file    Demonstrations/Src/stm32f3xx_it.c
-  * @author  MCD Application Team
+  * @file    stm32f3xx_it.c
+  * @author  ÅF Embedded Systems Syd
   * @version V1.0.0
-  * @date    18-June-2014
+  * @date    24-May-2015
   * @brief   Main Interrupt Service Routines.
   *          This file provides all exceptions handler and 
   *          peripherals interrupt service routine.
   ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT(c) 2014 STMicroelectronics</center></h2>
-  *
-  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
-  * You may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at:
-  *
-  *        http://www.st.com/software_license_agreement_liberty_v2
-  *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  ******************************************************************************
-  */
+**/
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_it.h"
+#include "rc_input.h"
 
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
   * @{
@@ -42,6 +26,9 @@
 /* Private variables ---------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd;
 extern USBD_HandleTypeDef hUSBDDevice;
+
+extern TIM_HandleTypeDef PrimaryReceiverTimHandle;
+extern TIM_HandleTypeDef AuxReceiverTimHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -119,16 +106,18 @@ void DebugMon_Handler(void)
   * @param  None
   * @retval None
   */
-//void SVC_Handler(void)
-//{}
+/*void SVC_Handler(void)
+{
+}*/
 
 /**
   * @brief  This function handles PendSV_Handler exception.
   * @param  None
   * @retval None
   */
-//void PendSV_Handler(void)
-//{}
+/*void PendSV_Handler(void)
+{
+}*/
 
 /**
   * @brief  This function handles SysTick Handler.
@@ -137,7 +126,7 @@ void DebugMon_Handler(void)
   */
 void SysTick_Handler(void)
 {
-   HAL_IncTick();
+  HAL_IncTick();
 }
 
 /******************************************************************************/
@@ -147,11 +136,16 @@ void SysTick_Handler(void)
 /*  file (startup_stm32f3xx.s).                                               */
 /******************************************************************************/
 
+void PRIMARY_RECEIVER_TIM_IRQHandler(void)
+{
+  HAL_TIM_IRQHandler(&PrimaryReceiverTimHandle);
+}
+
 /*
  * @brief       Timer 2 interrupt handler.
  */
-void TIM2_IRQHandler(void)
-{
+//void TIM2_IRQHandler(void)
+//{
 //
 //  /* If interrupt concerns TIM2 CH1 */
 //  if (TIM_GetITStatus(TIM2, TIM_IT_CC1) != RESET)
@@ -179,7 +173,7 @@ void TIM2_IRQHandler(void)
 //      TIM_ClearITPendingBit(TIM2, TIM_IT_CC4);
 //      UpdateRudderChannel();
 //    }
-}
+//}
 
 /*
  * @brief       Timer 3 interrupt handler.
@@ -197,18 +191,6 @@ void TIM3_IRQHandler(void)
 //    {
 //      TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
 //      UpdateAuxiliaryChannel();
-//    }
-}
-
-/*
- * @brief       Timer 7 interrupt handler.
- */
-void TIM7_IRQHandler(void)
-{
-//  if (TIM_GetITStatus(TIM7, TIM_IT_Update) != RESET)
-//    {
-//      TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
-//      UpdateControl();
 //    }
 }
 
@@ -241,14 +223,25 @@ void USBWakeUp_RMP_IRQHandler(void)
 }
 
 /**
-  * @brief  This function handles PPP interrupt request.
+  * @brief  This function handles EXTI0 interrupt request.
   * @param  None
   * @retval None
   */
 void EXTI0_IRQHandler(void)
-{ 
+{
   HAL_GPIO_EXTI_IRQHandler(USER_BUTTON_PIN);
 }
+
+/**
+  * @brief  This function handles PPP interrupt request.
+  * @param  None
+  * @retval None
+  */
+/*void PPP_IRQHandler(void)
+{
+}*/
+
+
 
 /**
   * @}

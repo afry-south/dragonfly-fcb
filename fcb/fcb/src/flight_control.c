@@ -11,7 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "flight_control.h"
 #include "main.h"
-#include "RCinput.h"
+#include "rc_input.h"
 #include "sensors.h"
 #include "motor_control.h"
 #include <math.h>

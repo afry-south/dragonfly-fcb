@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    fcb/RCinput.c
+ * @file    rc_input.c
  * @author  ÅF Dragonfly
  * Daniel Nilsson, Embedded Systems
  * Daniel Stenberg, Embedded Systems
@@ -9,13 +9,19 @@
  *          File contains functionality for reading signals from the RC receiver
  ******************************************************************************/
 
-#include "RCinput.h"
-#include <stdio.h>
-#include <string.h>
-#include "stm32f3xx.h"
+/* Includes ------------------------------------------------------------------*/
+#include "rc_input.h"
+#include "main.h"
+//#include <stdio.h>
+//#include <string.h>
 #include "flight_control.h"
 
-#define PWM_INPUT_SAMPLE_CLOCK 2400000
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef PrimaryReceiverTimHandle;
+TIM_HandleTypeDef AuxReceiverTimHandle;
 
 /* PWM input variables */
 //TIM_ICInitTypeDef TIM2_CH1_ICInitStructure, TIM2_CH2_ICInitStructure, TIM2_CH3_ICInitStructure, TIM2_CH4_ICInitStructure;
@@ -37,6 +43,111 @@ float RCmin = 1080, RCmid = 1500, RCmax = 1920;
 
 volatile PWMRC_TimeTypeDef PWMTimes;
 PWMRC_TimeTypeDef PWMTimesTemp;
+
+/*
+ * @brief       Initializes reading from the receiver primary input channels, i.e.
+ *              throttle aileron, elevator and rudder channels. The signals are
+ *              encoded as PWM pulses of ~1-2 ms.
+ * @param       None.
+ * @retval      None.
+ */
+void PrimaryReceiverInput_Config(void)
+{
+  /* Timer Input Capture Configuration Structure declaration */
+  TIM_IC_InitTypeDef sConfig;
+
+  /*##-1- Configure the Primary Receiver TIM peripheral ######################*/
+  /* Set TIMx instance */
+  PrimaryReceiverTimHandle.Instance = PRIMARY_RECEIVER_TIM;
+
+  /* Initialize TIM peripheral to maximum period with suitable counter clocking (receiver PWM input period is ~22 ms) */
+  PrimaryReceiverTimHandle.Init.Period = 0xFFFF;
+  PrimaryReceiverTimHandle.Init.Prescaler = SystemCoreClock/PRIMARY_RECEIVER_TIM_COUNTER_CLOCK - 1;
+  PrimaryReceiverTimHandle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  PrimaryReceiverTimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
+  if(HAL_TIM_IC_Init(&PrimaryReceiverTimHandle) != HAL_OK)
+    {
+      /* Initialization Error */
+      Error_Handler();
+    }
+
+  /*##-2- Configure the Input Capture channels ###############################*/
+  /* Common configuration */
+  sConfig.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfig.ICFilter = 0;
+
+  /* Configure the Input Capture of throttle channel */
+  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &sConfig, PRIMARY_RECEIVER_THROTTLE_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
+
+  /* Configure the Input Capture of aileron channel */
+  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &sConfig, PRIMARY_RECEIVER_AILERON_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
+
+  /* Configure the Input Capture of elevator channel */
+  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &sConfig, PRIMARY_RECEIVER_ELEVATOR_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
+
+  /* Configure the Input Capture of rudder channel */
+  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &sConfig, PRIMARY_RECEIVER_RUDDER_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
+
+  /*##-3- Start the Input Capture in interrupt mode ##########################*/
+  if(HAL_TIM_IC_Start_IT(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_THROTTLE_CHANNEL) != HAL_OK)
+    {
+      /* Starting Error */
+      Error_Handler();
+    }
+
+  if(HAL_TIM_IC_Start_IT(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_AILERON_CHANNEL) != HAL_OK)
+    {
+      /* Starting Error */
+      Error_Handler();
+    }
+
+  if(HAL_TIM_IC_Start_IT(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_ELEVATOR_CHANNEL) != HAL_OK)
+    {
+      /* Starting Error */
+      Error_Handler();
+    }
+
+  if(HAL_TIM_IC_Start_IT(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_RUDDER_CHANNEL) != HAL_OK)
+    {
+      /* Starting Error */
+      Error_Handler();
+    }
+}
+
+/*
+ * @brief       Initializes reading from the receiver aux input channels, i.e.
+ *              gear and aux1. The signals are encoded as PWM pulses of ~1-2 ms.
+ * @param       None.
+ * @retval      None.
+ */
+void AuxReceiverInput_Config(void)
+{
+
+}
 
 void UpdateThrottleChannel(void)
 {
@@ -318,31 +429,6 @@ float GetRCmax(void)
   return RCmax;
 }
 
-/* @TIM2_Setup
- * @brief	Timer 2 setup
- * @param	None.
- * @retval	None.
- */
-void TIM2_Setup(void)
-{
-//  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure2;	// TIM2 timebase struct
-//
-//  //TIM2 clock enable
-//  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 , ENABLE);
-//
-//  // TIM2 Time Base configuration
-//  TIM_TimeBaseStructure2.TIM_Prescaler = SystemCoreClock/PWM_INPUT_SAMPLE_CLOCK -1;	// 72 MHz to 2.4 MHz
-//  TIM_TimeBaseStructure2.TIM_CounterMode = TIM_CounterMode_Up;
-//  TIM_TimeBaseStructure2.TIM_Period = 0xFFFF;	// Can take receiver input down to less than 40 Hz (approx. 45 Hz is used for RC)
-//  TIM_TimeBaseStructure2.TIM_ClockDivision = TIM_CKD_DIV1;
-//  TIM_TimeBaseStructure2.TIM_RepetitionCounter = 0;
-//
-//  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure2);
-//
-//  // TIM2 counter enable
-//  TIM_Cmd(TIM2, ENABLE);
-}
-
 /* @TIM3_Setup
  * @brief	Timer 3 setup
  * @param	None.
@@ -385,16 +471,6 @@ void PWM_In_Setup(void) {
 //  PWMTimes.Gear = 0.0;
 //  PWMTimes.Auxiliary = 0.0;
 
-//  /* GPIOD clock enable */
-//  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
-//
-//  /* TIM2 GPIO pin configuration : CH1=PD3, CH2=PD4, CH3=PD7, CH4=PD6 */
-//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_7 | GPIO_Pin_6;
-//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-//  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-//  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-//  GPIO_Init(GPIOD, &GPIO_InitStructure);
 //
 //  /* Debug/test pins (TODO: delete later) */
 //  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11;
@@ -404,19 +480,6 @@ void PWM_In_Setup(void) {
 //  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 //  GPIO_Init(GPIOD, &GPIO_InitStructure);
 //
-//  /* Connect pins to TIM2 AF2 */
-//  GPIO_PinAFConfig(GPIOD, GPIO_PinSource3, GPIO_AF_2);
-//  GPIO_PinAFConfig(GPIOD, GPIO_PinSource4, GPIO_AF_2);
-//  GPIO_PinAFConfig(GPIOD, GPIO_PinSource7, GPIO_AF_2);
-//  GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_2);
-//
-//  /* Setup TIM2 interrupts */
-//  NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
-//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0D;
-//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
-//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//  NVIC_Init(&NVIC_InitStructure);
-//
 //  // TIM2 Channel 1-4 IC init structs, not used until interrupt handler
 //  TIM2_CH1_ICInitStructure.TIM_Channel = TIM_Channel_1;
 //  TIM2_CH1_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
@@ -424,27 +487,6 @@ void PWM_In_Setup(void) {
 //  TIM2_CH1_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
 //  TIM2_CH1_ICInitStructure.TIM_ICFilter = 0;
 //  TIM_ICInit(TIM2, &TIM2_CH1_ICInitStructure);
-//
-//  TIM2_CH2_ICInitStructure.TIM_Channel = TIM_Channel_2;
-//  TIM2_CH2_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-//  TIM2_CH2_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
-//  TIM2_CH2_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-//  TIM2_CH2_ICInitStructure.TIM_ICFilter = 0;
-//  TIM_ICInit(TIM2, &TIM2_CH2_ICInitStructure);
-//
-//  TIM2_CH3_ICInitStructure.TIM_Channel = TIM_Channel_3;
-//  TIM2_CH3_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-//  TIM2_CH3_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
-//  TIM2_CH3_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-//  TIM2_CH3_ICInitStructure.TIM_ICFilter = 0;
-//  TIM_ICInit(TIM2, &TIM2_CH3_ICInitStructure);
-//
-//  TIM2_CH4_ICInitStructure.TIM_Channel = TIM_Channel_4;
-//  TIM2_CH4_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-//  TIM2_CH4_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
-//  TIM2_CH4_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-//  TIM2_CH4_ICInitStructure.TIM_ICFilter = 0;
-//  TIM_ICInit(TIM2, &TIM2_CH4_ICInitStructure);
 //
 //  /* GPIOB clock enable */
 //  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);

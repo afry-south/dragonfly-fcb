@@ -51,6 +51,7 @@
 #include "stm32f3xx_hal.h"
 
 #include "motor_control.h"
+#include "rc_input.h"
 
 /** @addtogroup STM32F3xx_HAL_Driver
   * @{
@@ -158,6 +159,57 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
       /* Motor channel 4 pin */
       GPIO_InitStruct.Pin = MOTOR_GPIO_PIN_CHANNEL4;
       HAL_GPIO_Init(MOTOR_PIN_PORT, &GPIO_InitStruct);
+    }
+}
+
+/**
+* @brief TIM MSP Initialization
+*        This function configures the hardware resources used in this example:
+*           - Peripheral's clock enable
+*           - Peripheral's GPIO Configuration
+* @param htim: TIM handle pointer
+* @retval None
+*/
+void HAL_TIM_IC_MspInit(TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance==PRIMARY_RECEIVER_TIM)
+    {
+      GPIO_InitTypeDef   GPIO_InitStruct;
+
+      /*##-1- Enable peripherals and GPIO Clocks #################################*/
+      /* Primary Receiver TIM Peripheral clock enable */
+      PRIMARY_RECEIVER_TIM_CLK_ENABLE();
+
+      /* Enable GPIO channels Clock */
+      PRIMARY_RECEIVER_TIM_CHANNEL_GPIO_PORT();
+
+      /* Configure  channels for Alternate function, push-pull and 100MHz speed */
+      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+      GPIO_InitStruct.Pull = GPIO_PULLUP;
+      GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+      GPIO_InitStruct.Alternate = PRIMARY_RECEIVER_TIM_AF;
+
+      /* Primary Receiver Channel 1 pin */
+      GPIO_InitStruct.Pin = PRIMARY_RECEIVER_PIN_CHANNEL1;
+      HAL_GPIO_Init(PRIMARY_RECEIVER_TIM_PIN_PORT, &GPIO_InitStruct);
+
+      /* Primary Receiver Channel 2 pin */
+      GPIO_InitStruct.Pin = PRIMARY_RECEIVER_PIN_CHANNEL2;
+      HAL_GPIO_Init(PRIMARY_RECEIVER_TIM_PIN_PORT, &GPIO_InitStruct);
+
+      /* Primary Receiver Channel 3 pin */
+      GPIO_InitStruct.Pin = PRIMARY_RECEIVER_PIN_CHANNEL3;
+      HAL_GPIO_Init(PRIMARY_RECEIVER_TIM_PIN_PORT, &GPIO_InitStruct);
+
+      /* Primary Receiver Channel 4 pin */
+      GPIO_InitStruct.Pin = PRIMARY_RECEIVER_PIN_CHANNEL4;
+      HAL_GPIO_Init(PRIMARY_RECEIVER_TIM_PIN_PORT, &GPIO_InitStruct);
+
+      /*##-2- Configure the NVIC for PRIMARY_RECEIVER_TIM ########################*/
+      HAL_NVIC_SetPriority(PRIMARY_RECEIVER_TIM_IRQn, PRIMARY_RECEIVER_TIM_IRQ_PREEMPT_PRIO, PRIMARY_RECEIVER_TIM_IRQ_SUB_PRIO);
+
+      /* Enable the PRIMARY_RECEIVER_TIM global Interrupt */
+      HAL_NVIC_EnableIRQ(PRIMARY_RECEIVER_TIM_IRQn);
     }
 }
 
