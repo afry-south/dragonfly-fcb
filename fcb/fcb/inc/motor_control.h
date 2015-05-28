@@ -40,7 +40,7 @@
 
 /* Defines Motor TIM Timebase */
 // 60000 ticks on a 24MHz clock yields a 400 MHz PWM frequency
-#define MOTOR_OUTPUT_SAMPLECLOCK                24000000
+#define MOTOR_OUTPUT_COUNTER_CLOCK              24000000
 #define MOTOR_OUTPUT_PERIOD                     60000
 
 #define ESC_MAX_OUTPUT                          48000 // 2.0 ms pulse
