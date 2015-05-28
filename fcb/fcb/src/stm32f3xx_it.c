@@ -141,6 +141,12 @@ void PRIMARY_RECEIVER_TIM_IRQHandler(void)
   HAL_TIM_IRQHandler(&PrimaryReceiverTimHandle);
 }
 
+void AUX_RECEIVER_TIM_IRQHandler(void)
+{
+  HAL_TIM_IRQHandler(&AuxReceiverTimHandle);
+}
+
+#ifdef TODO
 /*
  * @brief       Timer 2 interrupt handler.
  */
@@ -174,12 +180,14 @@ void PRIMARY_RECEIVER_TIM_IRQHandler(void)
 //      UpdateRudderChannel();
 //    }
 //}
+#endif
 
+#ifdef TODO
 /*
  * @brief       Timer 3 interrupt handler.
  */
-void TIM3_IRQHandler(void)
-{
+//void TIM3_IRQHandler(void)
+//{
 //  /* If interrupt concerns TIM3 CH1 */
 //  if (TIM_GetITStatus(TIM3, TIM_IT_CC1) != RESET)
 //    {
@@ -192,7 +200,8 @@ void TIM3_IRQHandler(void)
 //      TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
 //      UpdateAuxiliaryChannel();
 //    }
-}
+//}
+#endif
 
 /**
   * @brief  This function handles USB Handler.

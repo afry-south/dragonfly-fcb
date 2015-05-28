@@ -14,18 +14,34 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
+/* Exported constants --------------------------------------------------------*/
+typedef enum
+{
+  PWM_LOW = 0,
+  PWM_HIGH = !PWM_LOW
+} PWM_State;
+
 /* Exported types ------------------------------------------------------------*/
 typedef struct
 {
-        float Throttle;
-        float Aileron;
-        float Elevator;
-        float Rudder;
-        float Gear;
-        float Auxiliary;
+  PWM_State ThrottleInputState;
+  PWM_State AileronInputState;
+  PWM_State ElevatorInputState;
+  PWM_State RudderInputState;
+  PWM_State GearInputState;
+  PWM_State AuxiliaryInputState;
+}PWM_Input_Channel_States_TypeDef;
+
+typedef struct
+{
+  float Throttle;
+  float Aileron;
+  float Elevator;
+  float Rudder;
+  float Gear;
+  float Auxiliary;
 }PWMRC_TimeTypeDef;
 
-/* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 
 /* Definitions for Primary Receiver ##########################################*/
@@ -54,13 +70,35 @@ typedef struct
 #define PRIMARY_RECEIVER_ELEVATOR_CHANNEL               TIM_CHANNEL_3
 #define PRIMARY_RECEIVER_RUDDER_CHANNEL                 TIM_CHANNEL_4
 
-/* Definions for Primary receiver TIM timebase */
-#define PRIMARY_RECEIVER_TIM_COUNTER_CLOCK              2400000
-
 /* Definitions for Aux Receiver ##############################################*/
+/* Definitions for Aux Receiver TIM clock */
+#define AUX_RECEIVER_TIM                                TIM3
+#define AUX_RECEIVER_TIM_CLK_ENABLE()                   __TIM3_CLK_ENABLE()
+
 /* Definitions for Auxiliary Receiver channels input */
 #define AUX_RECEIVER_GEAR_CHANNEL                       TIM_CHANNEL_1
 #define AUX_RECEIVER_AUX1_CHANNEL                       TIM_CHANNEL_2
+
+/* Definitions for Aux Receiver TIM pins */
+#define AUX_RECEIVER_TIM_CHANNEL_GPIO_PORT()            __GPIOB_CLK_ENABLE()
+#define AUX_RECEIVER_TIM_AF                             GPIO_AF2_TIM2
+#define AUX_RECEIVER_TIM_PIN_PORT                       GPIOB
+#define AUX_RECEIVER_PIN_CHANNEL1                       GPIO_PIN_4
+#define AUX_RECEIVER_PIN_CHANNEL2                       GPIO_PIN_5
+
+/* Definitions for AUX_RECEIVER_TIM NVIC */
+#define AUX_RECEIVER_TIM_IRQn                           TIM3_IRQn
+#define AUX_RECEIVER_TIM_IRQHandler                     TIM3_IRQHandler
+#define AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO               0
+#define AUX_RECEIVER_TIM_IRQ_SUB_PRIO                   0
+
+/* Definitions for Aux Receiver channels input */
+#define AUX_RECEIVER_GEAR_CHANNEL                       TIM_CHANNEL_1
+#define AUX_RECEIVER_AUX1_CHANNEL                       TIM_CHANNEL_2
+
+/* Common definitions for the receiver TIM timers ############################*/
+/* Definions for receiver TIM timebase */
+#define RECEIVER_TIM_COUNTER_CLOCK                      2400000
 
 /* Exported functions ------------------------------------------------------- */
 void PrimaryReceiverInput_Config(void);

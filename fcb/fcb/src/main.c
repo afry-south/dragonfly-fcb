@@ -1,10 +1,8 @@
 /******************************************************************************
  * @file    fcb/main.c
  * @author  ÅF Dragonfly
- * Daniel Nilsson, Embedded Systems
- * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.2
- * @date    2015-04-12
+ * @date    2015-05-28
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
  ******************************************************************************/
 
@@ -96,18 +94,6 @@ static void Init_System(void)
 
   /* Setup receiver aux channels timer */
   AuxReceiverInput_Config();
-
-//
-//  /* Setup Timers 2 and 3 (used for PWM input) */
-//  TIM2_Setup();
-//  TIM3_Setup();
-//  /* Setup and start PWM input (GPIO, NVIC settings) */
-//  PWM_In_Setup();
-//
-//  /* Setup Timer 7 (used for program periodic execution) */
-//  TIM7_Setup();
-//  /* Setup and start Timer 7 for interrupt generation */
-//  TIM7_SetupIRQ(); // NEEDS TO BE STARTED AFTER SENSOR CONFIG
 }
 
 static void Init_LEDs(void)

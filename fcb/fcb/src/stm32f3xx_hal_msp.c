@@ -211,6 +211,37 @@ void HAL_TIM_IC_MspInit(TIM_HandleTypeDef *htim)
       /* Enable the PRIMARY_RECEIVER_TIM global Interrupt */
       HAL_NVIC_EnableIRQ(PRIMARY_RECEIVER_TIM_IRQn);
     }
+  else if(htim->Instance==AUX_RECEIVER_TIM)
+    {
+      GPIO_InitTypeDef   GPIO_InitStruct;
+
+      /*##-1- Enable peripherals and GPIO Clocks #################################*/
+      /* Aux Receiver TIM Peripheral clock enable */
+      AUX_RECEIVER_TIM_CLK_ENABLE();
+
+      /* Enable GPIO channels Clock */
+      AUX_RECEIVER_TIM_CHANNEL_GPIO_PORT();
+
+      /* Configure channels for Alternate function, push-pull and 100MHz speed */
+      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+      GPIO_InitStruct.Pull = GPIO_PULLUP;
+      GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+      GPIO_InitStruct.Alternate = AUX_RECEIVER_TIM_AF;
+
+      /* Aux Receiver Channel 1 pin */
+      GPIO_InitStruct.Pin = AUX_RECEIVER_PIN_CHANNEL1;
+      HAL_GPIO_Init(AUX_RECEIVER_TIM_PIN_PORT, &GPIO_InitStruct);
+
+      /* Aux Receiver Channel 2 pin */
+      GPIO_InitStruct.Pin = AUX_RECEIVER_PIN_CHANNEL2;
+      HAL_GPIO_Init(AUX_RECEIVER_TIM_PIN_PORT, &GPIO_InitStruct);
+
+      /*##-2- Configure the NVIC for AUX_RECEIVER_TIM ############################*/
+      HAL_NVIC_SetPriority(AUX_RECEIVER_TIM_IRQn, AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO, AUX_RECEIVER_TIM_IRQ_SUB_PRIO);
+
+      /* Enable the AUX_RECEIVER_TIM global Interrupt */
+      HAL_NVIC_EnableIRQ(AUX_RECEIVER_TIM_IRQn);
+    }
 }
 
 /**
