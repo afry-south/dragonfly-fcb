@@ -24,6 +24,8 @@ static void Init_LEDs(void);
 static void LEDs_Off(void);
 static void ToggleLEDs();
 
+/* Private functions ---------------------------------------------------------*/
+
 /**
  * @brief  Main program.
  * @param  None
@@ -81,19 +83,18 @@ static void Init_System(void)
   /* Init User button */
   BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
+#ifdef TODO
   /* Setup sensors */
   GyroConfig();
   CompassConfig();
   InitPIDControllers();
+#endif
 
   /* Setup motor output timer */
   MotorControl_Config();
 
-  /* Setup receiver primary channels timer */
-  PrimaryReceiverInput_Config();
-
-  /* Setup receiver aux channels timer */
-  AuxReceiverInput_Config();
+  /* Setup receiver timers for receiver input */
+  ReceiverInput_Config();
 }
 
 static void Init_LEDs(void)

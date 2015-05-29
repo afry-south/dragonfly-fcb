@@ -66,9 +66,13 @@ typedef struct
 
 /* Definitions for Primary Receiver channels input */
 #define PRIMARY_RECEIVER_THROTTLE_CHANNEL               TIM_CHANNEL_1
+#define PRIMARY_RECEIVER_THROTTLE_ACTIVE_CHANNEL        HAL_TIM_ACTIVE_CHANNEL_1
 #define PRIMARY_RECEIVER_AILERON_CHANNEL                TIM_CHANNEL_2
+#define PRIMARY_RECEIVER_AILERON_ACTIVE_CHANNEL         HAL_TIM_ACTIVE_CHANNEL_2
 #define PRIMARY_RECEIVER_ELEVATOR_CHANNEL               TIM_CHANNEL_3
+#define PRIMARY_RECEIVER_ELEVATOR_ACTIVE_CHANNEL        HAL_TIM_ACTIVE_CHANNEL_3
 #define PRIMARY_RECEIVER_RUDDER_CHANNEL                 TIM_CHANNEL_4
+#define PRIMARY_RECEIVER_RUDDER_ACTIVE_CHANNEL          HAL_TIM_ACTIVE_CHANNEL_4
 
 /* Definitions for Aux Receiver ##############################################*/
 /* Definitions for Aux Receiver TIM clock */
@@ -94,15 +98,16 @@ typedef struct
 
 /* Definitions for Aux Receiver channels input */
 #define AUX_RECEIVER_GEAR_CHANNEL                       TIM_CHANNEL_1
+#define AUX_RECEIVER_GEAR_ACTIVE_CHANNEL                HAL_TIM_ACTIVE_CHANNEL_1
 #define AUX_RECEIVER_AUX1_CHANNEL                       TIM_CHANNEL_2
+#define AUX_RECEIVER_AUX1_ACTIVE_CHANNEL                HAL_TIM_ACTIVE_CHANNEL_2
 
 /* Common definitions for the receiver TIM timers ############################*/
 /* Definions for receiver TIM timebase */
 #define RECEIVER_TIM_COUNTER_CLOCK                      2400000
 
 /* Exported functions ------------------------------------------------------- */
-void PrimaryReceiverInput_Config(void);
-void AuxReceiverInput_Config(void);
+void ReceiverInput_Config(void);
 
 void UpdateThrottleChannel(void);
 void UpdateAileronChannel(void);
@@ -111,8 +116,6 @@ void UpdateRudderChannel(void);
 void UpdateGearChannel(void);
 void UpdateAuxiliaryChannel(void);
 
-void TIM3_Setup(void);
-void PWM_In_Setup(void);
 void GetPWMInputTimes(PWMRC_TimeTypeDef *PWM_Time);
 char CheckRCConnection(void);
 float GetRCmin(void);

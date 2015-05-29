@@ -36,6 +36,23 @@ float RCmin = 1080, RCmid = 1500, RCmax = 1920;
 volatile PWMRC_TimeTypeDef PWMTimes;
 PWMRC_TimeTypeDef PWMTimesTemp;
 
+/* Private function prototypes -----------------------------------------------*/
+static void PrimaryReceiverInput_Config(void);
+static void AuxReceiverInput_Config(void);
+
+/* Private functions ---------------------------------------------------------*/
+
+/*
+ * @brief  Initializes timers in input capture mode to read the receiver input PWM signals
+ * @param  None
+ * @retval None
+ */
+void ReceiverInput_Config(void)
+{
+  PrimaryReceiverInput_Config();
+  AuxReceiverInput_Config();
+}
+
 /*
  * @brief       Initializes reading from the receiver primary input channels, i.e.
  *              throttle aileron, elevator and rudder channels. The signals are
@@ -43,7 +60,7 @@ PWMRC_TimeTypeDef PWMTimesTemp;
  * @param       None.
  * @retval      None.
  */
-void PrimaryReceiverInput_Config(void)
+static void PrimaryReceiverInput_Config(void)
 {
   /* Timer Input Capture Configuration Structure declaration */
   TIM_IC_InitTypeDef sConfig;
@@ -136,7 +153,7 @@ void PrimaryReceiverInput_Config(void)
  * @param       None.
  * @retval      None.
  */
-void AuxReceiverInput_Config(void)
+static void AuxReceiverInput_Config(void)
 {
   /* Timer Input Capture Configuration Structure declaration */
   TIM_IC_InitTypeDef sConfig;
@@ -425,6 +442,7 @@ void UpdateAuxiliaryChannel(void)
  */
 char CheckRCConnection()
 {
+#ifdef TODO
   char retVal = 0;
 
   if(PWM_IN_DOWN[1] != PWM_IN_DOWN_PRE_2)
@@ -451,6 +469,8 @@ char CheckRCConnection()
   PWM_IN_DOWN_PRE_2 = PWM_IN_DOWN[1];
 
   return retVal;
+#endif
+  return 0;
 }
 
 /* @GetPWMInputTimes
@@ -485,84 +505,65 @@ float GetRCmax(void)
   return RCmax;
 }
 
-/* @TIM3_Setup
- * @brief	Timer 3 setup
- * @param	None.
- * @retval	None.
- */
-void TIM3_Setup(void)
+/**
+  * @brief  Input Capture callback in non blocking mode
+  * @param  htim : TIM IC handle
+  * @retval None
+  */
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
+  if (htim->Instance==PRIMARY_RECEIVER_TIM)
+    {
+      if(htim->Channel == PRIMARY_RECEIVER_THROTTLE_ACTIVE_CHANNEL)
+        {
 #ifdef TODO
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure3;	// TIM3 timebase struct
-
-  //TIM3 clock enable
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 , ENABLE);
-
-  // TIM3 Time Base configuration
-  TIM_TimeBaseStructure3.TIM_Prescaler = SystemCoreClock/PWM_INPUT_SAMPLE_CLOCK -1;	// 72 MHz to 2.4 MHz
-  TIM_TimeBaseStructure3.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseStructure3.TIM_Period = 0xFFFF;	// Can take receiver input down to less than 40 Hz (approx. 45 Hz is used for RC)
-  TIM_TimeBaseStructure3.TIM_ClockDivision = TIM_CKD_DIV1;
-  TIM_TimeBaseStructure3.TIM_RepetitionCounter = 0;
-
-  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure3);
-
-  // TIM3 counter enable
-  TIM_Cmd(TIM3, ENABLE);
+          /* Get the Input Capture value */
+//          uint32_t throttleInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, PRIMARY_RECEIVER_THROTTLE_CHANNEL);
+          // UpdateThrottleChannel();
 #endif
-}
-
-/* @PWM_In_Setup
- * @brief  Sets up timer 2, GPIO and NVIC for PWM input
- * @param  None
- * @retval None
- */
-void PWM_In_Setup(void)
-{
+        }
+      else if(htim->Channel == PRIMARY_RECEIVER_AILERON_ACTIVE_CHANNEL)
+        {
 #ifdef TODO
-//  /* Debug/test pins (TODO: delete later) */
-//  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11;
-//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-//  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-//  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-//  GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-//
-//  /* Connect pins to TIM3 AF2 */
-//  GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_2);
-//  GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_2);
-//
-//  /* Setup TIM3 interrupts */
-//  NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn;
-//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0;
-//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;
-//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//  NVIC_Init(&NVIC_InitStructure);
-//
-//  // TIM3 Channel 1-2 IC init structs, not used until interrupt handler
-//  TIM3_CH1_ICInitStructure.TIM_Channel = TIM_Channel_1;
-//  TIM3_CH1_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-//  TIM3_CH1_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
-//  TIM3_CH1_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-//  TIM3_CH1_ICInitStructure.TIM_ICFilter = 0;
-//  TIM_ICInit(TIM3, &TIM3_CH1_ICInitStructure);
-//
-//  TIM3_CH2_ICInitStructure.TIM_Channel = TIM_Channel_2;
-//  TIM3_CH2_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-//  TIM3_CH2_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
-//  TIM3_CH2_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-//  TIM3_CH2_ICInitStructure.TIM_ICFilter = 0;
-//  TIM_ICInit(TIM3, &TIM3_CH2_ICInitStructure);
-//
-//  //Enable TIM2 CC1-4 interrupt
-//  TIM_ITConfig(TIM2, TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3 | TIM_IT_CC4, ENABLE);
-//  //Clear TIM2 CC1-4 Flag
-//  TIM_ClearFlag(TIM2, TIM_FLAG_CC1 | TIM_FLAG_CC2 | TIM_FLAG_CC3 | TIM_FLAG_CC4 );
-//
-//  //Enable TIM3 CC1-2 interrupt
-//  TIM_ITConfig(TIM3, TIM_IT_CC1 | TIM_IT_CC2, ENABLE);
-//  //Clear TIM3 CC1-2 Flag
-//  TIM_ClearFlag(TIM3, TIM_FLAG_CC1 | TIM_FLAG_CC2);
+          /* Get the Input Capture value */
+//          uint32_t aileronInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, PRIMARY_RECEIVER_AILERON_CHANNEL);
+          // UpdateAileronChannel
 #endif
+        }
+      else if(htim->Channel == PRIMARY_RECEIVER_ELEVATOR_ACTIVE_CHANNEL)
+        {
+#ifdef TODO
+          /* Get the Input Capture value */
+//          uint32_t elevatorInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, PRIMARY_RECEIVER_ELEVATOR_CHANNEL);
+          // UpdatedElevatorChannel();
+#endif
+        }
+      else if(htim->Channel == PRIMARY_RECEIVER_RUDDER_ACTIVE_CHANNEL)
+        {
+#ifdef TODO
+          /* Get the Input Capture value */
+//          uint32_t rudderInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, PRIMARY_RECEIVER_RUDDER_CHANNEL);
+          // UpdateRudderChannel();
+#endif
+        }
+    }
+  else if (htim->Instance==AUX_RECEIVER_TIM)
+    {
+      if(htim->Channel == AUX_RECEIVER_GEAR_ACTIVE_CHANNEL)
+        {
+#ifdef TODO
+          /* Get the Input Capture value */
+//          uint32_t gearInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, AUX_RECEIVER_GEAR_CHANNEL);
+          // UpdateGearChannel();
+#endif
+        }
+      else if(htim->Channel == AUX_RECEIVER_AUX1_ACTIVE_CHANNEL)
+        {
+#ifdef TODO
+          /* Get the Input Capture value */
+//          uint32_t aux1InputCaptureValue = HAL_TIM_ReadCapturedValue(htim, AUX_RECEIVER_AUX1_CHANNEL);
+          // UpdateAux1Channel();
+#endif
+        }
+    }
 }
