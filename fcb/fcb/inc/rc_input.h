@@ -22,16 +22,8 @@ typedef enum
 } PWM_State;
 
 /* Exported types ------------------------------------------------------------*/
-typedef struct
-{
-  PWM_State ThrottleInputState;
-  PWM_State AileronInputState;
-  PWM_State ElevatorInputState;
-  PWM_State RudderInputState;
-  PWM_State GearInputState;
-  PWM_State AuxiliaryInputState;
-}PWM_Input_Channel_States_TypeDef;
 
+// TODO Delete this typedef
 typedef struct
 {
   float Throttle;
@@ -105,6 +97,8 @@ typedef struct
 /* Common definitions for the receiver TIM timers ############################*/
 /* Definions for receiver TIM timebase */
 #define RECEIVER_TIM_COUNTER_CLOCK                      2400000
+#define RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT             6000      // Corresponds to 2.5 ms with 2,4Mhz counter clock (Recevier PWM ~1-2 ms pulse)
+#define RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT             2400      // Corresponds to 0.5 ms with 2,4Mhz counter clock (Recevier PWM ~1-2 ms pulse)
 
 /* Exported functions ------------------------------------------------------- */
 void ReceiverInput_Config(void);

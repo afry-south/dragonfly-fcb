@@ -13,28 +13,53 @@
 #include "flight_control.h"
 
 /* Private typedef -----------------------------------------------------------*/
+typedef struct
+{
+  PWM_State ThrottleInputState;
+  PWM_State AileronInputState;
+  PWM_State ElevatorInputState;
+  PWM_State RudderInputState;
+  PWM_State GearInputState;
+  PWM_State AuxiliaryInputState;
+}PWM_Input_Channel_States_TypeDef;
+
+typedef struct
+{
+  uint16_t RisingCount;
+  uint16_t FallingCounter;
+  uint16_t PreviousRisingCount;
+  uint16_t PulseCount;
+  uint16_t PeriodCount;
+}PWM_IC_Values;
+
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef PrimaryReceiverTimHandle;
 TIM_HandleTypeDef AuxReceiverTimHandle;
+TIM_IC_InitTypeDef PrimaryReceiverICConfig;
+TIM_IC_InitTypeDef AuxReceiverICConfig;
 
-uint16_t PWM_IN_DOWN[6] = {0, 0, 0, 0, 0, 0}; 	// Current falling edge (for PWM input 1, 2, 3, 4)
-uint16_t PWM_IN_UP[6] = {0, 0, 0, 0, 0, 0};		// Current rising edge (for PWM input 1, 2, 3, 4)
-uint16_t PWM_IN_UP2[6] = {0, 0, 0, 0, 0, 0};		// Previous rising edge (for PWM input 1, 2, 3, 4)
-uint8_t pulseState[6] = {0, 0, 0, 0, 0, 0};			// 0 = rising, 1 = falling detection (for PWM input 1, 2, 3, 4)
-uint16_t PWM_IN_DutyCycleTicks[6] = {0, 0, 0, 0, 0, 0};	// Number of PWM duty cycle ticks (for PWM input 1, 2, 3, 4)
-uint16_t PWM_IN_PeriodTicks[6] = {0, 0, 0, 0, 0, 0};		// Number of PWM period ticks (for PWM input 1, 2, 3, 4)
+PWM_Input_Channel_States_TypeDef ReceiverInputStates;
+
+PWM_IC_Values ThrottleICValues;
+PWM_IC_Values AileronICValues;
+PWM_IC_Values ElevatorICValues;
+PWM_IC_Values RudderICValues;
+PWM_IC_Values GearICValues;
+PWM_IC_Values Aux1ICValues;
 
 uint16_t PWM_IN_DOWN_PRE_2 = 0;
 uint16_t RCTimeOut = 50;
 uint16_t RCTimeOutCount = 0;
 
+// TODO DELETE LATER
 /* RC input limits in microseconds */
 float RCmin = 1080, RCmid = 1500, RCmax = 1920;
 
 volatile PWMRC_TimeTypeDef PWMTimes;
 PWMRC_TimeTypeDef PWMTimesTemp;
+// END TODO
 
 /* Private function prototypes -----------------------------------------------*/
 static void PrimaryReceiverInput_Config(void);
@@ -62,9 +87,6 @@ void ReceiverInput_Config(void)
  */
 static void PrimaryReceiverInput_Config(void)
 {
-  /* Timer Input Capture Configuration Structure declaration */
-  TIM_IC_InitTypeDef sConfig;
-
   /*##-1- Configure the Primary Receiver TIM peripheral ######################*/
   /* Set TIM instance */
   PrimaryReceiverTimHandle.Instance = PRIMARY_RECEIVER_TIM;
@@ -82,40 +104,40 @@ static void PrimaryReceiverInput_Config(void)
 
   /*##-2- Configure the Input Capture channels ###############################*/
   /* Common configuration */
-  sConfig.ICPrescaler = TIM_ICPSC_DIV1;
-  sConfig.ICFilter = 0;
+  PrimaryReceiverICConfig.ICPrescaler = TIM_ICPSC_DIV1;
+  PrimaryReceiverICConfig.ICFilter = 0;
 
   /* Configure the Input Capture of throttle channel */
-  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
-  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &sConfig, PRIMARY_RECEIVER_THROTTLE_CHANNEL) != HAL_OK)
+  PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  PrimaryReceiverICConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_THROTTLE_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
       Error_Handler();
     }
 
   /* Configure the Input Capture of aileron channel */
-  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
-  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &sConfig, PRIMARY_RECEIVER_AILERON_CHANNEL) != HAL_OK)
+  PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  PrimaryReceiverICConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_AILERON_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
       Error_Handler();
     }
 
   /* Configure the Input Capture of elevator channel */
-  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
-  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &sConfig, PRIMARY_RECEIVER_ELEVATOR_CHANNEL) != HAL_OK)
+  PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  PrimaryReceiverICConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_ELEVATOR_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
       Error_Handler();
     }
 
   /* Configure the Input Capture of rudder channel */
-  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
-  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &sConfig, PRIMARY_RECEIVER_RUDDER_CHANNEL) != HAL_OK)
+  PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  PrimaryReceiverICConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_RUDDER_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
       Error_Handler();
@@ -155,9 +177,6 @@ static void PrimaryReceiverInput_Config(void)
  */
 static void AuxReceiverInput_Config(void)
 {
-  /* Timer Input Capture Configuration Structure declaration */
-  TIM_IC_InitTypeDef sConfig;
-
   /*##-1- Configure the Aux Receiver TIM peripheral ##########################*/
   /* Set TIM instance */
   AuxReceiverTimHandle.Instance = AUX_RECEIVER_TIM;
@@ -175,22 +194,22 @@ static void AuxReceiverInput_Config(void)
 
   /*##-2- Configure the Input Capture channels ###############################*/
   /* Common configuration */
-  sConfig.ICPrescaler = TIM_ICPSC_DIV1;
-  sConfig.ICFilter = 0;
+  AuxReceiverICConfig.ICPrescaler = TIM_ICPSC_DIV1;
+  AuxReceiverICConfig.ICFilter = 0;
 
   /* Configure the Input Capture of throttle channel */
-  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
-  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-  if(HAL_TIM_IC_ConfigChannel(&AuxReceiverTimHandle, &sConfig, AUX_RECEIVER_GEAR_CHANNEL) != HAL_OK)
+  AuxReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  AuxReceiverICConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, AUX_RECEIVER_GEAR_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
       Error_Handler();
     }
 
   /* Configure the Input Capture of aileron channel */
-  sConfig.ICPolarity = TIM_ICPOLARITY_RISING;
-  sConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-  if(HAL_TIM_IC_ConfigChannel(&AuxReceiverTimHandle, &sConfig, AUX_RECEIVER_AUX1_CHANNEL) != HAL_OK)
+  AuxReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING;
+  AuxReceiverICConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  if(HAL_TIM_IC_ConfigChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, AUX_RECEIVER_AUX1_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
       Error_Handler();
@@ -212,43 +231,56 @@ static void AuxReceiverInput_Config(void)
 
 void UpdateThrottleChannel(void)
 {
-#ifdef TODO
-  if (pulseState[0] == 0) // Rising edge
+  /* Detected rising PWM edge */
+  if (ReceiverInputStates.ThrottleInputState == PWM_LOW)
     {
-      TIM2_CH1_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_THROTTLE_CHANNEL);
+      ReceiverInputStates.ThrottleInputState = PWM_HIGH; // Set input state to high
 
-      PWM_IN_UP2[0] = PWM_IN_UP[0];
-      PWM_IN_UP[0] = TIM_GetCapture1(TIM2);
+      PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_FALLING; // Set IC polarity property to falling
 
-      if(PWM_IN_UP[0] >= PWM_IN_UP2[0])
-        PWM_IN_PeriodTicks[0] = PWM_IN_UP[0] - PWM_IN_UP2[0];
+      /* Set the rising timer IC counts */
+      ThrottleICValues.PreviousRisingCount = ThrottleICValues.RisingCount;
+      ThrottleICValues.RisingCount = icValue;
+
+      /* Calculate the period of the 16-bit counter by computing the difference between current and previous rising edge timer counts */
+      if(ThrottleICValues.RisingCount > ThrottleICValues.PreviousRisingCount)
+        ThrottleICValues.PeriodCount = ThrottleICValues.RisingCount - ThrottleICValues.PreviousRisingCount;
       else
-        PWM_IN_PeriodTicks[0] = PWM_IN_UP[0] + 0xFFFF - PWM_IN_UP2[0];
-
-      //printf("Channel 1, Rising edge, Timer ticks = %d \nPeriod ticks = %d", PWM_1_IN_UP, PWM_1_IN_PeriodTicks);
-      GPIO_SetBits(GPIOD, GPIO_Pin_8); //Debugging set GPIOD pin 8 high
+        ThrottleICValues.PeriodCount = ThrottleICValues.RisingCount + 0xFFFF - ThrottleICValues.PreviousRisingCount;
     }
-  else      //Falling edge
+  /* Detected falling PWM edge */
+  else if (ReceiverInputStates.ThrottleInputState == PWM_HIGH)
     {
-      TIM2_CH1_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-      PWM_IN_DOWN[0] = TIM_GetCapture1(TIM2);
+      uint16_t tempPulseCount;
 
-      if (PWM_IN_DOWN[0] >= PWM_IN_UP[0])
-        PWM_IN_DutyCycleTicks[0] = PWM_IN_DOWN[0] - PWM_IN_UP[0];
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_THROTTLE_CHANNEL);
+      ReceiverInputStates.ThrottleInputState = PWM_HIGH; // Set input state to low
+
+      PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING; // Set IC polarity property to rising
+
+      /* Set the falling timer IC count */
+      ThrottleICValues.FallingCounter = icValue;
+
+      /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
+      if (ThrottleICValues.FallingCounter > ThrottleICValues.RisingCount)
+        tempPulseCount = ThrottleICValues.FallingCounter - ThrottleICValues.RisingCount;
       else
-        PWM_IN_DutyCycleTicks[0] = PWM_IN_DOWN[0] + 0xFFFF - PWM_IN_UP[0];
+        tempPulseCount = ThrottleICValues.FallingCounter + 0xFFFF - ThrottleICValues.RisingCount;
 
-      //Sanity check
-      PWMTimesTemp.Throttle = (float)((float)PWM_IN_DutyCycleTicks[0])/((float)PWM_INPUT_SAMPLE_CLOCK);
-      if(PWMTimesTemp.Throttle >= 0.0 && PWMTimesTemp.Throttle <= 0.0025)
-        PWMTimes.Throttle = PWMTimesTemp.Throttle;
-
-      //printf("Channel 1, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_1_IN_DOWN, PWM_1_IN_DutyCycleTicks);
-      GPIO_ResetBits(GPIOD, GPIO_Pin_8); //Debugging set GPIOD pin 8 low
+      /* Sanity check of pulse count before updating it */
+      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        ThrottleICValues.PulseCount = tempPulseCount;
     }
-  pulseState[0] = !pulseState[0];
-  TIM_ICInit(TIM2, &TIM2_CH1_ICInitStructure);      // Reverse polarity
-#endif
+
+  /* Toggle the IC Polarity */
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_THROTTLE_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
 }
 
 void UpdateAileronChannel(void)
@@ -515,13 +547,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
   if (htim->Instance==PRIMARY_RECEIVER_TIM)
     {
       if(htim->Channel == PRIMARY_RECEIVER_THROTTLE_ACTIVE_CHANNEL)
-        {
-#ifdef TODO
-          /* Get the Input Capture value */
-//          uint32_t throttleInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, PRIMARY_RECEIVER_THROTTLE_CHANNEL);
-          // UpdateThrottleChannel();
-#endif
-        }
+          UpdateThrottleChannel();
       else if(htim->Channel == PRIMARY_RECEIVER_AILERON_ACTIVE_CHANNEL)
         {
 #ifdef TODO
