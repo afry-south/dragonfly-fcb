@@ -95,10 +95,16 @@ typedef struct
 #define AUX_RECEIVER_AUX1_ACTIVE_CHANNEL                HAL_TIM_ACTIVE_CHANNEL_2
 
 /* Common definitions for the receiver TIM timers ############################*/
-/* Definions for receiver TIM timebase */
+/* Defintions for receiver TIM timebase */
 #define RECEIVER_TIM_COUNTER_CLOCK                      2400000
-#define RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT             6000      // Corresponds to 2.5 ms with 2,4Mhz counter clock (Recevier PWM ~1-2 ms pulse)
-#define RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT             2400      // Corresponds to 0.5 ms with 2,4Mhz counter clock (Recevier PWM ~1-2 ms pulse)
+
+/* RC min max default count values */
+#define RECEIVER_DEFAULT_MAX_COUNT                      4608    // Corresponds to 1.92 ms with 2,4Mhz counter clock
+#define RECEIVER_DEFAULT_MIN_COUNT                      2592    // Corresponds to 1.08 ms with 2,4Mhz counter clock
+
+/* Used for sanity check of IC count*/
+#define RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT             6000    // Corresponds to 2.50 ms with 2,4Mhz counter clock
+#define RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT             1200    // Corresponds to 0.50 ms with 2,4Mhz counter clock
 
 /* Exported functions ------------------------------------------------------- */
 void ReceiverInput_Config(void);

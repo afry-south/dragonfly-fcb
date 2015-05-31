@@ -20,7 +20,7 @@ typedef struct
   PWM_State ElevatorInputState;
   PWM_State RudderInputState;
   PWM_State GearInputState;
-  PWM_State AuxiliaryInputState;
+  PWM_State Aux1InputState;
 }PWM_Input_Channel_States_TypeDef;
 
 typedef struct
@@ -37,17 +37,17 @@ typedef struct
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef PrimaryReceiverTimHandle;
 TIM_HandleTypeDef AuxReceiverTimHandle;
-TIM_IC_InitTypeDef PrimaryReceiverICConfig;
-TIM_IC_InitTypeDef AuxReceiverICConfig;
+static TIM_IC_InitTypeDef PrimaryReceiverICConfig;
+static TIM_IC_InitTypeDef AuxReceiverICConfig;
 
-PWM_Input_Channel_States_TypeDef ReceiverInputStates;
+static PWM_Input_Channel_States_TypeDef ReceiverInputStates;
 
-PWM_IC_Values ThrottleICValues;
-PWM_IC_Values AileronICValues;
-PWM_IC_Values ElevatorICValues;
-PWM_IC_Values RudderICValues;
-PWM_IC_Values GearICValues;
-PWM_IC_Values Aux1ICValues;
+static PWM_IC_Values ThrottleICValues;
+static PWM_IC_Values AileronICValues;
+static PWM_IC_Values ElevatorICValues;
+static PWM_IC_Values RudderICValues;
+static PWM_IC_Values GearICValues;
+static PWM_IC_Values Aux1ICValues;
 
 uint16_t PWM_IN_DOWN_PRE_2 = 0;
 uint16_t RCTimeOut = 50;
@@ -55,7 +55,7 @@ uint16_t RCTimeOutCount = 0;
 
 // TODO DELETE LATER
 /* RC input limits in microseconds */
-float RCmin = 1080, RCmid = 1500, RCmax = 1920;
+float RCmin = RECEIVER_DEFAULT_MIN_COUNT, RCmax = RECEIVER_DEFAULT_MAX_COUNT;
 
 volatile PWMRC_TimeTypeDef PWMTimes;
 PWMRC_TimeTypeDef PWMTimesTemp;
@@ -257,7 +257,7 @@ void UpdateThrottleChannel(void)
 
       /* Get the Input Capture value */
       uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_THROTTLE_CHANNEL);
-      ReceiverInputStates.ThrottleInputState = PWM_HIGH; // Set input state to low
+      ReceiverInputStates.ThrottleInputState = PWM_LOW; // Set input state to low
 
       PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING; // Set IC polarity property to rising
 
@@ -285,186 +285,272 @@ void UpdateThrottleChannel(void)
 
 void UpdateAileronChannel(void)
 {
-#ifdef TODO
-  if (pulseState[1] == 0) // Rising edge
+  /* Detected rising PWM edge */
+  if (ReceiverInputStates.AileronInputState == PWM_LOW)
     {
-      TIM2_CH2_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
-      PWM_IN_UP2[1] = PWM_IN_UP[1];
-      PWM_IN_UP[1] = TIM_GetCapture2(TIM2);
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_AILERON_CHANNEL);
+      ReceiverInputStates.AileronInputState = PWM_HIGH; // Set input state to high
 
-      if(PWM_IN_UP[1] >= PWM_IN_UP2[1])
-        PWM_IN_PeriodTicks[1] = PWM_IN_UP[1] - PWM_IN_UP2[1];
+      PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_FALLING; // Set IC polarity property to falling
+
+      /* Set the rising timer IC counts */
+      AileronICValues.PreviousRisingCount = AileronICValues.RisingCount;
+      AileronICValues.RisingCount = icValue;
+
+      /* Calculate the period of the 16-bit counter by computing the difference between current and previous rising edge timer counts */
+      if(AileronICValues.RisingCount > AileronICValues.PreviousRisingCount)
+        AileronICValues.PeriodCount = AileronICValues.RisingCount - AileronICValues.PreviousRisingCount;
       else
-        PWM_IN_PeriodTicks[1] = PWM_IN_UP[1] + 0xFFFF - PWM_IN_UP2[1];
-
-      //printf("Channel 2, Rising edge, Timer ticks = %d\nPeriod ticks = %d", PWM_2_IN_UP, PWM_2_IN_PeriodTicks);
-      GPIO_SetBits(GPIOD, GPIO_Pin_9); //Debugging set GPIOD pin 9 high
+        AileronICValues.PeriodCount = AileronICValues.RisingCount + 0xFFFF - AileronICValues.PreviousRisingCount;
     }
-  else      //Falling edge
+  /* Detected falling PWM edge */
+  else if (ReceiverInputStates.AileronInputState == PWM_HIGH)
     {
-      TIM2_CH2_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-      PWM_IN_DOWN[1] = TIM_GetCapture2(TIM2);
+      uint16_t tempPulseCount;
 
-      if (PWM_IN_DOWN[1] >= PWM_IN_UP[1])
-        PWM_IN_DutyCycleTicks[1] = PWM_IN_DOWN[1] - PWM_IN_UP[1];
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_AILERON_CHANNEL);
+      ReceiverInputStates.AileronInputState = PWM_LOW; // Set input state to low
+
+      PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING; // Set IC polarity property to rising
+
+      /* Set the falling timer IC count */
+      AileronICValues.FallingCounter = icValue;
+
+      /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
+      if (AileronICValues.FallingCounter > AileronICValues.RisingCount)
+        tempPulseCount = AileronICValues.FallingCounter - AileronICValues.RisingCount;
       else
-        PWM_IN_DutyCycleTicks[1] = PWM_IN_DOWN[1] + 0xFFFF - PWM_IN_UP[1];
+        tempPulseCount = AileronICValues.FallingCounter + 0xFFFF - AileronICValues.RisingCount;
 
-      //Sanity check
-      PWMTimesTemp.Aileron = (float)((float)PWM_IN_DutyCycleTicks[1])/((float)PWM_INPUT_SAMPLE_CLOCK);
-      if(PWMTimesTemp.Aileron >= 0.0 && PWMTimesTemp.Aileron <= 0.0025)
-        PWMTimes.Aileron = PWMTimesTemp.Aileron;
-
-      //printf("Channel 2, Falling edge, Timer ticks = %d \nDuty cycle ticks = %d", PWM_2_IN_DOWN, PWM_2_IN_DutyCycleTicks);
-      GPIO_ResetBits(GPIOD, GPIO_Pin_9); //Debugging set GPIOD pin 9 low
+      /* Sanity check of pulse count before updating it */
+      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        AileronICValues.PulseCount = tempPulseCount;
     }
-  pulseState[1] = !pulseState[1];
-  TIM_ICInit(TIM2, &TIM2_CH2_ICInitStructure);      // Reverse polarity
-#endif
+
+  /* Toggle the IC Polarity */
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_AILERON_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
 }
 
 void UpdateElevatorChannel(void)
 {
-#ifdef TODO
-  if (pulseState[2] == 0) // Rising edge
+  /* Detected rising PWM edge */
+  if (ReceiverInputStates.ElevatorInputState == PWM_LOW)
     {
-      TIM2_CH3_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
-      PWM_IN_UP2[2] = PWM_IN_UP[2];
-      PWM_IN_UP[2] = TIM_GetCapture3(TIM2);
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_ELEVATOR_CHANNEL);
+      ReceiverInputStates.ElevatorInputState = PWM_HIGH; // Set input state to high
 
-      if(PWM_IN_UP[2] >= PWM_IN_UP2[2])
-        PWM_IN_PeriodTicks[2] = PWM_IN_UP[2] - PWM_IN_UP2[2];
+      PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_FALLING; // Set IC polarity property to falling
+
+      /* Set the rising timer IC counts */
+      ElevatorICValues.PreviousRisingCount = ElevatorICValues.RisingCount;
+      ElevatorICValues.RisingCount = icValue;
+
+      /* Calculate the period of the 16-bit counter by computing the difference between current and previous rising edge timer counts */
+      if(ElevatorICValues.RisingCount > ElevatorICValues.PreviousRisingCount)
+        ElevatorICValues.PeriodCount = ElevatorICValues.RisingCount - ElevatorICValues.PreviousRisingCount;
       else
-        PWM_IN_PeriodTicks[2] = PWM_IN_UP[2] + 0xFFFF - PWM_IN_UP2[2];
+        ElevatorICValues.PeriodCount = ElevatorICValues.RisingCount + 0xFFFF - ElevatorICValues.PreviousRisingCount;
     }
-  else      //Falling edge
+  /* Detected falling PWM edge */
+  else if (ReceiverInputStates.ElevatorInputState == PWM_HIGH)
     {
-      TIM2_CH3_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-      PWM_IN_DOWN[2] = TIM_GetCapture3(TIM2);
+      uint16_t tempPulseCount;
 
-      if (PWM_IN_DOWN[2] >= PWM_IN_UP[2])
-        PWM_IN_DutyCycleTicks[2] = PWM_IN_DOWN[2] - PWM_IN_UP[2];
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_ELEVATOR_CHANNEL);
+      ReceiverInputStates.ElevatorInputState = PWM_LOW; // Set input state to low
+
+      PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING; // Set IC polarity property to rising
+
+      /* Set the falling timer IC count */
+      ElevatorICValues.FallingCounter = icValue;
+
+      /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
+      if (ElevatorICValues.FallingCounter > ElevatorICValues.RisingCount)
+        tempPulseCount = ElevatorICValues.FallingCounter - ElevatorICValues.RisingCount;
       else
-        PWM_IN_DutyCycleTicks[2] = PWM_IN_DOWN[2] + 0xFFFF - PWM_IN_UP[2];
+        tempPulseCount = ElevatorICValues.FallingCounter + 0xFFFF - ElevatorICValues.RisingCount;
 
-      //Sanity check
-      PWMTimesTemp.Elevator = (float)((float)PWM_IN_DutyCycleTicks[2])/((float)PWM_INPUT_SAMPLE_CLOCK);
-      if(PWMTimesTemp.Elevator >= 0.0 && PWMTimesTemp.Elevator <= 0.0025)
-        PWMTimes.Elevator = PWMTimesTemp.Elevator;
+      /* Sanity check of pulse count before updating it */
+      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        ElevatorICValues.PulseCount = tempPulseCount;
     }
-  pulseState[2] = !pulseState[2];
-  TIM_ICInit(TIM2, &TIM2_CH3_ICInitStructure); // Reverse polarity
-#endif
+
+  /* Toggle the IC Polarity */
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_ELEVATOR_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
 }
 
 void UpdateRudderChannel(void)
 {
-#ifdef TODO
-  if (pulseState[3] == 0) // Rising edge
+  /* Detected rising PWM edge */
+  if (ReceiverInputStates.RudderInputState == PWM_LOW)
     {
-      TIM2_CH4_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
-      PWM_IN_UP2[3] = PWM_IN_UP[3];
-      PWM_IN_UP[3] = TIM_GetCapture4(TIM2);
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_RUDDER_CHANNEL);
+      ReceiverInputStates.RudderInputState = PWM_HIGH; // Set input state to high
 
-      if(PWM_IN_UP[3] >= PWM_IN_UP2[3])
-        PWM_IN_PeriodTicks[3] = PWM_IN_UP[3] - PWM_IN_UP2[3];
+      PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_FALLING; // Set IC polarity property to falling
+
+      /* Set the rising timer IC counts */
+      RudderICValues.PreviousRisingCount = RudderICValues.RisingCount;
+      RudderICValues.RisingCount = icValue;
+
+      /* Calculate the period of the 16-bit counter by computing the difference between current and previous rising edge timer counts */
+      if(RudderICValues.RisingCount > RudderICValues.PreviousRisingCount)
+        RudderICValues.PeriodCount = RudderICValues.RisingCount - RudderICValues.PreviousRisingCount;
       else
-        PWM_IN_PeriodTicks[3] = PWM_IN_UP[3] + 0xFFFF - PWM_IN_UP2[3];
+        RudderICValues.PeriodCount = RudderICValues.RisingCount + 0xFFFF - RudderICValues.PreviousRisingCount;
     }
-  else      //Falling edge
+  /* Detected falling PWM edge */
+  else if (ReceiverInputStates.RudderInputState == PWM_HIGH)
     {
-      TIM2_CH4_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-      PWM_IN_DOWN[3] = TIM_GetCapture4(TIM2);
+      uint16_t tempPulseCount;
 
-      if (PWM_IN_DOWN[3] >= PWM_IN_UP[3])
-        PWM_IN_DutyCycleTicks[3] = PWM_IN_DOWN[3] - PWM_IN_UP[3];
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_RUDDER_CHANNEL);
+      ReceiverInputStates.RudderInputState = PWM_LOW; // Set input state to low
+
+      PrimaryReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING; // Set IC polarity property to rising
+
+      /* Set the falling timer IC count */
+      RudderICValues.FallingCounter = icValue;
+
+      /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
+      if (RudderICValues.FallingCounter > RudderICValues.RisingCount)
+        tempPulseCount = RudderICValues.FallingCounter - RudderICValues.RisingCount;
       else
-        PWM_IN_DutyCycleTicks[3] = PWM_IN_DOWN[3] + 0xFFFF - PWM_IN_UP[3];
+        tempPulseCount = RudderICValues.FallingCounter + 0xFFFF - RudderICValues.RisingCount;
 
-      //Sanity check
-      PWMTimesTemp.Rudder = (float)((float)PWM_IN_DutyCycleTicks[3])/((float)PWM_INPUT_SAMPLE_CLOCK);
-      if(PWMTimesTemp.Rudder >= 0.0 && PWMTimesTemp.Rudder <= 0.0025)
-        PWMTimes.Rudder = PWMTimesTemp.Rudder;
+      /* Sanity check of pulse count before updating it */
+      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        RudderICValues.PulseCount = tempPulseCount;
     }
-  pulseState[3] = !pulseState[3];
-  TIM_ICInit(TIM2, &TIM2_CH4_ICInitStructure);      // Reverse polarity
-#endif
+
+  /* Toggle the IC Polarity */
+  if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_RUDDER_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
 }
 
 void UpdateGearChannel(void)
 {
-#ifdef TODO
-  if (pulseState[4] == 0) // Rising edge
+  /* Detected rising PWM edge */
+  if (ReceiverInputStates.GearInputState == PWM_LOW)
     {
-      TIM3_CH1_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
-      PWM_IN_UP2[4] = PWM_IN_UP[4];
-      PWM_IN_UP[4] = TIM_GetCapture1(TIM3);
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&AuxReceiverTimHandle, AUX_RECEIVER_GEAR_CHANNEL);
+      ReceiverInputStates.GearInputState = PWM_HIGH; // Set input state to high
 
-      if(PWM_IN_UP[4] >= PWM_IN_UP2[4])
-        PWM_IN_PeriodTicks[4] = PWM_IN_UP[4] - PWM_IN_UP2[4];
+      AuxReceiverICConfig.ICPolarity = TIM_ICPOLARITY_FALLING; // Set IC polarity property to falling
+
+      /* Set the rising timer IC counts */
+      GearICValues.PreviousRisingCount = GearICValues.RisingCount;
+      GearICValues.RisingCount = icValue;
+
+      /* Calculate the period of the 16-bit counter by computing the difference between current and previous rising edge timer counts */
+      if(GearICValues.RisingCount > GearICValues.PreviousRisingCount)
+        GearICValues.PeriodCount = GearICValues.RisingCount - GearICValues.PreviousRisingCount;
       else
-        PWM_IN_PeriodTicks[4] = PWM_IN_UP[4] + 0xFFFF - PWM_IN_UP2[4];
-
-      GPIO_SetBits(GPIOD, GPIO_Pin_10); //Debugging set GPIOD pin 10 high
+        GearICValues.PeriodCount = GearICValues.RisingCount + 0xFFFF - GearICValues.PreviousRisingCount;
     }
-  else      //Falling edge
+  /* Detected falling PWM edge */
+  else if (ReceiverInputStates.GearInputState == PWM_HIGH)
     {
-      TIM3_CH1_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-      PWM_IN_DOWN[4] = TIM_GetCapture1(TIM3);
+      uint16_t tempPulseCount;
 
-      if (PWM_IN_DOWN[4] >= PWM_IN_UP[4])
-        PWM_IN_DutyCycleTicks[4] = PWM_IN_DOWN[4] - PWM_IN_UP[4];
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&AuxReceiverTimHandle, AUX_RECEIVER_GEAR_CHANNEL);
+      ReceiverInputStates.GearInputState = PWM_LOW; // Set input state to low
+
+      AuxReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING; // Set IC polarity property to rising
+
+      /* Set the falling timer IC count */
+      GearICValues.FallingCounter = icValue;
+
+      /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
+      if (GearICValues.FallingCounter > GearICValues.RisingCount)
+        tempPulseCount = GearICValues.FallingCounter - GearICValues.RisingCount;
       else
-        PWM_IN_DutyCycleTicks[4] = PWM_IN_DOWN[4] + 0xFFFF - PWM_IN_UP[4];
+        tempPulseCount = GearICValues.FallingCounter + 0xFFFF - GearICValues.RisingCount;
 
-      //Sanity check
-      PWMTimesTemp.Gear = (float)((float)PWM_IN_DutyCycleTicks[4])/((float)PWM_INPUT_SAMPLE_CLOCK);
-      if(PWMTimesTemp.Gear >= 0.0 && PWMTimesTemp.Gear <= 0.0025)
-        PWMTimes.Gear = PWMTimesTemp.Gear;
-
-      GPIO_ResetBits(GPIOD, GPIO_Pin_10); //Debugging set GPIOD pin 10 low
+      /* Sanity check of pulse count before updating it */
+      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        GearICValues.PulseCount = tempPulseCount;
     }
-  pulseState[4] = !pulseState[4];
-  TIM_ICInit(TIM3, &TIM3_CH1_ICInitStructure);      // Reverse polarity
-#endif
+
+  /* Toggle the IC Polarity */
+  if(HAL_TIM_IC_ConfigChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, AUX_RECEIVER_GEAR_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
 }
 
 void UpdateAuxiliaryChannel(void)
 {
-#ifdef TODO
-  if (pulseState[5] == 0) // Rising edge
+  /* Detected rising PWM edge */
+  if (ReceiverInputStates.Aux1InputState == PWM_LOW)
     {
-      TIM3_CH2_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Falling;
-      PWM_IN_UP2[5] = PWM_IN_UP[5];
-      PWM_IN_UP[5] = TIM_GetCapture2(TIM3);
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&AuxReceiverTimHandle, AUX_RECEIVER_AUX1_CHANNEL);
+      ReceiverInputStates.Aux1InputState = PWM_HIGH; // Set input state to high
 
-      if(PWM_IN_UP[5] >= PWM_IN_UP2[5])
-        PWM_IN_PeriodTicks[5] = PWM_IN_UP[5] - PWM_IN_UP2[5];
+      AuxReceiverICConfig.ICPolarity = TIM_ICPOLARITY_FALLING; // Set IC polarity property to falling
+
+      /* Set the rising timer IC counts */
+      Aux1ICValues.PreviousRisingCount = Aux1ICValues.RisingCount;
+      Aux1ICValues.RisingCount = icValue;
+
+      /* Calculate the period of the 16-bit counter by computing the difference between current and previous rising edge timer counts */
+      if(Aux1ICValues.RisingCount > Aux1ICValues.PreviousRisingCount)
+        Aux1ICValues.PeriodCount = Aux1ICValues.RisingCount - Aux1ICValues.PreviousRisingCount;
       else
-        PWM_IN_PeriodTicks[5] = PWM_IN_UP[5] + 0xFFFF - PWM_IN_UP2[5];
-
-      GPIO_SetBits(GPIOD, GPIO_Pin_11); //Debugging set GPIOD pin 11 high
+        Aux1ICValues.PeriodCount = Aux1ICValues.RisingCount + 0xFFFF - Aux1ICValues.PreviousRisingCount;
     }
-  else      //Falling edge
+  /* Detected falling PWM edge */
+  else if (ReceiverInputStates.Aux1InputState == PWM_HIGH)
     {
-      TIM3_CH2_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
-      PWM_IN_DOWN[5] = TIM_GetCapture2(TIM3);
+      uint16_t tempPulseCount;
 
-      if (PWM_IN_DOWN[5] >= PWM_IN_UP[5])
-        PWM_IN_DutyCycleTicks[5] = PWM_IN_DOWN[5] - PWM_IN_UP[5];
+      /* Get the Input Capture value */
+      uint32_t icValue = HAL_TIM_ReadCapturedValue(&AuxReceiverTimHandle, AUX_RECEIVER_AUX1_CHANNEL);
+      ReceiverInputStates.Aux1InputState = PWM_LOW; // Set input state to low
+
+      AuxReceiverICConfig.ICPolarity = TIM_ICPOLARITY_RISING; // Set IC polarity property to rising
+
+      /* Set the falling timer IC count */
+      Aux1ICValues.FallingCounter = icValue;
+
+      /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
+      if (Aux1ICValues.FallingCounter > Aux1ICValues.RisingCount)
+        tempPulseCount = Aux1ICValues.FallingCounter - Aux1ICValues.RisingCount;
       else
-        PWM_IN_DutyCycleTicks[5] = PWM_IN_DOWN[5] + 0xFFFF - PWM_IN_UP[5];
+        tempPulseCount = Aux1ICValues.FallingCounter + 0xFFFF - Aux1ICValues.RisingCount;
 
-      //Sanity check
-      PWMTimesTemp.Auxiliary = (float)((float)PWM_IN_DutyCycleTicks[5])/((float)PWM_INPUT_SAMPLE_CLOCK);
-      if(PWMTimesTemp.Auxiliary >= 0.0 && PWMTimesTemp.Auxiliary <= 0.0025)
-        PWMTimes.Auxiliary = PWMTimesTemp.Auxiliary;
-
-      GPIO_ResetBits(GPIOD, GPIO_Pin_11); //Debugging set GPIOD pin 11 low
+      /* Sanity check of pulse count before updating it */
+      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        Aux1ICValues.PulseCount = tempPulseCount;
     }
-  pulseState[5] = !pulseState[5];
-  TIM_ICInit(TIM3, &TIM3_CH2_ICInitStructure);      // Reverse polarity
-#endif
+
+  /* Toggle the IC Polarity */
+  if(HAL_TIM_IC_ConfigChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, AUX_RECEIVER_AUX1_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
 }
 
 /* @CheckRCConnection
