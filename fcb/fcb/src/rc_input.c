@@ -612,7 +612,7 @@ float GetRCmin(void)
  */
 float GetRCmid(void)
 {
-  return RCmid;
+  return RCmin + (RCmax-RCmin)/2;
 }
 
 /* @GetRCmax
