@@ -28,9 +28,15 @@ typedef struct
   uint16_t RisingCount;
   uint16_t FallingCounter;
   uint16_t PreviousRisingCount;
-  uint16_t PulseCount;
+  uint16_t PulseTimerCount;
   uint16_t PeriodCount;
-}PWM_IC_Values;
+}PWM_IC_Values_TypeDef;
+
+typedef struct
+{
+  uint16_t ChannelMaxCount;
+  uint16_t ChannelMinCount;
+}PWM_IC_CalibrationValues_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -40,30 +46,33 @@ TIM_HandleTypeDef AuxReceiverTimHandle;
 static TIM_IC_InitTypeDef PrimaryReceiverICConfig;
 static TIM_IC_InitTypeDef AuxReceiverICConfig;
 
+/* Struct contaning HIGH/LOW state for each input channel pulse */
 static PWM_Input_Channel_States_TypeDef ReceiverInputStates;
 
-static PWM_IC_Values ThrottleICValues;
-static PWM_IC_Values AileronICValues;
-static PWM_IC_Values ElevatorICValues;
-static PWM_IC_Values RudderICValues;
-static PWM_IC_Values GearICValues;
-static PWM_IC_Values Aux1ICValues;
+/* Structs for each channel's count values */
+static PWM_IC_Values_TypeDef ThrottleICValues;
+static PWM_IC_Values_TypeDef AileronICValues;
+static PWM_IC_Values_TypeDef ElevatorICValues;
+static PWM_IC_Values_TypeDef RudderICValues;
+static PWM_IC_Values_TypeDef GearICValues;
+static PWM_IC_Values_TypeDef Aux1ICValues;
 
-uint16_t PWM_IN_DOWN_PRE_2 = 0;
-uint16_t RCTimeOut = 50;
-uint16_t RCTimeOutCount = 0;
-
-// TODO DELETE LATER
-/* RC input limits in microseconds */
-float RCmin = RECEIVER_DEFAULT_MIN_COUNT, RCmax = RECEIVER_DEFAULT_MAX_COUNT;
-
-volatile PWMRC_TimeTypeDef PWMTimes;
-PWMRC_TimeTypeDef PWMTimesTemp;
-// END TODO
+static PWM_IC_CalibrationValues_TypeDef ThrottleCalibrationValues;
+static PWM_IC_CalibrationValues_TypeDef AileronCalibrationValues;
+static PWM_IC_CalibrationValues_TypeDef ElevatorCalibrationValues;
+static PWM_IC_CalibrationValues_TypeDef RudderCalibrationValues;
+static PWM_IC_CalibrationValues_TypeDef GearCalibrationValues;
+static PWM_IC_CalibrationValues_TypeDef Aux1CalibrationValues;
 
 /* Private function prototypes -----------------------------------------------*/
 static void PrimaryReceiverInput_Config(void);
 static void AuxReceiverInput_Config(void);
+static void UpdateThrottleChannel(void);
+static void UpdateAileronChannel(void);
+static void UpdateElevatorChannel(void);
+static void UpdateRudderChannel(void);
+static void UpdateGearChannel(void);
+static void UpdateAux1Channel(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -74,6 +83,20 @@ static void AuxReceiverInput_Config(void);
  */
 void ReceiverInput_Config(void)
 {
+  // TODO: Get these from persistent memory (last stored calibration)
+  ThrottleCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
+  ThrottleCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+  AileronCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
+  AileronCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+  ElevatorCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
+  ElevatorCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+  RudderCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
+  RudderCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+  GearCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
+  GearCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+  Aux1CalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
+  Aux1CalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+
   PrimaryReceiverInput_Config();
   AuxReceiverInput_Config();
 }
@@ -229,7 +252,13 @@ static void AuxReceiverInput_Config(void)
     }
 }
 
-void UpdateThrottleChannel(void)
+/*
+ * @brief	Handles the RC input pulse measurements from the throttle channel
+ * 			and updates pulse and frequency values.
+ * @param 	None.
+ * @retval      None.
+ */
+static void UpdateThrottleChannel(void)
 {
   /* Detected rising PWM edge */
   if (ReceiverInputStates.ThrottleInputState == PWM_LOW)
@@ -253,7 +282,7 @@ void UpdateThrottleChannel(void)
   /* Detected falling PWM edge */
   else if (ReceiverInputStates.ThrottleInputState == PWM_HIGH)
     {
-      uint16_t tempPulseCount;
+      uint32_t tempPulseTimerCount;
 
       /* Get the Input Capture value */
       uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_THROTTLE_CHANNEL);
@@ -266,13 +295,13 @@ void UpdateThrottleChannel(void)
 
       /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
       if (ThrottleICValues.FallingCounter > ThrottleICValues.RisingCount)
-        tempPulseCount = ThrottleICValues.FallingCounter - ThrottleICValues.RisingCount;
+        tempPulseTimerCount = ThrottleICValues.FallingCounter - ThrottleICValues.RisingCount;
       else
-        tempPulseCount = ThrottleICValues.FallingCounter + 0xFFFF - ThrottleICValues.RisingCount;
+        tempPulseTimerCount = ThrottleICValues.FallingCounter + 0xFFFF - ThrottleICValues.RisingCount;
 
       /* Sanity check of pulse count before updating it */
-      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
-        ThrottleICValues.PulseCount = tempPulseCount;
+      if(tempPulseTimerCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseTimerCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        ThrottleICValues.PulseTimerCount = tempPulseTimerCount;
     }
 
   /* Toggle the IC Polarity */
@@ -283,7 +312,13 @@ void UpdateThrottleChannel(void)
     }
 }
 
-void UpdateAileronChannel(void)
+/*
+ * @brief       Handles the RC input pulse measurements from the aileron channel
+ *              and updates pulse and frequency values.
+ * @param       None.
+ * @retval      None.
+ */
+static void UpdateAileronChannel(void)
 {
   /* Detected rising PWM edge */
   if (ReceiverInputStates.AileronInputState == PWM_LOW)
@@ -307,7 +342,7 @@ void UpdateAileronChannel(void)
   /* Detected falling PWM edge */
   else if (ReceiverInputStates.AileronInputState == PWM_HIGH)
     {
-      uint16_t tempPulseCount;
+      uint32_t tempPulseTimerCount;
 
       /* Get the Input Capture value */
       uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_AILERON_CHANNEL);
@@ -320,13 +355,13 @@ void UpdateAileronChannel(void)
 
       /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
       if (AileronICValues.FallingCounter > AileronICValues.RisingCount)
-        tempPulseCount = AileronICValues.FallingCounter - AileronICValues.RisingCount;
+        tempPulseTimerCount = AileronICValues.FallingCounter - AileronICValues.RisingCount;
       else
-        tempPulseCount = AileronICValues.FallingCounter + 0xFFFF - AileronICValues.RisingCount;
+        tempPulseTimerCount = AileronICValues.FallingCounter + 0xFFFF - AileronICValues.RisingCount;
 
       /* Sanity check of pulse count before updating it */
-      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
-        AileronICValues.PulseCount = tempPulseCount;
+      if(tempPulseTimerCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseTimerCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        AileronICValues.PulseTimerCount = tempPulseTimerCount;
     }
 
   /* Toggle the IC Polarity */
@@ -337,7 +372,13 @@ void UpdateAileronChannel(void)
     }
 }
 
-void UpdateElevatorChannel(void)
+/*
+ * @brief       Handles the RC input pulse measurements from the elevator channel
+ *              and updates pulse and frequency values.
+ * @param       None.
+ * @retval      None.
+ */
+static void UpdateElevatorChannel(void)
 {
   /* Detected rising PWM edge */
   if (ReceiverInputStates.ElevatorInputState == PWM_LOW)
@@ -361,7 +402,7 @@ void UpdateElevatorChannel(void)
   /* Detected falling PWM edge */
   else if (ReceiverInputStates.ElevatorInputState == PWM_HIGH)
     {
-      uint16_t tempPulseCount;
+      uint32_t tempPulseTimerCount;
 
       /* Get the Input Capture value */
       uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_ELEVATOR_CHANNEL);
@@ -374,13 +415,13 @@ void UpdateElevatorChannel(void)
 
       /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
       if (ElevatorICValues.FallingCounter > ElevatorICValues.RisingCount)
-        tempPulseCount = ElevatorICValues.FallingCounter - ElevatorICValues.RisingCount;
+        tempPulseTimerCount = ElevatorICValues.FallingCounter - ElevatorICValues.RisingCount;
       else
-        tempPulseCount = ElevatorICValues.FallingCounter + 0xFFFF - ElevatorICValues.RisingCount;
+        tempPulseTimerCount = ElevatorICValues.FallingCounter + 0xFFFF - ElevatorICValues.RisingCount;
 
       /* Sanity check of pulse count before updating it */
-      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
-        ElevatorICValues.PulseCount = tempPulseCount;
+      if(tempPulseTimerCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseTimerCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        ElevatorICValues.PulseTimerCount = tempPulseTimerCount;
     }
 
   /* Toggle the IC Polarity */
@@ -391,7 +432,13 @@ void UpdateElevatorChannel(void)
     }
 }
 
-void UpdateRudderChannel(void)
+/*
+ * @brief       Handles the RC input pulse measurements from the rudder channel
+ *                      and updates pulse and frequency values.
+ * @param       None.
+ * @retval      None.
+ */
+static void UpdateRudderChannel(void)
 {
   /* Detected rising PWM edge */
   if (ReceiverInputStates.RudderInputState == PWM_LOW)
@@ -415,7 +462,7 @@ void UpdateRudderChannel(void)
   /* Detected falling PWM edge */
   else if (ReceiverInputStates.RudderInputState == PWM_HIGH)
     {
-      uint16_t tempPulseCount;
+      uint32_t tempPulseTimerCount;
 
       /* Get the Input Capture value */
       uint32_t icValue = HAL_TIM_ReadCapturedValue(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_RUDDER_CHANNEL);
@@ -428,13 +475,13 @@ void UpdateRudderChannel(void)
 
       /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
       if (RudderICValues.FallingCounter > RudderICValues.RisingCount)
-        tempPulseCount = RudderICValues.FallingCounter - RudderICValues.RisingCount;
+        tempPulseTimerCount = RudderICValues.FallingCounter - RudderICValues.RisingCount;
       else
-        tempPulseCount = RudderICValues.FallingCounter + 0xFFFF - RudderICValues.RisingCount;
+        tempPulseTimerCount = RudderICValues.FallingCounter + 0xFFFF - RudderICValues.RisingCount;
 
       /* Sanity check of pulse count before updating it */
-      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
-        RudderICValues.PulseCount = tempPulseCount;
+      if(tempPulseTimerCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseTimerCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        RudderICValues.PulseTimerCount = tempPulseTimerCount;
     }
 
   /* Toggle the IC Polarity */
@@ -445,7 +492,13 @@ void UpdateRudderChannel(void)
     }
 }
 
-void UpdateGearChannel(void)
+/*
+ * @brief       Handles the RC input pulse measurements from the gear channel
+ *                      and updates pulse and frequency values.
+ * @param       None.
+ * @retval      None.
+ */
+static void UpdateGearChannel(void)
 {
   /* Detected rising PWM edge */
   if (ReceiverInputStates.GearInputState == PWM_LOW)
@@ -469,7 +522,7 @@ void UpdateGearChannel(void)
   /* Detected falling PWM edge */
   else if (ReceiverInputStates.GearInputState == PWM_HIGH)
     {
-      uint16_t tempPulseCount;
+      uint32_t tempPulseTimerCount;
 
       /* Get the Input Capture value */
       uint32_t icValue = HAL_TIM_ReadCapturedValue(&AuxReceiverTimHandle, AUX_RECEIVER_GEAR_CHANNEL);
@@ -482,13 +535,13 @@ void UpdateGearChannel(void)
 
       /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
       if (GearICValues.FallingCounter > GearICValues.RisingCount)
-        tempPulseCount = GearICValues.FallingCounter - GearICValues.RisingCount;
+        tempPulseTimerCount = GearICValues.FallingCounter - GearICValues.RisingCount;
       else
-        tempPulseCount = GearICValues.FallingCounter + 0xFFFF - GearICValues.RisingCount;
+        tempPulseTimerCount = GearICValues.FallingCounter + 0xFFFF - GearICValues.RisingCount;
 
       /* Sanity check of pulse count before updating it */
-      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
-        GearICValues.PulseCount = tempPulseCount;
+      if(tempPulseTimerCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseTimerCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        GearICValues.PulseTimerCount = tempPulseTimerCount;
     }
 
   /* Toggle the IC Polarity */
@@ -499,7 +552,13 @@ void UpdateGearChannel(void)
     }
 }
 
-void UpdateAuxiliaryChannel(void)
+/*
+ * @brief       Handles the RC input pulse measurements from the aux1 channel
+ *              and updates pulse and frequency values.
+ * @param       None.
+ * @retval      None.
+ */
+static void UpdateAux1Channel(void)
 {
   /* Detected rising PWM edge */
   if (ReceiverInputStates.Aux1InputState == PWM_LOW)
@@ -523,7 +582,7 @@ void UpdateAuxiliaryChannel(void)
   /* Detected falling PWM edge */
   else if (ReceiverInputStates.Aux1InputState == PWM_HIGH)
     {
-      uint16_t tempPulseCount;
+      uint32_t tempPulseTimerCount;
 
       /* Get the Input Capture value */
       uint32_t icValue = HAL_TIM_ReadCapturedValue(&AuxReceiverTimHandle, AUX_RECEIVER_AUX1_CHANNEL);
@@ -536,13 +595,13 @@ void UpdateAuxiliaryChannel(void)
 
       /* Calculate the pulse of the 16-bit counter by computing the difference between falling and rising edges timer counts */
       if (Aux1ICValues.FallingCounter > Aux1ICValues.RisingCount)
-        tempPulseCount = Aux1ICValues.FallingCounter - Aux1ICValues.RisingCount;
+        tempPulseTimerCount = Aux1ICValues.FallingCounter - Aux1ICValues.RisingCount;
       else
-        tempPulseCount = Aux1ICValues.FallingCounter + 0xFFFF - Aux1ICValues.RisingCount;
+        tempPulseTimerCount = Aux1ICValues.FallingCounter + 0xFFFF - Aux1ICValues.RisingCount;
 
       /* Sanity check of pulse count before updating it */
-      if(tempPulseCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
-        Aux1ICValues.PulseCount = tempPulseCount;
+      if(tempPulseTimerCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseTimerCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
+        Aux1ICValues.PulseTimerCount = tempPulseTimerCount;
     }
 
   /* Toggle the IC Polarity */
@@ -553,74 +612,17 @@ void UpdateAuxiliaryChannel(void)
     }
 }
 
-/* @CheckRCConnection
- * @brief	Checks that the RC transmitter and receiver are connected.
+/*
+ * @brief       Checks if the RC transmission between transmitter and receiver is active.
+ *              In case of transmitter is turned off or aircraft is out of transmission range
+ *              this function will return false.
  * @param	None.
- * @retval	None.
+ * @retval	true if transmission is active, else false.
  */
-char CheckRCConnection()
+bool IsReceiverActive()
 {
-#ifdef TODO
-  char retVal = 0;
-
-  if(PWM_IN_DOWN[1] != PWM_IN_DOWN_PRE_2)
-    {
-      RCTimeOutCount = 0;
-      retVal = 1;
-    }
-  else if(RCTimeOutCount < RCTimeOut && PWM_IN_DOWN[1] == PWM_IN_DOWN_PRE_2)
-    {
-      RCTimeOutCount++;
-      retVal = 1;
-    }
-  else
-    {
-      PWMTimes.Throttle = RCmin;
-      PWMTimes.Aileron = RCmid;
-      PWMTimes.Elevator = RCmid;
-      PWMTimes.Rudder = RCmid;
-      PWMTimes.Gear = RCmin;
-      PWMTimes.Auxiliary = RCmin;
-      retVal = 0;
-    }
-
-  PWM_IN_DOWN_PRE_2 = PWM_IN_DOWN[1];
-
-  return retVal;
-#endif
-  return 0;
-}
-
-/* @GetPWMInputTimes
- * @brief	Gets the receiver PWM times
- */
-void GetPWMInputTimes(PWMRC_TimeTypeDef *PWM_Time)
-{
-  memcpy((void*)PWM_Time ,(const void*)(&PWMTimes), sizeof(PWMRC_TimeTypeDef));
-}
-
-/* @GetRCmin
- * @brief	Gets the minimum receiver value
- */
-float GetRCmin(void)
-{
-  return RCmin;
-}
-
-/* @GetRCmid
- * @brief	Gets the midpoint receiver value
- */
-float GetRCmid(void)
-{
-  return RCmin + (RCmax-RCmin)/2;
-}
-
-/* @GetRCmax
- * @brief	Gets the maximum receiver value
- */
-float GetRCmax(void)
-{
-  return RCmax;
+  // TODO: Check last time pulse
+  return true;
 }
 
 /**
@@ -633,49 +635,19 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
   if (htim->Instance==PRIMARY_RECEIVER_TIM)
     {
       if(htim->Channel == PRIMARY_RECEIVER_THROTTLE_ACTIVE_CHANNEL)
-          UpdateThrottleChannel();
+        UpdateThrottleChannel();
       else if(htim->Channel == PRIMARY_RECEIVER_AILERON_ACTIVE_CHANNEL)
-        {
-#ifdef TODO
-          /* Get the Input Capture value */
-//          uint32_t aileronInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, PRIMARY_RECEIVER_AILERON_CHANNEL);
-          // UpdateAileronChannel
-#endif
-        }
+        UpdateAileronChannel();
       else if(htim->Channel == PRIMARY_RECEIVER_ELEVATOR_ACTIVE_CHANNEL)
-        {
-#ifdef TODO
-          /* Get the Input Capture value */
-//          uint32_t elevatorInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, PRIMARY_RECEIVER_ELEVATOR_CHANNEL);
-          // UpdatedElevatorChannel();
-#endif
-        }
+        UpdateElevatorChannel();
       else if(htim->Channel == PRIMARY_RECEIVER_RUDDER_ACTIVE_CHANNEL)
-        {
-#ifdef TODO
-          /* Get the Input Capture value */
-//          uint32_t rudderInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, PRIMARY_RECEIVER_RUDDER_CHANNEL);
-          // UpdateRudderChannel();
-#endif
-        }
+        UpdateRudderChannel();
     }
   else if (htim->Instance==AUX_RECEIVER_TIM)
     {
       if(htim->Channel == AUX_RECEIVER_GEAR_ACTIVE_CHANNEL)
-        {
-#ifdef TODO
-          /* Get the Input Capture value */
-//          uint32_t gearInputCaptureValue = HAL_TIM_ReadCapturedValue(htim, AUX_RECEIVER_GEAR_CHANNEL);
-          // UpdateGearChannel();
-#endif
-        }
+        UpdateGearChannel();
       else if(htim->Channel == AUX_RECEIVER_AUX1_ACTIVE_CHANNEL)
-        {
-#ifdef TODO
-          /* Get the Input Capture value */
-//          uint32_t aux1InputCaptureValue = HAL_TIM_ReadCapturedValue(htim, AUX_RECEIVER_AUX1_CHANNEL);
-          // UpdateAux1Channel();
-#endif
-        }
+        UpdateAux1Channel();
     }
 }

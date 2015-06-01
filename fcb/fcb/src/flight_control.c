@@ -17,7 +17,6 @@
 #include <math.h>
 
 /* Private variables ---------------------------------------------------------*/
-PWMRC_TimeTypeDef PWMInputTimes; // 6-channel PWM input width in seconds
 CtrlSignals_TypeDef CtrlSignals; // Physical control signals
 RefSignals_TypeDef RefSignals; // Control reference signals
 PWMMotor_TimeTypeDef PWMMotorTimes; // Motor output PWM widths [s]
@@ -35,7 +34,7 @@ enum FlightControlMode flightMode = MANUAL_FLIGHT;
 void UpdateControl(void)
 {
   ReadSensors(); // Reads gyroscope, accelerometer and magnetometer
-  GetPWMInputTimes(&PWMInputTimes); // Get 6 channel RC input pulse widths
+  // GetPWMInputTimes(&PWMInputTimes); // TODO Delete. Get 6 channel RC input pulse widths
 
   SetFlightMode();
 
@@ -161,7 +160,8 @@ void UpdateControl(void)
  */
 void SetFlightMode()
 {
-  if (CheckRCConnection())
+#ifdef TODO
+  if (IsReceiverActive())
     {
       if (PWMInputTimes.Gear >= GetRCmid())
         flightMode = ATTITUDE_CONTROL;
@@ -172,6 +172,7 @@ void SetFlightMode()
     {
       flightMode = SHUTDOWN_MOTORS;
     }
+#endif
 }
 
 /* @AltitudeControl
@@ -311,6 +312,8 @@ void YawControl(void)
  */
 void SetReferenceSignals(void)
 {
+#ifdef TODO
+
   // Set velocity reference limits
   if (PWMInputTimes.Throttle >= GetRCmin()
       && PWMInputTimes.Throttle <= GetRCmax())
@@ -341,6 +344,7 @@ void SetReferenceSignals(void)
         * (PWMInputTimes.Rudder - GetRCmid());
   else
     RefSignals.YawRate = GetRCmid();
+#endif
 }
 
 /* ControlAllocation
@@ -405,6 +409,7 @@ void ControlAllocation(void)
  */
 void ManualModeAllocation(void)
 {
+#ifdef TODO
   PWMMotorTimes.M1 = 0.9
       * (PWMInputTimes.Throttle - 2 * (PWMInputTimes.Aileron - GetRCmid())
           - 2 * (PWMInputTimes.Elevator - GetRCmid())
@@ -449,6 +454,7 @@ void ManualModeAllocation(void)
 //    PWMMotorTimes.M4 = PWMMotorTimes.M4;
 //  else
 //    PWMMotorTimes.M4 = MIN_ESC_VAL;
+#endif
 }
 
 /* @InitPIDControllers

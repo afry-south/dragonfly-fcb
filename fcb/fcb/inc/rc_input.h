@@ -13,6 +13,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
+#include <stdbool.h>
 
 /* Exported constants --------------------------------------------------------*/
 typedef enum
@@ -22,17 +23,6 @@ typedef enum
 } PWM_State;
 
 /* Exported types ------------------------------------------------------------*/
-
-// TODO Delete this typedef
-typedef struct
-{
-  float Throttle;
-  float Aileron;
-  float Elevator;
-  float Rudder;
-  float Gear;
-  float Auxiliary;
-}PWMRC_TimeTypeDef;
 
 /* Exported macro ------------------------------------------------------------*/
 
@@ -109,17 +99,13 @@ typedef struct
 /* Exported functions ------------------------------------------------------- */
 void ReceiverInput_Config(void);
 
-void UpdateThrottleChannel(void);
-void UpdateAileronChannel(void);
-void UpdateElevatorChannel(void);
-void UpdateRudderChannel(void);
-void UpdateGearChannel(void);
-void UpdateAuxiliaryChannel(void);
+uint16_t GetThrottleReceiverChannel(void);
+int16_t GetAileronReceiverChannel(void);
+int16_t GetElevatorReceiverChannel(void);
+int16_t GetRudderReceiverChannel(void);
+int16_t GetGearReceiverChannel(void);
+int16_t GetAux1ReceiverChannel(void);
 
-void GetPWMInputTimes(PWMRC_TimeTypeDef *PWM_Time);
-char CheckRCConnection(void);
-float GetRCmin(void);
-float GetRCmid(void);
-float GetRCmax(void);
+bool IsReceiverActive(void);
 
 #endif /* __RCINPUT_H */
