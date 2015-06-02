@@ -66,18 +66,18 @@ static PWM_IC_CalibrationValues_TypeDef Aux1CalibrationValues;
 
 /* Private function prototypes -----------------------------------------------*/
 static void InitReceiverCalibrationValues(void);
-static bool GetReceiverCalibrationValuesFromFlash(void);
+static ReceiverErrorStatus GetReceiverCalibrationValuesFromFlash(void);
 static void SetDefaultReceiverCalibrationValues(void);
-static void PrimaryReceiverInput_Config(void);
-static void AuxReceiverInput_Config(void);
+static ReceiverErrorStatus PrimaryReceiverInput_Config(void);
+static ReceiverErrorStatus AuxReceiverInput_Config(void);
 
-static void UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState, PWM_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel);
-static void UpdateReceiverThrottleChannel(void);
-static void UpdateReceiverAileronChannel(void);
-static void UpdateReceiverElevatorChannel(void);
-static void UpdateReceiverRudderChannel(void);
-static void UpdateReceiverGearChannel(void);
-static void UpdateReceiverAux1Channel(void);
+static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState, PWM_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel);
+static ReceiverErrorStatus UpdateReceiverThrottleChannel(void);
+static ReceiverErrorStatus UpdateReceiverAileronChannel(void);
+static ReceiverErrorStatus UpdateReceiverElevatorChannel(void);
+static ReceiverErrorStatus UpdateReceiverRudderChannel(void);
+static ReceiverErrorStatus UpdateReceiverGearChannel(void);
+static ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -86,11 +86,14 @@ static void UpdateReceiverAux1Channel(void);
  * @param  None
  * @retval None
  */
-void ReceiverInput_Config(void)
+ReceiverErrorStatus ReceiverInput_Config(void)
 {
   InitReceiverCalibrationValues();
-  PrimaryReceiverInput_Config();
-  AuxReceiverInput_Config();
+  if(!PrimaryReceiverInput_Config())
+    return RECEIVER_ERROR;
+  if(!AuxReceiverInput_Config())
+    return RECEIVER_ERROR;
+  return RECEIVER_OK;
 }
 
 /*
@@ -235,10 +238,10 @@ static void SetDefaultReceiverCalibrationValues(void)
  * @param       None.
  * @retval      true if valid calibration values has been loaded, else false.
  */
-static bool GetReceiverCalibrationValuesFromFlash(void)
+static ReceiverErrorStatus GetReceiverCalibrationValuesFromFlash(void)
 {
   // TODO implement
-  return false;
+  return RECEIVER_ERROR;
 }
 
 /*
@@ -248,8 +251,10 @@ static bool GetReceiverCalibrationValuesFromFlash(void)
  * @param       None.
  * @retval      None.
  */
-static void PrimaryReceiverInput_Config(void)
+static ReceiverErrorStatus PrimaryReceiverInput_Config(void)
 {
+  ReceiverErrorStatus errorStatus = RECEIVER_OK;
+
   /*##-1- Configure the Primary Receiver TIM peripheral ######################*/
   /* Set TIM instance */
   PrimaryReceiverTimHandle.Instance = PRIMARY_RECEIVER_TIM;
@@ -262,6 +267,7 @@ static void PrimaryReceiverInput_Config(void)
   if(HAL_TIM_IC_Init(&PrimaryReceiverTimHandle) != HAL_OK)
     {
       /* Initialization Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
@@ -276,6 +282,7 @@ static void PrimaryReceiverInput_Config(void)
   if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_THROTTLE_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
@@ -285,6 +292,7 @@ static void PrimaryReceiverInput_Config(void)
   if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_AILERON_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
@@ -294,6 +302,7 @@ static void PrimaryReceiverInput_Config(void)
   if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_ELEVATOR_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
@@ -303,6 +312,7 @@ static void PrimaryReceiverInput_Config(void)
   if(HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, PRIMARY_RECEIVER_RUDDER_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
@@ -310,26 +320,32 @@ static void PrimaryReceiverInput_Config(void)
   if(HAL_TIM_IC_Start_IT(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_THROTTLE_CHANNEL) != HAL_OK)
     {
       /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
   if(HAL_TIM_IC_Start_IT(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_AILERON_CHANNEL) != HAL_OK)
     {
       /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
   if(HAL_TIM_IC_Start_IT(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_ELEVATOR_CHANNEL) != HAL_OK)
     {
       /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
   if(HAL_TIM_IC_Start_IT(&PrimaryReceiverTimHandle, PRIMARY_RECEIVER_RUDDER_CHANNEL) != HAL_OK)
     {
       /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
+
+  return errorStatus;
 }
 
 /*
@@ -338,8 +354,10 @@ static void PrimaryReceiverInput_Config(void)
  * @param       None.
  * @retval      None.
  */
-static void AuxReceiverInput_Config(void)
+static ReceiverErrorStatus AuxReceiverInput_Config(void)
 {
+  ReceiverErrorStatus errorStatus = RECEIVER_OK;
+
   /*##-1- Configure the Aux Receiver TIM peripheral ##########################*/
   /* Set TIM instance */
   AuxReceiverTimHandle.Instance = AUX_RECEIVER_TIM;
@@ -352,6 +370,7 @@ static void AuxReceiverInput_Config(void)
   if(HAL_TIM_IC_Init(&AuxReceiverTimHandle) != HAL_OK)
     {
       /* Initialization Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
@@ -366,6 +385,7 @@ static void AuxReceiverInput_Config(void)
   if(HAL_TIM_IC_ConfigChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, AUX_RECEIVER_GEAR_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
@@ -375,6 +395,7 @@ static void AuxReceiverInput_Config(void)
   if(HAL_TIM_IC_ConfigChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, AUX_RECEIVER_AUX1_CHANNEL) != HAL_OK)
     {
       /* Configuration Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
@@ -382,14 +403,18 @@ static void AuxReceiverInput_Config(void)
   if(HAL_TIM_IC_Start_IT(&AuxReceiverTimHandle, AUX_RECEIVER_GEAR_CHANNEL) != HAL_OK)
     {
       /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
 
   if(HAL_TIM_IC_Start_IT(&AuxReceiverTimHandle, AUX_RECEIVER_AUX1_CHANNEL) != HAL_OK)
     {
       /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
+
+  return errorStatus;
 }
 
 /*
@@ -401,8 +426,10 @@ static void AuxReceiverInput_Config(void)
  * @param
  * @retval      None.
  */
-static void UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState, PWM_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel)
+static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState, PWM_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel)
 {
+  ReceiverErrorStatus errorStatus = RECEIVER_OK;
+
   /* Detected rising PWM edge */
   if ((*channelInputState) == PULSE_LOW)
     {
@@ -445,14 +472,19 @@ static void UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeD
       /* Sanity check of pulse count before updating it */
       if(tempPulseTimerCount <= RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT && tempPulseTimerCount >= RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT)
         ChannelICValues->PulseTimerCount = tempPulseTimerCount;
+      else
+        errorStatus = RECEIVER_ERROR;
     }
 
   /* Toggle the IC Polarity */
   if(HAL_TIM_IC_ConfigChannel(TimHandle, TimIC, receiverChannel) != HAL_OK)
     {
       /* Configuration Error */
+      errorStatus = RECEIVER_ERROR;
       Error_Handler();
     }
+
+  return errorStatus;
 }
 
 /*
@@ -461,9 +493,9 @@ static void UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeD
  * @param 	None.
  * @retval      None.
  */
-static void UpdateReceiverThrottleChannel(void)
+static ReceiverErrorStatus UpdateReceiverThrottleChannel(void)
 {
-  UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.ThrottleInputState, &ThrottleICValues, PRIMARY_RECEIVER_THROTTLE_CHANNEL);
+  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.ThrottleInputState, &ThrottleICValues, PRIMARY_RECEIVER_THROTTLE_CHANNEL);
 }
 
 /*
@@ -472,9 +504,9 @@ static void UpdateReceiverThrottleChannel(void)
  * @param       None.
  * @retval      None.
  */
-static void UpdateReceiverAileronChannel(void)
+static ReceiverErrorStatus UpdateReceiverAileronChannel(void)
 {
-  UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.AileronInputState, &AileronICValues, PRIMARY_RECEIVER_AILERON_CHANNEL);
+  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.AileronInputState, &AileronICValues, PRIMARY_RECEIVER_AILERON_CHANNEL);
 }
 
 /*
@@ -483,9 +515,9 @@ static void UpdateReceiverAileronChannel(void)
  * @param       None.
  * @retval      None.
  */
-static void UpdateReceiverElevatorChannel(void)
+static ReceiverErrorStatus UpdateReceiverElevatorChannel(void)
 {
-  UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.ElevatorInputState, &ElevatorICValues, PRIMARY_RECEIVER_ELEVATOR_CHANNEL);
+  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.ElevatorInputState, &ElevatorICValues, PRIMARY_RECEIVER_ELEVATOR_CHANNEL);
 }
 
 /*
@@ -494,9 +526,9 @@ static void UpdateReceiverElevatorChannel(void)
  * @param       None.
  * @retval      None.
  */
-static void UpdateReceiverRudderChannel(void)
+static ReceiverErrorStatus UpdateReceiverRudderChannel(void)
 {
-  UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.RudderInputState, &RudderICValues, PRIMARY_RECEIVER_RUDDER_CHANNEL);
+  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.RudderInputState, &RudderICValues, PRIMARY_RECEIVER_RUDDER_CHANNEL);
 }
 
 /*
@@ -505,9 +537,9 @@ static void UpdateReceiverRudderChannel(void)
  * @param       None.
  * @retval      None.
  */
-static void UpdateReceiverGearChannel(void)
+static ReceiverErrorStatus UpdateReceiverGearChannel(void)
 {
-  UpdateReceiverChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, &ReceiverInputStates.GearInputState, &GearICValues, AUX_RECEIVER_GEAR_CHANNEL);
+  return UpdateReceiverChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, &ReceiverInputStates.GearInputState, &GearICValues, AUX_RECEIVER_GEAR_CHANNEL);
 }
 
 /*
@@ -516,9 +548,9 @@ static void UpdateReceiverGearChannel(void)
  * @param       None.
  * @retval      None.
  */
-static void UpdateReceiverAux1Channel(void)
+static ReceiverErrorStatus UpdateReceiverAux1Channel(void)
 {
-  UpdateReceiverChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, &ReceiverInputStates.Aux1InputState, &Aux1ICValues, AUX_RECEIVER_AUX1_CHANNEL);
+  return UpdateReceiverChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, &ReceiverInputStates.Aux1InputState, &Aux1ICValues, AUX_RECEIVER_AUX1_CHANNEL);
 }
 
 /*
@@ -528,7 +560,7 @@ static void UpdateReceiverAux1Channel(void)
  * @param	None.
  * @retval	true if transmission is active, else false.
  */
-bool IsReceiverActive()
+ReceiverErrorStatus IsReceiverActive()
 {
   // TODO: Check last time for pulse. The throttle channel typically keeps transmitting a pulse in case of
   // connection failure, but the other channels (all of them?) go silent with no pulses

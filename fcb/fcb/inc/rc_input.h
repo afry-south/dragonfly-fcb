@@ -22,6 +22,12 @@ typedef enum
   PULSE_HIGH = !PULSE_LOW
 } Pulse_State;
 
+typedef enum
+{
+  RECEIVER_ERROR = 0,
+  RECEIVER_OK = !RECEIVER_ERROR
+} ReceiverErrorStatus;
+
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported macro ------------------------------------------------------------*/
@@ -97,7 +103,7 @@ typedef enum
 #define RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT             1200    // Corresponds to 0.50 ms with 2,4Mhz counter clock
 
 /* Exported functions ------------------------------------------------------- */
-void ReceiverInput_Config(void);
+ReceiverErrorStatus ReceiverInput_Config(void);
 uint16_t GetThrottleReceiverChannel(void);
 int16_t GetAileronReceiverChannel(void);
 int16_t GetElevatorReceiverChannel(void);
@@ -105,6 +111,6 @@ int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
 void CalibrateReceiver(void);
-bool IsReceiverActive(void);
+ReceiverErrorStatus IsReceiverActive(void);
 
 #endif /* __RCINPUT_H */
