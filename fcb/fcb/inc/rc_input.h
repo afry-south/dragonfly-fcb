@@ -18,9 +18,9 @@
 /* Exported constants --------------------------------------------------------*/
 typedef enum
 {
-  PWM_LOW = 0,
-  PWM_HIGH = !PWM_LOW
-} PWM_State;
+  PULSE_LOW = 0,
+  PULSE_HIGH = !PULSE_LOW
+} Pulse_State;
 
 /* Exported types ------------------------------------------------------------*/
 
@@ -98,14 +98,13 @@ typedef enum
 
 /* Exported functions ------------------------------------------------------- */
 void ReceiverInput_Config(void);
-
 uint16_t GetThrottleReceiverChannel(void);
 int16_t GetAileronReceiverChannel(void);
 int16_t GetElevatorReceiverChannel(void);
 int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
-
+void CalibrateReceiver(void);
 bool IsReceiverActive(void);
 
 #endif /* __RCINPUT_H */
