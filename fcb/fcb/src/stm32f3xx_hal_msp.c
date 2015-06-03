@@ -51,7 +51,7 @@
 #include "stm32f3xx_hal.h"
 
 #include "motor_control.h"
-#include "rc_input.h"
+#include "receiver.h"
 
 /** @addtogroup STM32F3xx_HAL_Driver
   * @{

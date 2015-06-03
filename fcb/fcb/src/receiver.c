@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    rc_input.c
+ * @file    receiver.c
  * @author  ÅF Dragonfly
  * @version v. 0.0.4
  * @date    2015-05-28
@@ -8,7 +8,7 @@
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include "rc_input.h"
+#include "receiver.h"
 #include "main.h"
 #include "flight_control.h"
 
@@ -79,6 +79,9 @@ static ReceiverErrorStatus UpdateReceiverRudderChannel(void);
 static ReceiverErrorStatus UpdateReceiverGearChannel(void);
 static ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 
+static int16_t GetSignedReceiverChannel(PWM_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues);
+static uint16_t GetUnsignedReceiverChannel(PWM_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues);
+
 /* Private functions ---------------------------------------------------------*/
 
 /*
@@ -89,10 +92,13 @@ static ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 ReceiverErrorStatus ReceiverInput_Config(void)
 {
   InitReceiverCalibrationValues();
+
   if(!PrimaryReceiverInput_Config())
     return RECEIVER_ERROR;
+
   if(!AuxReceiverInput_Config())
     return RECEIVER_ERROR;
+
   return RECEIVER_OK;
 }
 
@@ -103,12 +109,7 @@ ReceiverErrorStatus ReceiverInput_Config(void)
  */
 uint16_t GetThrottleReceiverChannel(void)
 {
-  if(ThrottleICValues.PulseTimerCount < ThrottleCalibrationValues.ChannelMinCount)
-    return 0;
-  else if(ThrottleICValues.PulseTimerCount > ThrottleCalibrationValues.ChannelMaxCount)
-    return UINT16_MAX;
-  else
-    return ((uint32_t) (ThrottleICValues.PulseTimerCount-ThrottleCalibrationValues.ChannelMinCount)*UINT16_MAX)/(ThrottleCalibrationValues.ChannelMaxCount-ThrottleCalibrationValues.ChannelMinCount);
+  return GetUnsignedReceiverChannel(&ThrottleICValues, &ThrottleCalibrationValues);
 }
 
 /*
@@ -118,14 +119,7 @@ uint16_t GetThrottleReceiverChannel(void)
  */
 int16_t GetAileronReceiverChannel(void)
 {
-  if(AileronICValues.PulseTimerCount < AileronCalibrationValues.ChannelMinCount)
-    return INT16_MIN;
-  else if(AileronICValues.PulseTimerCount > AileronCalibrationValues.ChannelMaxCount)
-    return INT16_MAX;
-  else if(AileronCalibrationValues.ChannelMaxCount > AileronCalibrationValues.ChannelMinCount)
-    return INT16_MIN + (((uint32_t) (AileronICValues.PulseTimerCount-AileronCalibrationValues.ChannelMinCount)*UINT16_MAX)/(AileronCalibrationValues.ChannelMaxCount-AileronCalibrationValues.ChannelMinCount));
-  else
-    return 0;
+  return GetSignedReceiverChannel(&AileronICValues, &AileronCalibrationValues);
 }
 
 /*
@@ -135,14 +129,7 @@ int16_t GetAileronReceiverChannel(void)
  */
 int16_t GetElevatorReceiverChannel(void)
 {
-  if(ElevatorICValues.PulseTimerCount < ElevatorCalibrationValues.ChannelMinCount)
-    return INT16_MIN;
-  else if(ElevatorICValues.PulseTimerCount > ElevatorCalibrationValues.ChannelMaxCount)
-    return INT16_MAX;
-  else if(ElevatorCalibrationValues.ChannelMaxCount > ElevatorCalibrationValues.ChannelMinCount)
-    return INT16_MIN + (((uint32_t) (ElevatorICValues.PulseTimerCount-ElevatorCalibrationValues.ChannelMinCount)*UINT16_MAX)/(ElevatorCalibrationValues.ChannelMaxCount-ElevatorCalibrationValues.ChannelMinCount));
-  else
-    return 0;
+  return GetSignedReceiverChannel(&ElevatorICValues, &ElevatorCalibrationValues);
 }
 
 /*
@@ -152,14 +139,7 @@ int16_t GetElevatorReceiverChannel(void)
  */
 int16_t GetRudderReceiverChannel(void)
 {
-  if(RudderICValues.PulseTimerCount < RudderCalibrationValues.ChannelMinCount)
-    return INT16_MIN;
-  else if(RudderICValues.PulseTimerCount > RudderCalibrationValues.ChannelMaxCount)
-    return INT16_MAX;
-  else if(RudderCalibrationValues.ChannelMaxCount > RudderCalibrationValues.ChannelMinCount)
-    return INT16_MIN + (((uint32_t) (RudderICValues.PulseTimerCount-RudderCalibrationValues.ChannelMinCount)*UINT16_MAX)/(RudderCalibrationValues.ChannelMaxCount-RudderCalibrationValues.ChannelMinCount));
-  else
-    return 0;
+  return GetSignedReceiverChannel(&RudderICValues, &RudderCalibrationValues);
 }
 
 /*
@@ -169,14 +149,7 @@ int16_t GetRudderReceiverChannel(void)
  */
 int16_t GetGearReceiverChannel(void)
 {
-  if(GearICValues.PulseTimerCount < GearCalibrationValues.ChannelMinCount)
-    return INT16_MIN;
-  else if(GearICValues.PulseTimerCount > GearCalibrationValues.ChannelMaxCount)
-    return INT16_MAX;
-  else if(GearCalibrationValues.ChannelMaxCount > GearCalibrationValues.ChannelMinCount)
-    return INT16_MIN + (((uint32_t) (GearICValues.PulseTimerCount-GearCalibrationValues.ChannelMinCount)*UINT16_MAX)/(GearCalibrationValues.ChannelMaxCount-GearCalibrationValues.ChannelMinCount));
-  else
-    return 0;
+  return GetSignedReceiverChannel(&GearICValues, &GearCalibrationValues);
 }
 
 /*
@@ -186,14 +159,7 @@ int16_t GetGearReceiverChannel(void)
  */
 int16_t GetAux1ReceiverChannel(void)
 {
-  if(Aux1ICValues.PulseTimerCount < Aux1CalibrationValues.ChannelMinCount)
-    return INT16_MIN;
-  else if(Aux1ICValues.PulseTimerCount > Aux1CalibrationValues.ChannelMaxCount)
-    return INT16_MAX;
-  else if(Aux1CalibrationValues.ChannelMaxCount > Aux1CalibrationValues.ChannelMinCount)
-    return INT16_MIN + (((uint32_t) (Aux1ICValues.PulseTimerCount-Aux1CalibrationValues.ChannelMinCount)*UINT16_MAX)/(Aux1CalibrationValues.ChannelMaxCount-Aux1CalibrationValues.ChannelMinCount));
-  else
-    return 0;
+  return GetSignedReceiverChannel(&Aux1ICValues, &Aux1CalibrationValues);
 }
 
 /*
@@ -217,22 +183,65 @@ static void InitReceiverCalibrationValues(void)
     SetDefaultReceiverCalibrationValues();
 }
 
+/*
+ * @brief  Sets receiver calibration values to default
+ * @param  None
+ * @retval None
+ */
 static void SetDefaultReceiverCalibrationValues(void)
 {
   ThrottleCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
   ThrottleCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+
   AileronCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
   AileronCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+
   ElevatorCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
   ElevatorCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+
   RudderCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
   RudderCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+
   GearCalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
   GearCalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
+
   Aux1CalibrationValues.ChannelMaxCount = RECEIVER_DEFAULT_MAX_COUNT;
   Aux1CalibrationValues.ChannelMinCount = RECEIVER_DEFAULT_MIN_COUNT;
 }
 
+/*
+ * @brief  Returns a normalized receiver channel value as a signed integer.
+ * @param  None
+ * @retval channel value [-32768, 32767]
+ */
+static int16_t GetSignedReceiverChannel(PWM_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues)
+{
+  if(ChannelICValues->PulseTimerCount < ChannelCalibrationValues->ChannelMinCount)
+    return INT16_MIN;
+  else if(ChannelICValues->PulseTimerCount > ChannelCalibrationValues->ChannelMaxCount)
+    return INT16_MAX;
+  else if(ChannelCalibrationValues->ChannelMaxCount > ChannelCalibrationValues->ChannelMinCount)
+    return INT16_MIN + (((uint32_t) (ChannelICValues->PulseTimerCount-ChannelCalibrationValues->ChannelMinCount)*UINT16_MAX)/(ChannelCalibrationValues->ChannelMaxCount-ChannelCalibrationValues->ChannelMinCount));
+  else
+    return 0;
+}
+
+/*
+ * @brief  Returns a normalized receiver channel value as an unsigned integer.
+ * @param  None
+ * @retval channel value [0, 65535]
+ */
+static uint16_t GetUnsignedReceiverChannel(PWM_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues)
+{
+  if(ChannelICValues->PulseTimerCount < ChannelCalibrationValues->ChannelMinCount)
+    return 0;
+  else if(ChannelICValues->PulseTimerCount > ChannelCalibrationValues->ChannelMaxCount)
+    return UINT16_MAX;
+  else if(ChannelCalibrationValues->ChannelMaxCount > ChannelCalibrationValues->ChannelMinCount)
+    return ((uint32_t) (ChannelICValues->PulseTimerCount-ChannelCalibrationValues->ChannelMinCount)*UINT16_MAX)/(ChannelCalibrationValues->ChannelMaxCount-ChannelCalibrationValues->ChannelMinCount);
+  else
+    return 0;
+}
 /*
  * @brief       Gets calibration values stored in flash after previously performed receiver calibration
  * @param       None.
@@ -422,8 +431,8 @@ static ReceiverErrorStatus AuxReceiverInput_Config(void)
  * @param       TimHandle: Reference to the TIM_HandleTypeDef struct used to read the channel's IC count
  * @param       TimIC: Reference to the TIM_IC_InitTypeDef struct used to configure the IC to count on rising/falling pulse flank
  * @param       channelInputState: The current channel pulse input state (PULSE_LOW or PULSE_HIGH)
- * @param
- * @param
+ * @param       ChannelICValues: Reference to the channels IC value struct
+ * @param       receiverChannel: TIM Channel
  * @retval      None.
  */
 static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState, PWM_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel)

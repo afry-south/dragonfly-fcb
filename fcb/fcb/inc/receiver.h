@@ -1,6 +1,6 @@
 /******************************************************************************
- * @file    rc_input.h
- * @author  ÅF Dragonfly - Daniel Nilsson and Daniel Stenberg, Embedded Systems
+ * @file    receiver.h
+ * @author  ÅF Dragonfly
  * @version v. 0.0.2
  * @date    2015-04-16
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
@@ -8,8 +8,8 @@
  ******************************************************************************/
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __RCINPUT_H
-#define __RCINPUT_H
+#ifndef __RECEIVER_H
+#define __RECEIVER_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
@@ -113,4 +113,4 @@ int16_t GetAux1ReceiverChannel(void);
 void CalibrateReceiver(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
-#endif /* __RCINPUT_H */
+#endif /* __RECEIVER_H */

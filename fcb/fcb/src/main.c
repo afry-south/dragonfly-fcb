@@ -11,7 +11,7 @@
 #include "motor_control.h"
 #include "flight_control.h"
 #include "sensors.h"
-#include "rc_input.h"
+#include "receiver.h"
 
 /* Private variables ---------------------------------------------------------*/
 USBD_HandleTypeDef hUSBDDevice;
