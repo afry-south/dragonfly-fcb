@@ -3,8 +3,13 @@
  * @author  ÅF Dragonfly
  * @version v. 0.0.4
  * @date    2015-05-28
- * @brief   Flight Control program for the ÅF Dragonfly quadcopter
- *          File contains functionality for reading signals from the RC receiver
+ * @brief   File contains functionality for signal readubg from the Dragonfly
+ *          RC receiver. The receiver model is Spektrum AR610, which uses DSMX
+ *          frequency modulation technology. It outputs 6 channels: throttle,
+ *          aileron, elevator, rudder, gear and aux1. Since a timer IC on STM32
+ *          only has up to 4 channels, two timers are needed to collect the
+ *          receiver pulses. The pulses sent from the receiver are typically
+ *          ~1-2 ms width with a period of ~22 ms.
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
@@ -42,22 +47,27 @@ typedef struct
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-volatile TIM_HandleTypeDef PrimaryReceiverTimHandle;
-volatile TIM_HandleTypeDef AuxReceiverTimHandle;
-static volatile TIM_IC_InitTypeDef PrimaryReceiverICConfig;
-static volatile TIM_IC_InitTypeDef AuxReceiverICConfig;
+
+/* Timer time base handlers for each timer */
+TIM_HandleTypeDef PrimaryReceiverTimHandle;
+TIM_HandleTypeDef AuxReceiverTimHandle;
+
+/* Timer IC init declarations for each timer */
+static TIM_IC_InitTypeDef PrimaryReceiverICConfig;
+static TIM_IC_InitTypeDef AuxReceiverICConfig;
 
 /* Struct contaning HIGH/LOW state for each input channel pulse */
 static Receiver_Pulse_States_TypeDef ReceiverPulseStates;
 
-/* Structs for each channel's count values */
-static volatile Receiver_IC_Values_TypeDef ThrottleICValues;
-static volatile Receiver_IC_Values_TypeDef AileronICValues;
-static volatile Receiver_IC_Values_TypeDef ElevatorICValues;
-static volatile Receiver_IC_Values_TypeDef RudderICValues;
-static volatile Receiver_IC_Values_TypeDef GearICValues;
-static volatile Receiver_IC_Values_TypeDef Aux1ICValues;
+/* Structs for each channel's timer count values */
+static Receiver_IC_Values_TypeDef ThrottleICValues;
+static Receiver_IC_Values_TypeDef AileronICValues;
+static Receiver_IC_Values_TypeDef ElevatorICValues;
+static Receiver_IC_Values_TypeDef RudderICValues;
+static Receiver_IC_Values_TypeDef GearICValues;
+static Receiver_IC_Values_TypeDef Aux1ICValues;
 
+/* Structs for each channel's calibration values */
 static PWM_IC_CalibrationValues_TypeDef ThrottleCalibrationValues;
 static PWM_IC_CalibrationValues_TypeDef AileronCalibrationValues;
 static PWM_IC_CalibrationValues_TypeDef ElevatorCalibrationValues;
@@ -65,8 +75,9 @@ static PWM_IC_CalibrationValues_TypeDef RudderCalibrationValues;
 static PWM_IC_CalibrationValues_TypeDef GearCalibrationValues;
 static PWM_IC_CalibrationValues_TypeDef Aux1CalibrationValues;
 
-static volatile uint16_t PrimaryReceiverTimerPeriodCount;
-static volatile uint16_t AuxReceiverTimerPeriodCount;
+/* Timer reset counters for each timer */
+static uint16_t PrimaryReceiverTimerPeriodCount;
+static uint16_t AuxReceiverTimerPeriodCount;
 
 /* Private function prototypes -----------------------------------------------*/
 static void InitReceiverCalibrationValues(void);
@@ -76,13 +87,15 @@ static ReceiverErrorStatus PrimaryReceiverInput_Config(void);
 static ReceiverErrorStatus AuxReceiverInput_Config(void);
 
 static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState,
-    Receiver_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel, const volatile uint16_t* ReceiverTimerPeriodCount);
+    Receiver_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel, const uint16_t* ReceiverTimerPeriodCount);
 static ReceiverErrorStatus UpdateReceiverThrottleChannel(void);
 static ReceiverErrorStatus UpdateReceiverAileronChannel(void);
 static ReceiverErrorStatus UpdateReceiverElevatorChannel(void);
 static ReceiverErrorStatus UpdateReceiverRudderChannel(void);
 static ReceiverErrorStatus UpdateReceiverGearChannel(void);
 static ReceiverErrorStatus UpdateReceiverAux1Channel(void);
+
+static ReceiverErrorStatus IsReceiverChannelActive(Receiver_IC_Values_TypeDef* ChannelICValues, const uint16_t ReceiverTimerPeriodCount);
 
 static int16_t GetSignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues);
 static uint16_t GetUnsignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues);
@@ -179,28 +192,23 @@ void CalibrateReceiver(void)
 
 /*
  * @brief       Checks if the RC transmission between transmitter and receiver is active.
- *              In case of transmitter is turned off or aircraft is out of transmission range
- *              this function will return false.
  * @param       None.
- * @retval      true if transmission is active, else false.
+ * @retval      RECEIVER_OK if transmission is active, else RECEIVER_ERROR.
  */
 ReceiverErrorStatus IsReceiverActive(void)
 {
-  // TODO: Check last time for pulse. The throttle channel typically keeps transmitting a pulse in case of
-  // connection failure, but the other channels (all of them?) go silent with no pulses
-  // Perhaps count amount of reset interrupts without a pulse flank being detected
+  ReceiverErrorStatus aileronChannelActive;
+  ReceiverErrorStatus elevatorChannelActive;
+  ReceiverErrorStatus rudderChannelActive;
 
-  // Use IS_RECEIVER_INACTIVE_PERIODS_COUNT
-  uint32_t periodsSinceLastAileronPulse;
+  /* When transmission stops, the throttle channel on the Spektrum AR610 receiver keeps sending pulses on its
+   * channel based on its last received throttle command. But the other channels go silents, so they can be
+   * used to check if the transmission is down. */
+  aileronChannelActive = IsReceiverChannelActive(&AileronICValues, PrimaryReceiverTimerPeriodCount);
+  elevatorChannelActive = IsReceiverChannelActive(&ElevatorICValues, PrimaryReceiverTimerPeriodCount);
+  rudderChannelActive = IsReceiverChannelActive(&RudderICValues, PrimaryReceiverTimerPeriodCount);
 
-  if(PrimaryReceiverTimerPeriodCount >= PrimaryAileronICValues.PreviousRisingCountTimerPeriodCount)
-    periodsSinceLastAileronPulse = PrimaryReceiverTimerPeriodCount - PrimaryAileronICValues.PreviousRisingCountTimerPeriodCount;
-  else
-    periodsSinceLastAileronPulse = PrimaryReceiverTimerPeriodCount + UINT16_MAX - PrimaryAileronICValues.PreviousRisingCountTimerPeriodCount;
-
-  if(AileronICValues.PreviousRisingCountTimerPeriodCount)
-
-  return RECEIVER_OK;
+  return (aileronChannelActive && elevatorChannelActive && rudderChannelActive);
 }
 
 /**
@@ -529,7 +537,7 @@ static ReceiverErrorStatus AuxReceiverInput_Config(void)
  * @retval      None.
  */
 static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState,
-    Receiver_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel, const volatile uint16_t* ReceiverTimerPeriodCount)
+    Receiver_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel, const uint16_t* ReceiverTimerPeriodCount)
 {
   ReceiverErrorStatus errorStatus = RECEIVER_OK;
 
@@ -673,3 +681,33 @@ static ReceiverErrorStatus UpdateReceiverAux1Channel(void)
   return UpdateReceiverChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, &ReceiverPulseStates.Aux1InputState,
       &Aux1ICValues, AUX_RECEIVER_AUX1_CHANNEL, &AuxReceiverTimerPeriodCount);
 }
+
+/*
+ * @brief       Checks if the RC transmission between transmitter and receiver is active for a specified channel.
+ * @param       None.
+ * @retval      RECEIVER_OK if transmission is active, else RECEIVER_ERROR.
+ */
+static ReceiverErrorStatus IsReceiverChannelActive(Receiver_IC_Values_TypeDef* ChannelICValues, const uint16_t ReceiverTimerPeriodCount)
+{
+  uint32_t periodsSinceLastChannelPulse;
+
+  /* Check how many timer resets have been performed since the last rising pulse edge */
+  if(ReceiverTimerPeriodCount >= ChannelICValues->PreviousRisingCountTimerPeriodCount)
+    periodsSinceLastChannelPulse = ReceiverTimerPeriodCount - ChannelICValues->PreviousRisingCountTimerPeriodCount;
+  else
+    periodsSinceLastChannelPulse = ReceiverTimerPeriodCount + UINT16_MAX - ChannelICValues->PreviousRisingCountTimerPeriodCount;
+
+  if(periodsSinceLastChannelPulse > IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT)
+    return RECEIVER_ERROR;
+
+  return RECEIVER_OK;
+}
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/

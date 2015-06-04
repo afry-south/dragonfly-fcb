@@ -9,8 +9,8 @@
 ******************************************************************************/
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MOTOR_OUTPUT_H
-#define __MOTOR_OUTPUT_H
+#ifndef __MOTOR_CONTROL_H
+#define __MOTOR_CONTROL_H
 
 /* Includes */
 #include "stm32f3xx.h"
@@ -38,8 +38,8 @@
 #define MOTOR3_CHANNEL                          TIM_CHANNEL_3
 #define MOTOR4_CHANNEL                          TIM_CHANNEL_4
 
-/* Defines Motor TIM Timebase */
-// 60000 ticks on a 24MHz clock yields a 400 MHz PWM frequency
+/* Defines Motor TIM Timebase
+ * 60000 ticks on a 24MHz clock yields a 400 MHz PWM frequency */
 #define MOTOR_OUTPUT_COUNTER_CLOCK              24000000
 #define MOTOR_OUTPUT_PERIOD                     60000
 
@@ -53,4 +53,13 @@ void SetMotor2(uint16_t ctrlVal);
 void SetMotor3(uint16_t ctrlVal);
 void SetMotor4(uint16_t ctrlVal);
 
-#endif /* __MOTOR_OUTPUT_H */
+#endif /* __MOTOR_CONTROL_H */
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/

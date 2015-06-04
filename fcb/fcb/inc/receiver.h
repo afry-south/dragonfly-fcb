@@ -94,7 +94,8 @@ typedef enum
 /* Defintions for receiver TIM timebase */
 #define RECEIVER_TIM_COUNTER_CLOCK                      18000000
 
-/* RC min max default count values */
+/* RC min max default count values
+ * The Spektrum AR610 receiver resolution is only 2048, so this should be more than enough! */
 #define RECEIVER_DEFAULT_MAX_COUNT                      34560   // Corresponds to 1.92 ms with 18Mhz counter clock
 #define RECEIVER_DEFAULT_MIN_COUNT                      19440   // Corresponds to 1.08 ms with 18Mhz counter clock
 
@@ -102,7 +103,7 @@ typedef enum
 #define RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT             45000   // Corresponds to 2.50 ms with 18Mhz counter clock
 #define RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT             9000    // Corresponds to 0.50 ms with 18Mhz counter clock
 
-#define IS_RECEIVER_INACTIVE_PERIODS_COUNT              50
+#define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      50
 
 /* Exported functions ------------------------------------------------------- */
 ReceiverErrorStatus ReceiverInput_Config(void);
@@ -116,3 +117,12 @@ void CalibrateReceiver(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
 #endif /* __RECEIVER_H */
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/

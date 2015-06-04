@@ -4,18 +4,33 @@
  * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.1
  * @date    2014-09-29
- * @brief   Flight Control program for the ÅF Dragonfly quadcopter
- *          File contains PWM output configuration and handling functions. PWM
- *          pulse of ~1-2 ms is used to control the ESC:s, which in turn control
+ * @brief   File contains PWM output configuration and handling functions. PWM
+ *          pulses of ~1-2 ms are used to control the ESC:s, which in turn control
  *          Dragonfly's motors.
+ *
+ *          The ESC:s are of the T-motor brand and can
+ *          withstand up to 30 A continuous current. They take up to 400 Hz pulse
+ *          control signals.
+ *
+ *          The motors are also of T-motor brand (U3 Power Type model) with a KV
+ *          value of 700. Coupled with the 11x3.7 carbon fibre propellers, they
+ *          can spin at up to 8700 rpm providing a lifting force of ~12 N.
  ******************************************************************************/
 
 /* Includes */
 #include "motor_control.h"
 #include "main.h"
 
-/* Timer handler declaration */
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+
+/* Timer time base handler */
 TIM_HandleTypeDef    TimHandle;
+
+/* Private function prototypes -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
 
 /*
  * @brief	Initializes and configures the timer used to produce PWM output
@@ -109,44 +124,55 @@ void MotorControl_Config(void)
 
 /*
  * @brief       Sets the motor control PWM (sent to ESC) for motor 1
- * @param       ctrlVal: value 0x0000-0xFFFF indicating amount of motor thrust
+ * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
  * @retval      None.
  */
 void SetMotor1(uint16_t ctrlVal)
 {
-  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/0xFFFF;
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/UINT16_MAX;
   __HAL_TIM_SetCompare(&TimHandle, MOTOR1_CHANNEL, (uint16_t)ccrVal);
 }
 
 /*
  * @brief       Sets the motor control PWM (sent to ESC) for motor 2
- * @param       ctrlVal: value 0x0000-0xFFFF indicating amount of motor thrust
+ * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
  * @retval      None.
  */
 void SetMotor2(uint16_t ctrlVal)
 {
-  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/0xFFFF;
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/UINT16_MAX;
   __HAL_TIM_SetCompare(&TimHandle, MOTOR2_CHANNEL, ccrVal);
 }
 
 /*
  * @brief       Sets the motor control PWM (sent to ESC) for motor 3
- * @param       ctrlVal: value 0x0000-0xFFFF indicating amount of motor thrust
+ * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
  * @retval      None.
  */
 void SetMotor3(uint16_t ctrlVal)
 {
-  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/0xFFFF;
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/UINT16_MAX;
   __HAL_TIM_SetCompare(&TimHandle, MOTOR3_CHANNEL, ccrVal);
 }
 
 /*
  * @brief       Sets the motor control PWM (sent to ESC) for motor 4
- * @param       ctrlVal: value 0x0000-0xFFFF indicating amount of motor thrust
+ * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
  * @retval      None.
  */
 void SetMotor4(uint16_t ctrlVal)
 {
-  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/0xFFFF;
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/UINT16_MAX;
   __HAL_TIM_SetCompare(&TimHandle, MOTOR4_CHANNEL, ccrVal);
 }
+
+/* Private functions ---------------------------------------------------------*/
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/
