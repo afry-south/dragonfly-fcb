@@ -92,15 +92,17 @@ typedef enum
 
 /* Common definitions for the receiver TIM timers ############################*/
 /* Defintions for receiver TIM timebase */
-#define RECEIVER_TIM_COUNTER_CLOCK                      2400000
+#define RECEIVER_TIM_COUNTER_CLOCK                      18000000
 
 /* RC min max default count values */
-#define RECEIVER_DEFAULT_MAX_COUNT                      4608    // Corresponds to 1.92 ms with 2,4Mhz counter clock
-#define RECEIVER_DEFAULT_MIN_COUNT                      2592    // Corresponds to 1.08 ms with 2,4Mhz counter clock
+#define RECEIVER_DEFAULT_MAX_COUNT                      34560   // Corresponds to 1.92 ms with 18Mhz counter clock
+#define RECEIVER_DEFAULT_MIN_COUNT                      19440   // Corresponds to 1.08 ms with 18Mhz counter clock
 
 /* Used for sanity check of IC count*/
-#define RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT             6000    // Corresponds to 2.50 ms with 2,4Mhz counter clock
-#define RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT             1200    // Corresponds to 0.50 ms with 2,4Mhz counter clock
+#define RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT             45000   // Corresponds to 2.50 ms with 18Mhz counter clock
+#define RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT             9000    // Corresponds to 0.50 ms with 18Mhz counter clock
+
+#define IS_RECEIVER_INACTIVE_PERIODS_COUNT              50
 
 /* Exported functions ------------------------------------------------------- */
 ReceiverErrorStatus ReceiverInput_Config(void);

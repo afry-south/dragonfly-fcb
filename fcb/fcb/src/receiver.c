@@ -21,16 +21,17 @@ typedef struct
   Pulse_State RudderInputState;
   Pulse_State GearInputState;
   Pulse_State Aux1InputState;
-}PWM_Input_Channel_States_TypeDef;
+}Receiver_Pulse_States_TypeDef;
 
 typedef struct
 {
   uint16_t RisingCount;
   uint16_t FallingCounter;
   uint16_t PreviousRisingCount;
+  uint16_t PreviousRisingCountTimerPeriodCount;
   uint16_t PulseTimerCount;
-  uint16_t PeriodCount;
-}PWM_IC_Values_TypeDef;
+  uint32_t PeriodCount;
+}Receiver_IC_Values_TypeDef;
 
 typedef struct
 {
@@ -41,21 +42,21 @@ typedef struct
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef PrimaryReceiverTimHandle;
-TIM_HandleTypeDef AuxReceiverTimHandle;
-static TIM_IC_InitTypeDef PrimaryReceiverICConfig;
-static TIM_IC_InitTypeDef AuxReceiverICConfig;
+volatile TIM_HandleTypeDef PrimaryReceiverTimHandle;
+volatile TIM_HandleTypeDef AuxReceiverTimHandle;
+static volatile TIM_IC_InitTypeDef PrimaryReceiverICConfig;
+static volatile TIM_IC_InitTypeDef AuxReceiverICConfig;
 
 /* Struct contaning HIGH/LOW state for each input channel pulse */
-static PWM_Input_Channel_States_TypeDef ReceiverInputStates;
+static Receiver_Pulse_States_TypeDef ReceiverPulseStates;
 
 /* Structs for each channel's count values */
-static PWM_IC_Values_TypeDef ThrottleICValues;
-static PWM_IC_Values_TypeDef AileronICValues;
-static PWM_IC_Values_TypeDef ElevatorICValues;
-static PWM_IC_Values_TypeDef RudderICValues;
-static PWM_IC_Values_TypeDef GearICValues;
-static PWM_IC_Values_TypeDef Aux1ICValues;
+static volatile Receiver_IC_Values_TypeDef ThrottleICValues;
+static volatile Receiver_IC_Values_TypeDef AileronICValues;
+static volatile Receiver_IC_Values_TypeDef ElevatorICValues;
+static volatile Receiver_IC_Values_TypeDef RudderICValues;
+static volatile Receiver_IC_Values_TypeDef GearICValues;
+static volatile Receiver_IC_Values_TypeDef Aux1ICValues;
 
 static PWM_IC_CalibrationValues_TypeDef ThrottleCalibrationValues;
 static PWM_IC_CalibrationValues_TypeDef AileronCalibrationValues;
@@ -64,6 +65,9 @@ static PWM_IC_CalibrationValues_TypeDef RudderCalibrationValues;
 static PWM_IC_CalibrationValues_TypeDef GearCalibrationValues;
 static PWM_IC_CalibrationValues_TypeDef Aux1CalibrationValues;
 
+static volatile uint16_t PrimaryReceiverTimerPeriodCount;
+static volatile uint16_t AuxReceiverTimerPeriodCount;
+
 /* Private function prototypes -----------------------------------------------*/
 static void InitReceiverCalibrationValues(void);
 static ReceiverErrorStatus GetReceiverCalibrationValuesFromFlash(void);
@@ -71,7 +75,8 @@ static void SetDefaultReceiverCalibrationValues(void);
 static ReceiverErrorStatus PrimaryReceiverInput_Config(void);
 static ReceiverErrorStatus AuxReceiverInput_Config(void);
 
-static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState, PWM_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel);
+static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState,
+    Receiver_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel, const volatile uint16_t* ReceiverTimerPeriodCount);
 static ReceiverErrorStatus UpdateReceiverThrottleChannel(void);
 static ReceiverErrorStatus UpdateReceiverAileronChannel(void);
 static ReceiverErrorStatus UpdateReceiverElevatorChannel(void);
@@ -79,10 +84,10 @@ static ReceiverErrorStatus UpdateReceiverRudderChannel(void);
 static ReceiverErrorStatus UpdateReceiverGearChannel(void);
 static ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 
-static int16_t GetSignedReceiverChannel(PWM_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues);
-static uint16_t GetUnsignedReceiverChannel(PWM_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues);
+static int16_t GetSignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues);
+static uint16_t GetUnsignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues);
 
-/* Private functions ---------------------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
 
 /*
  * @brief  Initializes timers in input capture mode to read the receiver input PWM signals
@@ -173,6 +178,78 @@ void CalibrateReceiver(void)
 }
 
 /*
+ * @brief       Checks if the RC transmission between transmitter and receiver is active.
+ *              In case of transmitter is turned off or aircraft is out of transmission range
+ *              this function will return false.
+ * @param       None.
+ * @retval      true if transmission is active, else false.
+ */
+ReceiverErrorStatus IsReceiverActive(void)
+{
+  // TODO: Check last time for pulse. The throttle channel typically keeps transmitting a pulse in case of
+  // connection failure, but the other channels (all of them?) go silent with no pulses
+  // Perhaps count amount of reset interrupts without a pulse flank being detected
+
+  // Use IS_RECEIVER_INACTIVE_PERIODS_COUNT
+  uint32_t periodsSinceLastAileronPulse;
+
+  if(PrimaryReceiverTimerPeriodCount >= PrimaryAileronICValues.PreviousRisingCountTimerPeriodCount)
+    periodsSinceLastAileronPulse = PrimaryReceiverTimerPeriodCount - PrimaryAileronICValues.PreviousRisingCountTimerPeriodCount;
+  else
+    periodsSinceLastAileronPulse = PrimaryReceiverTimerPeriodCount + UINT16_MAX - PrimaryAileronICValues.PreviousRisingCountTimerPeriodCount;
+
+  if(AileronICValues.PreviousRisingCountTimerPeriodCount)
+
+  return RECEIVER_OK;
+}
+
+/**
+  * @brief  Input Capture callback in non blocking mode
+  * @param  htim : TIM IC handle
+  * @retval None
+  */
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance==PRIMARY_RECEIVER_TIM)
+    {
+      if(htim->Channel == PRIMARY_RECEIVER_THROTTLE_ACTIVE_CHANNEL)
+        UpdateReceiverThrottleChannel();
+      else if(htim->Channel == PRIMARY_RECEIVER_AILERON_ACTIVE_CHANNEL)
+        UpdateReceiverAileronChannel();
+      else if(htim->Channel == PRIMARY_RECEIVER_ELEVATOR_ACTIVE_CHANNEL)
+        UpdateReceiverElevatorChannel();
+      else if(htim->Channel == PRIMARY_RECEIVER_RUDDER_ACTIVE_CHANNEL)
+        UpdateReceiverRudderChannel();
+    }
+  else if (htim->Instance==AUX_RECEIVER_TIM)
+    {
+      if(htim->Channel == AUX_RECEIVER_GEAR_ACTIVE_CHANNEL)
+        UpdateReceiverGearChannel();
+      else if(htim->Channel == AUX_RECEIVER_AUX1_ACTIVE_CHANNEL)
+        UpdateReceiverAux1Channel();
+    }
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance==PRIMARY_RECEIVER_TIM)
+    {
+      PrimaryReceiverTimerPeriodCount++;
+    }
+  else if (htim->Instance==AUX_RECEIVER_TIM)
+    {
+      AuxReceiverTimerPeriodCount++;
+    }
+}
+
+/* Private functions ---------------------------------------------------------*/
+
+/*
  * @brief  Initializes receiver input calibration values (max and min timer IC counts)
  * @param  None
  * @retval None
@@ -214,7 +291,7 @@ static void SetDefaultReceiverCalibrationValues(void)
  * @param  None
  * @retval channel value [-32768, 32767]
  */
-static int16_t GetSignedReceiverChannel(PWM_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues)
+static int16_t GetSignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues)
 {
   if(ChannelICValues->PulseTimerCount < ChannelCalibrationValues->ChannelMinCount)
     return INT16_MIN;
@@ -231,7 +308,7 @@ static int16_t GetSignedReceiverChannel(PWM_IC_Values_TypeDef* ChannelICValues, 
  * @param  None
  * @retval channel value [0, 65535]
  */
-static uint16_t GetUnsignedReceiverChannel(PWM_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues)
+static uint16_t GetUnsignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, PWM_IC_CalibrationValues_TypeDef* ChannelCalibrationValues)
 {
   if(ChannelICValues->PulseTimerCount < ChannelCalibrationValues->ChannelMinCount)
     return 0;
@@ -354,6 +431,14 @@ static ReceiverErrorStatus PrimaryReceiverInput_Config(void)
       Error_Handler();
     }
 
+  /*##-4- Start the Time Base update interrupt mode ##########################*/
+  if(HAL_TIM_Base_Start_IT(&PrimaryReceiverTimHandle) != HAL_OK)
+    {
+      /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
+      Error_Handler();
+    }
+
   return errorStatus;
 }
 
@@ -423,6 +508,14 @@ static ReceiverErrorStatus AuxReceiverInput_Config(void)
       Error_Handler();
     }
 
+  /*##-4- Start the Time Base update interrupt mode ##########################*/
+  if(HAL_TIM_Base_Start_IT(&AuxReceiverTimHandle) != HAL_OK)
+    {
+      /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
+      Error_Handler();
+    }
+
   return errorStatus;
 }
 
@@ -435,7 +528,8 @@ static ReceiverErrorStatus AuxReceiverInput_Config(void)
  * @param       receiverChannel: TIM Channel
  * @retval      None.
  */
-static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState, PWM_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel)
+static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC, Pulse_State* channelInputState,
+    Receiver_IC_Values_TypeDef* ChannelICValues, const uint32_t receiverChannel, const volatile uint16_t* ReceiverTimerPeriodCount)
 {
   ReceiverErrorStatus errorStatus = RECEIVER_OK;
 
@@ -452,11 +546,23 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
       ChannelICValues->PreviousRisingCount = ChannelICValues->RisingCount;
       ChannelICValues->RisingCount = icValue;
 
-      /* Calculate the period of the 16-bit counter by computing the difference between current and previous rising edge timer counts */
-      if(ChannelICValues->RisingCount > ChannelICValues->PreviousRisingCount)
-        ChannelICValues->PeriodCount = ChannelICValues->RisingCount - ChannelICValues->PreviousRisingCount;
+      /* Calculate the period between pulses by computing the difference between current and previous rising edge timer counts.
+       * Since the counter typically resets more often than a new pulse is triggered for the receiver, one must also use the
+       * number of timer period resets since the last pulse. */
+      if((*ReceiverTimerPeriodCount) > ChannelICValues->PreviousRisingCountTimerPeriodCount)
+        {
+          ChannelICValues->PeriodCount = ChannelICValues->RisingCount + UINT16_MAX - ChannelICValues->PreviousRisingCount
+              + UINT16_MAX*((*ReceiverTimerPeriodCount)-ChannelICValues->PreviousRisingCountTimerPeriodCount-1);
+        }
       else
-        ChannelICValues->PeriodCount = ChannelICValues->RisingCount + UINT16_MAX - ChannelICValues->PreviousRisingCount;
+        {
+          if(ChannelICValues->RisingCount > ChannelICValues->PreviousRisingCount)
+            ChannelICValues->PeriodCount = ChannelICValues->RisingCount - ChannelICValues->PreviousRisingCount;
+          else
+            ChannelICValues->PeriodCount = ChannelICValues->RisingCount + UINT16_MAX - ChannelICValues->PreviousRisingCount;
+        }
+
+      ChannelICValues->PreviousRisingCountTimerPeriodCount = (*ReceiverTimerPeriodCount);
     }
   /* Detected falling PWM edge */
   else if ((*channelInputState) == PULSE_HIGH)
@@ -504,7 +610,8 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
  */
 static ReceiverErrorStatus UpdateReceiverThrottleChannel(void)
 {
-  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.ThrottleInputState, &ThrottleICValues, PRIMARY_RECEIVER_THROTTLE_CHANNEL);
+  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverPulseStates.ThrottleInputState,
+      &ThrottleICValues, PRIMARY_RECEIVER_THROTTLE_CHANNEL, &PrimaryReceiverTimerPeriodCount);
 }
 
 /*
@@ -515,7 +622,8 @@ static ReceiverErrorStatus UpdateReceiverThrottleChannel(void)
  */
 static ReceiverErrorStatus UpdateReceiverAileronChannel(void)
 {
-  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.AileronInputState, &AileronICValues, PRIMARY_RECEIVER_AILERON_CHANNEL);
+  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverPulseStates.AileronInputState,
+      &AileronICValues, PRIMARY_RECEIVER_AILERON_CHANNEL, &PrimaryReceiverTimerPeriodCount);
 }
 
 /*
@@ -526,7 +634,8 @@ static ReceiverErrorStatus UpdateReceiverAileronChannel(void)
  */
 static ReceiverErrorStatus UpdateReceiverElevatorChannel(void)
 {
-  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.ElevatorInputState, &ElevatorICValues, PRIMARY_RECEIVER_ELEVATOR_CHANNEL);
+  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverPulseStates.ElevatorInputState,
+      &ElevatorICValues, PRIMARY_RECEIVER_ELEVATOR_CHANNEL, &PrimaryReceiverTimerPeriodCount);
 }
 
 /*
@@ -537,7 +646,8 @@ static ReceiverErrorStatus UpdateReceiverElevatorChannel(void)
  */
 static ReceiverErrorStatus UpdateReceiverRudderChannel(void)
 {
-  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverInputStates.RudderInputState, &RudderICValues, PRIMARY_RECEIVER_RUDDER_CHANNEL);
+  return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &PrimaryReceiverICConfig, &ReceiverPulseStates.RudderInputState,
+      &RudderICValues, PRIMARY_RECEIVER_RUDDER_CHANNEL, &PrimaryReceiverTimerPeriodCount);
 }
 
 /*
@@ -548,7 +658,8 @@ static ReceiverErrorStatus UpdateReceiverRudderChannel(void)
  */
 static ReceiverErrorStatus UpdateReceiverGearChannel(void)
 {
-  return UpdateReceiverChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, &ReceiverInputStates.GearInputState, &GearICValues, AUX_RECEIVER_GEAR_CHANNEL);
+  return UpdateReceiverChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, &ReceiverPulseStates.GearInputState,
+      &GearICValues, AUX_RECEIVER_GEAR_CHANNEL, &AuxReceiverTimerPeriodCount);
 }
 
 /*
@@ -559,47 +670,6 @@ static ReceiverErrorStatus UpdateReceiverGearChannel(void)
  */
 static ReceiverErrorStatus UpdateReceiverAux1Channel(void)
 {
-  return UpdateReceiverChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, &ReceiverInputStates.Aux1InputState, &Aux1ICValues, AUX_RECEIVER_AUX1_CHANNEL);
-}
-
-/*
- * @brief       Checks if the RC transmission between transmitter and receiver is active.
- *              In case of transmitter is turned off or aircraft is out of transmission range
- *              this function will return false.
- * @param	None.
- * @retval	true if transmission is active, else false.
- */
-ReceiverErrorStatus IsReceiverActive()
-{
-  // TODO: Check last time for pulse. The throttle channel typically keeps transmitting a pulse in case of
-  // connection failure, but the other channels (all of them?) go silent with no pulses
-  // Perhaps count amount of reset interrupts without a pulse flank being detected
-  return true;
-}
-
-/**
-  * @brief  Input Capture callback in non blocking mode
-  * @param  htim : TIM IC handle
-  * @retval None
-  */
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
-{
-  if (htim->Instance==PRIMARY_RECEIVER_TIM)
-    {
-      if(htim->Channel == PRIMARY_RECEIVER_THROTTLE_ACTIVE_CHANNEL)
-        UpdateReceiverThrottleChannel();
-      else if(htim->Channel == PRIMARY_RECEIVER_AILERON_ACTIVE_CHANNEL)
-        UpdateReceiverAileronChannel();
-      else if(htim->Channel == PRIMARY_RECEIVER_ELEVATOR_ACTIVE_CHANNEL)
-        UpdateReceiverElevatorChannel();
-      else if(htim->Channel == PRIMARY_RECEIVER_RUDDER_ACTIVE_CHANNEL)
-        UpdateReceiverRudderChannel();
-    }
-  else if (htim->Instance==AUX_RECEIVER_TIM)
-    {
-      if(htim->Channel == AUX_RECEIVER_GEAR_ACTIVE_CHANNEL)
-        UpdateReceiverGearChannel();
-      else if(htim->Channel == AUX_RECEIVER_AUX1_ACTIVE_CHANNEL)
-        UpdateReceiverAux1Channel();
-    }
+  return UpdateReceiverChannel(&AuxReceiverTimHandle, &AuxReceiverICConfig, &ReceiverPulseStates.Aux1InputState,
+      &Aux1ICValues, AUX_RECEIVER_AUX1_CHANNEL, &AuxReceiverTimerPeriodCount);
 }
