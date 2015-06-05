@@ -1,97 +1,178 @@
 /*****************************************************************************
- * @file    fcb/motor_control.c
+ * @file    motor_control.c
  * @author  ÅF Dragonfly
  * Daniel Stenberg, Embedded Systems
  * @version v. 0.0.1
  * @date    2014-09-29
- * @brief   Flight Control program for the ÅF Dragonfly quadcopter
- *          File contains pwm output
+ * @brief   File contains PWM output configuration and handling functions. PWM
+ *          pulses of ~1-2 ms are used to control the ESC:s, which in turn control
+ *          Dragonfly's motors.
+ *
+ *          The ESC:s are of the T-motor brand and can
+ *          withstand up to 30 A continuous current. They take up to 400 Hz pulse
+ *          control signals.
+ *
+ *          The motors are also of T-motor brand (U3 Power Type model) with a KV
+ *          value of 700. Coupled with the 11x3.7 carbon fibre propellers, they
+ *          can spin at up to 8700 rpm providing a lifting force of ~12 N.
  ******************************************************************************/
 
-/* @TIM4_IOconfig
- * @brief	Initializes and configures output pins used to
- * 			physically transmit PWM motor control signals.
- * @param	None.
- * @retval	None.
- */
+/* Includes */
 #include "motor_control.h"
+#include "main.h"
 
-void TIM4_IOconfig(void)
-{
-  GPIO_InitTypeDef GPIO_InitStructure;
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
 
-  /* GPIO D clock enable */
-  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
+/* Timer time base handler */
+TIM_HandleTypeDef    TimHandle;
 
-  /* GPIOA Configuration: Channel 1, 2, 3 and 4 as alternate function push-pull */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
-  GPIO_Init(GPIOD, &GPIO_InitStructure);
+/* Private function prototypes -----------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
 
-  GPIO_PinAFConfig(GPIOD, GPIO_PinSource12, GPIO_AF_2);
-  GPIO_PinAFConfig(GPIOD, GPIO_PinSource13, GPIO_AF_2);
-  GPIO_PinAFConfig(GPIOD, GPIO_PinSource14, GPIO_AF_2);
-  GPIO_PinAFConfig(GPIOD, GPIO_PinSource15, GPIO_AF_2);
-}
-
-/* @TIM4_Setup
- * @brief	Sets up the Timer 4 timebase. Timer 4 is responsible
- * 			for producing the PWM motor control signals at 400 Hz.
+/*
+ * @brief	Initializes and configures the timer used to produce PWM output
+ *              to control the ESC:s with.
  * @param	None.
  * @retval	None.
  */
-void TIM4_Setup(void)
+void MotorControl_Config(void)
 {
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure4; // TIM4
+  /*##-1- Configure the TIM peripheral #######################################*/
 
-  /* TIM4 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4 , ENABLE);
+  /* Timer Output Compare Configuration Structure declaration */
+  TIM_OC_InitTypeDef ocConfig;
 
-  /* TIM4 Time Base configuration */
-  TIM_TimeBaseStructure4.TIM_Prescaler = SystemCoreClock/MOTOR_OUT_SAMPLECLOCK-1; // SystemCoreClock (72 MHz on STM32F303) to 24 MHz (Prescaler = 3)
-  TIM_TimeBaseStructure4.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseStructure4.TIM_Period = TIM4_Period-1;
-  TIM_TimeBaseStructure4.TIM_ClockDivision = TIM_CKD_DIV1;
-  TIM_TimeBaseStructure4.TIM_RepetitionCounter = 0;
+  /* Initialize Motor TIM peripheral timebase */
+  TimHandle.Instance = TIM_MOTOR;
+  TimHandle.Init.Prescaler = SystemCoreClock/MOTOR_OUTPUT_COUNTER_CLOCK - 1;
+  TimHandle.Init.Period = MOTOR_OUTPUT_PERIOD;
+  TimHandle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  TimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
+  if(HAL_TIM_PWM_Init(&TimHandle) != HAL_OK)
+  {
+    /* Capture initialization Error */
+    Error_Handler();
+  }
 
-  TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure4);
+  /*##-2- Configure the PWM channels #########################################*/
+  /* Common configuration for all channels */
+  ocConfig.OCMode = TIM_OCMODE_PWM1;
+  ocConfig.OCPolarity = TIM_OCPOLARITY_HIGH;
+  ocConfig.OCFastMode = TIM_OCFAST_ENABLE;
 
-  /* TIM4 counter enable */
-  TIM_Cmd(TIM4, ENABLE);
+  /* Set the pulse value for Motor 1 */
+  ocConfig.Pulse = 0;
+  if(HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR1_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
+
+  /* Set the pulse value for Motor 2 */
+  ocConfig.Pulse = 0;
+  if(HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR2_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
+
+  /* Set the pulse value for Motor 3 */
+  ocConfig.Pulse = 0;
+  if(HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR3_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
+
+  /* Set the pulse value for Motor 4 */
+  ocConfig.Pulse = 0;
+  if(HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR4_CHANNEL) != HAL_OK)
+    {
+      /* Configuration Error */
+      Error_Handler();
+    }
+
+  /*##-3- Start PWM signals generation #######################################*/
+  /* Start Motor 1 channel */
+  if(HAL_TIM_PWM_Start(&TimHandle, MOTOR1_CHANNEL) != HAL_OK)
+    {
+      /* PWM Generation Error */
+      Error_Handler();
+    }
+  /* Start Motor 2 channel */
+  if(HAL_TIM_PWM_Start(&TimHandle, MOTOR2_CHANNEL) != HAL_OK)
+    {
+      /* PWM Generation Error */
+      Error_Handler();
+    }
+  /* Start Motor 3 channel */
+  if(HAL_TIM_PWM_Start(&TimHandle, MOTOR3_CHANNEL) != HAL_OK)
+    {
+      /* PWM Generation Error */
+      Error_Handler();
+    }
+  /* Start Motor 4 channel */
+  if(HAL_TIM_PWM_Start(&TimHandle, MOTOR4_CHANNEL) != HAL_OK)
+    {
+      /* PWM Generation Error */
+      Error_Handler();
+    }
 }
 
-/* @TIM4_SetupOC
- * @brief  Configures the Timer 4 OC registers for PWM output
- * 		   Channel 1 outputs on pin PD12
- * 		   Channel 2 outputs on pin PD13
- * 		   Channel 3 outputs on pin PD14
- * 		   Channel 4 outputs on pin PD15
- * @param  None
- * @retval None
+/*
+ * @brief       Sets the motor control PWM (sent to ESC) for motor 1
+ * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
+ * @retval      None.
  */
-void TIM4_SetupOC(void)
+void SetMotor1(uint16_t ctrlVal)
 {
-  TIM_OCInitTypeDef TIM_OCInitStructure;
-
-  /* Channel 1, 2, 3, 4 configuration in PWM mode */
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;
-  TIM_OCInitStructure.TIM_Pulse = 0;
-  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-  TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
-  TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
-  TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCIdleState_Reset;
-
-  // Initializes Timer 4 OC registers (Channels 1, 2, 3, 4)
-  TIM_OC1Init(TIM4, &TIM_OCInitStructure);
-  TIM_OC2Init(TIM4, &TIM_OCInitStructure);
-  TIM_OC3Init(TIM4, &TIM_OCInitStructure);
-  TIM_OC4Init(TIM4, &TIM_OCInitStructure);
-
-  /* TIM4 Main Output Enable */
-  // TIM_CtrlPWMOutputs(TIM4, ENABLE);
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/UINT16_MAX;
+  __HAL_TIM_SetCompare(&TimHandle, MOTOR1_CHANNEL, (uint16_t)ccrVal);
 }
+
+/*
+ * @brief       Sets the motor control PWM (sent to ESC) for motor 2
+ * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
+ * @retval      None.
+ */
+void SetMotor2(uint16_t ctrlVal)
+{
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/UINT16_MAX;
+  __HAL_TIM_SetCompare(&TimHandle, MOTOR2_CHANNEL, ccrVal);
+}
+
+/*
+ * @brief       Sets the motor control PWM (sent to ESC) for motor 3
+ * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
+ * @retval      None.
+ */
+void SetMotor3(uint16_t ctrlVal)
+{
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/UINT16_MAX;
+  __HAL_TIM_SetCompare(&TimHandle, MOTOR3_CHANNEL, ccrVal);
+}
+
+/*
+ * @brief       Sets the motor control PWM (sent to ESC) for motor 4
+ * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
+ * @retval      None.
+ */
+void SetMotor4(uint16_t ctrlVal)
+{
+  uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal*(ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)/UINT16_MAX;
+  __HAL_TIM_SetCompare(&TimHandle, MOTOR4_CHANNEL, ccrVal);
+}
+
+/* Private functions ---------------------------------------------------------*/
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/

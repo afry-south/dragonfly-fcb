@@ -11,13 +11,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "flight_control.h"
 #include "main.h"
-#include "RCinput.h"
+#include "receiver.h"
 #include "sensors.h"
 #include "motor_control.h"
 #include <math.h>
 
 /* Private variables ---------------------------------------------------------*/
-PWMRC_TimeTypeDef PWMInputTimes; // 6-channel PWM input width in seconds
 CtrlSignals_TypeDef CtrlSignals; // Physical control signals
 RefSignals_TypeDef RefSignals; // Control reference signals
 PWMMotor_TimeTypeDef PWMMotorTimes; // Motor output PWM widths [s]
@@ -35,32 +34,29 @@ enum FlightControlMode flightMode = MANUAL_FLIGHT;
 void UpdateControl(void)
 {
   ReadSensors(); // Reads gyroscope, accelerometer and magnetometer
-  GetPWMInputTimes(&PWMInputTimes); // Get 6 channel RC input pulse widths
-
-  // Read/write USB Virtual COM
-  //rwUSB();
+  // GetPWMInputTimes(&PWMInputTimes); // TODO Delete. Get 6 channel RC input pulse widths
 
   SetFlightMode();
 
   switch(flightMode)
   {
   case MANUAL_FLIGHT:
-    STM_EVAL_LEDOff(LED7);
-    STM_EVAL_LEDOff(LED8);
-    STM_EVAL_LEDOff(LED9);
-    STM_EVAL_LEDOff(LED10);
+    BSP_LED_Off(LED7);
+    BSP_LED_Off(LED8);
+    BSP_LED_Off(LED9);
+    BSP_LED_Off(LED10);
 
-    UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
+    // UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
     // Set motor output to lowest
-    ManualModeAllocation();
-    SetMotors();
+    // ManualModeMotorAllocation();
+    //SetMotors();
     return;
 
   case ATTITUDE_CONTROL:
-    STM_EVAL_LEDOff(LED7);
-    STM_EVAL_LEDOff(LED8);
-    STM_EVAL_LEDOff(LED9);
-    STM_EVAL_LEDOn(LED10);
+    BSP_LED_Off(LED7);
+    BSP_LED_Off(LED8);
+    BSP_LED_Off(LED9);
+    BSP_LED_On(LED10);
 
     UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
 
@@ -71,31 +67,30 @@ void UpdateControl(void)
     YawControl();
 
     ControlAllocation();
-    SetMotors();
+    //SetMotors();
     return;
 
   case SHUTDOWN_MOTORS:
-    STM_EVAL_LEDOff(LED7);
-    STM_EVAL_LEDOff(LED9);
-    STM_EVAL_LEDOff(LED10);
-    STM_EVAL_LEDOn(LED8);
+    BSP_LED_Off(LED7);
+    BSP_LED_Off(LED9);
+    BSP_LED_Off(LED10);
+    BSP_LED_On(LED8);
 
     UpdateStates(); // Updates state estimates using Kalman filtering of sensor readings
 
     // Set motor output to lowest
-    PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
-    SetMotors();
+    // PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
+    //SetMotors();
     return;
 
   case INITIALIZE_STATES:
-    STM_EVAL_LEDOn(LED9);
-    ResetUserButton(); // Reset user button
+    BSP_LED_On(LED9);
 
     InitializeStateEstimation();
 
     // Set motor output to lowest
-    PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
-    SetMotors();
+//    PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
+    //SetMotors();
     return;
 
   case CALIBRATE_SENSORS:
@@ -109,15 +104,15 @@ void UpdateControl(void)
          * It does not matter in which direction the quadcopter is rotated.
          * */
 
-        STM_EVAL_LEDOn(LED3);
-        ResetUserButton(); // Reset user button
+        BSP_LED_On(LED3);
+        // ResetUserButton(); // Reset user button
 
         CalibrateMag();
 
         // Set motor output to lowest
-        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-            PWMMotorTimes.M4 = MIN_ESC_VAL;
-        SetMotors();
+//        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
+//            PWMMotorTimes.M4 = MIN_ESC_VAL;
+        //SetMotors();
       }
     else if (!GetAccCalibrated())
       {
@@ -126,14 +121,14 @@ void UpdateControl(void)
          * Level, upside-down, left side down, right side down, front down, rear down. (Does not need to be exact)
          * */
 
-        STM_EVAL_LEDOn(LED5);
-        ResetUserButton(); // Reset user button
+        BSP_LED_On(LED5);
+        // ResetUserButton(); // Reset user button
 
         CalibrateAcc();
 
         // Set motor output to lowest
-        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
-        SetMotors();
+//        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 = PWMMotorTimes.M4 = MIN_ESC_VAL;
+        //SetMotors();
       }
     else if (!GetGyroCalibrated())
       {
@@ -141,15 +136,15 @@ void UpdateControl(void)
          * Hold the quadcopter completely still, put it on the ground or equivalent.
          * */
 
-        STM_EVAL_LEDOn(LED7);
-        ResetUserButton(); // Reset user button
+        BSP_LED_On(LED7);
+        // ResetUserButton(); // Reset user button
 
         CalibrateGyro();
 
         // Set motor output to lowest
-        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
-            PWMMotorTimes.M4 = MIN_ESC_VAL;
-        SetMotors();
+//        PWMMotorTimes.M1 = PWMMotorTimes.M2 = PWMMotorTimes.M3 =
+//            PWMMotorTimes.M4 = MIN_ESC_VAL;
+        //SetMotors();
       }
     return;
 
@@ -165,7 +160,8 @@ void UpdateControl(void)
  */
 void SetFlightMode()
 {
-  if (CheckRCConnection())
+#ifdef TODO
+  if (IsReceiverActive())
     {
       if (PWMInputTimes.Gear >= GetRCmid())
         flightMode = ATTITUDE_CONTROL;
@@ -176,6 +172,7 @@ void SetFlightMode()
     {
       flightMode = SHUTDOWN_MOTORS;
     }
+#endif
 }
 
 /* @AltitudeControl
@@ -315,6 +312,8 @@ void YawControl(void)
  */
 void SetReferenceSignals(void)
 {
+#ifdef TODO
+
   // Set velocity reference limits
   if (PWMInputTimes.Throttle >= GetRCmin()
       && PWMInputTimes.Throttle <= GetRCmax())
@@ -345,6 +344,7 @@ void SetReferenceSignals(void)
         * (PWMInputTimes.Rudder - GetRCmid());
   else
     RefSignals.YawRate = GetRCmid();
+#endif
 }
 
 /* ControlAllocation
@@ -373,33 +373,33 @@ void ControlAllocation(void)
       + AT * LENGTH_ARM * CtrlSignals.Yaw - 4 * BQ * CT * LENGTH_ARM)
       / ((float) 4 * AT * BQ * LENGTH_ARM);
 
-  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
-    PWMMotorTimes.M1 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
-    PWMMotorTimes.M1 = PWMMotorTimes.M1;
-  else
-    PWMMotorTimes.M1 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
-    PWMMotorTimes.M2 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
-    PWMMotorTimes.M2 = PWMMotorTimes.M2;
-  else
-    PWMMotorTimes.M2 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
-    PWMMotorTimes.M3 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
-    PWMMotorTimes.M3 = PWMMotorTimes.M3;
-  else
-    PWMMotorTimes.M3 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
-    PWMMotorTimes.M4 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
-    PWMMotorTimes.M4 = PWMMotorTimes.M4;
-  else
-    PWMMotorTimes.M4 = MIN_ESC_VAL;
+//  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
+//    PWMMotorTimes.M1 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M1 = PWMMotorTimes.M1;
+//  else
+//    PWMMotorTimes.M1 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
+//    PWMMotorTimes.M2 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M2 = PWMMotorTimes.M2;
+//  else
+//    PWMMotorTimes.M2 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
+//    PWMMotorTimes.M3 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M3 = PWMMotorTimes.M3;
+//  else
+//    PWMMotorTimes.M3 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
+//    PWMMotorTimes.M4 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M4 = PWMMotorTimes.M4;
+//  else
+//    PWMMotorTimes.M4 = MIN_ESC_VAL;
 }
 
 /* ManualModeAllocation
@@ -409,6 +409,7 @@ void ControlAllocation(void)
  */
 void ManualModeAllocation(void)
 {
+#ifdef TODO
   PWMMotorTimes.M1 = 0.9
       * (PWMInputTimes.Throttle - 2 * (PWMInputTimes.Aileron - GetRCmid())
           - 2 * (PWMInputTimes.Elevator - GetRCmid())
@@ -426,33 +427,34 @@ void ManualModeAllocation(void)
           + 2 * (PWMInputTimes.Elevator - GetRCmid())
           + 2 * (PWMInputTimes.Rudder - GetRCmid()));
 
-  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
-    PWMMotorTimes.M1 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
-    PWMMotorTimes.M1 = PWMMotorTimes.M1;
-  else
-    PWMMotorTimes.M1 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
-    PWMMotorTimes.M2 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
-    PWMMotorTimes.M2 = PWMMotorTimes.M2;
-  else
-    PWMMotorTimes.M2 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
-    PWMMotorTimes.M3 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
-    PWMMotorTimes.M3 = PWMMotorTimes.M3;
-  else
-    PWMMotorTimes.M3 = MIN_ESC_VAL;
-
-  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
-    PWMMotorTimes.M4 = MAX_ESC_VAL;
-  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
-    PWMMotorTimes.M4 = PWMMotorTimes.M4;
-  else
-    PWMMotorTimes.M4 = MIN_ESC_VAL;
+//  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
+//    PWMMotorTimes.M1 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M1 = PWMMotorTimes.M1;
+//  else
+//    PWMMotorTimes.M1 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
+//    PWMMotorTimes.M2 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M2 = PWMMotorTimes.M2;
+//  else
+//    PWMMotorTimes.M2 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
+//    PWMMotorTimes.M3 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M3 = PWMMotorTimes.M3;
+//  else
+//    PWMMotorTimes.M3 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
+//    PWMMotorTimes.M4 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M4 = PWMMotorTimes.M4;
+//  else
+//    PWMMotorTimes.M4 = MIN_ESC_VAL;
+#endif
 }
 
 /* @InitPIDControllers
@@ -516,21 +518,21 @@ void InitPIDControllers()
  */
 void TIM7_Setup(void)
 {
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure7; // TIM7 init struct
-
-  /* TIM7 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, ENABLE);
-
-  /* TIM7 Time Base configuration */
-  TIM_TimeBaseStructure7.TIM_Prescaler = SystemCoreClock / TIM7_FREQ - 1; // Scaling of system clock freq
-  TIM_TimeBaseStructure7.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseStructure7.TIM_Period = TIM7_FREQ / TIM7_CTRLFREQ - 1; // Counter reset value
-  TIM_TimeBaseStructure7.TIM_ClockDivision = TIM_CKD_DIV1;
-  TIM_TimeBaseStructure7.TIM_RepetitionCounter = 0;
-  TIM_TimeBaseInit(TIM7, &TIM_TimeBaseStructure7);
-
-  /* TIM7 counter enable */
-  TIM_Cmd(TIM7, ENABLE);
+//  TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure7; // TIM7 init struct
+//
+//  /* TIM7 clock enable */
+//  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, ENABLE);
+//
+//  /* TIM7 Time Base configuration */
+//  TIM_TimeBaseStructure7.TIM_Prescaler = SystemCoreClock / TIM7_FREQ - 1; // Scaling of system clock freq
+//  TIM_TimeBaseStructure7.TIM_CounterMode = TIM_CounterMode_Up;
+//  TIM_TimeBaseStructure7.TIM_Period = TIM7_FREQ / TIM7_CTRLFREQ - 1; // Counter reset value
+//  TIM_TimeBaseStructure7.TIM_ClockDivision = TIM_CKD_DIV1;
+//  TIM_TimeBaseStructure7.TIM_RepetitionCounter = 0;
+//  TIM_TimeBaseInit(TIM7, &TIM_TimeBaseStructure7);
+//
+//  /* TIM7 counter enable */
+//  TIM_Cmd(TIM7, ENABLE);
 }
 
 /* TIM7_SetupIRQ
@@ -540,37 +542,14 @@ void TIM7_Setup(void)
  */
 void TIM7_SetupIRQ(void)
 {
-
-  /* Interrupt config */
-  NVIC_InitTypeDef nvicStructure;
-  nvicStructure.NVIC_IRQChannel = TIM7_IRQn;
-  nvicStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-  nvicStructure.NVIC_IRQChannelSubPriority = 0x00;
-  nvicStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&nvicStructure);
-
-  TIM_ITConfig(TIM7, TIM_IT_Update, ENABLE);
-}
-
-/* @SetMotors
- * @brief       Sets the motor PWM, which is sent to the ESCs
- * @param       None.
- * @retval      None.
- */
-void SetMotors()
-{
-  TIM_SetCompare1(TIM4, GetPWM_CCR(PWMMotorTimes.M1)); // To motor 1 (PD12)
-  TIM_SetCompare2(TIM4, GetPWM_CCR(PWMMotorTimes.M2)); // To motor 2 (PD13)
-  TIM_SetCompare3(TIM4, GetPWM_CCR(PWMMotorTimes.M3)); // To motor 3 (PD14)
-  TIM_SetCompare4(TIM4, GetPWM_CCR(PWMMotorTimes.M4)); // To motor 4 (PD15)
-}
-
-/* @getPWM_CCR
- * @brief       Recalculates a time pulse width to number of TIM4 clock ticks.
- * @param       t is the pulse width in seconds.
- * @retval      TIM4 clock ticks to be written to TIM4 CCR output.
- */
-uint16_t GetPWM_CCR(float t)
-{
-  return (uint16_t)((float) (t * SystemCoreClock / ((float) (TIM_GetPrescaler(TIM4) + 1))));
+//
+//  /* Interrupt config */
+//  NVIC_InitTypeDef nvicStructure;
+//  nvicStructure.NVIC_IRQChannel = TIM7_IRQn;
+//  nvicStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
+//  nvicStructure.NVIC_IRQChannelSubPriority = 0x00;
+//  nvicStructure.NVIC_IRQChannelCmd = ENABLE;
+//  NVIC_Init(&nvicStructure);
+//
+//  TIM_ITConfig(TIM7, TIM_IT_Update, ENABLE);
 }

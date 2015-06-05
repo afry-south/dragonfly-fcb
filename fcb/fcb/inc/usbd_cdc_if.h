@@ -4,7 +4,7 @@
   * @author  MCD Application Team
   * @version V2.2.0
   * @date    13-June-2014
-  * @brief   Header for dfu_mal.c file.
+  * @brief   Header for usbd_cdc_if_template.c file.
   ******************************************************************************
   * @attention
   *
@@ -26,8 +26,8 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USBD_CDC_IF_TEMPLATE_H
-#define __USBD_CDC_IF_TEMPLATE_H
+#ifndef __USBD_CDC_IF_H
+#define __USBD_CDC_IF_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc.h"
@@ -35,10 +35,11 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
-extern USBD_CDC_ItfTypeDef  USBD_CDC_Template_fops;
+extern USBD_CDC_ItfTypeDef  USBD_CDC_fops;
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-#endif /* __USBD_CDC_IF_TEMPLATE_H */
+uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
+#endif /* __USBD_CDC_IF_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

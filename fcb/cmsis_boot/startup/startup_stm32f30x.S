@@ -1,10 +1,9 @@
-/**
-  ******************************************************************************
+/*******************************************************************************
   * @file      startup_stm32f30x.s
   * @author    MCD Application Team
   * @version   V1.0.0
   * @date      04-Spetember-2012
-  * @brief     STM32F30x Devices vector table for RIDE7 toolchain. 
+  * @brief     STM32F30x Devices vector table for GCC toolchain.
   *            This module performs:
   *                - Set the initial SP
   *                - Set the initial PC == Reset_Handler,
@@ -33,13 +32,15 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   *
-  ******************************************************************************
-  */
+  ******************************************************************************/
     
   .syntax unified
   .cpu cortex-m4
   .fpu softvfp
   .thumb
+
+#define __HEAP_SIZE 	0x2000
+#define __STACK_SIZE	0x2000
 
 .global  g_pfnVectors
 .global  Default_Handler
@@ -56,6 +57,40 @@ defined in linker script */
 /* end address for the .bss section. defined in linker script */
 .word  _ebss
 /* stack used for SystemInit_ExtMemCtl; always internal RAM used */
+
+.equ  BootRAM,        0xF1E0F85F
+
+	.section .stack
+	.align	3
+#ifdef __STACK_SIZE
+	.equ	Stack_Size, __STACK_SIZE
+#else
+	.equ	Stack_Size, 0xc00
+#endif
+	.globl	__StackTop
+	.globl	__StackLimit
+__StackLimit:
+	.space	Stack_Size
+	.size	__StackLimit, . - __StackLimit
+__StackTop:
+	.size	__StackTop, . - __StackTop
+
+	.section .heap
+	.align	3
+#ifdef __HEAP_SIZE
+	.equ	Heap_Size, __HEAP_SIZE
+#else
+	.equ	Heap_Size, 0
+#endif
+	.globl	__HeapBase
+	.globl	__HeapLimit
+__HeapBase:
+	.if	Heap_Size
+	.space	Heap_Size
+	.endif
+	.size	__HeapBase, . - __HeapBase
+__HeapLimit:
+	.size	__HeapLimit, . - __HeapLimit
 
 /**
  * @brief  This is the code that gets called when the processor first

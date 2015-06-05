@@ -59,9 +59,9 @@ typedef struct
  	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 * The total field strength is 50552 nT (505.52 mGauss) */
 
 /* Includes */
-#include "stm32f30x.h"
-#include "stm32f3_discovery_lsm303dlhc.h"
-#include "stm32f3_discovery_l3gd20.h"
+#include "stm32f3xx.h"
+#include "stm32f3_discovery_accelerometer.h"
+#include "stm32f3_discovery_gyroscope.h"
 #include "stm32f3_discovery.h"
 #include <stdio.h>
 #include "math.h"

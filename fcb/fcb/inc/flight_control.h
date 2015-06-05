@@ -107,23 +107,13 @@ typedef struct
 #define N_YR				15.0		// Max derivative gain (often 10-20)
 #define MAX_YAW_RATE		10*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
-/* ESC range */
-#define MAX_ESC_VAL 0.0020
-#define MID_ESC_CAL 0.0015
-#define MIN_ESC_VAL 0.0010
-
 /* Flight performance */
 #define SLOW_FLIGHT 	0
 #define NORMAL_FLIGHT	1
-#define FAST_FLIGHT		2
+#define FAST_FLIGHT     2
 
-#include "stm32f30x.h"
+#include "stm32f3xx.h"
 #include "stm32f3_discovery.h"
-#include "stm32f30x_it.h"
-#include "stm32f30x_tim.h"
-#include "stm32f30x_gpio.h"
-#include "stm32f30x_rcc.h"
-#include "stm32f30x_misc.h"
 
 /* Function prototype declarations */
 
@@ -147,9 +137,6 @@ void YawControl(void);
 void SetFlightMode(void);
 
 void InitPIDControllers(void);
-
-void SetMotors(void);
-uint16_t GetPWM_CCR(float dutycycle);
 
 #endif /* __CONTROL_H */
 

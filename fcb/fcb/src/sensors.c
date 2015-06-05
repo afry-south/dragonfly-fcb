@@ -63,6 +63,7 @@ char ctrlbIsRead = 0;
  */
 void GyroConfig(void)
 {
+#ifdef TODO
   L3GD20_InitTypeDef L3GD20_InitStructure;
   L3GD20_FilterConfigTypeDef L3GD20_FilterStructure;
 
@@ -81,6 +82,7 @@ void GyroConfig(void)
   L3GD20_FilterConfig(&L3GD20_FilterStructure) ;
 
   L3GD20_FilterCmd(L3GD20_HIGHPASSFILTER_ENABLE);
+#endif
 }
 
 /**
@@ -90,6 +92,7 @@ void GyroConfig(void)
  */
 void GyroReadAngRate(volatile float* pfData)
 {
+#ifdef TODO
   uint8_t tmpbuffer[6] ={0};
   int16_t RawData[3] = {0};
   uint8_t tmpreg = 0;
@@ -136,6 +139,7 @@ void GyroReadAngRate(volatile float* pfData)
   pfData[0] = -(float)RawData[1]/sensitivity * PI/180;	// Output in radians/second
   pfData[1] = (float)RawData[0]/sensitivity * PI/180;		// Raw data index inverted and minus sign introduced
   pfData[2] = (float)RawData[2]/sensitivity * PI/180;		// to align gyroscope with board directions
+#endif
 }
 
 /** CalibrateGyro
@@ -145,6 +149,7 @@ void GyroReadAngRate(volatile float* pfData)
  */
 void CalibrateGyro(void)
 {
+#ifdef TODO
   if(!GyroCalibrated)
     {
       CalRollSum += GyroBuffer[0];
@@ -160,6 +165,7 @@ void CalibrateGyro(void)
           GyroCalibrated = 1;
         }
     }
+#endif
 }
 
 /** GetGyroCalibrated
@@ -179,6 +185,7 @@ char GetGyroCalibrated(void)
  */
 void CompassConfig(void)
 {
+#ifdef TODO
   LSM303DLHCMag_InitTypeDef LSM303DLHC_InitStructure;
   LSM303DLHCAcc_InitTypeDef LSM303DLHCAcc_InitStructure;
   LSM303DLHCAcc_FilterConfigTypeDef LSM303DLHCFilter_InitStructure;
@@ -210,6 +217,7 @@ void CompassConfig(void)
   /* Configure the accelerometer LPF main parameters */
   LSM303DLHC_AccFilterConfig(&LSM303DLHCFilter_InitStructure);
   LSM303DLHC_AccFilterCmd(DISABLE);
+#endif
 }
 
 //void DMA1_Channel7_IRQHandler(void)
@@ -243,6 +251,7 @@ void CompassConfig(void)
  */
 void CompassReadAcc(volatile float* pfData)
 {
+#ifdef TODO
   int16_t pnRawData[3];
   uint8_t buffer[6], cDivider;
   uint8_t i = 0;
@@ -251,12 +260,12 @@ void CompassReadAcc(volatile float* pfData)
   /* Read the register content */
   if(ctrlxIsRead == 0)
     {
-      LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlx, 2);
+//      LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlx, 2);
       ctrlxIsRead = 1;
     }
 
   /* Read acceleration data */
-  LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, buffer, 6);
+//  LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, buffer, 6);
 
   if(ctrlx[1]&0x40)
     cDivider=64;
@@ -307,6 +316,7 @@ void CompassReadAcc(volatile float* pfData)
   pfData[0] = (float)pnRawData[0]/LSM_Acc_Sensitivity / 1000 - AccOffsets[0];		// Output in g (grav. acc. const.)
   pfData[1] = (float)pnRawData[1]/LSM_Acc_Sensitivity / 1000 - AccOffsets[1];
   pfData[2] = (float)pnRawData[2]/LSM_Acc_Sensitivity / 1000 - AccOffsets[2];
+#endif
 }
 
 /** AccAttitude
@@ -316,12 +326,14 @@ void CompassReadAcc(volatile float* pfData)
  */
 void AccAttitude(volatile float* pfData)
 {
+#ifdef TODO
   float SinAccRoll = -AccBuffer[1];
   float CosAccRoll = sqrtf(1-SinAccRoll*SinAccRoll);
   float SinAccPitch = AccBuffer[0]/CosAccRoll;
 
   pfData[0] = asinf(SinAccRoll);
   pfData[1] = asinf(SinAccPitch);
+#endif
 }
 
 /** CalibrateAcc
@@ -331,50 +343,52 @@ void AccAttitude(volatile float* pfData)
  */
 void CalibrateAcc(void)
 {
-//  if(!AccCalibrated)
-//    {
-      //		float accSamples[6][3] = {0.0f};
-      //		float accSumSq[3] = {0.0f}; // TODO move
-      //		float accSum[3] = {0.0f};
-      //
-      //		// First ACC_MEANVAR_SAMPLES samples used to determine mean and variance
-      //		if(GetUserButton() >= 0x01 && AccMeanVarSample <= ACC_MEANVAR_SAMPLES)
-      //		{
-      //			// Insert delay/wait/timeout 1-2 seconds before first measurement
-      //
-      //			accSum[0] += AccBuffer[0];
-      //			accSum[1] += AccBuffer[1];
-      //			accSum[2] += AccBuffer[2];
-      //
-      //			accSumSq[0] += AccBuffer[0]*AccBuffer[0];
-      //			accSumSq[1] += AccBuffer[1]*AccBuffer[1];
-      //			accSumSq[2] += AccBuffer[2]*AccBuffer[2];
-      //
-      //			if(AccMeanVarSample >= ACC_CALIBRATION_SAMPLES)
-      //			{
-      //				accSamples[GetUserButton()-1][0] = accSum[0]/ACC_CALIBRATION_SAMPLES;
-      //				accSamples[GetUserButton()-1][1] = accSum[1]/ACC_CALIBRATION_SAMPLES;
-      //				accSamples[GetUserButton()-1][2] = accSum[2]/ACC_CALIBRATION_SAMPLES;
-      //				if(GetUserButton() >= 0x06)
-      //					AccCalSampled = 1;
-      //			}
-      //		}
-      //
-      //		if(AccCalSampled)
-      //		{
-      //			if(change >= eps && iterations < MAX_ACCCAL_ITERATIONS)
-      //			{
-      //				CalcAccCalMatrices();
-      //				GetDelta();
-      //
-      //				AccOffsets[0] -= delta_acc[0];
-      //				AccOffsets[1] -= delta_acc[1];
-      //				AccOffsets[2] -= delta_acc[2];
-      //
-      //				change = delta_acc[0]*delta_acc[0] + delta_acc[1]*delta_acc[1] + delta_acc[2]*delta_acc[2];
-      //			}
-      //		}
-//    }
+#ifdef TODO
+  if(!AccCalibrated)
+    {
+      float accSamples[6][3] = {0.0f};
+      float accSumSq[3] = {0.0f}; // TODO move
+      float accSum[3] = {0.0f};
+
+      // First ACC_MEANVAR_SAMPLES samples used to determine mean and variance
+      if(GetUserButton() >= 0x01 && AccMeanVarSample <= ACC_MEANVAR_SAMPLES)
+        {
+          // Insert delay/wait/timeout 1-2 seconds before first measurement
+
+          accSum[0] += AccBuffer[0];
+          accSum[1] += AccBuffer[1];
+          accSum[2] += AccBuffer[2];
+
+          accSumSq[0] += AccBuffer[0]*AccBuffer[0];
+          accSumSq[1] += AccBuffer[1]*AccBuffer[1];
+          accSumSq[2] += AccBuffer[2]*AccBuffer[2];
+
+          if(AccMeanVarSample >= ACC_CALIBRATION_SAMPLES)
+            {
+              accSamples[GetUserButton()-1][0] = accSum[0]/ACC_CALIBRATION_SAMPLES;
+              accSamples[GetUserButton()-1][1] = accSum[1]/ACC_CALIBRATION_SAMPLES;
+              accSamples[GetUserButton()-1][2] = accSum[2]/ACC_CALIBRATION_SAMPLES;
+              if(GetUserButton() >= 0x06)
+                AccCalSampled = 1;
+            }
+        }
+
+      if(AccCalSampled)
+        {
+          if(change >= eps && iterations < MAX_ACCCAL_ITERATIONS)
+            {
+              CalcAccCalMatrices();
+              GetDelta();
+
+              AccOffsets[0] -= delta_acc[0];
+              AccOffsets[1] -= delta_acc[1];
+              AccOffsets[2] -= delta_acc[2];
+
+              change = delta_acc[0]*delta_acc[0] + delta_acc[1]*delta_acc[1] + delta_acc[2]*delta_acc[2];
+            }
+        }
+    }
+#endif
 }
 
 /** GetAccCalibrated
@@ -394,6 +408,7 @@ char GetAccCalibrated(void)
  */
 void CompassReadMag(volatile float* pfData)
 {
+#ifdef TODO
   static uint8_t buffer[6] = {0};
   uint16_t Magn_Sensitivity_XY = 0, Magn_Sensitivity_Z = 0;
 
@@ -442,6 +457,7 @@ void CompassReadMag(volatile float* pfData)
   pfData[0] = (float) (((int16_t)(((uint16_t)buffer[0] << 8) + buffer[1])*1000)/Magn_Sensitivity_XY - MagOffsets[0])/MagXNorm;
   pfData[1] = (float) (((int16_t)(((uint16_t)buffer[4] << 8) + buffer[5])*1000)/Magn_Sensitivity_XY - MagOffsets[1])/MagYNorm;
   pfData[2] = (float) (((int16_t)(((uint16_t)buffer[2] << 8) + buffer[3])*1000)/Magn_Sensitivity_Z - MagOffsets[2])/MagZNorm;
+#endif
 }
 
 /** CalibrateMag
@@ -451,6 +467,7 @@ void CompassReadMag(volatile float* pfData)
  */
 void CalibrateMag(void)
 {
+#ifdef TODO
   if(!MagCalibrated)
     {
       if(MagBuffer[0] > CalMagXMax)
@@ -485,6 +502,7 @@ void CalibrateMag(void)
           MagCalibrated = 1;
         }
     }
+#endif
 }
 
 /** GetMagCalibrated
@@ -504,6 +522,7 @@ char GetMagCalibrated(void)
  */
 void InitializeStateEstimation(void)
 {
+#ifdef TODO
   if(!StatesInitialized)
     {
       InitRollSum += AccAttitudeBuffer[0];
@@ -527,6 +546,7 @@ void InitializeStateEstimation(void)
           StatesInitialized = 1;
         }
     }
+#endif
 }
 
 /** GetStatesInitialized

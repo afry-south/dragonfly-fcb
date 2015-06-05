@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    Demonstrations/Inc/usbd_desc.h
+  * @file    USB_Device/CDC_Standalone/Inc/usbd_desc.h
   * @author  MCD Application Team
   * @version V1.0.0
   * @date    18-June-2014
@@ -41,7 +41,7 @@
 #define  USB_SIZ_STRING_SERIAL               0x1A
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-extern USBD_DescriptorsTypeDef HID_Desc;
+extern USBD_DescriptorsTypeDef VCP_Desc;
 
 #endif /* __USBD_DESC_H */
  
