@@ -185,9 +185,17 @@ int16_t GetAux1ReceiverChannel(void)
  * @param       None.
  * @retval      None.
  */
-void CalibrateReceiver(void)
+ReceiverErrorStatus CalibrateReceiver(void)
 {
   // TODO
+  // CalibrateReceiverChannel(&ThrottleCalibrationValues);
+  // CalibrateReceiverChannel(&AileronCalibrationValues);
+  // CalibrateReceiverChannel(&ElevatorCalibrationValues);
+  // CalibrateReceiverChannel(&RudderCalibrationValues);
+  // CalibrateReceiverChannel(&GearCalibrationValues);
+  // CalibrateReceiverChannel(&Aux1CalibrationValues);
+
+  return RECEIVER_ERROR;
 }
 
 /*
@@ -354,7 +362,7 @@ static ReceiverErrorStatus PrimaryReceiverInput_Config(void)
   PrimaryReceiverTimHandle.Instance = PRIMARY_RECEIVER_TIM;
 
   /* Initialize TIM peripheral to maximum period with suitable counter clocking (receiver PWM input period is ~22 ms) */
-  PrimaryReceiverTimHandle.Init.Period = UINT16_MAX;
+  PrimaryReceiverTimHandle.Init.Period = RECEIVER_COUNTER_PERIOD;
   PrimaryReceiverTimHandle.Init.Prescaler = SystemCoreClock/RECEIVER_TIM_COUNTER_CLOCK - 1;
   PrimaryReceiverTimHandle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   PrimaryReceiverTimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -465,7 +473,7 @@ static ReceiverErrorStatus AuxReceiverInput_Config(void)
   AuxReceiverTimHandle.Instance = AUX_RECEIVER_TIM;
 
   /* Initialize TIM peripheral to maximum period with suitable counter clocking (receiver PWM input period is ~22 ms) */
-  AuxReceiverTimHandle.Init.Period = UINT16_MAX;
+  AuxReceiverTimHandle.Init.Period = RECEIVER_COUNTER_PERIOD;
   AuxReceiverTimHandle.Init.Prescaler = SystemCoreClock/RECEIVER_TIM_COUNTER_CLOCK - 1;
   AuxReceiverTimHandle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   AuxReceiverTimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;

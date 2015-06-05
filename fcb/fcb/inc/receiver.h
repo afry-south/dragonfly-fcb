@@ -16,6 +16,7 @@
 #include <stdbool.h>
 
 /* Exported constants --------------------------------------------------------*/
+/* Exported types ------------------------------------------------------------*/
 typedef enum
 {
   PULSE_LOW = 0,
@@ -27,8 +28,6 @@ typedef enum
   RECEIVER_ERROR = 0,
   RECEIVER_OK = !RECEIVER_ERROR
 } ReceiverErrorStatus;
-
-/* Exported types ------------------------------------------------------------*/
 
 /* Exported macro ------------------------------------------------------------*/
 
@@ -92,18 +91,21 @@ typedef enum
 
 /* Common definitions for the receiver TIM timers ############################*/
 /* Defintions for receiver TIM timebase */
-#define RECEIVER_TIM_COUNTER_CLOCK                      18000000
+#define RECEIVER_TIM_COUNTER_CLOCK                      18000000        // 18 MHz counter update with 16-bit period
+#define RECEIVER_COUNTER_PERIOD                         UINT16_MAX      // reset gives ~3.64 ms counter period
 
 /* RC min max default count values
  * The Spektrum AR610 receiver resolution is only 2048, so this should be more than enough! */
 #define RECEIVER_DEFAULT_MAX_COUNT                      34560   // Corresponds to 1.92 ms with 18Mhz counter clock
 #define RECEIVER_DEFAULT_MIN_COUNT                      19440   // Corresponds to 1.08 ms with 18Mhz counter clock
 
-/* Used for sanity check of IC count*/
+/* Used for sanity check of IC count and calibration */
 #define RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT             45000   // Corresponds to 2.50 ms with 18Mhz counter clock
 #define RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT             9000    // Corresponds to 0.50 ms with 18Mhz counter clock
 
-#define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      50
+#define RECEIVER_CALIBRATION_PERIODS_COUNT              10000   // Corresponds to ~36.4 s
+
+#define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.09 s
 
 /* Exported functions ------------------------------------------------------- */
 ReceiverErrorStatus ReceiverInput_Config(void);
@@ -113,7 +115,7 @@ int16_t GetElevatorReceiverChannel(void);
 int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
-void CalibrateReceiver(void);
+ReceiverErrorStatus CalibrateReceiver(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
 #endif /* __RECEIVER_H */
