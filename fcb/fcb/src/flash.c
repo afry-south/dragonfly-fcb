@@ -28,7 +28,6 @@ static FlashErrorStatus WriteFlashPage(uint32_t * writeData, uint32_t pageNbr);
  */
 static FlashErrorStatus WriteFlashPage(uint32_t * writeData, uint32_t pageNbr)
 {
-  // TODO
   HAL_StatusTypeDef HALStatus = HAL_OK;
 
   /* Unlock the Flash Program Erase controller */
