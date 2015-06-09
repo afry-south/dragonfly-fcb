@@ -1,7 +1,6 @@
 /******************************************************************************
  * @file    fcb/flight_control.c
- * @author  ÅF Dragonfly:
- * Daniel Stenberg, Embedded Systems
+ * @author  ÅF Dragonfly
  * @version v. 0.0.1
  * @date    2014-09-29
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter

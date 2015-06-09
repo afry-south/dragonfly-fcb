@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    receiver.c
  * @author  ÅF Dragonfly
- * @version v. 0.0.4
+ * @version v. 1.0.0
  * @date    2015-05-28
  * @brief   File contains functionality for signal readubg from the Dragonfly
  *          RC receiver. The receiver model is Spektrum AR610, which uses DSMX
@@ -22,7 +22,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "receiver.h"
 #include "main.h"
-#include "flight_control.h"
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct

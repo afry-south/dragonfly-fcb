@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    receiver.h
  * @author  ÅF Dragonfly
- * @version v. 0.0.2
+ * @version v. 1.0.0
  * @date    2015-04-16
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
  *          Header file for reading signals from the RC receiver
@@ -113,7 +113,7 @@ typedef enum
 
 #define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.09 s
 
-/* Exported functions ------------------------------------------------------- */
+/* Exported function prototypes --------------------------------------------- */
 ReceiverErrorStatus ReceiverInput_Config(void);
 ReceiverErrorStatus CalibrateReceiver(void);
 ReceiverErrorStatus IsReceiverActive(void);
