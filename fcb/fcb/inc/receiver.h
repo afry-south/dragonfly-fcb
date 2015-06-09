@@ -95,13 +95,19 @@ typedef enum
 #define RECEIVER_COUNTER_PERIOD                         UINT16_MAX      // reset gives ~3.64 ms counter period
 
 /* RC min max default count values
- * The Spektrum AR610 receiver resolution is only 2048, so this should be more than enough! */
-#define RECEIVER_DEFAULT_MAX_COUNT                      34560   // Corresponds to 1.92 ms with 18Mhz counter clock
-#define RECEIVER_DEFAULT_MIN_COUNT                      19440   // Corresponds to 1.08 ms with 18Mhz counter clock
+ * The Spektrum AR610 receiver resolution is only 2048, so this should be more than enough!
+ * The values below are based on observed values of the Spektrum AR610 */
+#define RECEIVER_PULSE_DEFAULT_MAX_COUNT                34560   // Corresponds to 1.92 ms with 18Mhz counter clock
+#define RECEIVER_PULSE_DEFAULT_MIN_COUNT                19440   // Corresponds to 1.08 ms with 18Mhz counter clock
 
-/* Used for sanity check of IC count and calibration */
-#define RECEIVER_MAX_ALLOWED_IC_PULSE_COUNT             45000   // Corresponds to 2.50 ms with 18Mhz counter clock
-#define RECEIVER_MIN_ALLOWED_IC_PULSE_COUNT             9000    // Corresponds to 0.50 ms with 18Mhz counter clock
+/* Used for sanity check of IC pulse count, +/-10% of default count considered valid
+ * TODO: These may be defined of factors of calibrated values */
+#define RECEIVER_MAX_VALID_IC_PULSE_COUNT               RECEIVER_PULSE_DEFAULT_MAX_COUNT*11/10
+#define RECEIVER_MIN_VALID_IC_PULSE_COUNT               RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10
+
+/* Used for sanity check of IC period count - Period is ~22 ms, +/-10% considered valid */
+#define RECEIVER_MAX_VALID_PERIOD_COUNT                 432000
+#define RECEIVER_MIN_VALID_PERIOD_COUNT                 360000
 
 #define RECEIVER_CALIBRATION_PERIODS_COUNT              10000   // Corresponds to ~36.4 s
 
@@ -109,14 +115,29 @@ typedef enum
 
 /* Exported functions ------------------------------------------------------- */
 ReceiverErrorStatus ReceiverInput_Config(void);
+ReceiverErrorStatus CalibrateReceiver(void);
+ReceiverErrorStatus IsReceiverActive(void);
+
 uint16_t GetThrottleReceiverChannel(void);
 int16_t GetAileronReceiverChannel(void);
 int16_t GetElevatorReceiverChannel(void);
 int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
-ReceiverErrorStatus CalibrateReceiver(void);
-ReceiverErrorStatus IsReceiverActive(void);
+
+uint16_t GetThrottleReceiverChannelPulseMicros(void);
+uint16_t GetAileronReceiverChannelPulseMicros(void);
+uint16_t GetElevatorReceiverChannelPulseMicros(void);
+uint16_t GetRudderReceiverChannelPulseMicros(void);
+uint16_t GetGearReceiverChannelPulseMicros(void);
+uint16_t GetAux1ReceiverChannelPulseMicros(void);
+
+uint16_t GetThrottleReceiverChannelPeriodMicros(void);
+uint16_t GetAileronReceiverChannelPeriodMicros(void);
+uint16_t GetElevatorReceiverChannelPeriodMicros(void);
+uint16_t GetRudderReceiverChannelPeriodMicros(void);
+uint16_t GetGearReceiverChannelPeriodMicros(void);
+uint16_t GetAux1ReceiverChannelPeriodMicros(void);
 
 #endif /* __RECEIVER_H */
 

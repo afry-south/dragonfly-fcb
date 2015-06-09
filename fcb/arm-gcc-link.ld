@@ -2,7 +2,7 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
 /* Internal Memory Map*/
 MEMORY
 {
-	rom (rx)  : ORIGIN = 0x08000000, LENGTH = 0x00040000
+	rom (rx)  : ORIGIN = 0x08000000, LENGTH = 0x00038000 /* Last 32 kB reserved for Dragonfly data saving section */
 	ram (rwx) : ORIGIN = 0x20000000, LENGTH = 0x0000A000
 }
 
