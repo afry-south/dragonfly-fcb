@@ -45,12 +45,6 @@ typedef struct
   ReceiverErrorStatus IsActive;
 }Receiver_IC_Values_TypeDef;
 
-typedef struct
-{
-  uint16_t ChannelMaxCount;
-  uint16_t ChannelMinCount;
-}Receiver_IC_PulseCalibrationValues_TypeDef;
-
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/

@@ -29,6 +29,12 @@ typedef enum
   RECEIVER_OK = !RECEIVER_ERROR
 } ReceiverErrorStatus;
 
+typedef struct
+{
+  uint16_t ChannelMaxCount;
+  uint16_t ChannelMinCount;
+}Receiver_IC_PulseCalibrationValues_TypeDef;
+
 /* Exported macro ------------------------------------------------------------*/
 
 /* Definitions for Primary Receiver ##########################################*/

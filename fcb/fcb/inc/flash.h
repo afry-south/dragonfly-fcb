@@ -12,6 +12,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
+#include "receiver.h"
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
@@ -33,13 +34,16 @@ typedef enum
 /* Settings definitions */
 #define FLASH_SETTINGS_START_ADDR       0x08038000                                                      // Make sure this area is not used by linker (see ROM range in .ld file).
 #define FLASH_SETTINGS_START_PAGE       (FLASH_SETTINGS_START_ADDR - FLASH_BASE_ADDR) / FLASH_PAGE_SIZE
-#define FLASH_SETTINGS_BYTE_SIZE        FLASH_TOTAL_SIZE + FLASH_BASE_ADDR  - FLASH_SETTINGS_START_ADDR             // 32 kB reserved for data storage
+#define FLASH_SETTINGS_BYTE_SIZE        FLASH_TOTAL_SIZE + FLASH_BASE_ADDR  - FLASH_SETTINGS_START_ADDR // 32 kB reserved for data storage
 #define FLASH_SETTINGS_PAGE_SIZE        FLASH_SETTINGS_BYTE_SIZE / FLASH_PAGE_SIZE
 
 /* Receiver calibration values settings */
-#define FLASH_RECEIVER_
+#define FLASH_RECEIVER_CALIBRATION_PAGE         FLASH_SETTINGS_START_ADDR       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
+#define FLASH_RECEIVER_CALIBRATION_DATA_OFFSET  0                               // Storage offset from page base address
+#define FLASH_RECEIVER_CALIBRATION_SIZE         sizeof(Receiver_IC_PulseCalibrationValues_TypeDef) + HAL_CRC_LENGTH_32B/4
 
 /* Exported function prototypes --------------------------------------------- */
+FlashErrorStatus WriteCalibrationValuesToFlash(Receiver_IC_PulseCalibrationValues_TypeDef* receiverCalibrationValues);
 
 #endif /* __FLASH_H */
 
