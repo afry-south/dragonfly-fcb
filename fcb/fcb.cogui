@@ -11,13 +11,18 @@
 <folder appearance="1" expanded="2">
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
 <part id="0"/>
+<part id="1"/>
 </presentation>
 </folder>
 </info>
 </editorArea>
-<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" partName="main.c" path="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/main.c" title="main.c" tooltip="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/main.c" workbook="DefaultEditorWorkbook">
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" partName="main.c" path="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/main.c" title="main.c" tooltip="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/main.c" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/src/main.c"/>
 <editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="2720" selectionTopPixel="1140"/>
+</editor>
+<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.c" partName="receiver.c" path="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/receiver.c" title="receiver.c" tooltip="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/receiver.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/src/receiver.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="28230" selectionTopPixel="10150"/>
 </editor>
 </editors>
 <views>
@@ -58,7 +63,7 @@
 <viewState/>
 </view>
 </views>
-<perspectives activePart="org.eclipse.ui.console.ConsoleView" activePerspective="org.coocox.builder.perspective.CoBuilder">
+<perspectives activePart="org.eclipse.cdt.ui.editor.CEditor" activePerspective="org.coocox.builder.perspective.CoBuilder">
 <perspective editorAreaTrimState="2" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.coocox.builder.ui.PerspectiveCoBuilder" id="org.coocox.builder.perspective.CoBuilder" label="CooCox CoBuilder"/>
 <alwaysOnActionSet id="org.coocox.welcome.ui.actionSet"/>
@@ -248,16 +253,9 @@
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/inc/flight_control.h"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/receiver.c"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/main.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/receiver.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/inc/receiver.h"/>
 </editors>
-<item historyLabel="receiver.c" index="0">
-<position info="not_deleted" x="1889" y="9"/>
-</item>
-<item historyLabel="motor_control.c" index="2">
-<position info="not_deleted" x="1337" y="0"/>
-</item>
-<item historyLabel="receiver.c" index="0">
-<position info="not_deleted" x="3250" y="80"/>
-</item>
 <item historyLabel="motor_control.c" index="2">
 <position info="not_deleted" x="1457" y="0"/>
 </item>
@@ -396,8 +394,17 @@
 <item historyLabel="main.c" index="14">
 <position info="not_deleted" x="1445" y="11"/>
 </item>
-<item active="true" historyLabel="main.c" index="14">
+<item historyLabel="main.c" index="14">
 <position info="not_deleted" x="2720" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="15">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="receiver.h" index="16">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item active="true" historyLabel="receiver.c" index="15">
+<position info="not_deleted" x="0" y="0"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
@@ -406,6 +413,27 @@
 <actionBarAdvisor/>
 </window>
 <mruList>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.h" tooltip="fcb/fcb/inc/receiver.h">
+<persistable path="/fcb/fcb/inc/receiver.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.c" tooltip="fcb/fcb/src/receiver.c">
+<persistable path="/fcb/fcb/src/receiver.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_it.c" tooltip="fcb/fcb/src/stm32f3xx_it.c">
+<persistable path="/fcb/fcb/src/stm32f3xx_it.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f30x.S" tooltip="fcb/CMSIS_BOOT/startup_stm32f30x.S">
+<persistable path="/fcb/CMSIS_BOOT/startup_stm32f30x.S"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_hal_gpio.c" tooltip="fcb/STM32F3xx_HAL_Driver/src/stm32f3xx_hal_gpio.c">
+<persistable path="/fcb/STM32F3xx_HAL_Driver/src/stm32f3xx_hal_gpio.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_hal_gpio.h" tooltip="fcb/STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_gpio.h">
+<persistable path="/fcb/STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_gpio.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_hal_msp.c" tooltip="fcb/fcb/src/stm32f3xx_hal_msp.c">
+<persistable path="/fcb/fcb/src/stm32f3xx_hal_msp.c"/>
+</file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="sensors.c" tooltip="fcb/fcb/src/sensors.c">
 <persistable path="/fcb/fcb/src/sensors.c"/>
 </file>
@@ -414,12 +442,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="flight_control.c" tooltip="fcb/fcb/src/flight_control.c">
 <persistable path="/fcb/fcb/src/flight_control.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.h" tooltip="fcb/fcb/inc/receiver.h">
-<persistable path="/fcb/fcb/inc/receiver.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.c" tooltip="fcb/fcb/src/receiver.c">
-<persistable path="/fcb/fcb/src/receiver.c"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="motor_control.h" tooltip="fcb/fcb/inc/motor_control.h">
 <persistable path="/fcb/fcb/inc/motor_control.h"/>
@@ -432,21 +454,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_hal_dma.c" tooltip="fcb/STM32F3xx_HAL_Driver/src/stm32f3xx_hal_dma.c">
 <persistable path="/fcb/STM32F3xx_HAL_Driver/src/stm32f3xx_hal_dma.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_it.c" tooltip="fcb/fcb/src/stm32f3xx_it.c">
-<persistable path="/fcb/fcb/src/stm32f3xx_it.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_hal_msp.c" tooltip="fcb/fcb/src/stm32f3xx_hal_msp.c">
-<persistable path="/fcb/fcb/src/stm32f3xx_hal_msp.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_hal_tim_ex.h" tooltip="fcb/STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_tim_ex.h">
-<persistable path="/fcb/STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_tim_ex.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_hal_tim.h" tooltip="fcb/STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_tim.h">
-<persistable path="/fcb/STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_tim.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="rc_input.h" tooltip="fcb/fcb/inc/rc_input.h">
-<persistable path="/fcb/fcb/inc/rc_input.h"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="arm_math.h" tooltip="fcb/CMSIS/arm_math.h">
 <persistable path="/fcb/CMSIS/arm_math.h"/>
