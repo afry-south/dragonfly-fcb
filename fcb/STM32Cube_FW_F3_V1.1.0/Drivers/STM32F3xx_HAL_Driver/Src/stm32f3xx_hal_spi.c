@@ -558,7 +558,7 @@ HAL_StatusTypeDef HAL_SPI_Transmit(SPI_HandleTypeDef *hspi, uint8_t *pData, uint
   */
 HAL_StatusTypeDef HAL_SPI_Receive(SPI_HandleTypeDef *hspi, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
-  __IO uint16_t tmpreg;
+  __IO uint16_t __attribute__((unused)) tmpreg;
   
   if(hspi->State != HAL_SPI_STATE_READY)
   {
@@ -745,7 +745,7 @@ HAL_StatusTypeDef HAL_SPI_Receive(SPI_HandleTypeDef *hspi, uint8_t *pData, uint1
   */
 HAL_StatusTypeDef HAL_SPI_TransmitReceive(SPI_HandleTypeDef *hspi, uint8_t *pTxData, uint8_t *pRxData, uint16_t Size, uint32_t Timeout)
 {
-  __IO uint16_t tmpreg = 0;
+  __IO uint16_t __attribute__((unused)) tmpreg = 0;
   uint32_t tickstart = 0;
   
   assert_param(IS_SPI_DIRECTION_2LINES(hspi->Init.Direction));
@@ -1676,7 +1676,7 @@ static void SPI_DMATransmitCplt(DMA_HandleTypeDef *hdma)
   */
 static void SPI_DMAReceiveCplt(DMA_HandleTypeDef *hdma)   
 {
-  __IO uint16_t tmpreg;
+  __IO uint16_t __attribute__((unused)) tmpreg;
   SPI_HandleTypeDef* hspi = ( SPI_HandleTypeDef* )((DMA_HandleTypeDef* )hdma)->Parent;
   
   /* CRC handling */
@@ -1746,7 +1746,7 @@ static void SPI_DMAReceiveCplt(DMA_HandleTypeDef *hdma)
 
 static void SPI_DMATransmitReceiveCplt(DMA_HandleTypeDef *hdma)   
 {
-  __IO int16_t tmpreg;
+  __IO int16_t __attribute__((unused)) tmpreg;
   SPI_HandleTypeDef* hspi = ( SPI_HandleTypeDef* )((DMA_HandleTypeDef* )hdma)->Parent;
   
   /* CRC handling */
@@ -1960,7 +1960,7 @@ static void SPI_2linesRxISR_8BIT(struct __SPI_HandleTypeDef *hspi)
   */
 static void SPI_2linesRxISR_8BITCRC(struct __SPI_HandleTypeDef *hspi)
 {
-  __IO uint8_t tmpreg;
+  __IO uint8_t __attribute__((unused)) tmpreg;
   
   tmpreg = *((__IO uint8_t *)&hspi->Instance->DR);
   hspi->CRCSize--;
@@ -2050,7 +2050,7 @@ static void SPI_2linesRxISR_16BIT(struct __SPI_HandleTypeDef *hspi)
   */
 static void SPI_2linesRxISR_16BITCRC(struct __SPI_HandleTypeDef *hspi)
 {
-  __IO uint16_t tmpreg;
+  __IO uint16_t __attribute__((unused)) tmpreg;
   /* Receive data in 16 Bit mode */
   tmpreg = hspi->Instance->DR;
   
@@ -2094,7 +2094,7 @@ static void SPI_2linesTxISR_16BIT(struct __SPI_HandleTypeDef *hspi)
   */
 static void SPI_RxISR_8BITCRC(struct __SPI_HandleTypeDef *hspi)
 {
-  __IO uint8_t tmpreg;
+  __IO uint8_t __attribute__((unused))tmpreg;
   tmpreg = *((__IO uint8_t*)&hspi->Instance->DR);
   hspi->CRCSize--;
   
@@ -2136,7 +2136,7 @@ static void SPI_RxISR_8BIT(struct __SPI_HandleTypeDef *hspi)
   */
 static void SPI_RxISR_16BITCRC(struct __SPI_HandleTypeDef *hspi)
 {
-  __IO uint16_t tmpreg;
+  __IO uint16_t __attribute__((unused)) tmpreg;
   
   tmpreg = hspi->Instance->DR;
   
@@ -2275,7 +2275,7 @@ static HAL_StatusTypeDef SPI_WaitFlagStateUntilTimeout(SPI_HandleTypeDef *hspi, 
   */
 static HAL_StatusTypeDef SPI_WaitFifoStateUntilTimeout(SPI_HandleTypeDef *hspi, uint32_t Flag, uint32_t State, uint32_t Timeout)
 {
-  __IO uint8_t tmpreg;
+  __IO uint8_t __attribute__((unused)) tmpreg;
   uint32_t tickstart = HAL_GetTick();
 
   while((hspi->Instance->SR & Flag) != State)
