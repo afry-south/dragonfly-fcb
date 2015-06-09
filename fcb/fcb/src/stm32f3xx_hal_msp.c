@@ -118,10 +118,29 @@ void HAL_PPP_MspDeInit(void)
 }
 
 /**
-  * @brief TIM MSP Initialization
-  *        This function configures the hardware resources used in this example:
-  *           - Peripheral's clock enable
-  *           - Peripheral's GPIO Configuration
+  * @brief CRC MSP Initialization
+  * @param hcrc: CRC handle pointer
+  * @retval None
+  */
+void HAL_CRC_MspInit(CRC_HandleTypeDef *hcrc)
+{
+  /* CRC Peripheral clock enable */
+  __CRC_CLK_ENABLE();
+}
+
+/**
+  * @brief CRC MSP De-Initialization
+  * @param hcrc: CRC handle pointer
+  * @retval None
+  */
+void HAL_CRC_MspDeInit(CRC_HandleTypeDef *hcrc)
+{
+  /* CRC Peripheral clock disable */
+  __CRC_CLK_DISABLE();
+}
+
+/**
+  * @brief TIM PWM MSP Initialization
   * @param htim: TIM handle pointer
   * @retval None
   */
@@ -163,10 +182,21 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 }
 
 /**
-* @brief TIM MSP Initialization
-*        This function configures the hardware resources used in this example:
-*           - Peripheral's clock enable
-*           - Peripheral's GPIO Configuration
+  * @brief TIM PWM MSP Initialization
+  * @param htim: TIM handle pointer
+  * @retval None
+  */
+void HAL_TIM_PWM_MspDeInit(TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance==TIM_MOTOR)
+    {
+      /* Motor TIM Peripheral clock disable */
+      MOTOR_TIM_CLK_DISABLE();
+    }
+}
+
+/**
+* @brief TIM IC MSP Initialization
 * @param htim: TIM handle pointer
 * @retval None
 */
@@ -245,8 +275,23 @@ void HAL_TIM_IC_MspInit(TIM_HandleTypeDef *htim)
 }
 
 /**
-  * @}
-  */
+* @brief TIM IC MSP Deinitialization
+* @param htim: TIM handle pointer
+* @retval None
+*/
+void HAL_TIM_IC_MspDeInit(TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance==PRIMARY_RECEIVER_TIM)
+    {
+      /* Primary receiver TIM Peripheral clock disable */
+      PRIMARY_RECEIVER_TIM_CLK_DISABLE();
+    }
+  else if(htim->Instance==AUX_RECEIVER_TIM)
+    {
+      /* Aux receiver TIM Peripheral clock disable */
+      AUX_RECEIVER_TIM_CLK_DISABLE();
+    }
+}
 
 /**
   * @}
@@ -256,4 +301,8 @@ void HAL_TIM_IC_MspInit(TIM_HandleTypeDef *htim)
   * @}
   */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/**
+  * @}
+  */
+
+/*****END OF FILE****/

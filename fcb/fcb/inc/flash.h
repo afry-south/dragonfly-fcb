@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    fcb/flash.c
+ * @file    fcb/flash.h
  * @author  ÅF Dragonfly
  * @version v. 1.0.0
  * @date    2015-06-09
@@ -38,11 +38,12 @@ typedef enum
 #define FLASH_SETTINGS_PAGE_SIZE        FLASH_SETTINGS_BYTE_SIZE / FLASH_PAGE_SIZE
 
 /* Receiver calibration values settings */
-#define FLASH_RECEIVER_CALIBRATION_PAGE         FLASH_SETTINGS_START_ADDR       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
+#define FLASH_RECEIVER_CALIBRATION_PAGE         FLASH_SETTINGS_START_PAGE       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
 #define FLASH_RECEIVER_CALIBRATION_DATA_OFFSET  0                               // Storage offset from page base address
 #define FLASH_RECEIVER_CALIBRATION_SIZE         sizeof(Receiver_IC_PulseCalibrationValues_TypeDef) + HAL_CRC_LENGTH_32B/4
 
 /* Exported function prototypes --------------------------------------------- */
+FlashErrorStatus ReadCalibrationValuesFromFlash(Receiver_IC_PulseCalibrationValues_TypeDef* receiverCalibrationValues);
 FlashErrorStatus WriteCalibrationValuesToFlash(Receiver_IC_PulseCalibrationValues_TypeDef* receiverCalibrationValues);
 
 #endif /* __FLASH_H */

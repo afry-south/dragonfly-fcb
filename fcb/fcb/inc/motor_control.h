@@ -22,6 +22,7 @@
 /* Defines for Motor TIM clock source */
 #define TIM_MOTOR                               TIM4
 #define MOTOR_TIM_CLK_ENABLE()                  __TIM4_CLK_ENABLE()
+#define MOTOR_TIM_CLK_DISABLE()                 __TIM4_CLK_DISABLE()
 
 /* Defines for Motor TIM channel pins */
 #define MOTOR_TIM_CHANNEL_GPIO_PORT()           __GPIOD_CLK_ENABLE()

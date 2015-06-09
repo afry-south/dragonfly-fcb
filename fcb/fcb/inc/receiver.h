@@ -41,6 +41,7 @@ typedef struct
 /* Definitions for Primary Receiver TIM clock */
 #define PRIMARY_RECEIVER_TIM                            TIM2
 #define PRIMARY_RECEIVER_TIM_CLK_ENABLE()               __TIM2_CLK_ENABLE()
+#define PRIMARY_RECEIVER_TIM_CLK_DISABLE()              __TIM2_CLK_DISABLE()
 
 /* Definitions for Primary Receiver TIM pins */
 #define PRIMARY_RECEIVER_TIM_CHANNEL_GPIO_PORT()        __GPIOD_CLK_ENABLE()
@@ -71,6 +72,7 @@ typedef struct
 /* Definitions for Aux Receiver TIM clock */
 #define AUX_RECEIVER_TIM                                TIM3
 #define AUX_RECEIVER_TIM_CLK_ENABLE()                   __TIM3_CLK_ENABLE()
+#define AUX_RECEIVER_TIM_CLK_DISABLE()                  __TIM3_CLK_DISABLE()
 
 /* Definitions for Auxiliary Receiver channels input */
 #define AUX_RECEIVER_GEAR_CHANNEL                       TIM_CHANNEL_1

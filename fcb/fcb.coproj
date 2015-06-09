@@ -217,6 +217,7 @@
     <File name="FreeRTOS/inc/queue.h" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include/queue.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_i2s.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_i2s.h" type="1"/>
     <File name="fcb/inc/stm32f30x_conf.h" path="fcb/inc/stm32f30x_conf.h" type="1"/>
+    <File name="fcb/src/common.c" path="fcb/src/common.c" type="1"/>
     <File name="CMSIS_BOOT/src/system_stm32f3xx.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_smbus.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_smbus.c" type="1"/>
     <File name="fcb/src/receiver.c" path="fcb/src/receiver.c" type="1"/>
@@ -246,6 +247,7 @@
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_pcd.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pcd.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_def.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_def.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_pwr.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pwr.c" type="1"/>
+    <File name="fcb/inc/common.h" path="fcb/inc/common.h" type="1"/>
     <File name="FreeRTOS/src/list.c" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/list.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_comp_ex.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_comp_ex.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_flash_ex.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_flash_ex.c" type="1"/>
