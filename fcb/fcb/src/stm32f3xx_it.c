@@ -13,6 +13,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_it.h"
+#include "cmsis_os.h"
 
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
   * @{
@@ -25,6 +26,7 @@
 /* Private variables ---------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd;
 extern USBD_HandleTypeDef hUSBDDevice;
+extern void xPortSysTickHandler(void);
 
 extern TIM_HandleTypeDef PrimaryReceiverTimHandle;
 extern TIM_HandleTypeDef AuxReceiverTimHandle;
@@ -126,6 +128,11 @@ void DebugMon_Handler(void)
 void SysTick_Handler(void)
 {
   HAL_IncTick();
+
+   if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+     xPortSysTickHandler();
+   }
+
 }
 
 /******************************************************************************/
