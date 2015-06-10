@@ -16,7 +16,9 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
+
 /* Exported function prototypes --------------------------------------------- */
+uint32_t Calculate_CRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize);
 
 #endif /* __COMMON_H */
 

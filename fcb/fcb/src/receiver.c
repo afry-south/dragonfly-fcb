@@ -96,14 +96,14 @@ static ReceiverErrorStatus UpdateReceiverRudderChannel(void);
 static ReceiverErrorStatus UpdateReceiverGearChannel(void);
 static ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 
-static int16_t GetSignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, Receiver_IC_PulseCalibrationValues_TypeDef* ChannelCalibrationValues);
-static uint16_t GetUnsignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, Receiver_IC_PulseCalibrationValues_TypeDef* ChannelCalibrationValues);
-static uint16_t GetReceiverChannelPulseMicros(Receiver_IC_Values_TypeDef* ChannelICValues);
-static uint16_t GetReceiverChannelPeriodMicros(Receiver_IC_Values_TypeDef* ChannelICValues);
+static int16_t GetSignedReceiverChannel(const Receiver_IC_Values_TypeDef* ChannelICValues, const Receiver_IC_PulseCalibrationValues_TypeDef* ChannelCalibrationValues);
+static uint16_t GetUnsignedReceiverChannel(const Receiver_IC_Values_TypeDef* ChannelICValues, const Receiver_IC_PulseCalibrationValues_TypeDef* ChannelCalibrationValues);
+static uint16_t GetReceiverChannelPulseMicros(const Receiver_IC_Values_TypeDef* ChannelICValues);
+static uint16_t GetReceiverChannelPeriodMicros(const Receiver_IC_Values_TypeDef* ChannelICValues);
 
 static ReceiverErrorStatus IsReceiverChannelActive(Receiver_IC_Values_TypeDef* ChannelICValues, const uint16_t ReceiverTimerPeriodCount);
-static ReceiverErrorStatus IsReceiverPulseValid(uint16_t pulseTimerCount, uint16_t currentPeriodCount, uint16_t previousPeriodCount);
-static ReceiverErrorStatus IsReceiverPeriodValid(uint32_t periodTimerCount);
+static ReceiverErrorStatus IsReceiverPulseValid(const uint16_t pulseTimerCount, const uint16_t currentPeriodCount, const uint16_t previousPeriodCount);
+static ReceiverErrorStatus IsReceiverPeriodValid(const uint32_t periodTimerCount);
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -438,7 +438,7 @@ static void SetDefaultReceiverCalibrationValues(void)
  * @param  ChannelCalibrationValues : Reference to channel's calibration values struct
  * @retval channel value [-32768, 32767]
  */
-static int16_t GetSignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, Receiver_IC_PulseCalibrationValues_TypeDef* ChannelCalibrationValues)
+static int16_t GetSignedReceiverChannel(const Receiver_IC_Values_TypeDef* ChannelICValues, const Receiver_IC_PulseCalibrationValues_TypeDef* ChannelCalibrationValues)
 {
   if(ChannelICValues->PulseTimerCount < ChannelCalibrationValues->ChannelMinCount)
     return INT16_MIN;
@@ -456,7 +456,7 @@ static int16_t GetSignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICVal
  * @param  ChannelCalibrationValues : Reference to channel's calibration values struct
  * @retval channel value [0, 65535]
  */
-static uint16_t GetUnsignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelICValues, Receiver_IC_PulseCalibrationValues_TypeDef* ChannelCalibrationValues)
+static uint16_t GetUnsignedReceiverChannel(const Receiver_IC_Values_TypeDef* ChannelICValues, const Receiver_IC_PulseCalibrationValues_TypeDef* ChannelCalibrationValues)
 {
   if(ChannelICValues->PulseTimerCount < ChannelCalibrationValues->ChannelMinCount)
     return 0;
@@ -473,7 +473,7 @@ static uint16_t GetUnsignedReceiverChannel(Receiver_IC_Values_TypeDef* ChannelIC
  * @param  ChannelICValues : Reference to a channel's IC values struct
  * @retval Channel pulse timer count in microseconds
  */
-static uint16_t GetReceiverChannelPulseMicros(Receiver_IC_Values_TypeDef* ChannelICValues)
+static uint16_t GetReceiverChannelPulseMicros(const Receiver_IC_Values_TypeDef* ChannelICValues)
 {
   return (uint16_t)(((uint32_t)ChannelICValues->PulseTimerCount * 1000000) / RECEIVER_TIM_COUNTER_CLOCK);
 }
@@ -483,7 +483,7 @@ static uint16_t GetReceiverChannelPulseMicros(Receiver_IC_Values_TypeDef* Channe
  * @param  ChannelICValues : Reference to a channel's IC values struct
  * @retval Channel period timer count in microseconds
  */
-static uint16_t GetReceiverChannelPeriodMicros(Receiver_IC_Values_TypeDef* ChannelICValues)
+static uint16_t GetReceiverChannelPeriodMicros(const Receiver_IC_Values_TypeDef* ChannelICValues)
 {
   /* The period count will never be more than RECEIVER_MAX_VALID_PERIOD_COUNT, take care so that 32-bit overflow does not occur below */
   return (uint16_t)(((uint32_t)ChannelICValues->PeriodCount * 100000) / RECEIVER_TIM_COUNTER_CLOCK * 10);
@@ -865,7 +865,7 @@ static ReceiverErrorStatus IsReceiverChannelActive(Receiver_IC_Values_TypeDef* C
  * @param  previousPeriodCount : The previous period count
  * @retval RECEIVER_OK if receiver pulse count is valid, else RECEIVER_ERROR.
  */
-static ReceiverErrorStatus IsReceiverPulseValid(uint16_t pulseTimerCount, uint16_t currentPeriodCount, uint16_t previousPeriodCount)
+static ReceiverErrorStatus IsReceiverPulseValid(const uint16_t pulseTimerCount, const uint16_t currentPeriodCount, const uint16_t previousPeriodCount)
 {
   /* Pulse count considered valid if it is within defined bounds and doesn't strech over more than 2 timer periods */
   return (pulseTimerCount <= RECEIVER_MAX_VALID_IC_PULSE_COUNT && pulseTimerCount >= RECEIVER_MIN_VALID_IC_PULSE_COUNT
@@ -877,7 +877,7 @@ static ReceiverErrorStatus IsReceiverPulseValid(uint16_t pulseTimerCount, uint16
  * @param  periodTimerCount : period timer count value
  * @retval RECEIVER_OK if receiver period count is valid, else RECEIVER_ERROR.
  */
-static ReceiverErrorStatus IsReceiverPeriodValid(uint32_t periodTimerCount)
+static ReceiverErrorStatus IsReceiverPeriodValid(const uint32_t periodTimerCount)
 {
   /* Period count considered valid if it is within defined bounds */
   return (periodTimerCount <= RECEIVER_MAX_VALID_PERIOD_COUNT && periodTimerCount >= RECEIVER_MIN_VALID_PERIOD_COUNT);

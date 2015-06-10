@@ -8,17 +8,20 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "flash.h"
+#include "common.h"
+#include <string.h>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-static FlashErrorStatus WriteFlashPage(uint32_t* writeData, uint16_t pageNbr);
-static FlashErrorStatus ReadFlashPage(uint32_t* readData, uint16_t pageNbr);
-static uint32_t ReadFlashWord(uint32_t pageNbr, uint32_t wordNbr);
-static FlashErrorStatus ReadFlashBytes(uint8_t * readData, uint32_t startAddr, uint32_t nbrOfBytes);
-static FlashErrorStatus IsValidFlashAddress(uint32_t address);
+static FlashErrorStatus WriteFlashPage(const uint32_t* writeData, const uint16_t pageNbr);
+static FlashErrorStatus WriteFlashDataWithCRC(const uint8_t* writeData, const uint32_t writeDataSize, const uint16_t pageNbr, const uint16_t pageOffset);
+static FlashErrorStatus ReadFlashPage(uint32_t* readData, const uint16_t pageNbr);
+static uint32_t ReadFlashWord(const uint32_t pageNbr, const uint32_t wordNbr);
+static FlashErrorStatus ReadFlashBytes(uint8_t * readData, const uint32_t startAddr, const uint32_t nbrOfBytes);
+static FlashErrorStatus IsValidFlashAddress(const uint32_t address);
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -30,22 +33,19 @@ FlashErrorStatus ReadCalibrationValuesFromFlash(Receiver_IC_PulseCalibrationValu
   return FLASH_OK;
 }
 
-FlashErrorStatus WriteCalibrationValuesToFlash(Receiver_IC_PulseCalibrationValues_TypeDef* receiverCalibrationValues)
+FlashErrorStatus WriteCalibrationValuesToFlash(const Receiver_IC_PulseCalibrationValues_TypeDef* receiverCalibrationValues)
 {
   /* Read the page and store it in tmpPage */
-#ifdef TODO
-  uint32_t tmpPage[FLASH_PAGE_SIZE/FLASH_WORD_SIZE];  // Div by 4 to get word size
-  memset(&tmpConfigPage, 0xFF, sizeof(tmpConfigPage));
-  ReadFlashPage(&tmpConfigPage[0], FLASH_RECEIVER_CALIBRATION_PAGE);
+  uint32_t tmpPage[FLASH_PAGE_SIZE/FLASH_WORD_BYTE_SIZE];  // Div by 4 to get word size
+  memset(&tmpPage, 0xFF, sizeof(tmpPage));
+  ReadFlashPage(&tmpPage[0], FLASH_RECEIVER_CALIBRATION_PAGE);
 
   /* Copy data to tmpPage at offset+1 location (CRC stored at first index) */
-  memcpy(&tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET+1], &receiverCalibrationValues, sizeof(receiverCalibrationValues));
+  memcpy(&tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET+1], receiverCalibrationValues, sizeof(Receiver_IC_PulseCalibrationValues_TypeDef));
 
   /* Take the CRC of tmp page, except for the first index that is reserved for the CRC itself */
-  CRC_Init(); // Declare this in common.c since it may be of interest for other parts of the program
-  tmpConfigPage[0] = CRC_CalcBlockCRC(&tmpConfigPage[1], sizeof(receiverCalibrationValues)); // Div by 4 to get word size
-  WriteFlashPage(&tmpConfigPage[0], GetFlashAddressPageNbr(SETTINGS_SECTION + FLASH_BOXCONFIG_OFFSET)); // Write config to the config page
-#endif
+  tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET] = Calculate_CRC((uint8_t*)receiverCalibrationValues, sizeof(Receiver_IC_PulseCalibrationValues_TypeDef));
+  WriteFlashPage(&tmpPage[0], FLASH_RECEIVER_CALIBRATION_PAGE); // Write config to the config page
 
   return FLASH_OK;
 }
@@ -58,7 +58,7 @@ FlashErrorStatus WriteCalibrationValuesToFlash(Receiver_IC_PulseCalibrationValue
  * @param  pageNbr : Specifies flash page
  * @retval FLASH_OK if flash operation successful, else FLASH_ERROR
  */
-static FlashErrorStatus WriteFlashPage(uint32_t* writeData, uint16_t pageNbr)
+static FlashErrorStatus WriteFlashPage(const uint32_t* writeData, const uint16_t pageNbr)
 {
   HAL_StatusTypeDef HALStatus = HAL_OK;
 
@@ -100,7 +100,7 @@ static FlashErrorStatus WriteFlashPage(uint32_t* writeData, uint16_t pageNbr)
  * @param  pageNbr : the flash page number from which data is read
  * @retval FLASH_OK if flash operation successful, else FLASH_ERROR
  */
-static FlashErrorStatus ReadFlashPage(uint32_t * readData, uint16_t pageNbr)
+static FlashErrorStatus ReadFlashPage(uint32_t * readData, const uint16_t pageNbr)
 {
   uint32_t i = 0;
   uint32_t address = FLASH_BASE_ADDR+pageNbr*FLASH_PAGE_SIZE;
@@ -124,7 +124,7 @@ static FlashErrorStatus ReadFlashPage(uint32_t * readData, uint16_t pageNbr)
  * @param  wordNbr : word offset from pageNbr base
  * @retval word value as an unsigned 32-bit integer
  */
-static uint32_t ReadFlashWord(uint32_t pageNbr, uint32_t wordNbr)
+static uint32_t ReadFlashWord(const uint32_t pageNbr, const uint32_t wordNbr)
 {
   uint32_t address = FLASH_BASE_ADDR + pageNbr*FLASH_PAGE_SIZE + FLASH_WORD_BYTE_SIZE*wordNbr;
   if(IsValidFlashAddress(address))
@@ -140,7 +140,7 @@ static uint32_t ReadFlashWord(uint32_t pageNbr, uint32_t wordNbr)
  * @param  nbrOfBytes : Number of bytes to be read
  * @retval FLASH_OK if flash operation successful, else FLASH_ERROR
  */
-static FlashErrorStatus ReadFlashBytes(uint8_t * readData, uint32_t startAddr, uint32_t nbrOfBytes)
+static FlashErrorStatus ReadFlashBytes(uint8_t * readData, const uint32_t startAddr, const uint32_t nbrOfBytes)
 {
   uint32_t i = 0;
   uint32_t address = startAddr;
@@ -160,7 +160,7 @@ static FlashErrorStatus ReadFlashBytes(uint8_t * readData, uint32_t startAddr, u
  * @param  address : The flash address
  * @retval FLASH_OK if flash address is within valid flash address range, else FLASH_ERROR
  */
-static FlashErrorStatus IsValidFlashAddress(uint32_t address)
+static FlashErrorStatus IsValidFlashAddress(const uint32_t address)
 {
   return (address >= FLASH_BASE_ADDR && address < FLASH_BASE_ADDR + FLASH_TOTAL_SIZE);
 }
