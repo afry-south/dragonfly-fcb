@@ -496,7 +496,7 @@ static uint16_t GetReceiverChannelPeriodMicros(const Receiver_IC_Values_TypeDef*
  */
 static ReceiverErrorStatus GetReceiverCalibrationValuesFromFlash(void)
 {
-  // TODO implement
+  // TODO implement - Call function in flash.c and check here that they are reasonable
   return RECEIVER_ERROR;
 }
 
