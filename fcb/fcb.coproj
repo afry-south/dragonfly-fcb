@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Project version="2G - 2.0.0" name="fcb">
   <Target name="fcb" isCurrent="1">
-    <Device manufacturerId="9" manufacturerName="ST" chipId="242" chipName="STM32F303VC" boardId="" boardName="" coreId="4" coreName="Cortex M4"/>
+    <Device manufacturerId="9" manufacturerName="ST" chipId="242" chipName="STM32F303VC" boardId="" boardName="" boardUrl="" coreId="4" coreName="Cortex M4"/>
     <BuildOption>
       <Compile>
         <Option name="OptimizationLevel" value="0"/>
@@ -182,10 +182,10 @@
     <File name="STM32F3Discovery_BSP/inc/stm32f3_discovery_gyroscope.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32F3-Discovery/stm32f3_discovery_gyroscope.h" type="1"/>
     <File name="FreeRTOS/inc" path="" type="2"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_tsc.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tsc.c" type="1"/>
-    <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_rcc.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_rcc.h" type="1"/>
     <File name="CMSIS_OS/src/cmsis_os.c" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c" type="1"/>
-    <File name="STM32_USB_Device_Library/Class/CDC" path="" type="2"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_crc.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_crc.c" type="1"/>
+    <File name="STM32_USB_Device_Library/Class/CDC" path="" type="2"/>
+    <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_rcc.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_rcc.h" type="1"/>
     <File name="FreeRTOS/inc/mpu_wrappers.h" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h" type="1"/>
     <File name="FreeRTOS/inc/portable.h" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include/portable.h" type="1"/>
     <File name="CMSIS" path="" type="2"/>
@@ -218,9 +218,9 @@
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_i2s.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_i2s.h" type="1"/>
     <File name="fcb/inc/stm32f30x_conf.h" path="fcb/inc/stm32f30x_conf.h" type="1"/>
     <File name="fcb/src/common.c" path="fcb/src/common.c" type="1"/>
-    <File name="CMSIS_BOOT/src/system_stm32f3xx.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_smbus.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_smbus.c" type="1"/>
     <File name="fcb/src/receiver.c" path="fcb/src/receiver.c" type="1"/>
+    <File name="CMSIS_BOOT/src/system_stm32f3xx.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_crc_ex.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_crc_ex.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_iwdg.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_iwdg.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_comp.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_comp.h" type="1"/>
