@@ -152,63 +152,6 @@ void AUX_RECEIVER_TIM_IRQHandler(void)
   HAL_TIM_IRQHandler(&AuxReceiverTimHandle);
 }
 
-#ifdef TODO
-/*
- * @brief       Timer 2 interrupt handler.
- */
-//void TIM2_IRQHandler(void)
-//{
-//
-//  /* If interrupt concerns TIM2 CH1 */
-//  if (TIM_GetITStatus(TIM2, TIM_IT_CC1) != RESET)
-//    {
-//      TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
-//      UpdateThrottleChannel();
-//    }
-//  /* If interrupt concerns TIM2 CH2 */
-//  if (TIM_GetITStatus(TIM2, TIM_IT_CC2) != RESET)
-//    {
-//      TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
-//      UpdateAileronChannel();
-//    }
-//
-//  /* If interrupt concerns TIM2 CH3 */
-//  if (TIM_GetITStatus(TIM2, TIM_IT_CC3) != RESET)
-//    {
-//      TIM_ClearITPendingBit(TIM2, TIM_IT_CC3);
-//      UpdateElevatorChannel();
-//    }
-//
-//  /* If interrupt concerns TIM2 CH4 */
-//  if (TIM_GetITStatus(TIM2, TIM_IT_CC4) != RESET)
-//    {
-//      TIM_ClearITPendingBit(TIM2, TIM_IT_CC4);
-//      UpdateRudderChannel();
-//    }
-//}
-#endif
-
-#ifdef TODO
-/*
- * @brief       Timer 3 interrupt handler.
- */
-//void TIM3_IRQHandler(void)
-//{
-//  /* If interrupt concerns TIM3 CH1 */
-//  if (TIM_GetITStatus(TIM3, TIM_IT_CC1) != RESET)
-//    {
-//      TIM_ClearITPendingBit(TIM3, TIM_IT_CC1);
-//      UpdateGearChannel();
-//    }
-//  /* If interrupt concerns TIM3 CH2 */
-//  if (TIM_GetITStatus(TIM3, TIM_IT_CC2) != RESET)
-//    {
-//      TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
-//      UpdateAuxiliaryChannel();
-//    }
-//}
-#endif
-
 /**
   * @brief  This function handles USB Handler.
   * @param  None

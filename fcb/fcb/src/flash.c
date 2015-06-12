@@ -37,12 +37,12 @@ static FlashErrorStatus IsValidPageSize(const uint16_t settingsPageOffset, const
  * @param  receiverCalibrationValues : Pointer to receiver calibration values struct to which values will enter
  * @retval FLASH_OK if calibration values read succesfully from flash, else FLASH_ERROR
  */
-FlashErrorStatus ReadCalibrationValuesFromFlash(Receiver_IC_PulseCalibrationValues_TypeDef* receiverCalibrationValues)
+FlashErrorStatus ReadCalibrationValuesFromFlash(Receiver_CalibrationValues_TypeDef* receiverCalibrationValues)
 {
   FlashErrorStatus status = FLASH_OK;
 
   /* Read receiver calibration settings from flash, if valid data exists */
-  status = ReadSettingsFromFlash((uint8_t*)receiverCalibrationValues, sizeof(Receiver_IC_PulseCalibrationValues_TypeDef), FLASH_RECEIVER_CALIBRATION_PAGE, FLASH_RECEIVER_CALIBRATION_DATA_OFFSET);
+  status = ReadSettingsFromFlash((uint8_t*)receiverCalibrationValues, sizeof(Receiver_CalibrationValues_TypeDef), FLASH_RECEIVER_CALIBRATION_PAGE, FLASH_RECEIVER_CALIBRATION_DATA_OFFSET);
 
   return status;
 
@@ -53,12 +53,12 @@ FlashErrorStatus ReadCalibrationValuesFromFlash(Receiver_IC_PulseCalibrationValu
  * @param  receiverCalibrationValues : Pointer to receiver calibration values struct to be saved
  * @retval FLASH_OK if calibration values written succesfully to flash, else FLASH_ERROR
  */
-FlashErrorStatus WriteCalibrationValuesToFlash(const Receiver_IC_PulseCalibrationValues_TypeDef* receiverCalibrationValues)
+FlashErrorStatus WriteCalibrationValuesToFlash(const Receiver_CalibrationValues_TypeDef* receiverCalibrationValues)
 {
   FlashErrorStatus status = FLASH_OK;
 
   /* Write receiver calibration settings to flash */
-  status = WriteSettingsToFlash((uint8_t*)receiverCalibrationValues, sizeof(Receiver_IC_PulseCalibrationValues_TypeDef), FLASH_RECEIVER_CALIBRATION_PAGE, FLASH_RECEIVER_CALIBRATION_DATA_OFFSET);
+  status = WriteSettingsToFlash((uint8_t*)receiverCalibrationValues, sizeof(Receiver_CalibrationValues_TypeDef), FLASH_RECEIVER_CALIBRATION_PAGE, FLASH_RECEIVER_CALIBRATION_DATA_OFFSET);
 
   return status;
 }

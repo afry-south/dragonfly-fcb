@@ -29,11 +29,27 @@ typedef enum
   RECEIVER_OK = !RECEIVER_ERROR
 } ReceiverErrorStatus;
 
+typedef enum
+{
+  RECEIVER_CALIBRATION_READY = 0,
+  RECEIVER_CALIBRATION_IN_PROGRESS = 1,
+} ReceiverCalibrationState;
+
 typedef struct
 {
   uint16_t ChannelMaxCount;
   uint16_t ChannelMinCount;
-}Receiver_IC_PulseCalibrationValues_TypeDef;
+}Receiver_IC_ChannelCalibrationValues_TypeDef;
+
+typedef struct
+{
+  Receiver_IC_ChannelCalibrationValues_TypeDef ThrottleChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef AileronChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef ElevatorChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef RudderChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef GearChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef Aux1Channel;
+}Receiver_CalibrationValues_TypeDef;
 
 /* Exported macro ------------------------------------------------------------*/
 
@@ -117,7 +133,9 @@ typedef struct
 #define RECEIVER_MAX_VALID_PERIOD_COUNT                 432000
 #define RECEIVER_MIN_VALID_PERIOD_COUNT                 360000
 
-#define RECEIVER_CALIBRATION_PERIODS_COUNT              10000   // Corresponds to ~36.4 s
+#define RECEIVER_CALIBRATION_MIN_PULSE_COUNT            1000    // Corresponds to ~22.0 s (assuming period is 22 ms)
+#define RECEIVER_CALIBRATION_MAX_PULSE_COUNT            2000    // Corresponds to ~44.0 s (assuming period is 22 ms)
+#define RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE        16
 
 #define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.09 s
 

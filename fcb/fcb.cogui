@@ -9,10 +9,31 @@
 <editorArea activeWorkbook="DefaultEditorWorkbook">
 <info part="DefaultEditorWorkbook">
 <folder appearance="1" expanded="2">
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
+<part id="1"/>
+<part id="2"/>
+<part id="3"/>
+</presentation>
 </folder>
 </info>
 </editorArea>
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" partName="main.c" path="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/main.c" title="main.c" tooltip="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/main.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/src/main.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="2712" selectionTopPixel="810"/>
+</editor>
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="flash.c" partName="flash.c" path="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/flash.c" title="flash.c" tooltip="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/flash.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/src/flash.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="34" selectionOffset="3349" selectionTopPixel="690"/>
+</editor>
+<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.c" partName="receiver.c" path="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/receiver.c" title="receiver.c" tooltip="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/src/receiver.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/src/receiver.c"/>
+<editorState selectionHorizontalPixel="331" selectionLength="0" selectionOffset="5265" selectionTopPixel="1485"/>
+</editor>
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.h" partName="receiver.h" path="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/inc/receiver.h" title="receiver.h" tooltip="C:/Users/A501632/Documents/dragonfly-fcb/fcb/fcb/inc/receiver.h" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/inc/receiver.h"/>
+<editorState selectionHorizontalPixel="0" selectionLength="40" selectionOffset="6846" selectionTopPixel="1500"/>
+</editor>
 </editors>
 <views>
 <view id="org.eclipse.debug.ui.ExpressionView" partName="Expressions">
@@ -27,6 +48,9 @@
 <element path="/fcb/fcb"/>
 <element path="/fcb/fcb/src"/>
 </expanded>
+<selection>
+<element path="/fcb/fcb/src/receiver.c"/>
+</selection>
 </viewState>
 </view>
 <view id="org.coocox.codebugger.trace.ui.traceview" partName="Semihosting">
@@ -34,8 +58,8 @@
 </view>
 <view id="org.eclipse.search.ui.views.SearchView" partName="Search">
 <viewState isPinned="false">
-<view IMemento.internal.id="" org.eclipse.search.lastActivation="0"/>
 <view IMemento.internal.id="org.eclipse.search.text.FileSearchResultPage" org.eclipse.search.lastActivation="1" org.eclipse.search.resultpage.layout="2" org.eclipse.search.resultpage.limit="1000" org.eclipse.search.resultpage.sorting="2"/>
+<view IMemento.internal.id="" org.eclipse.search.lastActivation="0"/>
 </viewState>
 </view>
 <view id="org.eclipse.debug.ui.DebugView" partName="Debug">
@@ -49,7 +73,7 @@
 <viewState/>
 </view>
 </views>
-<perspectives activePart="org.coocox.builder.ui.views.ProjectView" activePerspective="org.coocox.builder.perspective.CoBuilder">
+<perspectives activePart="org.eclipse.cdt.ui.editor.CEditor" activePerspective="org.coocox.builder.perspective.CoBuilder">
 <perspective editorAreaTrimState="2" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.coocox.builder.ui.PerspectiveCoBuilder" id="org.coocox.builder.perspective.CoBuilder" label="CooCox CoBuilder"/>
 <alwaysOnActionSet id="org.coocox.welcome.ui.actionSet"/>
@@ -71,8 +95,8 @@
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showMemoryBrowserAction"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showVariablesAction"/>
 <hide_menu_item_id id="org.coocox.builder.ui.openProjectExplorerAction"/>
-<hide_menu_item_id id="org.coocox.codebugger.trace.actions.ShowTraceControlAction"/>
 <hide_menu_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
+<hide_menu_item_id id="org.coocox.codebugger.trace.actions.ShowTraceControlAction"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showRegistersAction"/>
 <hide_toolbar_item_id id="org.eclipse.cdt.debug.internal.ui.actions.ToggleInstructionStepModeAction"/>
 <hide_toolbar_item_id id="org.eclipse.ui.edit.text.toggleShowSelectedElementOnly"/>
@@ -222,15 +246,185 @@
 </perspective>
 </perspectives>
 <workingSets/>
-<navigationHistory/>
+<navigationHistory>
+<editors>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/flash.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/receiver.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/inc/receiver.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/inc/flash.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/inc/receiver.h"/>
+</editors>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="4521" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="12968" y="0"/>
+</item>
+<item historyLabel="flash.h" index="3">
+<position info="not_deleted" x="742" y="83"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="12968" y="0"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="4092" y="0"/>
+</item>
+<item historyLabel="flash.c" index="0">
+<position info="not_deleted" x="3349" y="34"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="4092" y="0"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position info="not_deleted" x="1015" y="22"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="4092" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="11012" y="60"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position info="not_deleted" x="1091" y="24"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="12959" y="0"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position info="not_deleted" x="1091" y="24"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="12820" y="60"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position info="not_deleted" x="6896" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="12820" y="24"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position info="not_deleted" x="6896" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="2247" y="0"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position info="not_deleted" x="6896" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="2247" y="0"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position info="not_deleted" x="6896" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="2043" y="0"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position info="not_deleted" x="6846" y="40"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="2043" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="2042" y="0"/>
+</item>
+<item historyLabel="receiver.h" index="2">
+<position info="not_deleted" x="6846" y="40"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="2042" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="3931" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="3031" y="52"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="5261" y="29"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="33576" y="29"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="36121" y="21"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="28948" y="21"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="12404" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="3485" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="1227" y="0"/>
+</item>
+<item historyLabel="flash.c" index="0">
+<position info="not_deleted" x="3349" y="34"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="12324" y="85"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="5611" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="33325" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="31759" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="32353" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="33227" y="0"/>
+</item>
+<item historyLabel="receiver.h" index="4">
+<position info="not_deleted" x="6846" y="40"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="7404" y="33"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="35860" y="0"/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position/>
+</item>
+<item historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="32974" y="166"/>
+</item>
+<item active="true" historyLabel="receiver.c" index="1">
+<position info="not_deleted" x="5100" y="167"/>
+</item>
+</navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
 </page>
 <workbenchWindowAdvisor/>
 <actionBarAdvisor/>
 </window>
 <mruList>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="flash.h" tooltip="fcb/fcb/inc/flash.h">
+<persistable path="/fcb/fcb/inc/flash.h"/>
+</file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.h" tooltip="fcb/fcb/inc/receiver.h">
 <persistable path="/fcb/fcb/inc/receiver.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.c" tooltip="fcb/fcb/src/receiver.c">
+<persistable path="/fcb/fcb/src/receiver.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="flash.c" tooltip="fcb/fcb/src/flash.c">
+<persistable path="/fcb/fcb/src/flash.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" tooltip="fcb/fcb/src/main.c">
+<persistable path="/fcb/fcb/src/main.c"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_hal_gpio.h" tooltip="fcb/STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_gpio.h">
 <persistable path="/fcb/STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_gpio.h"/>
@@ -243,9 +437,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f30x.S" tooltip="fcb/CMSIS_BOOT/startup_stm32f30x.S">
 <persistable path="/fcb/CMSIS_BOOT/startup_stm32f30x.S"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.c" tooltip="fcb/fcb/src/receiver.c">
-<persistable path="/fcb/fcb/src/receiver.c"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_hal_crc.c" tooltip="fcb/STM32F3xx_HAL_Driver/src/stm32f3xx_hal_crc.c">
 <persistable path="/fcb/STM32F3xx_HAL_Driver/src/stm32f3xx_hal_crc.c"/>
@@ -264,15 +455,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="common.c" tooltip="fcb/fcb/src/common.c">
 <persistable path="/fcb/fcb/src/common.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="flash.c" tooltip="fcb/fcb/src/flash.c">
-<persistable path="/fcb/fcb/src/flash.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="flash.h" tooltip="fcb/fcb/inc/flash.h">
-<persistable path="/fcb/fcb/inc/flash.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f3xx_it.c" tooltip="fcb/fcb/src/stm32f3xx_it.c">
-<persistable path="/fcb/fcb/src/stm32f3xx_it.c"/>
 </file>
 </mruList>
 </workbench>
