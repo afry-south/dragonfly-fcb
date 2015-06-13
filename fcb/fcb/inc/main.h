@@ -15,6 +15,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 #include "stm32f3_discovery.h"
+#include "stm32f3xx_hal_conf.h"
 
 #include "usbd_core.h"
 #include "usbd_desc.h"
