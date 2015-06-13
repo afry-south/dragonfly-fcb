@@ -61,6 +61,23 @@ uint32_t Calculate_CRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize)
   return CrcVal;
 }
 
+/*
+ * @brief  Calculates the mean of the elements in an uint16_t buffer
+ * @param  buffer : Pointer to uint16_t buffer
+ * @param  length : number of uint16_t elements in buffer over which mean is calculated
+ * @retval Mean value
+ */
+uint16_t UInt16_Mean(const uint16_t* buffer, const uint16_t length)
+{
+  uint32_t tmpInt;
+  uint16_t i;
+
+  for(i = 0; i < length; i++)
+    tmpInt += buffer[i];
+
+  return (uint16_t)(tmpInt /= length);
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 

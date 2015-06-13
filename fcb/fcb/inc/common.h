@@ -19,6 +19,7 @@
 
 /* Exported function prototypes --------------------------------------------- */
 uint32_t Calculate_CRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize);
+uint16_t UInt16_Mean(const uint16_t* buffer, const uint16_t length);
 
 #endif /* __COMMON_H */
 

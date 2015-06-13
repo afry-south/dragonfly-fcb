@@ -13,46 +13,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
-#include <stdbool.h>
 
 /* Exported constants --------------------------------------------------------*/
-/* Exported types ------------------------------------------------------------*/
-typedef enum
-{
-  PULSE_LOW = 0,
-  PULSE_HIGH = !PULSE_LOW
-} Pulse_State;
-
-typedef enum
-{
-  RECEIVER_ERROR = 0,
-  RECEIVER_OK = !RECEIVER_ERROR
-} ReceiverErrorStatus;
-
-typedef enum
-{
-  RECEIVER_CALIBRATION_READY = 0,
-  RECEIVER_CALIBRATION_IN_PROGRESS = 1,
-} ReceiverCalibrationState;
-
-typedef struct
-{
-  uint16_t ChannelMaxCount;
-  uint16_t ChannelMinCount;
-}Receiver_IC_ChannelCalibrationValues_TypeDef;
-
-typedef struct
-{
-  Receiver_IC_ChannelCalibrationValues_TypeDef ThrottleChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef AileronChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef ElevatorChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef RudderChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef GearChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef Aux1Channel;
-}Receiver_CalibrationValues_TypeDef;
-
-/* Exported macro ------------------------------------------------------------*/
-
 /* Definitions for Primary Receiver ##########################################*/
 /* Definitions for Primary Receiver TIM clock */
 #define PRIMARY_RECEIVER_TIM                            TIM2
@@ -124,24 +86,67 @@ typedef struct
 #define RECEIVER_PULSE_DEFAULT_MAX_COUNT                34560   // Corresponds to 1.92 ms with 18Mhz counter clock
 #define RECEIVER_PULSE_DEFAULT_MIN_COUNT                19440   // Corresponds to 1.08 ms with 18Mhz counter clock
 
-/* Used for sanity check of IC pulse count, +/-10% of default count considered valid
- * TODO: These may be defined of factors of calibrated values */
-#define RECEIVER_MAX_VALID_IC_PULSE_COUNT               RECEIVER_PULSE_DEFAULT_MAX_COUNT*11/10
-#define RECEIVER_MIN_VALID_IC_PULSE_COUNT               RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10
+/* Used for sanity check of IC pulse count, +/-20% of default count considered valid */
+#define RECEIVER_MAX_VALID_IC_PULSE_COUNT               RECEIVER_PULSE_DEFAULT_MAX_COUNT*12/10
+#define RECEIVER_MIN_VALID_IC_PULSE_COUNT               RECEIVER_PULSE_DEFAULT_MIN_COUNT*8/10
 
 /* Used for sanity check of IC period count - Period is ~22 ms, +/-10% considered valid */
 #define RECEIVER_MAX_VALID_PERIOD_COUNT                 432000
 #define RECEIVER_MIN_VALID_PERIOD_COUNT                 360000
 
-#define RECEIVER_CALIBRATION_MIN_PULSE_COUNT            1000    // Corresponds to ~22.0 s (assuming period is 22 ms)
-#define RECEIVER_CALIBRATION_MAX_PULSE_COUNT            2000    // Corresponds to ~44.0 s (assuming period is 22 ms)
+/* Receiver calibration definitions - must at least be withing valid pulse range */
+#define RECEIVER_CALIBRATION_DURATION                   30000   // [ms] Max receiver calibration duration
+#define RECEIVER_CALIBRATION_MIN_PULSE_COUNT            1000    // Corresponds to ~22.0 s of calibration (assuming period is 22 ms)
 #define RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE        16
+#define RECEIVER_MAX_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MAX_COUNT*11/10
+#define RECEIVER_MAX_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10
+#define RECEIVER_MIN_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*11/10
+#define RECEIVER_MIN_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10
 
-#define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.09 s
+#define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.092 s
+
+/* Exported types ------------------------------------------------------------*/
+typedef enum
+{
+  PULSE_LOW = 0,
+  PULSE_HIGH = !PULSE_LOW
+} Pulse_State;
+
+typedef enum
+{
+  RECEIVER_ERROR = 0,
+  RECEIVER_OK = !RECEIVER_ERROR
+} ReceiverErrorStatus;
+
+typedef enum
+{
+  RECEIVER_CALIBRATION_WAITING = 0,
+  RECEIVER_CALIBRATION_IN_PROGRESS = 1,
+  RECEIVER_CALIBRATION_FINISHED = 2
+} ReceiverCalibrationState;
+
+typedef struct
+{
+  uint16_t ChannelMaxCount;
+  uint16_t ChannelMinCount;
+}Receiver_IC_ChannelCalibrationValues_TypeDef;
+
+typedef struct
+{
+  Receiver_IC_ChannelCalibrationValues_TypeDef ThrottleChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef AileronChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef ElevatorChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef RudderChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef GearChannel;
+  Receiver_IC_ChannelCalibrationValues_TypeDef Aux1Channel;
+}Receiver_CalibrationValues_TypeDef;
+
+/* Exported macro ------------------------------------------------------------*/
 
 /* Exported function prototypes --------------------------------------------- */
 ReceiverErrorStatus ReceiverInput_Config(void);
-ReceiverErrorStatus CalibrateReceiver(void);
+ReceiverErrorStatus StartReceiverCalibration(void);
+ReceiverErrorStatus UpdateReceiverCalibrationValues(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
 uint16_t GetThrottleReceiverChannel(void);

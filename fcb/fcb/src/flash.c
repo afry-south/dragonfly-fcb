@@ -37,7 +37,7 @@ static FlashErrorStatus IsValidPageSize(const uint16_t settingsPageOffset, const
  * @param  receiverCalibrationValues : Pointer to receiver calibration values struct to which values will enter
  * @retval FLASH_OK if calibration values read succesfully from flash, else FLASH_ERROR
  */
-FlashErrorStatus ReadCalibrationValuesFromFlash(Receiver_CalibrationValues_TypeDef* receiverCalibrationValues)
+FlashErrorStatus ReadCalibrationValuesFromFlash(volatile Receiver_CalibrationValues_TypeDef* receiverCalibrationValues)
 {
   FlashErrorStatus status = FLASH_OK;
 

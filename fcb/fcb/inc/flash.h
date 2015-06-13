@@ -49,7 +49,7 @@ typedef enum
 #define FLASH_RECEIVER_CALIBRATION_SIZE         sizeof(Receiver_CalibrationValues_TypeDef) + HAL_CRC_LENGTH_32B/4       // Added room for CRC
 
 /* Exported function prototypes --------------------------------------------- */
-FlashErrorStatus ReadCalibrationValuesFromFlash(Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
+FlashErrorStatus ReadCalibrationValuesFromFlash(volatile Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
 FlashErrorStatus WriteCalibrationValuesToFlash(const Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
 
 #endif /* __FLASH_H */
