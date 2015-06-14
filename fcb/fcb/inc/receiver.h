@@ -95,7 +95,7 @@
 #define RECEIVER_MIN_VALID_PERIOD_COUNT                 360000
 
 /* Receiver calibration definitions - must at least be withing valid pulse range */
-#define RECEIVER_CALIBRATION_DURATION                   30000   // [ms] Max receiver calibration duration
+#define RECEIVER_MAX_CALIBRATION_DURATION               1200000 // [ms] Max receiver calibration duration
 #define RECEIVER_CALIBRATION_MIN_PULSE_COUNT            1000    // Corresponds to ~22.0 s of calibration (assuming period is 22 ms)
 #define RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE        16
 #define RECEIVER_MAX_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MAX_COUNT*11/10
@@ -122,7 +122,6 @@ typedef enum
 {
   RECEIVER_CALIBRATION_WAITING = 0,
   RECEIVER_CALIBRATION_IN_PROGRESS = 1,
-  RECEIVER_CALIBRATION_FINISHED = 2
 } ReceiverCalibrationState;
 
 typedef struct
@@ -146,7 +145,7 @@ typedef struct
 /* Exported function prototypes --------------------------------------------- */
 ReceiverErrorStatus ReceiverInput_Config(void);
 ReceiverErrorStatus StartReceiverCalibration(void);
-ReceiverErrorStatus UpdateReceiverCalibrationValues(void);
+ReceiverErrorStatus StopReceiverCalibration(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
 uint16_t GetThrottleReceiverChannel(void);

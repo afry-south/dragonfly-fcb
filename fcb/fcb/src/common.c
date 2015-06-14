@@ -14,6 +14,8 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+extern volatile uint8_t UserButtonPressed;
+
 /* Private function prototypes -----------------------------------------------*/
 
 /* Exported functions --------------------------------------------------------*/
@@ -76,6 +78,97 @@ uint16_t UInt16_Mean(const uint16_t* buffer, const uint16_t length)
     tmpInt += buffer[i];
 
   return (uint16_t)(tmpInt /= length);
+}
+
+/**
+  * @brief  Initializes the board's LEDs
+  * @param  None
+  * @retval None
+  */
+void Init_LEDs(void)
+{
+  /* Initialize LEDs and User Button available on STM32F3-Discovery board */
+  BSP_LED_Init(LED3);
+  BSP_LED_Init(LED4);
+  BSP_LED_Init(LED5);
+  BSP_LED_Init(LED6);
+  BSP_LED_Init(LED7);
+  BSP_LED_Init(LED8);
+  BSP_LED_Init(LED9);
+  BSP_LED_Init(LED10);
+
+  LEDs_Off();
+}
+
+/**
+  * @brief  Turns off all the LEDs
+  * @param  None
+  * @retval None
+  */
+void LEDs_Off(void)
+{
+  BSP_LED_Off(LED3);
+  BSP_LED_Off(LED4);
+  BSP_LED_Off(LED5);
+  BSP_LED_Off(LED6);
+  BSP_LED_Off(LED7);
+  BSP_LED_Off(LED8);
+  BSP_LED_Off(LED9);
+  BSP_LED_Off(LED10);
+}
+
+/**
+  * @brief Toggles the LEDs based on User Button presses
+  * @param None
+  * @retval None
+  */
+void ToggleLEDs(void)
+{
+  switch(UserButtonPressed)
+  {
+  case 0:
+    LEDs_Off();
+    BSP_LED_On(LED3);
+    break;
+
+  case 1:
+    LEDs_Off();
+    BSP_LED_On(LED4);
+    break;
+
+  case 2:
+    LEDs_Off();
+    BSP_LED_On(LED5);
+    break;
+
+  case 3:
+    LEDs_Off();
+    BSP_LED_On(LED6);
+    break;
+
+  case 4:
+    LEDs_Off();
+    BSP_LED_On(LED7);
+    break;
+
+  case 5:
+    LEDs_Off();
+    BSP_LED_On(LED8);
+    break;
+
+  case 6:
+    LEDs_Off();
+    BSP_LED_On(LED9);
+    break;
+
+  case 7:
+    LEDs_Off();
+    BSP_LED_On(LED10);
+    break;
+
+  default:
+    break;
+  }
 }
 
 /* Private functions ---------------------------------------------------------*/

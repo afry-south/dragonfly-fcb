@@ -13,7 +13,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_it.h"
-#include "cmsis_os.h"
 
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
   * @{
@@ -26,7 +25,6 @@
 /* Private variables ---------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd;
 extern USBD_HandleTypeDef hUSBDDevice;
-extern void xPortSysTickHandler(void);
 
 extern TIM_HandleTypeDef PrimaryReceiverTimHandle;
 extern TIM_HandleTypeDef AuxReceiverTimHandle;
@@ -127,10 +125,7 @@ void DebugMon_Handler(void)
   */
 void SysTick_Handler(void)
 {
-  HAL_IncTick();
-
-  if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-    xPortSysTickHandler();
+  HAL_SYSTICK_IRQHandler();
 }
 
 /******************************************************************************/
@@ -140,11 +135,32 @@ void SysTick_Handler(void)
 /*  file (startup_stm32f3xx.s).                                               */
 /******************************************************************************/
 
+
+/**
+  * @brief  This function handles the PVD Output interrupt request.
+  * @param  None
+  * @retval None
+  */
+void PVD_IRQHandler(void)
+{
+  HAL_PWR_PVD_IRQHandler();
+}
+
+/**
+  * @brief  This function handles the PRIMARY_RECEIVER_TIM timer interrupt request.
+  * @param  None
+  * @retval None
+  */
 void PRIMARY_RECEIVER_TIM_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&PrimaryReceiverTimHandle);
 }
 
+/**
+  * @brief  This function handles the AUX_RECEIVER_TIM timer interrupt request.
+  * @param  None
+  * @retval None
+  */
 void AUX_RECEIVER_TIM_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&AuxReceiverTimHandle);

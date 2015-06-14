@@ -22,19 +22,20 @@
  *          _PERFORMING A CALIBRATION_
  *          To perform a calibration of the receiver channels, the function
  *          StartReceiverCalibration() must be called. The receiver channels
- *          will then be sampled for RECEIVER_CALIBRATION_DURATION during which
- *          the user must push all the sticks in to their top and bottom ranges
- *          cyclically as well as toggling the aux1 and gear switches a few
- *          times.
+ *          will then be sampled for up to RECEIVER_MAX_CALIBRATION_DURATION
+ *          during which the user must push all the sticks in to their top and
+ *          bottom ranges cyclically as well as toggling the aux1 and gear switches
+ *          a few times.
  *
  *          Naturally, the receiver must be actively reading from the transmitter
- *          so checking that these are binded and calling IsReceiverActive(),
- *          this can be assured.
+ *          so checking that these are binded and by calling IsReceiverActive()
+ *          before starting the calibration, this can be assured.
  *
- *          During calibration, the UpdateReceiverCalibrationValues() should be
+ *          During calibration, the StopReceiverCalibration() must be
  *          called to finalize the calibration procedure, where the new values
  *          are taken into use (if they are valid) and written to persistent
- *          flash memory for future use.
+ *          flash memory for future use. If it is not called within
+ *          RECEIVER_MAX_CALIBRATION_DURATION time, the calibration will time out.
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
@@ -72,7 +73,12 @@ typedef struct
   uint16_t maxSamplesBuffer[RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE];
   uint16_t minSamplesBuffer[RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE];
   uint16_t channelCalibrationPulseSamples;
-  ReceiverCalibrationState channelCalibrationState;
+  uint16_t tmpMaxIndex;
+  uint16_t tmpMaxBufferMinValue;
+  uint16_t tmpMinIndex;
+  uint16_t tmpMinBufferMaxValue;
+  bool maxBufferUpdated;
+  bool minBufferUpdated;
 }Receiver_ChannelCalibrationSampling_TypeDef;
 
 
@@ -101,6 +107,8 @@ static volatile Receiver_IC_Values_TypeDef Aux1ICValues;
 
 /* Struct for all receiver channel's calibration values */
 static volatile Receiver_CalibrationValues_TypeDef CalibrationValues;
+static volatile ReceiverCalibrationState receiverCalibrationState;
+static volatile uint32_t calibrationStartTime;
 
 /* Structs for sampling the receiver channels when calibrating */
 static volatile Receiver_ChannelCalibrationSampling_TypeDef ThrottleCalibrationSampling;
@@ -109,7 +117,6 @@ static volatile Receiver_ChannelCalibrationSampling_TypeDef ElevatorCalibrationS
 static volatile Receiver_ChannelCalibrationSampling_TypeDef RudderCalibrationSampling;
 static volatile Receiver_ChannelCalibrationSampling_TypeDef GearCalibrationSampling;
 static volatile Receiver_ChannelCalibrationSampling_TypeDef Aux1CalibrationSampling;
-static volatile uint32_t calibrationStartTime;
 
 /* Timer reset counters for each timer */
 static volatile uint16_t PrimaryReceiverTimerPeriodCount;
@@ -144,7 +151,8 @@ static ReceiverErrorStatus IsCalibrationValuesValid(volatile const Receiver_Cali
 static ReceiverErrorStatus IsCalibrationMaxPulseValueValid(const uint16_t maxPulseValue);
 static ReceiverErrorStatus IsCalibrationMinPulseValueValid(const uint16_t minPulseValue);
 
-static void ResetCalibrationSamplingStatesToWaiting(void);
+static void EnforceNewCalibrationValues(volatile Receiver_CalibrationValues_TypeDef* newCalibrationValues);
+static void ResetCalibrationSampling(volatile Receiver_ChannelCalibrationSampling_TypeDef* channelCalibrationSampling);
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -358,25 +366,25 @@ uint16_t GetAux1ReceiverChannelPeriodMicros(void)
  */
 ReceiverErrorStatus StartReceiverCalibration(void)
 {
-  /* Reset the receiver channel's calibration sampling structs */
-  memset((Receiver_ChannelCalibrationSampling_TypeDef*)&ThrottleCalibrationSampling, 0, sizeof(ThrottleCalibrationSampling));
-  memset((Receiver_ChannelCalibrationSampling_TypeDef*)&ElevatorCalibrationSampling, 0, sizeof(ElevatorCalibrationSampling));
-  memset((Receiver_ChannelCalibrationSampling_TypeDef*)&AileronCalibrationSampling, 0, sizeof(AileronCalibrationSampling));
-  memset((Receiver_ChannelCalibrationSampling_TypeDef*)&RudderCalibrationSampling, 0, sizeof(RudderCalibrationSampling));
-  memset((Receiver_ChannelCalibrationSampling_TypeDef*)&GearCalibrationSampling, 0, sizeof(GearCalibrationSampling));
-  memset((Receiver_ChannelCalibrationSampling_TypeDef*)&Aux1CalibrationSampling, 0, sizeof(Aux1CalibrationSampling));
+  /* Check so that calibration is not already being performed */
+  if(receiverCalibrationState != RECEIVER_CALIBRATION_IN_PROGRESS)
+    {
+      /* Reset the receiver channel's calibration sampling structs */
+      ResetCalibrationSampling(&ThrottleCalibrationSampling);
+      ResetCalibrationSampling(&ElevatorCalibrationSampling);
+      ResetCalibrationSampling(&AileronCalibrationSampling);
+      ResetCalibrationSampling(&RudderCalibrationSampling);
+      ResetCalibrationSampling(&GearCalibrationSampling);
+      ResetCalibrationSampling(&Aux1CalibrationSampling);
 
-  /* Initialize the calibration states */
-  ThrottleCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
-  AileronCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
-  ElevatorCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
-  RudderCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
-  GearCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
-  Aux1CalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
+      /* Set the calibration start time */
+      calibrationStartTime = HAL_GetTick();
 
-  /* Set the calibration start time */
-  calibrationStartTime = HAL_GetTick();
-  return RECEIVER_OK;
+      return RECEIVER_OK;
+    }
+
+  /* Calibration busy */
+  return RECEIVER_ERROR;
 }
 
 /*
@@ -387,28 +395,27 @@ ReceiverErrorStatus StartReceiverCalibration(void)
  * @param  None.
  * @retval RECEIVER_OK if calibration finalized correctly, else RECEIVER_ERROR
  */
-ReceiverErrorStatus UpdateReceiverCalibrationValues(void)
+ReceiverErrorStatus StopReceiverCalibration(void)
 {
-  if(ThrottleCalibrationSampling.channelCalibrationState == RECEIVER_CALIBRATION_FINISHED && AileronCalibrationSampling.channelCalibrationState == RECEIVER_CALIBRATION_FINISHED && ElevatorCalibrationSampling.channelCalibrationState == RECEIVER_CALIBRATION_FINISHED
-      && RudderCalibrationSampling.channelCalibrationState == RECEIVER_CALIBRATION_FINISHED && GearCalibrationSampling.channelCalibrationState == RECEIVER_CALIBRATION_FINISHED && Aux1CalibrationSampling.channelCalibrationState == RECEIVER_CALIBRATION_FINISHED)
+  /* Check so that receiver calibration is currently being performed */
+  if(receiverCalibrationState == RECEIVER_CALIBRATION_IN_PROGRESS)
     {
-      Receiver_CalibrationValues_TypeDef tmpCalibrationValues;
-
       /* Check so that each channel has collected enough pulse samples during calibration */
       if(ThrottleCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
         return RECEIVER_ERROR;
-      if(ThrottleCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
+      if(AileronCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
         return RECEIVER_ERROR;
-      if(ThrottleCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
+      if(ElevatorCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
         return RECEIVER_ERROR;
-      if(ThrottleCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
+      if(RudderCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
         return RECEIVER_ERROR;
-      if(ThrottleCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
+      if(GearCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
         return RECEIVER_ERROR;
-      if(ThrottleCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
+      if(Aux1CalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
         return RECEIVER_ERROR;
 
-      /* Calculate mean of max and mean sample buffers */
+      /* Calculate mean of max and mean sample buffers and store in temporary calibration values struct */
+      Receiver_CalibrationValues_TypeDef tmpCalibrationValues;
       tmpCalibrationValues.ThrottleChannel.ChannelMaxCount = UInt16_Mean((uint16_t*)&ThrottleCalibrationSampling.maxSamplesBuffer[0], RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE);
       tmpCalibrationValues.ThrottleChannel.ChannelMinCount = UInt16_Mean((uint16_t*)&ThrottleCalibrationSampling.minSamplesBuffer[0], RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE);
       tmpCalibrationValues.AileronChannel.ChannelMaxCount = UInt16_Mean((uint16_t*)&AileronCalibrationSampling.maxSamplesBuffer[0], RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE);
@@ -423,35 +430,22 @@ ReceiverErrorStatus UpdateReceiverCalibrationValues(void)
       tmpCalibrationValues.Aux1Channel.ChannelMinCount = UInt16_Mean((uint16_t*)&Aux1CalibrationSampling.minSamplesBuffer[0], RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE);
 
       /* Check validity of calibration values */
-      ReceiverErrorStatus calibrationValid = IsCalibrationValuesValid(&tmpCalibrationValues);
-      if(!calibrationValid)
+      if(!IsCalibrationValuesValid(&tmpCalibrationValues))
         return RECEIVER_ERROR;
 
       /* Write calibration values to flash for persistent storage */
       WriteCalibrationValuesToFlash(&tmpCalibrationValues);
 
-      /* Copy values to used calibration values */
-      CalibrationValues.ThrottleChannel.ChannelMaxCount = tmpCalibrationValues.ThrottleChannel.ChannelMaxCount;
-      CalibrationValues.ThrottleChannel.ChannelMinCount = tmpCalibrationValues.ThrottleChannel.ChannelMinCount;
-      CalibrationValues.AileronChannel.ChannelMaxCount = tmpCalibrationValues.AileronChannel.ChannelMaxCount;
-      CalibrationValues.AileronChannel.ChannelMinCount = tmpCalibrationValues.AileronChannel.ChannelMinCount;
-      CalibrationValues.ElevatorChannel.ChannelMaxCount = tmpCalibrationValues.ElevatorChannel.ChannelMaxCount;
-      CalibrationValues.ElevatorChannel.ChannelMinCount = tmpCalibrationValues.ElevatorChannel.ChannelMinCount;
-      CalibrationValues.RudderChannel.ChannelMaxCount = tmpCalibrationValues.RudderChannel.ChannelMaxCount;
-      CalibrationValues.RudderChannel.ChannelMinCount = tmpCalibrationValues.RudderChannel.ChannelMinCount;
-      CalibrationValues.GearChannel.ChannelMaxCount = tmpCalibrationValues.GearChannel.ChannelMaxCount;
-      CalibrationValues.GearChannel.ChannelMinCount = tmpCalibrationValues.GearChannel.ChannelMinCount;
-      CalibrationValues.Aux1Channel.ChannelMaxCount = tmpCalibrationValues.Aux1Channel.ChannelMaxCount;
-      CalibrationValues.Aux1Channel.ChannelMinCount = tmpCalibrationValues.Aux1Channel.ChannelMinCount;
-
+      /* Copy values to used calibration values and start using them */
+      EnforceNewCalibrationValues(&tmpCalibrationValues);
 
       /* Reset calibration states to waiting so a new calibration may be initiated */
-      ResetCalibrationSamplingStatesToWaiting();
+      receiverCalibrationState = RECEIVER_CALIBRATION_WAITING;
 
       return RECEIVER_OK;
     }
 
-  /* If receiver is currently waiting for calibration or calibration in progress */
+  /* If receiver calibration has not been started yet */
   return RECEIVER_ERROR;
 }
 
@@ -894,8 +888,16 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
         {
           ChannelICValues->PulseTimerCount = tempPulseTimerCount;
           ChannelICValues->IsActive = RECEIVER_OK; // Set channel to active
-          if(ChannelCalibrationSampling->channelCalibrationState == RECEIVER_CALIBRATION_IN_PROGRESS)
-            UpdateChannelCalibrationSamples(ChannelCalibrationSampling, tempPulseTimerCount);
+
+          /* Check if calibration is being performed */
+          if(receiverCalibrationState == RECEIVER_CALIBRATION_IN_PROGRESS)
+            {
+              /* Check if max calibration time has been reached (time out) */
+              if(HAL_GetTick() > RECEIVER_MAX_CALIBRATION_DURATION + calibrationStartTime)
+                receiverCalibrationState = RECEIVER_CALIBRATION_WAITING;
+              else
+                UpdateChannelCalibrationSamples(ChannelCalibrationSampling, tempPulseTimerCount);
+            }
         }
       else
         errorStatus = RECEIVER_ERROR;
@@ -916,81 +918,57 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
  * @brief  Updates the receiver channel's calibration samples
  * @param  channelCalibrationSampling : calibration sampling struct
  * @param  channelPulseTimerCount : The pulse count value
- * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
+ * @retval RECEIVER_OK if updated correctly
  */
 static ReceiverErrorStatus UpdateChannelCalibrationSamples(volatile Receiver_ChannelCalibrationSampling_TypeDef* channelCalibrationSampling, const uint16_t channelPulseTimerCount)
 {
-  static uint16_t tmpMaxIndex;
-  static uint16_t tmpMaxBufferMinValue;
-  static bool maxBufferUpdated;
-
-  static uint16_t tmpMinIndex;
-  static uint16_t tmpMinBufferMaxValue;
-  static bool minBufferUpdated;
-
   uint16_t i;
 
-  /* # If a new calibration has been started, reset the static variables used in this function */
-  if(channelCalibrationSampling->channelCalibrationPulseSamples == 0)
-    {
-      tmpMaxIndex = 0;
-      tmpMaxBufferMinValue = UINT16_MAX;
-      maxBufferUpdated = true;
-
-      tmpMinIndex = 0;
-      tmpMinBufferMaxValue = 0;
-      minBufferUpdated = true;
-    }
-
   /* # Find the min value in the buffer containing the max values ########### */
-  if(maxBufferUpdated)
+  if(channelCalibrationSampling->maxBufferUpdated)
     {
       for(i = 0; i < RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE; i++)
         {
-          if(tmpMaxBufferMinValue > channelCalibrationSampling->maxSamplesBuffer[i])
+          if(channelCalibrationSampling->tmpMaxBufferMinValue > channelCalibrationSampling->maxSamplesBuffer[i])
             {
-              tmpMaxBufferMinValue = channelCalibrationSampling->maxSamplesBuffer[i];
-              tmpMaxIndex = i;
-              maxBufferUpdated = false;
+              channelCalibrationSampling->tmpMaxBufferMinValue = channelCalibrationSampling->maxSamplesBuffer[i];
+              channelCalibrationSampling->tmpMaxIndex = i;
+              channelCalibrationSampling->maxBufferUpdated = false;
             }
         }
     }
 
   /* If the pulse value is larger than the min value of the max value buffer, replace it */
-  if(channelPulseTimerCount > tmpMaxBufferMinValue)
+  if(channelPulseTimerCount > channelCalibrationSampling->tmpMaxBufferMinValue)
     {
-      channelCalibrationSampling->maxSamplesBuffer[tmpMaxIndex] = channelPulseTimerCount;
-      maxBufferUpdated = true;
+      channelCalibrationSampling->maxSamplesBuffer[channelCalibrationSampling->tmpMaxIndex] = channelPulseTimerCount;
+      channelCalibrationSampling->maxBufferUpdated = true;
     }
 
 
   /* # Find the max value in the buffer containing the min values ########### */
-  if(minBufferUpdated)
+  if(channelCalibrationSampling->minBufferUpdated)
     {
       for(i = 0; i < RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE; i++)
         {
-          if(tmpMinBufferMaxValue < channelCalibrationSampling->minSamplesBuffer[i])
+          if(channelCalibrationSampling->tmpMinBufferMaxValue < channelCalibrationSampling->minSamplesBuffer[i])
             {
-              tmpMinBufferMaxValue = channelCalibrationSampling->minSamplesBuffer[i];
-              tmpMinIndex = i;
-              minBufferUpdated = false;
+              channelCalibrationSampling->tmpMinBufferMaxValue = channelCalibrationSampling->minSamplesBuffer[i];
+              channelCalibrationSampling->tmpMinIndex = i;
+              channelCalibrationSampling->minBufferUpdated = false;
             }
         }
     }
 
   /* If the pulse value is larger than the min value of the max value buffer, replace it */
-  if(channelPulseTimerCount < tmpMinBufferMaxValue)
+  if(channelPulseTimerCount < channelCalibrationSampling->tmpMinBufferMaxValue)
     {
-      channelCalibrationSampling->minSamplesBuffer[tmpMinIndex] = channelPulseTimerCount;
-      minBufferUpdated = true;
+      channelCalibrationSampling->minSamplesBuffer[channelCalibrationSampling->tmpMinIndex] = channelPulseTimerCount;
+      channelCalibrationSampling->minBufferUpdated = true;
     }
 
   /* Increase amount of channel calibration samples */
   channelCalibrationSampling->channelCalibrationPulseSamples++;
-
-  /* # Check if max calibration time has been reached - stop calibration #### */
-  if(HAL_GetTick() > RECEIVER_CALIBRATION_DURATION + calibrationStartTime)
-    channelCalibrationSampling->channelCalibrationState = RECEIVER_CALIBRATION_FINISHED;
 
   return RECEIVER_OK;
 }
@@ -1179,18 +1157,44 @@ static ReceiverErrorStatus IsCalibrationMinPulseValueValid(const uint16_t minPul
 }
 
 /*
- * @brief  Resets the calibration sampling states to waiting
- * @param  None
+ * @brief  Updates the currently used calibration values
+ * @param  newCalibrationValues : reference to new calibration values
  * @retval None
  */
-static void ResetCalibrationSamplingStatesToWaiting(void)
+static void EnforceNewCalibrationValues(volatile Receiver_CalibrationValues_TypeDef* newCalibrationValues)
 {
-  ThrottleCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_WAITING;
-  AileronCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_WAITING;
-  ElevatorCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_WAITING;
-  RudderCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_WAITING;
-  GearCalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_WAITING;
-  Aux1CalibrationSampling.channelCalibrationState = RECEIVER_CALIBRATION_WAITING;
+  CalibrationValues.ThrottleChannel.ChannelMaxCount = newCalibrationValues->ThrottleChannel.ChannelMaxCount;
+  CalibrationValues.ThrottleChannel.ChannelMinCount = newCalibrationValues->ThrottleChannel.ChannelMinCount;
+  CalibrationValues.AileronChannel.ChannelMaxCount = newCalibrationValues->AileronChannel.ChannelMaxCount;
+  CalibrationValues.AileronChannel.ChannelMinCount = newCalibrationValues->AileronChannel.ChannelMinCount;
+  CalibrationValues.ElevatorChannel.ChannelMaxCount = newCalibrationValues->ElevatorChannel.ChannelMaxCount;
+  CalibrationValues.ElevatorChannel.ChannelMinCount = newCalibrationValues->ElevatorChannel.ChannelMinCount;
+  CalibrationValues.RudderChannel.ChannelMaxCount = newCalibrationValues->RudderChannel.ChannelMaxCount;
+  CalibrationValues.RudderChannel.ChannelMinCount = newCalibrationValues->RudderChannel.ChannelMinCount;
+  CalibrationValues.GearChannel.ChannelMaxCount = newCalibrationValues->GearChannel.ChannelMaxCount;
+  CalibrationValues.GearChannel.ChannelMinCount = newCalibrationValues->GearChannel.ChannelMinCount;
+  CalibrationValues.Aux1Channel.ChannelMaxCount = newCalibrationValues->Aux1Channel.ChannelMaxCount;
+  CalibrationValues.Aux1Channel.ChannelMinCount = newCalibrationValues->Aux1Channel.ChannelMinCount;
+}
+
+/*
+ * @brief  Resets a Receiver_ChannelCalibrationSampling_TypeDef struct
+ * @param  channelCalibrationSampling : Receiver_ChannelCalibrationSampling_TypeDef struct to be reset
+ * @retval None
+ */
+static void ResetCalibrationSampling(volatile Receiver_ChannelCalibrationSampling_TypeDef* channelCalibrationSampling)
+{
+  channelCalibrationSampling->channelCalibrationPulseSamples = 0;
+
+  channelCalibrationSampling->maxBufferUpdated = true;
+  memset((uint16_t*)channelCalibrationSampling->maxSamplesBuffer, 0, RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE*sizeof(uint16_t));
+  channelCalibrationSampling->tmpMaxBufferMinValue = 0;
+  channelCalibrationSampling->tmpMaxIndex = 0;
+
+  channelCalibrationSampling->minBufferUpdated = true;
+  memset((uint16_t*)channelCalibrationSampling->minSamplesBuffer, 0, RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE*sizeof(uint16_t));
+  channelCalibrationSampling->tmpMinBufferMaxValue = 0;
+  channelCalibrationSampling->tmpMinIndex = 0;
 }
 
 /**

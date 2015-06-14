@@ -8,6 +8,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
+#include "common.h"
 #include "motor_control.h"
 #include "flight_control.h"
 #include "sensors.h"
@@ -20,11 +22,12 @@ volatile uint8_t UserButtonPressed;
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Init_System(void);
-static void Init_LEDs(void);
-static void LEDs_Off(void);
-static void ToggleLEDs();
+static void PVD_Config(void);
 
-/* Private functions ---------------------------------------------------------*/
+/* Called every millisecond to drive the RTOS */
+extern void xPortSysTickHandler(void);
+
+/* Exported functions --------------------------------------------------------*/
 
 /**
  * @brief  Main program.
@@ -48,6 +51,69 @@ int main(void)
     }
 }
 
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @param  None
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* Turn LED3 on */
+  LEDs_Off();
+  BSP_LED_On(LED3);
+
+  // TODO: Based on the current state of the quadrotor, appropriate
+  // action should be taken (i.e. attempt to land and shut down
+  // motors within 20 seconds)
+
+  while(1)
+  {
+  }
+}
+
+/**
+  * @brief  EXTI line detection callbacks
+  * @param  GPIO_Pin: Specifies the pins connected EXTI line
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin == USER_BUTTON_PIN)
+  {
+   UserButtonPressed++;
+   if (UserButtonPressed > 0x7)
+    {
+      UserButtonPressed = 0x0;
+    }
+  }
+}
+
+/**
+  * @brief  PWR PVD interrupt callback
+  * @param  none
+  * @retval none
+  */
+void HAL_PWR_PVDCallback(void)
+{
+  /* Voltage drop detected - Go to error handler */
+  Error_Handler();
+}
+
+/**
+ * @brief  SYSTICK callback
+ * @param  None
+ * @retval None
+ */
+void HAL_SYSTICK_Callback(void)
+{
+  HAL_IncTick();
+
+  if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+    xPortSysTickHandler();
+}
+
+/* Private functions ---------------------------------------------------------*/
+
 static void Init_System(void)
 {
   /* STM32F3xx HAL library initialization:
@@ -61,6 +127,9 @@ static void Init_System(void)
          - Low Level Initialization
    */
   HAL_Init();
+
+  /* Initialize Programmable Voltage Detection (PVD) */
+  PVD_Config();
 
   /* Configure the system clock to 72 Mhz */
   SystemClock_Config();
@@ -97,107 +166,31 @@ static void Init_System(void)
   ReceiverInput_Config();
 }
 
-static void Init_LEDs(void)
-{
-  /* Initialize LEDs and User Button available on STM32F3-Discovery board */
-  BSP_LED_Init(LED3);
-  BSP_LED_Init(LED4);
-  BSP_LED_Init(LED5);
-  BSP_LED_Init(LED6);
-  BSP_LED_Init(LED7);
-  BSP_LED_Init(LED8);
-  BSP_LED_Init(LED9);
-  BSP_LED_Init(LED10);
-
-  LEDs_Off();
-}
-
 /**
-  * @brief  Turns off all the LEDs
+  * @brief  Configures the Programmable Voltage Detection (PVD) resources.
   * @param  None
   * @retval None
   */
-static void LEDs_Off(void)
+static void PVD_Config(void)
 {
-  BSP_LED_Off(LED3);
-  BSP_LED_Off(LED4);
-  BSP_LED_Off(LED5);
-  BSP_LED_Off(LED6);
-  BSP_LED_Off(LED7);
-  BSP_LED_Off(LED8);
-  BSP_LED_Off(LED9);
-  BSP_LED_Off(LED10);
-}
+  PWR_PVDTypeDef sConfigPVD;
 
-/**
-  * @brief Toggles the LEDs based on User Button presses
-  * @param None
-  * @retval None
-  */
-void ToggleLEDs(void)
-{
-  switch(UserButtonPressed)
-  {
-  case 0:
-    LEDs_Off();
-    BSP_LED_On(LED3);
-    break;
+  /*##-1- Enable Power Clock #################################################*/
+  __PWR_CLK_ENABLE();
 
-  case 1:
-    LEDs_Off();
-    BSP_LED_On(LED4);
-    break;
+  /*##-2- Configure the NVIC for PVD #########################################*/
+  HAL_NVIC_SetPriority(PVD_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(PVD_IRQn);
 
-  case 2:
-    LEDs_Off();
-    BSP_LED_On(LED5);
-    break;
+  /* Configure the PVD level to and generate an interrupt on falling
+     edges (Detection level set to 2.47V, refer to the electrical characteristics
+     of the device datasheet for more details) */
+  sConfigPVD.PVDLevel = PWR_PVDLEVEL_5;
+  sConfigPVD.Mode = PWR_PVD_MODE_IT_FALLING;
+  HAL_PWR_PVDConfig(&sConfigPVD);
 
-  case 3:
-    LEDs_Off();
-    BSP_LED_On(LED6);
-    break;
-
-  case 4:
-    LEDs_Off();
-    BSP_LED_On(LED7);
-    break;
-
-  case 5:
-    LEDs_Off();
-    BSP_LED_On(LED8);
-    break;
-
-  case 6:
-    LEDs_Off();
-    BSP_LED_On(LED9);
-    break;
-
-  case 7:
-    LEDs_Off();
-    BSP_LED_On(LED10);
-    break;
-
-  default:
-    break;
-  }
-}
-
-/**
-  * @brief EXTI line detection callbacks
-  * @param GPIO_Pin: Specifies the pins connected EXTI line
-  * @retval None
-  */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  if(GPIO_Pin == USER_BUTTON_PIN)
-  {
-   UserButtonPressed++;
-   if (UserButtonPressed > 0x7)
-    {
-      UserButtonPressed = 0x0;
-    }
-  }
+  /* Enable the PVD Output */
+  HAL_PWR_EnablePVD();
 }
 
 /**
@@ -245,21 +238,6 @@ static void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;     // APB1 is limited to 36 MHz according to reference manual
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
-}
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  LEDs_Off();
-  /* Turn LED3 on */
-  BSP_LED_On(LED3);
-  while(1)
-  {
-  }
 }
 
 #ifdef  USE_FULL_ASSERT
