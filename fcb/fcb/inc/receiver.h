@@ -118,12 +118,6 @@ typedef enum
   RECEIVER_OK = !RECEIVER_ERROR
 } ReceiverErrorStatus;
 
-typedef enum
-{
-  RECEIVER_CALIBRATION_WAITING = 0,
-  RECEIVER_CALIBRATION_IN_PROGRESS = 1,
-} ReceiverCalibrationState;
-
 typedef struct
 {
   uint16_t ChannelMaxCount;

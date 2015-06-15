@@ -47,6 +47,12 @@
 #include <string.h>
 
 /* Private typedef -----------------------------------------------------------*/
+typedef enum
+{
+  RECEIVER_CALIBRATION_WAITING = 0,
+  RECEIVER_CALIBRATION_IN_PROGRESS = 1,
+} ReceiverCalibrationState;
+
 typedef struct
 {
   Pulse_State ThrottleInputState;
