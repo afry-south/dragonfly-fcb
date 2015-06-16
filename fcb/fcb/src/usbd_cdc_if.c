@@ -26,6 +26,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
 
+#include "FreeRTOS.h"
+#include "semphr.h"
+extern xSemaphoreHandle usbComRxSem;
+static signed portBASE_TYPE xHigherPriorityTaskWoken;
+
 /* Private define ------------------------------------------------------------*/
 #define USB_RX_DATA_SIZE  2048
 #define USB_TX_DATA_SIZE  2048
@@ -63,7 +68,7 @@ USBD_CDC_LineCodingTypeDef LineCoding =
 /* Private functions ---------------------------------------------------------*/
 
 /**
-  * @brief  CDC_Itf_Init
+  * @brief  CDC_Itf_Init callback
   *         Initializes the CDC media low layer
   * @param  None
   * @retval Result of the opeartion: USBD_OK if all operations are OK else USBD_FAIL
@@ -78,7 +83,7 @@ static int8_t CDC_Itf_Init(void)
 }
 
 /**
-  * @brief  CDC_Itf_DeInit
+  * @brief  CDC_Itf_DeInit callback
   *         DeInitializes the CDC media low layer
   * @param  None
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
@@ -89,14 +94,14 @@ static int8_t CDC_Itf_DeInit(void)
 }
 
 /**
-  * @brief  CDC_Itf_Control
+  * @brief  CDC_Itf_Control callback
   *         Manage the CDC class requests
   * @param  Cmd: Command code            
   * @param  Buf: Buffer containing command data (request parameters)
   * @param  Len: Number of data to be sent (in bytes)
   * @retval Result of the opeartion: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_Itf_Control (uint8_t cmd, uint8_t* pbuf, uint16_t length)
+static int8_t CDC_Itf_Control(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 { 
   switch (cmd)
   {
@@ -157,8 +162,8 @@ static int8_t CDC_Itf_Control (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 }
 
 /**
-  * @brief  Data received over USB OUT endpoint sent over CDC interface
-  *         through this function.
+  * @brief  USB CDC receive callback. Data received over USB OUT endpoint sent over
+  *         CDC interface through this function.
   * @param  Buf: Buffer of data
   * @param  Len: Number of data received (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
@@ -170,7 +175,8 @@ static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
   if(hUSBDDevice.dev_state == USBD_STATE_CONFIGURED)
     {
       result = USBD_CDC_ReceivePacket(&hUSBDDevice);
-      if(result == USBD_OK) {
+      if(result == USBD_OK)
+        {
     	  char affirmation[] = " understood captain\n";
     	  size_t aff_len = strlen(affirmation);
     	  uint8_t replyBuf[aff_len + *Len + 1];
@@ -182,6 +188,9 @@ static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
     }
   else
     result = USBD_FAIL;
+
+  /* Give semaphore to indicate data has been received over USB Com Port */
+  xSemaphoreGiveFromISR(usbComRxSem, &xHigherPriorityTaskWoken);
   return result;
 }
 

@@ -8,23 +8,43 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "cmsis_os.h"
 #include "common.h"
 #include "motor_control.h"
 #include "flight_control.h"
 #include "sensors.h"
 #include "receiver.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+
+/* Private define ------------------------------------------------------------*/
+#define USB_COM_RX_THREAD_PRIO  1
+#define USB_COM_TX_THREAD_PRIO  1
+
+/* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 USBD_HandleTypeDef hUSBDDevice;
 volatile uint8_t UserButtonPressed;
 
+xTaskHandle USB_ComPortRx_Thread_Handle;
+xTaskHandle USB_ComPortTx_Thread_Handle;
+
+xSemaphoreHandle usbComRxSem;
+xSemaphoreHandle usbComTxSem;
+
+xQueueHandle usbComRxQueue;
+
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
-static void Init_System(void);
+static void System_Init(void);
+static void RTOS_Init(void);
 static void PVD_Config(void);
 
-/* Called every millisecond to drive the RTOS */
+static void USB_ComPort_RX_Thread(void const *argument);
+static void USB_ComPort_TX_Thread(void const *argument);
+
+/* Called every system tick to drive the RTOS */
 extern void xPortSysTickHandler(void);
 
 /* Exported functions --------------------------------------------------------*/
@@ -43,7 +63,11 @@ int main(void)
    * system_stm32f30x.c file
    */
 
-  Init_System();
+  /* Init system at low level */
+  System_Init();
+
+  /* Initialize RTOS tasks */
+  RTOS_Init();
 
   while (1)
     {
@@ -114,7 +138,13 @@ void HAL_SYSTICK_Callback(void)
 
 /* Private functions ---------------------------------------------------------*/
 
-static void Init_System(void)
+/**
+  * @brief  Initializes system at low level, setting up clocks and configuring
+  *         peripheral operation.
+  * @param  None
+  * @retval None
+  */
+static void System_Init(void)
 {
   /* STM32F3xx HAL library initialization:
          - Configure the Flash prefetch
@@ -159,11 +189,174 @@ static void Init_System(void)
   InitPIDControllers();
 #endif
 
-  /* Setup motor output timer */
-  MotorControl_Config();
+//  /* Setup motor output timer */
+//  MotorControl_Config();
+//
+//  /* Setup receiver timers for receiver input */
+//  ReceiverInput_Config();
+}
 
-  /* Setup receiver timers for receiver input */
-  ReceiverInput_Config();
+/**
+  * @brief  Initializes the Real-time operating system (RTOS) and starts the
+  *         OS kernel
+  * @param  None
+  * @retval None
+  */
+static void RTOS_Init(void)
+{
+  /* USB Virtual Com Port Rx handler thread creation
+   * Task function pointer: USB_ComPort_RX_Thread
+   * Task name: USB_COM_RX
+   * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
+   * Parameter: NULL
+   * Priority: USB_COM_RX_THREAD_PRIO ([0, inf] possible)
+   * Handle: USB_ComPortRx_Thread_Handle
+   * */
+  if(pdPASS != xTaskCreate((pdTASK_CODE)USB_ComPort_RX_Thread, (signed portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE, NULL, USB_COM_RX_THREAD_PRIO, &USB_ComPortRx_Thread_Handle))
+    {
+      Error_Handler();
+    }
+
+  /* USB Virtual Com Port Tx handler thread creation
+   * Task function pointer: USB_ComPort_RX_Thread
+   * Task name: USB_COM_TX
+   * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
+   * Parameter: NULL
+   * Priority: USB_COM_TX_THREAD_PRIO ([0, inf] possible)
+   * Handle: USB_ComPortTx_Thread_Handle
+   * */
+  if(pdPASS != xTaskCreate((pdTASK_CODE)USB_ComPort_TX_Thread, (signed portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE, NULL, USB_COM_TX_THREAD_PRIO, &USB_ComPortTx_Thread_Handle))
+    {
+      Error_Handler();
+    }
+
+  /* Create the USB Com Port Rx semaphore */
+  usbComRxSem = xSemaphoreCreateBinary();
+
+  /* Create the USB Com Port Tx semaphore */
+  usbComTxSem = xSemaphoreCreateBinary();
+
+  /* # CREATE QUEUES ######################################################## */
+  usbComRxQueue = xQueueCreate( 4, 64);
+  /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
+  vQueueAddToRegistry( usbComRxQueue, (signed char*) "usbComRxQueue" );
+
+
+  // xOutMessagesQueue = xQueueCreate( 10, sizeof( portCHAR ) );
+  /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
+
+  /* Start the RTOS scheduler
+   *
+   * since we use heap1.c, we must create all tasks and queues before the OS kernel
+   * is started according to ST UM1722 manual section 1.6.
+   */
+  vTaskStartScheduler();
+}
+
+/**
+  * @brief  Thread code handles the USB Com Port Rx communication
+  * @param  argument : Unused parameter
+  * @retval None
+  */
+static void USB_ComPort_RX_Thread(void const *argument)
+{
+  (void) argument;
+
+  for (;;)
+    {
+      xSemaphoreTake(usbComRxSem, portMAX_DELAY);
+      BSP_LED_Toggle(LED9);
+    }
+
+
+//  static uint8_t pucMessage[256];
+//
+//  for(;;)
+//    {
+//      /* wait forever for incoming messages */
+//      if(pdPASS == xQueueReceive( xInMessagesQueue, pucMessage, portMAX_DELAY ))
+//        {
+//          BSP_LED_Toggle(LED9);
+//
+//          switch ( pucMessage[ 2 ] )
+//          {
+//          case COMMAND_START:
+//            if ( xSampleTask == NULL )
+//              xTaskCreate( prvSampleDataTask, ( signed char* ) "SampleData", configMINIMAL_STACK_SIZE, NULL, parseIncomingData_TASK_PRIORITY, &xSampleTask );
+//
+//            break;
+//
+//          case COMMAND_STOP:
+//            if ( xSampleTask )
+//              {
+//                vTaskDelete( xSampleTask );
+//                xSampleTask = NULL;
+//                STM_EVAL_LEDOff( LED10 );
+//              }
+//
+//            break;
+//
+//          case COMMAND_SET_PWM_VALUES:
+//
+//            vMotorControlSetPwmValues( prvGetInt32FromDataArray( &(pucMessage[ 3 ]) ),
+//                prvGetInt32FromDataArray( &(pucMessage[ 7 ]) ) );
+//
+//
+//            break;
+//
+//          case COMMAND_UNKNOWN:
+//          default:
+//            break;
+//          }
+//        }
+//    }
+//
+// =================================================
+//
+//  portTickType count = 0;
+//
+//  for (;;)
+//    {
+//      count = xTaskGetTickCount() + 5000;
+//
+//      /* Toggle LED3 every 200 ms for 5 s */
+//
+//      while (count >= xTaskGetTickCount())
+//        {
+//          BSP_LED_Toggle(LED3);
+//
+//          vTaskDelay(200 / portTICK_RATE_MS);          /* Minimum delay = 1 tick */
+//        }
+//
+//      /* Turn off LED3 */
+//      BSP_LED_Off(LED3);
+//
+//      /* Suspend Thread 1 (own thread) */
+//
+//      vTaskSuspend(NULL);
+//
+//      count = xTaskGetTickCount() + 5000;
+//
+//      /* Toggle LED3 every 400 ms for 5 s */
+//      while (count >= xTaskGetTickCount()) {
+//          BSP_LED_Toggle(LED3);
+//
+//          vTaskDelay(400 / portTICK_RATE_MS); /* Minimum delay = 1 tick */
+//      }
+//
+//      /* Resume Thread 2*/
+//      vTaskResume(hLed2);
+//    }
+}
+
+/**
+  * @brief  Thread code handles the USB Com Port Tx communication
+  * @param  argument : Unused parameter
+  * @retval None
+  */
+static void USB_ComPort_TX_Thread(void const *argument)
+{
+  xSemaphoreTake(usbComTxSem, portMAX_DELAY);
 }
 
 /**
