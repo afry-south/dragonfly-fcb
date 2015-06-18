@@ -51,6 +51,7 @@ void PendSV_Handler(void);
 void SysTick_Handler(void);
 
 void EXTI0_IRQHandler(void);
+void PVD_IRQHandler(void);
 void PRIMARY_RECEIVER_TIM_IRQHandler(void);
 void AUX_RECEIVER_TIM_IRQHandler(void);
 

@@ -27,13 +27,10 @@
 #include "usbd_cdc_if.h"
 
 #include "FreeRTOS.h"
+#include "task.h"
 #include "semphr.h"
-extern xSemaphoreHandle usbComRxSem;
-static signed portBASE_TYPE xHigherPriorityTaskWoken;
 
 /* Private define ------------------------------------------------------------*/
-#define USB_RX_DATA_SIZE  2048
-#define USB_TX_DATA_SIZE  2048
 
 /* USB handler declaration */
 extern USBD_HandleTypeDef  hUSBDDevice;
@@ -46,8 +43,10 @@ static int8_t CDC_Itf_Receive  (uint8_t* pbuf, uint32_t *Len);
 
 /* Private variables ---------------------------------------------------------*/
 
-uint8_t UserRxBuffer[USB_RX_DATA_SIZE]; /* Receive Data over USB stored in this buffer */
-uint8_t UserTxBuffer[USB_TX_DATA_SIZE]; /* Transmit Data over USB (CDC interface) stored in this buffer */
+uint8_t USBCOMRxBuffer[CDC_DATA_FS_IN_PACKET_SIZE]; /* Receive Data over USB stored in this buffer */
+uint8_t USBCOMTxBuffer[CDC_DATA_FS_OUT_PACKET_SIZE]; /* Transmit Data over USB (CDC interface) stored in this buffer */
+
+extern xQueueHandle usbComRxQueue;
 
 USBD_CDC_ItfTypeDef USBD_CDC_fops =
 {
@@ -76,8 +75,8 @@ USBD_CDC_LineCodingTypeDef LineCoding =
 static int8_t CDC_Itf_Init(void)
 {
   /*##-5- Set Application Buffers ############################################*/
-  USBD_CDC_SetTxBuffer(&hUSBDDevice, UserTxBuffer, 0);
-  USBD_CDC_SetRxBuffer(&hUSBDDevice, UserRxBuffer);
+  USBD_CDC_SetTxBuffer(&hUSBDDevice, USBCOMTxBuffer, 0);
+  USBD_CDC_SetRxBuffer(&hUSBDDevice, USBCOMRxBuffer);
 
   return (USBD_OK);
 }
@@ -177,20 +176,16 @@ static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
       result = USBD_CDC_ReceivePacket(&hUSBDDevice);
       if(result == USBD_OK)
         {
-    	  char affirmation[] = " understood captain\n";
-    	  size_t aff_len = strlen(affirmation);
-    	  uint8_t replyBuf[aff_len + *Len + 1];
-    	  memcpy(replyBuf, Buf, *Len);
-    	  memcpy(replyBuf + *Len, affirmation, aff_len);
-    	  // replyBuf[aff_len + *Len] = '\0';
-        CDC_Transmit_FS(replyBuf, aff_len + *Len + 1);
+        /* # Add to RTOS queue #### */
+        portBASE_TYPE xHigherPriorityTaskWoken;
+        // We have not woken a task at the start of the ISR.
+        xHigherPriorityTaskWoken = pdFALSE;
+        xQueueSendFromISR(usbComRxQueue, USBCOMRxBuffer, xHigherPriorityTaskWoken);
       }
     }
   else
     result = USBD_FAIL;
 
-  /* Give semaphore to indicate data has been received over USB Com Port */
-  xSemaphoreGiveFromISR(usbComRxSem, &xHigherPriorityTaskWoken);
   return result;
 }
 

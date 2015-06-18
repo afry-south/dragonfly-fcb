@@ -30,10 +30,8 @@ volatile uint8_t UserButtonPressed;
 xTaskHandle USB_ComPortRx_Thread_Handle;
 xTaskHandle USB_ComPortTx_Thread_Handle;
 
-xSemaphoreHandle usbComRxSem;
-xSemaphoreHandle usbComTxSem;
-
 xQueueHandle usbComRxQueue;
+xQueueHandle usbComTxQueue;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -204,6 +202,8 @@ static void System_Init(void)
   */
 static void RTOS_Init(void)
 {
+  /* # CREATE THREADS ####################################################### */
+
   /* USB Virtual Com Port Rx handler thread creation
    * Task function pointer: USB_ComPort_RX_Thread
    * Task name: USB_COM_RX
@@ -230,20 +230,16 @@ static void RTOS_Init(void)
       Error_Handler();
     }
 
-  /* Create the USB Com Port Rx semaphore */
-  usbComRxSem = xSemaphoreCreateBinary();
-
-  /* Create the USB Com Port Tx semaphore */
-  usbComTxSem = xSemaphoreCreateBinary();
-
   /* # CREATE QUEUES ######################################################## */
-  usbComRxQueue = xQueueCreate( 4, 64);
-  /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
-  vQueueAddToRegistry( usbComRxQueue, (signed char*) "usbComRxQueue" );
+  usbComRxQueue = xQueueCreate(16, CDC_DATA_FS_IN_PACKET_SIZE); // TODO change 16 to a defined item number
 
-
-  // xOutMessagesQueue = xQueueCreate( 10, sizeof( portCHAR ) );
   /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
+  vQueueAddToRegistry(usbComRxQueue, (signed char*) "usbComRxQueue");
+
+  usbComTxQueue = xQueueCreate(16, CDC_DATA_FS_OUT_PACKET_SIZE); // TODO change 16 to a defined item number
+
+  /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
+  vQueueAddToRegistry(usbComTxQueue, (signed char*) "usbComTxQueue");
 
   /* Start the RTOS scheduler
    *
@@ -262,91 +258,21 @@ static void USB_ComPort_RX_Thread(void const *argument)
 {
   (void) argument;
 
+  static uint8_t usbRxDataPacket[CDC_DATA_FS_IN_PACKET_SIZE];
+
   for (;;)
     {
-      xSemaphoreTake(usbComRxSem, portMAX_DELAY);
-      BSP_LED_Toggle(LED9);
+      /* Wait forever for incoming data over USB */
+      if(pdPASS == xQueueReceive(usbComRxQueue, usbRxDataPacket, portMAX_DELAY))
+        {
+          // Here usbRxDataPacket contains the sent data
+          // TODO Do some parsing, perhaps we should keep a thread local buffer with more than 64 bytes?
+          // In case data/commands are longer than this?
+          xQueueSend(usbComTxQueue, "Message received: Self destruct in 10 seconds.\n", portMAX_DELAY);
+          BSP_LED_Toggle(LED9);
+        }
+      // TODO: Check if not pdPASS
     }
-
-
-//  static uint8_t pucMessage[256];
-//
-//  for(;;)
-//    {
-//      /* wait forever for incoming messages */
-//      if(pdPASS == xQueueReceive( xInMessagesQueue, pucMessage, portMAX_DELAY ))
-//        {
-//          BSP_LED_Toggle(LED9);
-//
-//          switch ( pucMessage[ 2 ] )
-//          {
-//          case COMMAND_START:
-//            if ( xSampleTask == NULL )
-//              xTaskCreate( prvSampleDataTask, ( signed char* ) "SampleData", configMINIMAL_STACK_SIZE, NULL, parseIncomingData_TASK_PRIORITY, &xSampleTask );
-//
-//            break;
-//
-//          case COMMAND_STOP:
-//            if ( xSampleTask )
-//              {
-//                vTaskDelete( xSampleTask );
-//                xSampleTask = NULL;
-//                STM_EVAL_LEDOff( LED10 );
-//              }
-//
-//            break;
-//
-//          case COMMAND_SET_PWM_VALUES:
-//
-//            vMotorControlSetPwmValues( prvGetInt32FromDataArray( &(pucMessage[ 3 ]) ),
-//                prvGetInt32FromDataArray( &(pucMessage[ 7 ]) ) );
-//
-//
-//            break;
-//
-//          case COMMAND_UNKNOWN:
-//          default:
-//            break;
-//          }
-//        }
-//    }
-//
-// =================================================
-//
-//  portTickType count = 0;
-//
-//  for (;;)
-//    {
-//      count = xTaskGetTickCount() + 5000;
-//
-//      /* Toggle LED3 every 200 ms for 5 s */
-//
-//      while (count >= xTaskGetTickCount())
-//        {
-//          BSP_LED_Toggle(LED3);
-//
-//          vTaskDelay(200 / portTICK_RATE_MS);          /* Minimum delay = 1 tick */
-//        }
-//
-//      /* Turn off LED3 */
-//      BSP_LED_Off(LED3);
-//
-//      /* Suspend Thread 1 (own thread) */
-//
-//      vTaskSuspend(NULL);
-//
-//      count = xTaskGetTickCount() + 5000;
-//
-//      /* Toggle LED3 every 400 ms for 5 s */
-//      while (count >= xTaskGetTickCount()) {
-//          BSP_LED_Toggle(LED3);
-//
-//          vTaskDelay(400 / portTICK_RATE_MS); /* Minimum delay = 1 tick */
-//      }
-//
-//      /* Resume Thread 2*/
-//      vTaskResume(hLed2);
-//    }
 }
 
 /**
@@ -356,7 +282,30 @@ static void USB_ComPort_RX_Thread(void const *argument)
   */
 static void USB_ComPort_TX_Thread(void const *argument)
 {
-  xSemaphoreTake(usbComTxSem, portMAX_DELAY);
+  (void) argument;
+
+  static uint8_t usbTxDataPacket[CDC_DATA_FS_OUT_PACKET_SIZE];
+
+  for (;;)
+    {
+      /* Wait forever for incoming data over USB */
+      if(pdPASS == xQueueReceive(usbComTxQueue, usbTxDataPacket, portMAX_DELAY))
+        {
+          // TODO: Fix this issue below - detect end of transmission and flush with empty packet
+          // According to the USB specification, a packet size of 64 bytes (CDC_DATA_FS_MAX_PACKET_SIZE)
+          // gets held at the USB host until the next packet is sent.  This is because a
+          // packet of maximum size is considered to be part of a longer chunk of data, and
+          // the host waits for all data to arrive (ie, waits for a packet < max packet size).
+          // To flush a packet of exactly max packet size, we need to send a zero-size packet.
+          // See eg http://www.cypress.com/?id=4&rID=92719
+
+          // Here usbTxDataPacket contains the data package to be send - TODO: Fix so -1 not needed
+          CDC_Transmit_FS(usbTxDataPacket, CDC_DATA_FS_OUT_PACKET_SIZE - 1);
+          BSP_LED_Toggle(LED9);
+        }
+
+      // TODO Check if not pdPass
+    }
 }
 
 /**
