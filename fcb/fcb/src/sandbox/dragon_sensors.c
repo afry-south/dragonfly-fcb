@@ -1,4 +1,4 @@
-#include "df_error.h"
+#include "fcb_error.h"
 #include "trace.h"
 
 
@@ -72,7 +72,7 @@ void dragon_sensors(void) {
     if(BSP_GYRO_Init() != HAL_OK)
     {
         /* Initialization Error */
-        df_error();
+        fcb_error();
     }
 #if 0
     /* the ITConfig code only seems to handle interrupt 1, not 2 */
@@ -95,7 +95,7 @@ void dragon_sensors(void) {
 			  	 			 NULL /* parameter */,
 			  	 			 1 /* priority */,
 			  	 			 &hGyroDataRead))) {
-		  df_error();
+		  fcb_error();
 	  }
 #else
     if (0 == (xDragonTimer = xTimerCreate((const signed char*)"tmrDragon",
@@ -103,12 +103,12 @@ void dragon_sensors(void) {
                                           pdTRUE, /* uxAutoReload */
                                           (void*)DRAGON_TIMER_ID, /* pvTimerID */
                                           dragon_timer_read_sensors))) {
-        df_error();
+        fcb_error();
         return;
     }
 
     if (pdFAIL == xTimerStart(xDragonTimer, 0)) {
-        df_error();
+        fcb_error();
         return;
     }
     sens_init_done = 1;
@@ -142,7 +142,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
         if (pdTRUE != xSemaphoreGiveFromISR(sGyroDataReady,
         		&higherPriorityTaskWoken)) {
-            df_error();
+            fcb_error();
         }
        	portYIELD_FROM_ISR(higherPriorityTaskWoken);
 #else
@@ -180,7 +180,7 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
         TRACE_SYNC("L3GD20_STATUS_REG:0x%02x", tmpreg);
 #endif
         if (pdTRUE != xSemaphoreTake(sGyroDataReady, portMAX_DELAY)) {
-            df_error();
+            fcb_error();
         }
     	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
 #else
@@ -282,5 +282,5 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
 
 void vApplicationStackOverflowHook( xTaskHandle xTask,
                                     signed char *pcTaskName ) {
-	df_error();
+	fcb_error();
 }

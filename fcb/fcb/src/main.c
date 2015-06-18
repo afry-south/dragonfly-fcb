@@ -14,7 +14,7 @@
 #include "flight_control.h"
 #include "sensors.h"
 #include "receiver.h"
-#include "df_error.h"
+#include "fcb_error.h"
 
 /* Private variables ---------------------------------------------------------*/
 USBD_HandleTypeDef hUSBDDevice;
@@ -61,7 +61,7 @@ void Error_Handler(void)
 {
   /* Turn LED3 on */
   LEDs_Off();
-  df_error();
+  fcb_error();
 
   // TODO: Based on the current state of the quadrotor, appropriate
   // action should be taken (i.e. attempt to land and shut down

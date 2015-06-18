@@ -140,7 +140,6 @@ uint8_t BSP_GYRO_Init(void)
 	
     GyroscopeDrv->FilterConfig(ctrl) ;
   
-    /* GyroscopeDrv->FilterCmd(L3GD20_HIGHPASSFILTER_DISABLE|L3GD20_FIFO_ENABLE); */
     GyroscopeDrv->FilterCmd(L3GD20_HIGHPASSFILTER_DISABLE);
 
 

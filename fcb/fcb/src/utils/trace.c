@@ -1,5 +1,5 @@
 #include "trace.h"
-#include "df_retval.h"
+#include "fcb_retval.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -37,7 +37,7 @@ static void trace_forward(void *);
 /* public function definitions */
 
 int trace_init(void) {
-    int ret_val = DF_OK;
+    int ret_val = FCB_OK;
 
     if (sizeof(struct trace_msg) > TRACE_Q_MSG_SIZE) {
         goto Error;
@@ -60,12 +60,12 @@ int trace_init(void) {
 Exit:
     return ret_val;
 Error:
-    ret_val = DF_ERR_INIT;
+    ret_val = FCB_ERR_INIT;
     goto Exit;
 }
 
 int trace_post(const char * fmt, ...) {
-    int ret_val = DF_OK;
+    int ret_val = FCB_OK;
     int i;
     struct trace_msg msg = { 0 }; /* message to post to q */
     va_list arg_list;
@@ -84,7 +84,7 @@ int trace_post(const char * fmt, ...) {
 Exit:
     return ret_val;
 Error:
-    ret_val = DF_ERR;
+    ret_val = FCB_ERR;
     goto Exit;
 }
 

@@ -1,9 +1,9 @@
-#include "df_error.h"
+#include "fcb_error.h"
 
 #include "stm32f3_discovery.h"
 
 
-void df_error(void) {
+void fcb_error(void) {
     BSP_LED_On(LED3);
     BSP_LED_On(LED4);
     BSP_LED_On(LED5);

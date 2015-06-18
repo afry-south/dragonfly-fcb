@@ -1,4 +1,4 @@
-#include "df_error.h"
+#include "fcb_error.h"
 #include "trace.h"
 
 
@@ -85,7 +85,7 @@ void dragon_isr_semaphore(void) {
                                NULL /* parameter */,
                                1 /* priority */,
                                &hTakeIsrSem))) {
-        df_error();
+        fcb_error();
     }
 
     /* Start scheduler
@@ -134,7 +134,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 //        return; // when commented in, ISR doesn't get called repeatedly.
         if (pdTRUE != xSemaphoreGiveFromISR(sUsrBtnPressed,
                                             &higherPriorityTaskWoken)) {
-            df_error();
+            fcb_error();
         }
 //        if (pdTRUE == higherPriorityTaskWoken) {
         portYIELD_FROM_ISR(higherPriorityTaskWoken);
@@ -155,7 +155,7 @@ static void take_isr_semaphore(xTimerHandle xTimer ) {
 
     while (1) {
         if (pdTRUE != xSemaphoreTake(sUsrBtnPressed, portMAX_DELAY)) {
-            df_error();
+            fcb_error();
         }
 
         if (flipflop) {
@@ -174,6 +174,6 @@ static void take_isr_semaphore(xTimerHandle xTimer ) {
 
 void vApplicationStackOverflowHook( xTaskHandle xTask,
                                     signed char *pcTaskName ) {
-	df_error();
+	fcb_error();
 }
 
