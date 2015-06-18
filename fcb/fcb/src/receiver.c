@@ -92,7 +92,7 @@ typedef struct
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
-/* Timer time base handlers for each timer */
+/* Timer time base handlers for each timer - These are exported to stm32f3xx_it.c */
 TIM_HandleTypeDef PrimaryReceiverTimHandle;
 TIM_HandleTypeDef AuxReceiverTimHandle;
 
@@ -656,6 +656,12 @@ static ReceiverErrorStatus PrimaryReceiverInput_Config(void)
   PrimaryReceiverTimHandle.Init.Prescaler = SystemCoreClock/RECEIVER_TIM_COUNTER_CLOCK - 1;
   PrimaryReceiverTimHandle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   PrimaryReceiverTimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
+  if(HAL_TIM_Base_Init(&PrimaryReceiverTimHandle) != HAL_OK)
+    {
+      /* Initialization Error */
+      errorStatus = RECEIVER_ERROR;
+      Error_Handler();
+    }
   if(HAL_TIM_IC_Init(&PrimaryReceiverTimHandle) != HAL_OK)
     {
       /* Initialization Error */
@@ -738,13 +744,12 @@ static ReceiverErrorStatus PrimaryReceiverInput_Config(void)
     }
 
   /*##-4- Start the Time Base update interrupt mode ##########################*/
-  // TODO fix this it doesn't cause hard fault - unexpected interrupt?
-//  if(HAL_TIM_Base_Start_IT(&PrimaryReceiverTimHandle) != HAL_OK)
-//    {
-//      /* Starting Error */
-//      errorStatus = RECEIVER_ERROR;
-//      Error_Handler();
-//    }
+  if(HAL_TIM_Base_Start_IT(&PrimaryReceiverTimHandle) != HAL_OK)
+    {
+      /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
+      Error_Handler();
+    }
 
   return errorStatus;
 }
@@ -768,6 +773,12 @@ static ReceiverErrorStatus AuxReceiverInput_Config(void)
   AuxReceiverTimHandle.Init.Prescaler = SystemCoreClock/RECEIVER_TIM_COUNTER_CLOCK - 1;
   AuxReceiverTimHandle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   AuxReceiverTimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
+  if(HAL_TIM_Base_Init(&AuxReceiverTimHandle) != HAL_OK)
+  {
+    /* Initialization Error */
+    errorStatus = RECEIVER_ERROR;
+    Error_Handler();
+  }
   if(HAL_TIM_IC_Init(&AuxReceiverTimHandle) != HAL_OK)
     {
       /* Initialization Error */
@@ -816,13 +827,12 @@ static ReceiverErrorStatus AuxReceiverInput_Config(void)
     }
 
   /*##-4- Start the Time Base update interrupt mode ##########################*/
-  // TODO fix this it doesn't cause hard fault - unexpected interrupt?
-//  if(HAL_TIM_Base_Start_IT(&AuxReceiverTimHandle) != HAL_OK)
-//    {
-//      /* Starting Error */
-//      errorStatus = RECEIVER_ERROR;
-//      Error_Handler();
-//    }
+  if(HAL_TIM_Base_Start_IT(&AuxReceiverTimHandle) != HAL_OK)
+    {
+      /* Starting Error */
+      errorStatus = RECEIVER_ERROR;
+      Error_Handler();
+    }
 
   return errorStatus;
 }

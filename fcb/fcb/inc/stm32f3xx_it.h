@@ -33,6 +33,8 @@
  extern "C" {
 #endif
 /* Includes ------------------------------------------------------------------*/
+#include "receiver.h"
+
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -47,7 +49,11 @@ void SVC_Handler(void);
 void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
+
 void EXTI0_IRQHandler(void);
+void PRIMARY_RECEIVER_TIM_IRQHandler(void);
+void AUX_RECEIVER_TIM_IRQHandler(void);
+
 #if defined (USE_USB_INTERRUPT_DEFAULT)
 void USB_LP_CAN_RX0_IRQHandler(void);
 void USBWakeUp_IRQHandler(void);
