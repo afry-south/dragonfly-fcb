@@ -189,11 +189,11 @@ static void System_Init(void)
   InitPIDControllers();
 #endif
 
-//  /* Setup motor output timer */
-//  MotorControl_Config();
-//
-//  /* Setup receiver timers for receiver input */
-//  ReceiverInput_Config();
+  /* Setup motor output timer */
+  MotorControl_Config();
+
+  /* Setup receiver timers for receiver input */
+  ReceiverInput_Config();
 }
 
 /**
