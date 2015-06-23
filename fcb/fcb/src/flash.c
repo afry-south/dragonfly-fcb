@@ -242,7 +242,7 @@ static FlashErrorStatus ReadFlashBytes(uint8_t * readData, const uint32_t startA
  */
 static uint32_t GetFlashPageOffsetAddress(const uint8_t pageNbr, const uint16_t pageOffset)
 {
-  return FLASH_BASE_ADDR + pageNbr*FLASH_WORD_BYTE_SIZE + pageOffset;
+  return FLASH_BASE_ADDR + pageNbr*FLASH_PAGE_SIZE + pageOffset;
 }
 
 /*

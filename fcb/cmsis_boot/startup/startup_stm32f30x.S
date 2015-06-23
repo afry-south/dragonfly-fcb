@@ -40,7 +40,7 @@
   .thumb
 
 #define __HEAP_SIZE 	0x2000
-#define __STACK_SIZE	0x2000
+#define __STACK_SIZE	0x4000
 
 .global  g_pfnVectors
 .global  Default_Handler
