@@ -32,6 +32,8 @@ uint32_t Calculate_CRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize)
   /* CRC handler declaration */
   CRC_HandleTypeDef CrcHandle;
 
+  CrcHandle.Instance = CRC;
+
   /* The default polynomial is used */
   CrcHandle.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
 
