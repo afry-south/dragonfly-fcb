@@ -44,7 +44,7 @@ static int8_t CDC_Itf_Receive  (uint8_t* pbuf, uint32_t *Len);
 /* Private variables ---------------------------------------------------------*/
 
 uint8_t USBCOMRxBuffer[CDC_DATA_FS_IN_PACKET_SIZE]; /* Receive Data over USB stored in this buffer */
-uint8_t USBCOMTxBuffer[CDC_DATA_FS_OUT_PACKET_SIZE]; /* Transmit Data over USB (CDC interface) stored in this buffer */
+uint8_t USBCOMTxBuffer[CDC_DATA_FS_OUT_PACKET_SIZE]; /* Transmit Data over USB (CDC interface) stored in this buffer */ // TODO: Is this even used?!
 
 extern xQueueHandle usbComRxQueue;
 

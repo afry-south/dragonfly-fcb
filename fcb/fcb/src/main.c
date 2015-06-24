@@ -13,6 +13,7 @@
 #include "flight_control.h"
 #include "sensors.h"
 #include "receiver.h"
+#include <string.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -32,6 +33,10 @@ xTaskHandle USB_ComPortTx_Thread_Handle;
 
 xQueueHandle usbComRxQueue;
 xQueueHandle usbComTxQueue;
+
+// TODO Make struct with buffer and mutex?
+uint8_t testTxData[128];
+xSemaphoreHandle testTxDataMutex;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -241,7 +246,14 @@ static void RTOS_Init(void)
   /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
   vQueueAddToRegistry(usbComTxQueue, (signed char*) "usbComTxQueue");
 
-  /* Start the RTOS scheduler
+  /* # CREATE SEMAPHORES AND MUTEXES ######################################## */
+  testTxDataMutex = xSemaphoreCreateMutex();
+  if( testTxDataMutex == NULL )
+    {
+      Error_Handler();
+    }
+
+  /* # Start the RTOS scheduler #############################################
    *
    * since we use heap1.c, we must create all tasks and queues before the OS kernel
    * is started according to ST UM1722 manual section 1.6.
@@ -268,7 +280,22 @@ static void USB_ComPort_RX_Thread(void const *argument)
           // Here usbRxDataPacket contains the sent data
           // TODO Do some parsing, perhaps we should keep a thread local buffer with more than 64 bytes?
           // In case data/commands are longer than this?
-          xQueueSend(usbComTxQueue, "Message received: Self destruct in 10 seconds.\n", portMAX_DELAY);
+
+          if( xSemaphoreTake( testTxDataMutex, 10 ) == pdTRUE )
+            {
+              // We were able to obtain the semaphore and can now access the
+              // shared resource.
+
+              memcpy(testTxData, "Welcome to the Dragonfly UAV Flight Control program!\nDeveloped by ÅF Embedded Systems South\n\0", 93);
+              UsbComPortTxData_TypeDef txData;
+              txData.dataPtr = &testTxData[0];
+              txData.dataSize = strlen((char*)testTxData);
+              xQueueSend(usbComTxQueue, &txData, portMAX_DELAY);
+
+              // We have finished accessing the shared resource.  Release the
+              // semaphore.
+              xSemaphoreGive( testTxDataMutex );
+            }
           BSP_LED_Toggle(LED9);
         }
       // TODO: Check if not pdPASS
@@ -284,12 +311,13 @@ static void USB_ComPort_TX_Thread(void const *argument)
 {
   (void) argument;
 
-  static uint8_t usbTxDataPacket[CDC_DATA_FS_OUT_PACKET_SIZE];
+  // static uint8_t usbTxDataPacket[CDC_DATA_FS_OUT_PACKET_SIZE];
+  static UsbComPortTxData_TypeDef txData;
 
   for (;;)
     {
       /* Wait forever for incoming data over USB */
-      if(pdPASS == xQueueReceive(usbComTxQueue, usbTxDataPacket, portMAX_DELAY))
+      if(pdPASS == xQueueReceive(usbComTxQueue, &txData, portMAX_DELAY))
         {
           // TODO: Fix this issue below - detect end of transmission and flush with empty packet
           // According to the USB specification, a packet size of 64 bytes (CDC_DATA_FS_MAX_PACKET_SIZE)
@@ -299,9 +327,21 @@ static void USB_ComPort_TX_Thread(void const *argument)
           // To flush a packet of exactly max packet size, we need to send a zero-size packet.
           // See eg http://www.cypress.com/?id=4&rID=92719
 
-          // Here usbTxDataPacket contains the data package to be send - TODO: Fix so -1 not needed
-          CDC_Transmit_FS(usbTxDataPacket, CDC_DATA_FS_OUT_PACKET_SIZE - 1);
-          BSP_LED_Toggle(LED9);
+          if( xSemaphoreTake( testTxDataMutex, 10 ) == pdTRUE )
+            {
+              // We were able to obtain the semaphore and can now access the
+              // shared resource.
+
+              // Here usbTxDataPacket contains the data package to be send - TODO: Sort out so that we don't get max buffer size +1 (exceeding the size)
+              if(txData.dataSize % CDC_DATA_FS_OUT_PACKET_SIZE == 0)
+                txData.dataSize++;
+
+              CDC_Transmit_FS(txData.dataPtr, txData.dataSize);
+              BSP_LED_Toggle(LED8);
+              // We have finished accessing the shared resource.  Release the
+              // semaphore.
+              xSemaphoreGive( testTxDataMutex );
+            }
         }
 
       // TODO Check if not pdPass

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <Project version="2G - 2.0.0" name="fcb">
   <Target name="fcb" isCurrent="1">
-    <Device manufacturerId="9" manufacturerName="ST" chipId="242" chipName="STM32F303VC" boardId="" boardName="" boardUrl="" coreId="4" coreName="Cortex M4"/>
+    <Device manufacturerId="9" manufacturerName="ST" chipId="242" chipName="STM32F303VC" boardId="" boardName="" coreId="4" coreName="Cortex M4"/>
     <BuildOption>
       <Compile>
         <Option name="OptimizationLevel" value="0"/>
@@ -68,7 +68,7 @@
       <Option name="org.coocox.codebugger.gdbjtag.core.autoDownload" value="1"/>
       <Option name="org.coocox.codebugger.gdbjtag.core.verify" value="1"/>
       <Option name="org.coocox.codebugger.gdbjtag.core.downloadFuction" value="Erase Effected"/>
-      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="C:\Users\A501632\AppData\Roaming\CooCox\CoIDE\config\flash\CooCox-Flash\CoIDE_STM32F3xx_256K\STM32F3xx_256.elf"/>
+      <Option name="org.coocox.codebugger.gdbjtag.core.defaultAlgorithm" value="C:\Users\Daniel\AppData\Roaming\CooCox\CoIDE\config\flash\CooCox-Flash\CoIDE_STM32F3xx_256K\STM32F3xx_256.elf"/>
     </DebugOption>
     <ExcludeFile/>
   </Target>
@@ -150,6 +150,7 @@
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_opamp_ex.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_opamp_ex.h" type="1"/>
     <File name="fcb/src/motor_control.c" path="fcb/src/motor_control.c" type="1"/>
     <File name="fcb/src/stm32f3xx_it.c" path="fcb/src/stm32f3xx_it.c" type="1"/>
+    <File name="fcb/src/fifo_buffer.c" path="fcb/src/fifo_buffer.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_irda.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_irda.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_cec.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_cec.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_rcc_ex.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_rcc_ex.h" type="1"/>
@@ -170,6 +171,7 @@
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_dma_ex.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_dma_ex.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_pcd_ex.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pcd_ex.c" type="1"/>
+    <File name="fcb/inc/fifo_buffer.h" path="fcb/inc/fifo_buffer.h" type="1"/>
     <File name="CMSIS_BOOT/startup_stm32f30x.S" path="cmsis_boot/startup/startup_stm32f30x.S" type="1"/>
     <File name="FreeRTOS/src/timers.c" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" type="1"/>
     <File name="FreeRTOS/portable/src" path="" type="2"/>
@@ -213,9 +215,9 @@
     <File name="FreeRTOS/inc/queue.h" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include/queue.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_i2s.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_i2s.h" type="1"/>
     <File name="fcb/src/common.c" path="fcb/src/common.c" type="1"/>
-    <File name="fcb/src/receiver.c" path="fcb/src/receiver.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_smbus.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_smbus.c" type="1"/>
     <File name="CMSIS_BOOT/src/system_stm32f3xx.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c" type="1"/>
+    <File name="fcb/src/receiver.c" path="fcb/src/receiver.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_crc_ex.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_crc_ex.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_iwdg.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_iwdg.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_comp.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_comp.h" type="1"/>

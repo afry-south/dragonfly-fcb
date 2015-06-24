@@ -24,6 +24,12 @@
 #include "usbd_cdc_if.h"
 
 /* Exported types ------------------------------------------------------------*/
+typedef struct
+{
+  uint8_t* dataPtr;
+  uint16_t dataSize;
+}UsbComPortTxData_TypeDef;
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
