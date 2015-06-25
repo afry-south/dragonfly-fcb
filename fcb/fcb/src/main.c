@@ -241,7 +241,7 @@ static void RTOS_Init(void)
   /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
   vQueueAddToRegistry(usbComRxQueue, (signed char*) "usbComRxQueue");
 
-  usbComTxQueue = xQueueCreate(16, CDC_DATA_FS_OUT_PACKET_SIZE); // TODO change 16 to a defined item number
+  usbComTxQueue = xQueueCreate(8, CDC_DATA_FS_OUT_PACKET_SIZE); // TODO change 16 to a defined item number
 
   /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
   vQueueAddToRegistry(usbComTxQueue, (signed char*) "usbComTxQueue");
@@ -327,7 +327,7 @@ static void USB_ComPort_TX_Thread(void const *argument)
           // To flush a packet of exactly max packet size, we need to send a zero-size packet.
           // See eg http://www.cypress.com/?id=4&rID=92719
 
-          if( xSemaphoreTake( testTxDataMutex, 10 ) == pdTRUE )
+          if( xSemaphoreTake( testTxDataMutex, 100 ) == pdTRUE )
             {
               // We were able to obtain the semaphore and can now access the
               // shared resource.

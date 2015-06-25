@@ -25,6 +25,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
+#include <string.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -74,7 +75,7 @@ USBD_CDC_LineCodingTypeDef LineCoding =
   */
 static int8_t CDC_Itf_Init(void)
 {
-  /*##-5- Set Application Buffers ############################################*/
+  /*# Set CDC Buffers ####################################################### */
   USBD_CDC_SetTxBuffer(&hUSBDDevice, USBCOMTxBuffer, 0);
   USBD_CDC_SetRxBuffer(&hUSBDDevice, USBCOMRxBuffer);
 
@@ -171,6 +172,8 @@ static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
 {
   uint8_t result = USBD_OK;
 
+  // TODO: Check if Len can be > 64?
+
   if(hUSBDDevice.dev_state == USBD_STATE_CONFIGURED)
     {
       result = USBD_CDC_ReceivePacket(&hUSBDDevice);
@@ -188,6 +191,8 @@ static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
 
   return result;
 }
+
+/* Exported functions --------------------------------------------------------*/
 
 /**
   * @brief  Data transmit over USB IN endpoint sent over CDC interface
@@ -207,6 +212,28 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
   else
     result = USBD_FAIL;
   return result;
+}
+
+/**
+  * @brief  Send a string over the USB IN endpoint CDC com port interface
+  * @param  sendString : Reference to the string to be sent
+  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
+  */
+USBD_StatusTypeDef USBComSendString(char* sendString)
+{
+  return CDC_Transmit_FS((uint8_t*)sendString, strlen(sendString));
+}
+
+
+/**
+  * @brief  Send data over the USB IN endpoint CDC com port interface
+  * @param  sendData : Reference to the data to be sent
+  * @param  sendDataSize : Size of data to be sent
+  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
+  */
+USBD_StatusTypeDef USBComSendData(uint8_t* sendData, uint16_t sendDataSize)
+{
+  return CDC_Transmit_FS(sendData, sendDataSize);
 }
 
 /**

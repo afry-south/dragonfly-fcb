@@ -40,6 +40,8 @@ extern USBD_CDC_ItfTypeDef  USBD_CDC_fops;
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
+USBD_StatusTypeDef USBComSendString(char* sendString);
+USBD_StatusTypeDef USBComSendData(uint8_t* sendData, uint16_t sendDataSize);
 
 #endif /* __USBD_CDC_IF_H */
 

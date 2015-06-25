@@ -26,8 +26,8 @@
 /* Exported types ------------------------------------------------------------*/
 typedef struct
 {
-  uint8_t* dataPtr;
   uint16_t dataSize;
+  uint8_t* dataPtr;
 }UsbComPortTxData_TypeDef;
 
 /* Exported constants --------------------------------------------------------*/
@@ -37,4 +37,11 @@ void Error_Handler(void);
 
 #endif /* __MAIN_H */
 
-/* ****END OF FILE****/
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/

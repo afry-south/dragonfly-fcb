@@ -6,8 +6,8 @@
 * @brief   Header file for handling circular FIFO buffers
 ******************************************************************************/
 
-#ifndef FIFO_BUFFER_H_
-#define FIFO_BUFFER_H_
+#ifndef __FIFO_BUFFER_H
+#define __FIFO_BUFFER_H
 
 /* Includes -----------------------------------------------------------------*/
 #include "main.h"
@@ -34,7 +34,7 @@ bool BufferIsEmpty(volatile FIFOBuffer_TypeDef* buffer);
 bool BufferIsFull(volatile FIFOBuffer_TypeDef* buffer);
 void ResetBuffer(volatile FIFOBuffer_TypeDef* buffer);
 
-#endif /* FIFO_BUFFER_H_ */
+#endif /* __FIFO_BUFFER_H */
 
 /**
  * @}
