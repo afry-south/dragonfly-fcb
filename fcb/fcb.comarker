@@ -16,8 +16,8 @@
 <attrib name="registered" value="true"/>
 <attrib name="path" value="/fcb/fcb/src/receiver.c"/>
 <attrib name="org.eclipse.cdt.debug.core.sourceHandle" value="C:\Users\Daniel\Code\dragonfly-fcb\fcb\fcb\src\receiver.c"/>
-<attrib name="org.eclipse.debug.core.enabled" value="true"/>
 <attrib name="org.eclipse.cdt.debug.core.ignoreCount" value="0"/>
+<attrib name="org.eclipse.debug.core.enabled" value="true"/>
 </marker>
 </breakpoint>
 </breakpoints>

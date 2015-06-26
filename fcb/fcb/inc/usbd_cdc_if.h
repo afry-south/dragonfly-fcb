@@ -33,15 +33,21 @@
 #include "usbd_cdc.h"
 
 /* Exported types ------------------------------------------------------------*/
+typedef struct
+{
+  uint16_t dataSize;
+  uint8_t* dataPtr;
+}UsbComPortTxData_TypeDef;
+
 /* Exported constants --------------------------------------------------------*/
 
 extern USBD_CDC_ItfTypeDef  USBD_CDC_fops;
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
-USBD_StatusTypeDef USBComSendString(char* sendString);
-USBD_StatusTypeDef USBComSendData(uint8_t* sendData, uint16_t sendDataSize);
+USBD_StatusTypeDef CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
+USBD_StatusTypeDef USBComSendString(const char* sendString, const uint32_t maxMutexWaitTicks);
+USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDataSize, const uint32_t maxMutexWaitTicks);
 
 #endif /* __USBD_CDC_IF_H */
 

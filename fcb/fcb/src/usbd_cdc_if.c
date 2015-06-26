@@ -31,6 +31,7 @@
 #include "task.h"
 #include "semphr.h"
 
+/* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
 /* USB handler declaration */
@@ -45,9 +46,12 @@ static int8_t CDC_Itf_Receive  (uint8_t* pbuf, uint32_t *Len);
 /* Private variables ---------------------------------------------------------*/
 
 uint8_t USBCOMRxBuffer[CDC_DATA_FS_IN_PACKET_SIZE]; /* Receive Data over USB stored in this buffer */
-uint8_t USBCOMTxBuffer[CDC_DATA_FS_OUT_PACKET_SIZE]; /* Transmit Data over USB (CDC interface) stored in this buffer */ // TODO: Is this even used?!
 
-extern xQueueHandle usbComRxQueue;
+uint8_t USBCOMTxBuffer[256+1];
+xSemaphoreHandle USBCOMTxBufferMutex;
+
+xQueueHandle usbComRxQueue;
+xQueueHandle usbComTxQueue;
 
 USBD_CDC_ItfTypeDef USBD_CDC_fops =
 {
@@ -76,7 +80,7 @@ USBD_CDC_LineCodingTypeDef LineCoding =
 static int8_t CDC_Itf_Init(void)
 {
   /*# Set CDC Buffers ####################################################### */
-  USBD_CDC_SetTxBuffer(&hUSBDDevice, USBCOMTxBuffer, 0);
+  //USBD_CDC_SetTxBuffer(&hUSBDDevice, USBCOMTxBuffer, 0);
   USBD_CDC_SetRxBuffer(&hUSBDDevice, USBCOMRxBuffer);
 
   return (USBD_OK);
@@ -201,7 +205,7 @@ static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
   * @param  Len: Number of data received (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
+USBD_StatusTypeDef CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
   if(hUSBDDevice.dev_state == USBD_STATE_CONFIGURED)
@@ -219,9 +223,43 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
   * @param  sendString : Reference to the string to be sent
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-USBD_StatusTypeDef USBComSendString(char* sendString)
+USBD_StatusTypeDef USBComSendString(const char* sendString, const uint32_t maxMutexWaitTicks)
 {
-  return CDC_Transmit_FS((uint8_t*)sendString, strlen(sendString));
+  UsbComPortTxData_TypeDef CompPortTxQueueItem;
+
+  if(xSemaphoreTake(USBCOMTxBufferMutex, maxMutexWaitTicks) == pdTRUE)
+    {
+      // We were able to obtain the semaphore and can now access the shared resource.
+      // TODO check strlen so it is not too large
+      memcpy(USBCOMTxBuffer, sendString, strlen(sendString));
+      CompPortTxQueueItem.dataPtr = &USBCOMTxBuffer[0];
+
+      CompPortTxQueueItem.dataSize = strlen(sendString);
+
+      /*
+       * According to the USB specification, a packet size of 64 bytes (CDC_DATA_FS_MAX_PACKET_SIZE)
+       * gets held at the USB host until the next packet is sent.  This is because a
+       * packet of maximum size is considered to be part of a longer chunk of data, and
+       * the host waits for all data to arrive (ie, waits for a packet < max packet size).
+       * To flush a packet of exactly max packet size, we need to send a zero-size packet or
+       * short packet of less than CDC_DATA_FS_MAX_PACKET_SIZE.
+       * See eg http://www.cypress.com/?id=4&rID=92719
+       * */
+      if(CompPortTxQueueItem.dataSize % CDC_DATA_FS_OUT_PACKET_SIZE == 0)
+        {
+          // Add an extra byte to make sure data is received by PC application
+          memset(&USBCOMTxBuffer[CompPortTxQueueItem.dataSize], 0, 1);
+          CompPortTxQueueItem.dataSize++;
+        }
+
+      // TODO check if queue is full, portMAX_DELAY?
+      xQueueSend(usbComTxQueue, &CompPortTxQueueItem, portMAX_DELAY);
+
+      // We have finished accessing the shared resource.  Release the semaphore.
+      xSemaphoreGive(USBCOMTxBufferMutex);
+      return USBD_OK;
+    }
+  return USBD_FAIL;
 }
 
 
@@ -231,7 +269,7 @@ USBD_StatusTypeDef USBComSendString(char* sendString)
   * @param  sendDataSize : Size of data to be sent
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-USBD_StatusTypeDef USBComSendData(uint8_t* sendData, uint16_t sendDataSize)
+USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDataSize, const uint32_t maxMutexWaitTicks)
 {
   return CDC_Transmit_FS(sendData, sendDataSize);
 }

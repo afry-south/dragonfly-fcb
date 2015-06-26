@@ -13,6 +13,7 @@
 #include "flight_control.h"
 #include "sensors.h"
 #include "receiver.h"
+#include "usbd_cdc_if.h"
 #include <string.h>
 
 #include "FreeRTOS.h"
@@ -31,12 +32,9 @@ volatile uint8_t UserButtonPressed;
 xTaskHandle USB_ComPortRx_Thread_Handle;
 xTaskHandle USB_ComPortTx_Thread_Handle;
 
-xQueueHandle usbComRxQueue;
-xQueueHandle usbComTxQueue;
-
-// TODO Make struct with buffer and mutex?
-uint8_t testTxData[128];
-xSemaphoreHandle testTxDataMutex;
+extern xQueueHandle usbComRxQueue;
+extern xQueueHandle usbComTxQueue;
+extern xSemaphoreHandle USBCOMTxBufferMutex;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -44,6 +42,7 @@ static void System_Init(void);
 static void RTOS_Init(void);
 static void PVD_Config(void);
 
+// TODO move these to USB communications/interface module
 static void USB_ComPort_RX_Thread(void const *argument);
 static void USB_ComPort_TX_Thread(void const *argument);
 
@@ -247,8 +246,8 @@ static void RTOS_Init(void)
   vQueueAddToRegistry(usbComTxQueue, (signed char*) "usbComTxQueue");
 
   /* # CREATE SEMAPHORES AND MUTEXES ######################################## */
-  testTxDataMutex = xSemaphoreCreateMutex();
-  if( testTxDataMutex == NULL )
+  USBCOMTxBufferMutex = xSemaphoreCreateMutex();
+  if( USBCOMTxBufferMutex == NULL )
     {
       Error_Handler();
     }
@@ -281,21 +280,7 @@ static void USB_ComPort_RX_Thread(void const *argument)
           // TODO Do some parsing, perhaps we should keep a thread local buffer with more than 64 bytes?
           // In case data/commands are longer than this?
 
-          if( xSemaphoreTake( testTxDataMutex, 10 ) == pdTRUE )
-            {
-              // We were able to obtain the semaphore and can now access the
-              // shared resource.
-
-              memcpy(testTxData, "Welcome to the Dragonfly UAV Flight Control program!\nDeveloped by ÅF Embedded Systems South\n\0", 93);
-              UsbComPortTxData_TypeDef txData;
-              txData.dataPtr = &testTxData[0];
-              txData.dataSize = strlen((char*)testTxData);
-              xQueueSend(usbComTxQueue, &txData, portMAX_DELAY);
-
-              // We have finished accessing the shared resource.  Release the
-              // semaphore.
-              xSemaphoreGive( testTxDataMutex );
-            }
+          USBComSendString("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas vitae consectetur purus. Nunc ultrices mi mauris, vel auctor metus tempor vel. Quisque in ante neque. Aliquam in porttitor arcu. Interdum et malesuada fames ac ante ipsum primis in nullam.\n", 255);
           BSP_LED_Toggle(LED9);
         }
       // TODO: Check if not pdPASS
@@ -311,37 +296,15 @@ static void USB_ComPort_TX_Thread(void const *argument)
 {
   (void) argument;
 
-  // static uint8_t usbTxDataPacket[CDC_DATA_FS_OUT_PACKET_SIZE];
-  static UsbComPortTxData_TypeDef txData;
+  static UsbComPortTxData_TypeDef CompPortTxQueueItem;
 
   for (;;)
     {
       /* Wait forever for incoming data over USB */
-      if(pdPASS == xQueueReceive(usbComTxQueue, &txData, portMAX_DELAY))
+      if(pdPASS == xQueueReceive(usbComTxQueue, &CompPortTxQueueItem, portMAX_DELAY))
         {
-          // TODO: Fix this issue below - detect end of transmission and flush with empty packet
-          // According to the USB specification, a packet size of 64 bytes (CDC_DATA_FS_MAX_PACKET_SIZE)
-          // gets held at the USB host until the next packet is sent.  This is because a
-          // packet of maximum size is considered to be part of a longer chunk of data, and
-          // the host waits for all data to arrive (ie, waits for a packet < max packet size).
-          // To flush a packet of exactly max packet size, we need to send a zero-size packet.
-          // See eg http://www.cypress.com/?id=4&rID=92719
-
-          if( xSemaphoreTake( testTxDataMutex, 100 ) == pdTRUE )
-            {
-              // We were able to obtain the semaphore and can now access the
-              // shared resource.
-
-              // Here usbTxDataPacket contains the data package to be send - TODO: Sort out so that we don't get max buffer size +1 (exceeding the size)
-              if(txData.dataSize % CDC_DATA_FS_OUT_PACKET_SIZE == 0)
-                txData.dataSize++;
-
-              CDC_Transmit_FS(txData.dataPtr, txData.dataSize);
-              BSP_LED_Toggle(LED8);
-              // We have finished accessing the shared resource.  Release the
-              // semaphore.
-              xSemaphoreGive( testTxDataMutex );
-            }
+          CDC_Transmit_FS(CompPortTxQueueItem.dataPtr, CompPortTxQueueItem.dataSize);
+          BSP_LED_Toggle(LED8);
         }
 
       // TODO Check if not pdPass
