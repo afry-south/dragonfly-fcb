@@ -18,6 +18,9 @@
 
 // #define SEM_VERSION
 
+// #define READ_GYRO_FROM_THR
+#define READ_GYRO_FROM_ISR
+
 static void dragon_timer_read_sensors(xTimerHandle xTimer ); /* tmrTIMER_CALLBACK */
 #ifndef SEM_VERSION
 static xTimerHandle xDragonTimer = NULL;
@@ -136,6 +139,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     	return;
     }
     if (GPIO_PIN_1 == GPIO_Pin) {
+    	cbk_gyro_counter++;
 #ifdef SEM_VERSION
         portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
     	cbk_gyro_counter++;
@@ -145,9 +149,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
             fcb_error();
         }
        	portYIELD_FROM_ISR(higherPriorityTaskWoken);
-#else
-       	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
-    	cbk_gyro_counter++;
+#endif
+#ifdef READ_GYRO_FROM_ISR
+    	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
 #endif
     }
 }
@@ -182,11 +186,13 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
         if (pdTRUE != xSemaphoreTake(sGyroDataReady, portMAX_DELAY)) {
             fcb_error();
         }
-    	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
-#else
-//   	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
 #endif
-    if (flipflop) {
+
+#ifdef READ_GYRO_FROM_THR
+    	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
+#endif
+
+    	if (flipflop) {
         BSP_LED_Off(LED6);
         flipflop = 0;
     } else {
@@ -280,7 +286,9 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
 #endif
 }
 
+#if 0
 void vApplicationStackOverflowHook( xTaskHandle xTask,
                                     signed char *pcTaskName ) {
 	fcb_error();
 }
+#endif
