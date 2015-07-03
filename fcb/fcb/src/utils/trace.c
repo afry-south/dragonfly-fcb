@@ -78,7 +78,7 @@ int trace_post(const char * fmt, ...) {
     va_end(arg_list);
 
     if (pdTRUE != xQueueSend(qh_trace, &msg,portMAX_DELAY)) {
-        goto Exit;
+        goto Error;
     }
 
 Exit:
@@ -126,11 +126,13 @@ Error:
 int trace_sync(const char * fmt, ...) {
     uint8_t send_buf[SEND_BUF_LEN] = { (uint8_t) '_'};
     int used_buf = 0;
+    int send_buf_len = 0;
     va_list arg_list;
 
     va_start(arg_list, fmt);
     used_buf = vsnprintf((char*)send_buf, SEND_BUF_LEN, fmt, arg_list);
     va_end(arg_list);
-
-    CDC_Transmit_FS(send_buf, (used_buf >= SEND_BUF_LEN) ? SEND_BUF_LEN : used_buf + 1);
+    send_buf_len = (used_buf >= SEND_BUF_LEN) ? SEND_BUF_LEN : used_buf + 1;
+    CDC_Transmit_FS(send_buf, send_buf_len);
+    return send_buf_len;
 }
