@@ -22,9 +22,11 @@
  * @param  buffer : Pointer to the declared FIFOBuffer_TypeDef buffer
  * @retval None
  */
-void FIFOBufferInit(volatile FIFOBuffer_TypeDef* buffer)
+void FIFOBufferInit(volatile FIFOBuffer_TypeDef* buffer, uint8_t* bufferDataArray, uint16_t bufferDataArraySize)
 {
-  buffer->count = 0;    // Initialize buffer current size
+  buffer->bufferArray = bufferDataArray;        // Pointer to data array used as the FIFO buffer
+  buffer->bufferSize = bufferDataArraySize;     // Set size of data array
+  buffer->count = 0;    // Initialize buffer current size count
   buffer->first = 0;    // Initialize first index
   buffer->last = 0;     // Initialize last index
 }
@@ -35,12 +37,11 @@ void FIFOBufferInit(volatile FIFOBuffer_TypeDef* buffer)
  *                 putByte: The byte of data to be inserted in to the buffer
  * @retval SUCCESS if data put in buffer, ERROR if buffer was full
  */
-ErrorStatus BufferPut(volatile FIFOBuffer_TypeDef* buffer, const uint8_t putByte)
+ErrorStatus BufferPutByte(volatile FIFOBuffer_TypeDef* buffer, const uint8_t putByte)
 {
   // Check if buffer is full - if it is, return ERROR
-  if(buffer->count == BUFFER_SIZE)
+  if(buffer->count == buffer->bufferSize)
     {
-      ResetBuffer(buffer);  // If buffer becomes full, reset it
       return ERROR;
     }
 
@@ -50,8 +51,46 @@ ErrorStatus BufferPut(volatile FIFOBuffer_TypeDef* buffer, const uint8_t putByte
 
   // Update buffer last index
   buffer->last++;
-  if(buffer->last >= BUFFER_SIZE)
+  if(buffer->last >= buffer->bufferSize)
     buffer->last = 0;
+
+  // Buffer updated - return SUCCESS
+  return SUCCESS;
+}
+
+/*
+ * @brief  Puts an array of data with a specified size in to the buffer and updates FIFO buffer indices
+ * @param  buffer : Pointer to the declared FIFOBuffer_TypeDef buffer
+ * @param  putDataPtr : Pointer to the data which is to be copied in to the FIFO buffer
+ * @param  putDataSize : The size of the data which is to be copied in to the FIFO buffer
+ * @retval SUCCESS if data put in buffer, ERROR if not enough empty space in buffer
+ */
+ErrorStatus BufferPutData(volatile FIFOBuffer_TypeDef* buffer, const uint8_t* putDataPtr, const uint16_t putDataSize)
+{
+  uint16_t spaceLeftBeforeWraparound;
+
+  // Check if there is enough unused space in buffer to store the data
+  if(BufferGetAvailableDataSize(buffer) < putDataSize)
+    {
+      ResetBuffer(buffer);  // If buffer becomes full, reset it
+      return ERROR;
+    }
+
+  // Copy new data to the buffer last index location - take FIFO buffer wrap-around in to account
+  spaceLeftBeforeWraparound = buffer->bufferSize - buffer->bufferArray[buffer->last];
+  if(putDataSize <= spaceLeftBeforeWraparound)
+    {
+      memcpy(&buffer->bufferArray[buffer->last], &putDataPtr[0], putDataSize);
+    }
+  else
+    {
+      memcpy(&buffer->bufferArray[buffer->last], &putDataPtr[0], spaceLeftBeforeWraparound);
+      memcpy(&buffer->bufferArray[buffer->last], &putDataPtr[spaceLeftBeforeWraparound], putDataSize-spaceLeftBeforeWraparound);
+    }
+
+  // Update buffer last index
+  buffer->last = (buffer->last + putDataSize) % buffer->bufferSize;
+  buffer->count += putDataSize;
 
   // Buffer updated - return SUCCESS
   return SUCCESS;
@@ -63,7 +102,7 @@ ErrorStatus BufferPut(volatile FIFOBuffer_TypeDef* buffer, const uint8_t putByte
  * @param  getByte : Pointer to the byte where the buffer output is to be stored
  * @retval SUCCESS if data obtained from buffer, ERROR if buffer was empty
  */
-ErrorStatus BufferGet(volatile FIFOBuffer_TypeDef* buffer, uint8_t* getByte)
+ErrorStatus BufferGetByte(volatile FIFOBuffer_TypeDef* buffer, uint8_t* getByte)
 {
   // Check if buffer is empty - if it is, return ERROR
   if(buffer->count == 0)
@@ -75,10 +114,72 @@ ErrorStatus BufferGet(volatile FIFOBuffer_TypeDef* buffer, uint8_t* getByte)
 
   // Update buffer first index
   buffer->first++;
-  if(buffer->first >= BUFFER_SIZE)
+  if(buffer->first >= buffer->bufferSize)
     buffer->first = 0;
 
   return SUCCESS;
+}
+
+/*
+ * @brief  Gets an array of data with a specified size in to the buffer and updates FIFO buffer indices.
+ * @param  buffer : Pointer to the declared FIFOBuffer_TypeDef buffer
+ * @param  getDataPtr : Pointer to the requested data stored in the FIFO buffer
+ * @param  getDataSize : Requested data size
+ * @retval Amount of data returned. May be less than requested if FIFO buffer wraps around. If so, this function
+ *         should be called again (with the size difference) to receive a pointer to the rest of the requested data.
+ */
+uint16_t BufferGetData(volatile FIFOBuffer_TypeDef* buffer, uint8_t** getDataPtr, const uint16_t getDataSize)
+{
+  uint16_t dataSize;
+  uint16_t spaceLeftBeforeWraparound;
+
+  // Check if amount of requested data in buffer is stored
+  if(buffer->count < getDataSize)
+    {
+      return 0;
+    }
+
+  // Copy new data to the buffer last index location - take FIFO buffer wrap-around in to account
+  spaceLeftBeforeWraparound = buffer->bufferSize - buffer->bufferArray[buffer->first];
+  if(getDataSize <= spaceLeftBeforeWraparound)
+    dataSize = getDataSize;
+  else
+    dataSize = spaceLeftBeforeWraparound;
+
+  // Set the pointer to first index
+  *getDataPtr = &buffer->bufferArray[buffer->first];
+
+  // Update buffer last index
+  buffer->first = (buffer->first + dataSize) % buffer->bufferSize;
+  buffer->count -= dataSize;
+
+  return dataSize;
+}
+
+/*
+ * @brief  Deletes a specified amount of the last entered data bytes from FIFO buffer
+ * @param  buffer : Pointer to the declared FIFOBuffer_TypeDef buffer
+ * @param  dataSize : Amount of bytes to delete
+ * @retval None
+ */
+void BufferDeleteLastEnteredBytes(volatile FIFOBuffer_TypeDef* buffer, const uint16_t dataSize)
+{
+  if(buffer->count == dataSize)
+    {
+      buffer->count = 0;
+      buffer->last = buffer->first;
+    }
+
+  if(buffer->last >= dataSize)
+    {
+      buffer->last = buffer->last - dataSize;
+    }
+  else
+    {
+      buffer->last += buffer->bufferSize - dataSize;
+    }
+
+  buffer->count -= dataSize;
 }
 
 /*
@@ -100,9 +201,19 @@ bool BufferIsEmpty(volatile FIFOBuffer_TypeDef* buffer)
  */
 bool BufferIsFull(volatile FIFOBuffer_TypeDef* buffer)
 {
-  if(buffer->count == BUFFER_SIZE)
+  if(buffer->count == buffer->bufferSize)
     return true;
   return false;
+}
+
+/*
+ * @brief  Calculates and returns the amount of free space in the FIFO buffer
+ * @param  buffer : Pointer to the declared FIFOBuffer_TypeDef buffer
+ * @retval free size in FIFO buffer
+ */
+uint16_t BufferGetAvailableDataSize(volatile FIFOBuffer_TypeDef* buffer)
+{
+  return buffer->bufferSize - buffer->count;
 }
 
 /*
@@ -114,7 +225,7 @@ void ResetBuffer(volatile FIFOBuffer_TypeDef* buffer)
 {
   uint16_t i = 0;
 
-  while(i < BUFFER_SIZE)
+  while(i < buffer->bufferSize)
     buffer->bufferArray[i++] = '\0';
 
   buffer->first = 0;

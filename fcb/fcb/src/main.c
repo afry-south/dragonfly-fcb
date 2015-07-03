@@ -20,31 +20,18 @@
 #include "task.h"
 #include "semphr.h"
 
+/* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define USB_COM_RX_THREAD_PRIO  1
-#define USB_COM_TX_THREAD_PRIO  1
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-USBD_HandleTypeDef hUSBDDevice;
 volatile uint8_t UserButtonPressed;
-
-xTaskHandle USB_ComPortRx_Thread_Handle;
-xTaskHandle USB_ComPortTx_Thread_Handle;
-
-extern xQueueHandle usbComRxQueue;
-extern xQueueHandle usbComTxQueue;
-extern xSemaphoreHandle USBCOMTxBufferMutex;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void System_Init(void);
 static void RTOS_Init(void);
 static void PVD_Config(void);
-
-// TODO move these to USB communications/interface module
-static void USB_ComPort_RX_Thread(void const *argument);
-static void USB_ComPort_TX_Thread(void const *argument);
 
 /* Called every system tick to drive the RTOS */
 extern void xPortSysTickHandler(void);
@@ -166,17 +153,8 @@ static void System_Init(void)
   /* Configure the system clock to 72 Mhz */
   SystemClock_Config();
 
-  /* Init Device Library */
-  USBD_Init(&hUSBDDevice, &VCP_Desc, 0);
-
-  /* Add Supported Class */
-  USBD_RegisterClass(&hUSBDDevice, &USBD_CDC);
-
-  /* Add CDC Interface Class */
-  USBD_CDC_RegisterInterface(&hUSBDDevice, &USBD_CDC_fops);
-
-  /* Start Device Process */
-  USBD_Start(&hUSBDDevice);
+  /* Init USB communication */
+  InitUSBCom();
 
   /* Init on-board LEDs */
   Init_LEDs();
@@ -207,50 +185,13 @@ static void System_Init(void)
 static void RTOS_Init(void)
 {
   /* # CREATE THREADS ####################################################### */
-
-  /* USB Virtual Com Port Rx handler thread creation
-   * Task function pointer: USB_ComPort_RX_Thread
-   * Task name: USB_COM_RX
-   * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
-   * Parameter: NULL
-   * Priority: USB_COM_RX_THREAD_PRIO ([0, inf] possible)
-   * Handle: USB_ComPortRx_Thread_Handle
-   * */
-  if(pdPASS != xTaskCreate((pdTASK_CODE)USB_ComPort_RX_Thread, (signed portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE, NULL, USB_COM_RX_THREAD_PRIO, &USB_ComPortRx_Thread_Handle))
-    {
-      Error_Handler();
-    }
-
-  /* USB Virtual Com Port Tx handler thread creation
-   * Task function pointer: USB_ComPort_RX_Thread
-   * Task name: USB_COM_TX
-   * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
-   * Parameter: NULL
-   * Priority: USB_COM_TX_THREAD_PRIO ([0, inf] possible)
-   * Handle: USB_ComPortTx_Thread_Handle
-   * */
-  if(pdPASS != xTaskCreate((pdTASK_CODE)USB_ComPort_TX_Thread, (signed portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE, NULL, USB_COM_TX_THREAD_PRIO, &USB_ComPortTx_Thread_Handle))
-    {
-      Error_Handler();
-    }
+  CreateUSBComThreads();
 
   /* # CREATE QUEUES ######################################################## */
-  usbComRxQueue = xQueueCreate(16, CDC_DATA_FS_IN_PACKET_SIZE); // TODO change 16 to a defined item number
+  CreateUSBComQueues();
 
-  /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
-  vQueueAddToRegistry(usbComRxQueue, (signed char*) "usbComRxQueue");
-
-  usbComTxQueue = xQueueCreate(8, CDC_DATA_FS_OUT_PACKET_SIZE); // TODO change 16 to a defined item number
-
-  /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
-  vQueueAddToRegistry(usbComTxQueue, (signed char*) "usbComTxQueue");
-
-  /* # CREATE SEMAPHORES AND MUTEXES ######################################## */
-  USBCOMTxBufferMutex = xSemaphoreCreateMutex();
-  if( USBCOMTxBufferMutex == NULL )
-    {
-      Error_Handler();
-    }
+  /* # CREATE SEMAPHORES #################################################### */
+  CreateUSBComSemaphores();
 
   /* # Start the RTOS scheduler #############################################
    *
@@ -258,57 +199,6 @@ static void RTOS_Init(void)
    * is started according to ST UM1722 manual section 1.6.
    */
   vTaskStartScheduler();
-}
-
-/**
-  * @brief  Thread code handles the USB Com Port Rx communication
-  * @param  argument : Unused parameter
-  * @retval None
-  */
-static void USB_ComPort_RX_Thread(void const *argument)
-{
-  (void) argument;
-
-  static uint8_t usbRxDataPacket[CDC_DATA_FS_IN_PACKET_SIZE];
-
-  for (;;)
-    {
-      /* Wait forever for incoming data over USB */
-      if(pdPASS == xQueueReceive(usbComRxQueue, usbRxDataPacket, portMAX_DELAY))
-        {
-          // Here usbRxDataPacket contains the sent data
-          // TODO Do some parsing, perhaps we should keep a thread local buffer with more than 64 bytes?
-          // In case data/commands are longer than this?
-
-          USBComSendString("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas vitae consectetur purus. Nunc ultrices mi mauris, vel auctor metus tempor vel. Quisque in ante neque. Aliquam in porttitor arcu. Interdum et malesuada fames ac ante ipsum primis in nullam.\n", 255);
-          BSP_LED_Toggle(LED9);
-        }
-      // TODO: Check if not pdPASS
-    }
-}
-
-/**
-  * @brief  Thread code handles the USB Com Port Tx communication
-  * @param  argument : Unused parameter
-  * @retval None
-  */
-static void USB_ComPort_TX_Thread(void const *argument)
-{
-  (void) argument;
-
-  static UsbComPortTxData_TypeDef CompPortTxQueueItem;
-
-  for (;;)
-    {
-      /* Wait forever for incoming data over USB */
-      if(pdPASS == xQueueReceive(usbComTxQueue, &CompPortTxQueueItem, portMAX_DELAY))
-        {
-          CDC_Transmit_FS(CompPortTxQueueItem.dataPtr, CompPortTxQueueItem.dataSize);
-          BSP_LED_Toggle(LED8);
-        }
-
-      // TODO Check if not pdPass
-    }
 }
 
 /**
