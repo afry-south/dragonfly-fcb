@@ -1,3 +1,5 @@
+#define COMPILE_THIS
+
 #include "fcb_error.h"
 #include "trace.h"
 
@@ -15,6 +17,9 @@
 #include "semphr.h"
 
 #include "stdio.h"
+
+
+#ifdef COMPILE_THIS
 
 // #define SEM_VERSION
 
@@ -42,6 +47,7 @@ static uint32_t cbk_counter = 0;
 static float gyro_xyz_dot_buf[3] = { 0.0, 0.0, 0.0 };
 static volatile uint8_t sens_init_done = 0;
 
+#endif
 
 void dragon_gyro_init(void) {
     uint8_t tmpreg = 0;
@@ -74,6 +80,8 @@ void dragon_gyro_init(void) {
     GYRO_IO_Read(&tmpreg,L3GD20_CTRL_REG3_ADDR,1);
     TRACE_SYNC("L3GD20_CTRL_REG3:0x%02x", tmpreg);
 }
+
+#ifdef COMPILE_THIS
 
 /**
  *
@@ -134,10 +142,10 @@ void dragon_sensors(void) {
     }
 }
 
-#if 1
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-    cbk_counter++;
+#ifdef ISR_DELEGATE_FCN
 
+void dragon_sensors_isr(uint16_t GPIO_Pin) {
+	cbk_counter++;
     if ((cbk_counter % 48) == 0) {
     	BSP_LED_Toggle(LED5);
     }
@@ -145,6 +153,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     if (0 == sens_init_done) {
     	return;
     }
+
     if (GPIO_PIN_1 == GPIO_Pin) {
     	cbk_gyro_counter++;
 #ifdef SEM_VERSION
@@ -156,10 +165,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
             fcb_error();
         }
        	portYIELD_FROM_ISR(higherPriorityTaskWoken);
-#endif
+#endif /* SEM_VERSION */
 #ifdef READ_GYRO_FROM_ISR
     	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
-#endif
+#endif /* READ_GYRO_FROM_ISR */
     }
 }
 #endif
@@ -299,3 +308,5 @@ void vApplicationStackOverflowHook( xTaskHandle xTask,
 	fcb_error();
 }
 #endif
+
+#endif /* COMPILE_THIS */
