@@ -39,18 +39,9 @@ static uint32_t cbk_counter = 0;
 static float gyro_xyz_dot_buf[3] = { 0.0, 0.0, 0.0 };
 static volatile uint8_t sens_init_done = 0;
 
-/**
- *
- */
 
-void dragon_sensors(void) {
+void dragon_gyro_init(void) {
     uint8_t tmpreg = 0;
-    uint8_t ctrl3 = 0;
-    xSemaphoreHandle sNeverExit = xSemaphoreCreateBinary();
-#ifdef SEM_VERSION
-	portBASE_TYPE retVal = 0;
-    vSemaphoreCreateBinary(sGyroDataReady);
-#endif
 
     GPIO_InitTypeDef GPIO_InitStructure;
     BSP_LED_On(LED4);
@@ -68,24 +59,32 @@ void dragon_sensors(void) {
     HAL_NVIC_SetPriority(EXTI1_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
-    /* configure pin PD9 for GPIO toggling */
-    __GPIOD_CLK_ENABLE();
-
+    BSP_GYRO_Reset();
 
     if(BSP_GYRO_Init() != HAL_OK)
     {
         /* Initialization Error */
         fcb_error();
     }
-#if 0
-    /* the ITConfig code only seems to handle interrupt 1, not 2 */
-    BSP_GYRO_ITConfig()
-    BSP_GYRO_EnableIT(L3GD20_INT2);
+
+    /* not sure if L3GD20_EnableIT says the right thing */
+    GYRO_IO_Read(&tmpreg,L3GD20_CTRL_REG3_ADDR,1);
+    TRACE_SYNC("L3GD20_CTRL_REG3:0x%02x", tmpreg);
+}
+
+/**
+ *
+ */
+
+void dragon_sensors(void) {
+    uint8_t tmpreg = 0;
+    uint8_t ctrl3 = 0;
+    xSemaphoreHandle sNeverExit = xSemaphoreCreateBinary();
+#ifdef SEM_VERSION
+	portBASE_TYPE retVal = 0;
+    vSemaphoreCreateBinary(sGyroDataReady);
 #endif
-
-    ctrl3 = 0x08; /* page 33 L3GD20 datasheet */
-    GYRO_IO_Write(&ctrl3, L3GD20_CTRL_REG3_ADDR, 1);
-
+    dragon_gyro_init();
     /* not sure if L3GD20_EnableIT says the right thing */
     GYRO_IO_Read(&tmpreg,L3GD20_CTRL_REG3_ADDR,1);
     TRACE_SYNC("L3GD20_CTRL_REG3:0x%02x", tmpreg);
@@ -135,6 +134,11 @@ void dragon_sensors(void) {
 #if 1
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     cbk_counter++;
+#error BANG
+    if ((cbk_counter % 48) == 0) {
+    	BSP_LED_Toggle(LED5);
+    }
+
     if (0 == sens_init_done) {
     	return;
     }
