@@ -19,6 +19,9 @@
 // #define SEM_VERSION
 
 // #define READ_GYRO_FROM_THR
+
+#define ISR_DELEGATE_FCN
+
 #define READ_GYRO_FROM_ISR
 
 static void dragon_timer_read_sensors(xTimerHandle xTimer ); /* tmrTIMER_CALLBACK */
@@ -134,7 +137,7 @@ void dragon_sensors(void) {
 #if 1
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     cbk_counter++;
-#error BANG
+
     if ((cbk_counter % 48) == 0) {
     	BSP_LED_Toggle(LED5);
     }
