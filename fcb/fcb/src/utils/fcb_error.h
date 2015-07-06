@@ -5,5 +5,5 @@
  *
  * It lights up two red LEDs then goes into infinite loop.
  */
-void fcb_error(void);
+extern void fcb_error(void);
 #endif

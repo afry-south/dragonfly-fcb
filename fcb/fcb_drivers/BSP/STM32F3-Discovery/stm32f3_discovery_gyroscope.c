@@ -104,7 +104,11 @@ static GYRO_DrvTypeDef *GyroscopeDrv;
 uint8_t BSP_GYRO_Init(void)
 {  
   uint8_t ret = GYRO_ERROR;
-  uint16_t ctrl = 0x0000;
+  uint8_t ctrlreg1 = 0x00;
+  uint8_t ctrlreg2 = 0x00;
+  uint8_t ctrlreg3 = 0x00;
+  uint8_t ctrlreg4 = 0x00;
+
   GYRO_InitTypeDef L3GD20_InitStructure;
   GYRO_FilterConfigTypeDef L3GD20_FilterStructure;
 
@@ -123,22 +127,24 @@ uint8_t BSP_GYRO_Init(void)
     L3GD20_InitStructure.Full_Scale = L3GD20_FULLSCALE_500;
 	
     /* Configure MEMS: data rate, power mode, full scale and axes */
-    ctrl = (uint16_t) (L3GD20_InitStructure.Power_Mode | L3GD20_InitStructure.Output_DataRate | \
+    ctrlreg1 = (uint32_t) (L3GD20_InitStructure.Power_Mode | L3GD20_InitStructure.Output_DataRate | \
                       L3GD20_InitStructure.Axes_Enable | L3GD20_InitStructure.Band_Width);
 	
-    ctrl |= (uint16_t) ((L3GD20_InitStructure.BlockData_Update | L3GD20_InitStructure.Endianness | \
-                        L3GD20_InitStructure.Full_Scale) << 8);
+    ctrlreg4 = (uint8_t) (L3GD20_InitStructure.BlockData_Update | L3GD20_InitStructure.Endianness |
+                        L3GD20_InitStructure.Full_Scale);
+
+    ctrlreg3 = L3GD20_INT2INTERRUPT_ENABLE;
 
     /* L3gd20 Init */	 
-    GyroscopeDrv->Init(ctrl);
+    GyroscopeDrv->Init(ctrlreg1, ctrlreg3, ctrlreg4);
   
     L3GD20_FilterStructure.HighPassFilter_Mode_Selection =L3GD20_HPM_NORMAL_MODE_RES;
     L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency = L3GD20_HPFCF_9;
 	
-    ctrl = (uint8_t) ((L3GD20_FilterStructure.HighPassFilter_Mode_Selection |\
+    ctrlreg2 = (uint8_t) ((L3GD20_FilterStructure.HighPassFilter_Mode_Selection |\
                        L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency));		
 	
-    GyroscopeDrv->FilterConfig(ctrl) ;
+    GyroscopeDrv->FilterConfig(ctrlreg2) ;
   
     GyroscopeDrv->FilterCmd(L3GD20_HIGHPASSFILTER_DISABLE);
 
