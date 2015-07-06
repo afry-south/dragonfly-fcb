@@ -21,7 +21,7 @@
 
 #ifdef COMPILE_THIS
 
-// #define SEM_VERSION
+#define SEM_VERSION
 
 // #define READ_GYRO_FROM_THR
 
@@ -29,13 +29,34 @@
 
 #define READ_GYRO_FROM_ISR
 
+#define LAUNCH_TASK_SCHEDULER
+
+#define LAUNCH_TIMER
+
+/*
+ * Defining this makes a difference whether or not timer is launched.
+ * When defined, then DRDY callbacks show on LEDs (timer launched)
+ * When not defined DRDY callback doesn't show on LEDs. (timer not launched)
+ *
+ * (gyro read from ISR)
+ *
+ *   DRDYLED     UNE
+ *              0   1
+ *
+ *   TIMER 0    0   1
+ *         1    0   1
+ *
+ * Lighting LED10 if scheduler should exit never shows in any combination.
+ */
+#define USE_NEVER_EXIT
+
 static void dragon_timer_read_sensors(xTimerHandle xTimer ); /* tmrTIMER_CALLBACK */
 #ifndef SEM_VERSION
 static xTimerHandle xDragonTimer = NULL;
 #endif
 
 #ifdef SEM_VERSION
-static xSemaphoreHandle sGyroDataReady;
+static xSemaphoreHandle sGyroDataReady = NULL;
 static xTaskHandle hGyroDataRead;
 #endif
 
@@ -90,15 +111,18 @@ void dragon_gyro_init(void) {
 void dragon_sensors(void) {
     uint8_t tmpreg = 0;
     uint8_t ctrl3 = 0;
+#ifdef USE_NEVER_EXIT
     xSemaphoreHandle sNeverExit = xSemaphoreCreateBinary();
+#endif /* USE_NEVER_EXIT */
 #ifdef SEM_VERSION
 	portBASE_TYPE retVal = 0;
-    vSemaphoreCreateBinary(sGyroDataReady);
+	sGyroDataReady = xSemaphoreCreateBinary();
+
+    if (NULL == sGyroDataReady) {
+    	fcb_error();
+    }
+
 #endif
-    dragon_gyro_init();
-    /* not sure if L3GD20_EnableIT says the right thing */
-    GYRO_IO_Read(&tmpreg,L3GD20_CTRL_REG3_ADDR,1);
-    TRACE_SYNC("L3GD20_CTRL_REG3:0x%02x", tmpreg);
 
 #ifdef SEM_VERSION
 	  if (pdPASS != (retVal =
@@ -111,6 +135,12 @@ void dragon_sensors(void) {
 		  fcb_error();
 	  }
 #else
+	  dragon_gyro_init();
+	  /* not sure if L3GD20_EnableIT says the right thing */
+	  GYRO_IO_Read(&tmpreg,L3GD20_CTRL_REG3_ADDR,1);
+	  TRACE_SYNC("L3GD20_CTRL_REG3:0x%02x", tmpreg);
+
+#ifdef LAUNCH_TIMER
     if (0 == (xDragonTimer = xTimerCreate((const signed char*)"tmrDragon",
                                           TIMER_INTERVAL_MS / portTICK_RATE_MS,
                                           pdTRUE, /* uxAutoReload */
@@ -124,22 +154,25 @@ void dragon_sensors(void) {
         fcb_error();
         return;
     }
+#endif /* LAUNCH_TIMER */
     sens_init_done = 1;
-#endif
+#endif /* SEM_VERSION */
 
-
+#ifdef LAUNCH_TASK_SCHEDULER
     /* Start scheduler
      *
      * since we use heap1.c, we must create all tasks and queues before the OS kernel
      * is started according to ST UM1722 manual section 1.6.
      */
     vTaskStartScheduler();
-
-
+#ifdef USE_NEVER_EXIT
     /* We should never get here as control is now taken by the scheduler */
     if (pdTRUE != xSemaphoreTake(sNeverExit, portMAX_DELAY)) {
         // ERROR here
     }
+#endif /* USE_NEVER_EXIT */
+#endif /* LAUNCH_TASK_SCHEDULER */
+
 }
 
 #ifdef ISR_DELEGATE_FCN
@@ -175,7 +208,7 @@ void dragon_sensors_isr(uint16_t GPIO_Pin) {
 
 static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     enum { SEND_BUF_LEN = 64 };
-    uint8_t send_buf[SEND_BUF_LEN] = { (uint8_t) '_'};
+    uint8_t send_buf[SEND_BUF_LEN * 2] = { (uint8_t) '_'};
     static uint8_t flipflop = 0;
     static uint32_t pulse_counter = 0;
     int used_buf = 0;
@@ -188,6 +221,7 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     static uint8_t xdot_or_x = 0; /* 0 = xdot, 1 = x */
 
 #ifdef SEM_VERSION
+    dragon_gyro_init();
     sens_init_done = 1;
     GYRO_IO_Read(&tmpreg,L3GD20_STATUS_REG_ADDR,1);
     TRACE_SYNC("L3GD20_STATUS_REG:0x%02x", tmpreg);
@@ -208,24 +242,21 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
 #endif
 
-    	if (flipflop) {
-        BSP_LED_Off(LED6);
-        flipflop = 0;
-    } else {
-        BSP_LED_On(LED6);
-        flipflop = 1;
-    }
 
 #ifdef SEM_VERSION
     if ((pulse_counter % (500)) == 0) {
+       BSP_LED_Toggle(LED6);
        print_this = 1;
     }
 #else
     if (pulse_counter % (2000 / TIMER_INTERVAL_MS) == 0) {
+        BSP_LED_Toggle(LED6);
+
         print_this = 1;
     }
 #endif
 
+#ifdef PRINT_SOMETHING
 #if 1
 	  if (print_this) {
 //          GYRO_IO_Read(&tmpreg,L3GD20_STATUS_REG_ADDR,1);
@@ -296,17 +327,12 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     if (print_this) {
         CDC_Transmit_FS(send_buf, (used_buf >= SEND_BUF_LEN) ? SEND_BUF_LEN : used_buf + 1);
     }
+#endif /* PRINT_SOMETHING */
+
     ++pulse_counter;
 #ifdef SEM_VERSION
     }
 #endif
 }
-
-#if 0
-void vApplicationStackOverflowHook( xTaskHandle xTask,
-                                    signed char *pcTaskName ) {
-	fcb_error();
-}
-#endif
 
 #endif /* COMPILE_THIS */
