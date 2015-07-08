@@ -15,6 +15,7 @@
 #include "sensors.h"
 #include "receiver.h"
 #include "fcb_error.h"
+#include "gyroscope.h"
 
 /* Private variables ---------------------------------------------------------*/
 USBD_HandleTypeDef hUSBDDevice;
@@ -48,7 +49,7 @@ int main(void)
 
   while (1)
     {
-      ToggleLEDs();
+//      ToggleLEDs();
     }
 }
 
@@ -72,6 +73,7 @@ void Error_Handler(void)
   }
 }
 
+// #ifdef TODO
 /**
   * @brief  EXTI line detection callbacks
   * @param  GPIO_Pin: Specifies the pins connected EXTI line
@@ -84,8 +86,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
    UserButtonPressed++;
    if (UserButtonPressed > 0x7)
     {
+	   BSP_LED_Toggle(LED7);
       UserButtonPressed = 0x0;
     }
+  } else if (GPIO_Pin == GPIO_GYRO_DRDY) {
+	  dragon_sensors_isr();
+//	  GyroHandleDataReady();
   }
 }
 
@@ -107,6 +113,15 @@ void HAL_PWR_PVDCallback(void)
  */
 void HAL_SYSTICK_Callback(void)
 {
+#if 1
+
+	static uint32_t kicks = 0;
+	kicks++;
+
+	if ((kicks % 1000) == 0) {
+		BSP_LED_Toggle(LED9);
+	}
+#endif
   HAL_IncTick();
 
   if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
@@ -153,18 +168,30 @@ static void Init_System(void)
   /* Init User button */
   BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
+
+  dragon_sensors();
+
 #ifdef TODO
+  InitialiseGyroscope();
+
+  vTaskStartScheduler();
+
+  /* sandbox */
+
+
   /* Setup sensors */
-  GyroConfig();
+
   CompassConfig();
   InitPIDControllers();
 #endif
 
+#ifdef TODO
   /* Setup motor output timer */
   MotorControl_Config();
 
   /* Setup receiver timers for receiver input */
   ReceiverInput_Config();
+#endif
 }
 
 /**

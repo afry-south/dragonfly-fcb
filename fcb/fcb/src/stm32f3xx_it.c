@@ -14,6 +14,8 @@
 #include "main.h"
 #include "stm32f3xx_it.h"
 
+#include "fcb_error.h"
+
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
   * @{
   */
@@ -52,6 +54,7 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* Go to infinite loop when Hard Fault exception occurs */
+	fcb_error();
   while (1)
   {}
 }

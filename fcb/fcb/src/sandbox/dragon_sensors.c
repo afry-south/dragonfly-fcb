@@ -23,15 +23,17 @@
 
 #define SEM_VERSION
 
-// #define READ_GYRO_FROM_THR
+#define READ_GYRO_FROM_THR
 
 #define ISR_DELEGATE_FCN
 
-#define READ_GYRO_FROM_ISR
+// #define READ_GYRO_FROM_ISR
 
 #define LAUNCH_TASK_SCHEDULER
 
 #define LAUNCH_TIMER
+
+#define PRINT_SOMETHING
 
 /*
  * Defining this makes a difference whether or not timer is launched.
@@ -63,9 +65,9 @@ static xTaskHandle hGyroDataRead;
 enum { TIMER_INTERVAL_MS = 50 };
 enum { DRAGON_TIMER_ID = 242 };
 
-static uint32_t cbk_gyro_counter = 0;
-static uint32_t cbk_counter = 0;
-static float gyro_xyz_dot_buf[3] = { 0.0, 0.0, 0.0 };
+static volatile uint32_t cbk_gyro_counter = 0;
+static volatile uint32_t cbk_counter = 0;
+static volatile float gyro_xyz_dot_buf[3] = { 0.0, 0.0, 0.0 };
 static volatile uint8_t sens_init_done = 0;
 
 #endif
@@ -177,9 +179,8 @@ void dragon_sensors(void) {
 
 #ifdef ISR_DELEGATE_FCN
 
-void dragon_sensors_isr(uint16_t GPIO_Pin) {
-	cbk_counter++;
-    if ((cbk_counter % 48) == 0) {
+extern void dragon_sensors_isr(void) {
+    if ((cbk_gyro_counter % 48) == 0) {
     	BSP_LED_Toggle(LED5);
     }
 
@@ -187,34 +188,36 @@ void dragon_sensors_isr(uint16_t GPIO_Pin) {
     	return;
     }
 
-    if (GPIO_PIN_1 == GPIO_Pin) {
-    	cbk_gyro_counter++;
+   	cbk_gyro_counter++;
 #ifdef SEM_VERSION
-        portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
-    	cbk_gyro_counter++;
+    portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
 
-        if (pdTRUE != xSemaphoreGiveFromISR(sGyroDataReady,
-        		&higherPriorityTaskWoken)) {
-            fcb_error();
-        }
-       	portYIELD_FROM_ISR(higherPriorityTaskWoken);
+    if (pdTRUE != xSemaphoreGiveFromISR(sGyroDataReady,
+       		&higherPriorityTaskWoken)) {
+           fcb_error();
+    }
+   	portYIELD_FROM_ISR(higherPriorityTaskWoken);
 #endif /* SEM_VERSION */
+
 #ifdef READ_GYRO_FROM_ISR
     	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
 #endif /* READ_GYRO_FROM_ISR */
-    }
 }
 #endif
 
 static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     enum { SEND_BUF_LEN = 64 };
-    uint8_t send_buf[SEND_BUF_LEN * 2] = { (uint8_t) '_'};
+    uint8_t send_buf[SEND_BUF_LEN] = { (uint8_t) '_'};
     static uint8_t flipflop = 0;
     static uint32_t pulse_counter = 0;
     int used_buf = 0;
     static float gyro_xyz_dot_mean_buf[3] = { 0 }; /* compensate zero-rate level */
     static float gyro_xyz[3] = { 0 }; /* compensate zero-rate level */
+#ifdef SEM_VERSION
+    int sample_num = 200;
+#else
     int sample_num = 1000 / TIMER_INTERVAL_MS * 60;
+#endif
     uint8_t print_this = 0;
     uint8_t i = 0;
     uint8_t tmpreg = 0;
@@ -236,7 +239,8 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
         if (pdTRUE != xSemaphoreTake(sGyroDataReady, portMAX_DELAY)) {
             fcb_error();
         }
-#endif
+#endif /* SEM_VERSION */
+
 
 #ifdef READ_GYRO_FROM_THR
     	BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
@@ -247,6 +251,8 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     if ((pulse_counter % (500)) == 0) {
        BSP_LED_Toggle(LED6);
        print_this = 1;
+    } else {
+    	print_this = 0;
     }
 #else
     if (pulse_counter % (2000 / TIMER_INTERVAL_MS) == 0) {
@@ -257,32 +263,24 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
 #endif
 
 #ifdef PRINT_SOMETHING
-#if 1
+#if 0
 	  if (print_this) {
-//          GYRO_IO_Read(&tmpreg,L3GD20_STATUS_REG_ADDR,1);
-//		  TRACE_SYNC("L3GD20_STATUS_REG:0x%02x", tmpreg);
+          GYRO_IO_Read(&tmpreg,L3GD20_STATUS_REG_ADDR,1);
+          TRACE_SYNC("L3GD20_STATUS_REG:0x%02x", tmpreg);
 
-	      used_buf += snprintf((char*)(send_buf+used_buf),
-                             SEND_BUF_LEN,
-                             "tim:%u cbk:%u cbkg:%u xyzdot:%1.1f, %1.1f, %1.1f\n",
+	      TRACE_SYNC("tim:%u cbkg:%u xdot:%1.1f\n",
                              (uint) pulse_counter,
-                             cbk_counter,
                              cbk_gyro_counter,
-                             gyro_xyz_dot_buf[0],
-                             gyro_xyz_dot_buf[1],
-                             gyro_xyz_dot_buf[2]);
+                             gyro_xyz_dot_buf[0]);
 	  }
 #else
-
     if (pulse_counter < sample_num) {
         gyro_xyz_dot_mean_buf[0] += gyro_xyz_dot_buf[0];
         gyro_xyz_dot_mean_buf[1] += gyro_xyz_dot_buf[1];
         gyro_xyz_dot_mean_buf[2] += gyro_xyz_dot_buf[2];
 
         if (print_this) {
-            used_buf += snprintf((char*)(send_buf+used_buf),
-                                 SEND_BUF_LEN,
-                                 "tim:%u sum xyzdot:%1.1f, %1.1f, %1.1f\n",
+        	TRACE_SYNC("tim:%u sum xyzdot:%1.1f, %1.1f, %1.1f\n",
                                  (uint) pulse_counter,
                                  gyro_xyz_dot_mean_buf[0],
                                  gyro_xyz_dot_mean_buf[1],
@@ -293,27 +291,31 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
             gyro_xyz_dot_mean_buf[i] = gyro_xyz_dot_mean_buf[i] / sample_num ;
         }
     } else {
+    	float dt  = 0;
 
-        for (i = 0; i < 3; i++) {
+    	#ifdef LAUNCH_TIMER
+        	dt = TIMER_INTERVAL_MS / 1000;
+#endif
+#ifdef READ_GYRO_FROM_THR
+            dt = (float)(1.0 / 190.0);
+#endif
+
+    	for (i = 0; i < 3; i++) {
             /* integrating the values */
-            gyro_xyz[i] += ((gyro_xyz_dot_buf[i] - gyro_xyz_dot_mean_buf[i]) * TIMER_INTERVAL_MS / 1000);
+        	gyro_xyz[i] += ((gyro_xyz_dot_buf[i] - gyro_xyz_dot_mean_buf[i]) * dt);
         }
 
         if (print_this) {
             if (xdot_or_x == 0) {
                 xdot_or_x = 1;
-                used_buf += snprintf((char*)(send_buf+used_buf),
-                                     SEND_BUF_LEN,
-                                     "tim:%u xdot:%0.1f ydot:%0.1f zdot:%0.1f\n",
-                                     (uint) pulse_counter,
-                                     gyro_xyz_dot_buf[0] - gyro_xyz_dot_mean_buf[0],
-                                     gyro_xyz_dot_buf[1] - gyro_xyz_dot_mean_buf[1],
-                                     gyro_xyz_dot_buf[2] - gyro_xyz_dot_mean_buf[2]);
+                TRACE_SYNC("tim:%u xdot:%0.1f ydot:%0.1f zdot:%0.1f\n",
+                           (uint) pulse_counter,
+                           gyro_xyz_dot_buf[0] - gyro_xyz_dot_mean_buf[0],
+                           gyro_xyz_dot_buf[1] - gyro_xyz_dot_mean_buf[1],
+                           gyro_xyz_dot_buf[2] - gyro_xyz_dot_mean_buf[2]);
             } else {
                 xdot_or_x = 0;
-                used_buf += snprintf((char*)(send_buf+used_buf),
-                                     SEND_BUF_LEN,
-                                     "tim:%u x:%0.1f y:%0.1f z:%0.1f\n",
+                TRACE_SYNC("tim:%u x:%0.1f y:%0.1f z:%0.1f\n",
                                      (uint) pulse_counter,
                                      gyro_xyz[0],
                                      gyro_xyz[1],
@@ -324,9 +326,6 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     }
 #endif
 
-    if (print_this) {
-        CDC_Transmit_FS(send_buf, (used_buf >= SEND_BUF_LEN) ? SEND_BUF_LEN : used_buf + 1);
-    }
 #endif /* PRINT_SOMETHING */
 
     ++pulse_counter;
