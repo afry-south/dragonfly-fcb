@@ -35,6 +35,7 @@
 
 #define PRINT_SOMETHING
 
+
 /*
  * Defining this makes a difference whether or not timer is launched.
  * When defined, then DRDY callbacks show on LEDs (timer launched)
@@ -51,6 +52,12 @@
  * Lighting LED10 if scheduler should exit never shows in any combination.
  */
 #define USE_NEVER_EXIT
+
+/*
+ * trace variable via DAC output
+ */
+#define DAC_OUTPUT
+
 
 static void dragon_timer_read_sensors(xTimerHandle xTimer ); /* tmrTIMER_CALLBACK */
 #ifndef SEM_VERSION
@@ -70,6 +77,17 @@ static volatile uint32_t cbk_counter = 0;
 static volatile float gyro_xyz_dot_buf[3] = { 0.0, 0.0, 0.0 };
 static volatile uint8_t sens_init_done = 0;
 
+#endif
+
+#ifdef DAC_OUTPUT
+#include "stm32f3xx_hal_dac.h"
+
+static DAC_HandleTypeDef sDacHandle;
+static DAC_ChannelConfTypeDef sDacChannelOneConf = { DAC_TRIGGER_NONE, DAC_OUTPUTBUFFER_DISABLE };
+
+
+void dragon_dac_init(void);
+static uint32_t dac1_scaled = 0;
 #endif
 
 void dragon_gyro_init(void) {
@@ -124,6 +142,10 @@ void dragon_sensors(void) {
     	fcb_error();
     }
 
+#endif
+
+#ifdef DAC_OUTPUT
+	  dragon_dac_init();
 #endif
 
 #ifdef SEM_VERSION
@@ -299,6 +321,22 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
 #ifdef READ_GYRO_FROM_THR
             dt = (float)(1.0 / 190.0);
 #endif
+#ifdef DAC_OUTPUT
+    	{
+           	HAL_StatusTypeDef halRetVal = HAL_OK;
+    		/* for L3GD20_SENSITIVITY_500DPS */
+
+    		float xdot_fsv_fraction = ((gyro_xyz_dot_buf[0] - gyro_xyz_dot_mean_buf[i]) + 500000) / 1000000;
+    		dac1_scaled = (xdot_fsv_fraction * 4096);
+
+    		if (HAL_OK != (halRetVal = HAL_DAC_SetValue(&sDacHandle /* DAC_HandleTypeDef* hdac */,
+    				DAC1_CHANNEL_1 /* uint32_t channel */,
+    				DAC_ALIGN_12B_R /* uint32_t alignment */, /* 0 - 4095 */
+    				dac1_scaled /* uint32_t data */))) {
+    			fcb_error();
+    		}
+    	}
+#endif /* DAC_OUTPUT */
 
     	for (i = 0; i < 3; i++) {
             /* integrating the values */
@@ -333,5 +371,54 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     }
 #endif
 }
+
+#ifdef DAC_OUTPUT
+void dragon_dac_init(void) {
+	HAL_StatusTypeDef halRetVal = HAL_OK;
+	GPIO_InitTypeDef          GPIO_InitStruct;
+
+	/* DAC init sequence borrowed from stm32f3xx_hal_dac.c */
+	sDacHandle.Instance = DAC1;
+
+	if ((halRetVal = HAL_DAC_Init(&sDacHandle)) != HAL_OK) {
+		/* Initiliazation Error */
+	    fcb_error();
+	}
+
+	/* set PA4 to analog mode */
+
+	  /*##-1- Enable peripherals and GPIO Clocks #################################*/
+	  /* Enable GPIO clock ****************************************/
+	  __GPIOA_CLK_ENABLE();
+	  /* DAC Periph clock enable */
+	  __DAC1_CLK_ENABLE();
+
+	  /*##-2- Configure peripheral GPIO ##########################################*/
+	  /* DAC Channel1 GPIO pin configuration */
+	  GPIO_InitStruct.Pin = GPIO_PIN_4;
+	  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/* returns HAL_StatusTypeDef */
+	if (HAL_OK != (halRetVal = HAL_DAC_ConfigChannel(&sDacHandle /* DAC_HandleTypeDef* hdac */,
+			&sDacChannelOneConf /* DAC_ChannelConfTypeDef* sConfig */,
+			DAC1_CHANNEL_1 /* uint32_t channel */))) {
+		fcb_error();
+	}
+
+	if (HAL_OK != (halRetVal = HAL_DAC_SetValue(&sDacHandle /* DAC_HandleTypeDef* hdac */,
+			DAC1_CHANNEL_1 /* uint32_t channel */,
+			DAC_ALIGN_12B_R /* uint32_t alignment */, /* 0 - 4095 */
+			0xFFF /* uint32_t data */))) {
+		fcb_error();
+	}
+
+	if (HAL_OK != (halRetVal = HAL_DAC_Start(&sDacHandle, DAC1_CHANNEL_1 /* uint32_t channel */))) {
+		fcb_error();
+	}
+
+}
+#endif /* DAC_OUTPUT */
 
 #endif /* COMPILE_THIS */
