@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    fcb/main.c
  * @author  ÅF Dragonfly
- * @version v. 0.0.2
+ * @version v. 0.1.0
  * @date    2015-05-28
  * @brief   Flight Control program for the ÅF Dragonfly quadcopter
  ******************************************************************************/

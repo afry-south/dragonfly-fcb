@@ -77,7 +77,7 @@ ErrorStatus BufferPutData(volatile FIFOBuffer_TypeDef* buffer, const uint8_t* pu
     }
 
   // Copy new data to the buffer last index location - take FIFO buffer wrap-around in to account
-  spaceLeftBeforeWraparound = buffer->bufferSize - buffer->bufferArray[buffer->last];
+  spaceLeftBeforeWraparound = buffer->bufferSize - buffer->last;
   if(putDataSize <= spaceLeftBeforeWraparound)
     {
       memcpy(&buffer->bufferArray[buffer->last], &putDataPtr[0], putDataSize);
@@ -85,7 +85,7 @@ ErrorStatus BufferPutData(volatile FIFOBuffer_TypeDef* buffer, const uint8_t* pu
   else
     {
       memcpy(&buffer->bufferArray[buffer->last], &putDataPtr[0], spaceLeftBeforeWraparound);
-      memcpy(&buffer->bufferArray[buffer->last], &putDataPtr[spaceLeftBeforeWraparound], putDataSize-spaceLeftBeforeWraparound);
+      memcpy(&buffer->bufferArray[0], &putDataPtr[spaceLeftBeforeWraparound], putDataSize-spaceLeftBeforeWraparound);
     }
 
   // Update buffer last index
@@ -140,7 +140,7 @@ uint16_t BufferGetData(volatile FIFOBuffer_TypeDef* buffer, uint8_t** getDataPtr
     }
 
   // Copy new data to the buffer last index location - take FIFO buffer wrap-around in to account
-  spaceLeftBeforeWraparound = buffer->bufferSize - buffer->bufferArray[buffer->first];
+  spaceLeftBeforeWraparound = buffer->bufferSize - buffer->first;
   if(getDataSize <= spaceLeftBeforeWraparound)
     dataSize = getDataSize;
   else

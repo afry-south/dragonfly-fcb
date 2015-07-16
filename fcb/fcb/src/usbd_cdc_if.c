@@ -1,27 +1,12 @@
-/********************************************************************************
-  * @file    usbd_cdc_if_template.c
-  * @author  MCD Application Team
-  * @version V2.2.0
-  * @date    13-June-2014
-  * @brief   Generic media access Layer.
+/**
   ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT 2014 STMicroelectronics</center></h2>
-  *
-  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
-  * You may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at:
-  *
-  *        http://www.st.com/software_license_agreement_liberty_v2
-  *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  *******************************************************************************/
+  * @file    usbd_cdc_if.c
+  * @author  ÅF Dragonfly - Embedded Systems
+  * @version v. 0.1.0
+  * @date    2015-07-16
+  * @brief   USB CDC Interface functions for the ÅF Dragonfly quadrotor UAV
+  ******************************************************************************
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
@@ -43,12 +28,12 @@ typedef struct
 }UsbComPortTxQueueItem_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
-#define USB_COM_TX_BUFFER_SIZE          2048
+#define USB_COM_TX_BUFFER_SIZE          1024
+#define USB_COM_RX_BUFFER_SIZE          1024
 
 #define USB_COM_RX_THREAD_PRIO          1
 #define USB_COM_TX_THREAD_PRIO          1
 
-#define USB_COM_RX_QUEUE_ITEMS          32
 #define USB_COM_TX_QUEUE_ITEMS          16
 
 /* USB handler declaration */
@@ -58,12 +43,16 @@ USBD_HandleTypeDef hUSBDDevice;
 static int8_t CDC_Itf_Init     (void);
 static int8_t CDC_Itf_DeInit   (void);
 static int8_t CDC_Itf_Control  (uint8_t cmd, uint8_t* pbuf, uint16_t length);
-static int8_t CDC_Itf_Receive  (uint8_t* pbuf, uint32_t *Len);
+static int8_t CDC_Itf_Receive  (uint8_t* rxData, uint32_t *rxDataLen);
 
 /* Private variables ---------------------------------------------------------*/
+uint8_t USBCOMRxPacketBuffer[CDC_DATA_HS_OUT_PACKET_SIZE];
 
-uint8_t USBCOMRxBuffer[CDC_DATA_FS_IN_PACKET_SIZE]; /* Receive Data over USB stored in this buffer */
+/* USB CDC Receive FIFO buffer */
+uint8_t USBCOMRxBufferArray[USB_COM_RX_BUFFER_SIZE];
+volatile FIFOBuffer_TypeDef USBCOMRxFIFOBuffer;
 
+/* USB CDC Transmit FIFO buffer */
 uint8_t USBCOMTxBufferArray[USB_COM_TX_BUFFER_SIZE];
 volatile FIFOBuffer_TypeDef USBCOMTxFIFOBuffer;
 
@@ -87,9 +76,9 @@ USBD_CDC_LineCodingTypeDef LineCoding =
 xTaskHandle USB_ComPortRx_Thread_Handle;
 xTaskHandle USB_ComPortTx_Thread_Handle;
 
-xQueueHandle usbComRxQueue;
 xQueueHandle usbComTxQueue;
 
+xSemaphoreHandle USBCOMRxDataSem;
 xSemaphoreHandle USBCOMTxBufferMutex;
 xSemaphoreHandle USBTxMutex;
 
@@ -106,9 +95,7 @@ static void USB_ComPort_TX_Thread(void const *argument);
 static int8_t CDC_Itf_Init(void)
 {
   /*# Set CDC Buffers ####################################################### */
-
-  //USBD_CDC_SetTxBuffer(&hUSBDDevice, USBCOMTxBufferArray, 0);
-  USBD_CDC_SetRxBuffer(&hUSBDDevice, USBCOMRxBuffer);
+  USBD_CDC_SetRxBuffer(&hUSBDDevice, USBCOMRxPacketBuffer);
 
   return (USBD_OK);
 }
@@ -199,23 +186,26 @@ static int8_t CDC_Itf_Control(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   * @param  Len: Number of data received (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
+static int8_t CDC_Itf_Receive(uint8_t* rxData, uint32_t *rxDataLen)
 {
   uint8_t result = USBD_OK;
-
-  // TODO: Check if Len can be > 64?
+  static portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE; // We have not woken a task at the start of the ISR.
 
   if(hUSBDDevice.dev_state == USBD_STATE_CONFIGURED)
     {
       result = USBD_CDC_ReceivePacket(&hUSBDDevice);
       if(result == USBD_OK)
         {
-        /* # Add to RTOS queue #### */
-        portBASE_TYPE xHigherPriorityTaskWoken;
-        // We have not woken a task at the start of the ISR.
-        xHigherPriorityTaskWoken = pdFALSE;
-        xQueueSendFromISR(usbComRxQueue, USBCOMRxBuffer, &xHigherPriorityTaskWoken);
-      }
+          if(BufferPutData(&USBCOMRxFIFOBuffer, rxData, *rxDataLen))
+            {
+              /* # Signal RX thread that new USB CDC data has arrived #### */
+              xSemaphoreGiveFromISR(USBCOMRxDataSem, &xHigherPriorityTaskWoken);
+            }
+          else
+            {
+              result = USBD_FAIL;
+            }
+        }
     }
   else
     result = USBD_FAIL;
@@ -232,16 +222,13 @@ static void USB_ComPort_RX_Thread(void const *argument)
 {
   (void) argument;
 
-  static uint8_t usbRxDataPacket[CDC_DATA_FS_IN_PACKET_SIZE];
-
   for (;;)
     {
       /* Wait forever for incoming data over USB by pending on the USB Rx queue */
-      if(pdPASS == xQueueReceive(usbComRxQueue, usbRxDataPacket, portMAX_DELAY))
+      if(pdPASS == xSemaphoreTake(USBCOMRxDataSem, portMAX_DELAY))
         {
-          // Here usbRxDataPacket contains the sent data
-          // TODO Do some parsing, perhaps we should keep a thread local buffer with more than 64 bytes?
-          // In case data/commands are longer than this?
+          // TODO Get new contents from FIFO buffer, perhaps scan it for commands X amount of bytes before updating indicies?
+          // TODO Do command/data parsing
 
           USBComSendString("Hello, this is Dragonfly!\n", portMAX_DELAY, portMAX_DELAY);
         }
@@ -275,8 +262,8 @@ static void USB_ComPort_TX_Thread(void const *argument)
                   // If not all data received from buffer (due to FIFO wrap-around), get the rest
                   if(tmpSize < CompPortTxQueueItem.dataTxSize)
                     {
-                      tmpSize = BufferGetData(CompPortTxQueueItem.FIFOBuffer, txDataPtr, CompPortTxQueueItem.dataTxSize-tmpSize);
-                      CDC_Transmit_FS(txDataPtr, CompPortTxQueueItem.dataTxSize-tmpSize);
+                      tmpSize = BufferGetData(CompPortTxQueueItem.FIFOBuffer, &txDataPtr, CompPortTxQueueItem.dataTxSize-tmpSize);
+                      CDC_Transmit_FS(txDataPtr, tmpSize);
                     }
                   xSemaphoreGive(*CompPortTxQueueItem.FIFOBufferMutex);
                 }
@@ -291,6 +278,9 @@ static void USB_ComPort_TX_Thread(void const *argument)
 
 void InitUSBCom(void)
 {
+  /* Create CDC RX FIFO Buffer */
+  FIFOBufferInit(&USBCOMRxFIFOBuffer, USBCOMRxBufferArray, sizeof(USBCOMRxBufferArray));
+
   /* Create CDC TX FIFO Buffer */
   FIFOBufferInit(&USBCOMTxFIFOBuffer, USBCOMTxBufferArray, sizeof(USBCOMTxBufferArray));
 
@@ -432,12 +422,6 @@ void CreateUSBComThreads(void)
 
 void CreateUSBComQueues(void)
 {
-  /* # Create queue for incoming data ####################################### */
-  usbComRxQueue = xQueueCreate(USB_COM_RX_QUEUE_ITEMS, CDC_DATA_FS_IN_PACKET_SIZE);
-
-  /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
-  vQueueAddToRegistry(usbComRxQueue, (signed char*) "usbComRxQueue");
-
   /* # Create queue for outgoing data ####################################### */
   usbComTxQueue = xQueueCreate(USB_COM_TX_QUEUE_ITEMS, sizeof(UsbComPortTxQueueItem_TypeDef));
 
@@ -447,6 +431,12 @@ void CreateUSBComQueues(void)
 
 void CreateUSBComSemaphores(void)
 {
+  USBCOMRxDataSem = xSemaphoreCreateBinary();
+  if( USBCOMRxDataSem == NULL )
+    {
+      Error_Handler();
+    }
+
   USBCOMTxBufferMutex = xSemaphoreCreateMutex();
   if( USBCOMTxBufferMutex == NULL )
     {
@@ -470,6 +460,7 @@ void CreateUSBComSemaphores(void)
 //static void Error_Handler(void)
 //{
 //  /* Add your own code here */
+// TODO USB error handler?
 //}
 
 /**
