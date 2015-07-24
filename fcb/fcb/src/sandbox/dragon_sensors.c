@@ -29,11 +29,13 @@
 
 // #define READ_GYRO_FROM_ISR
 
-#define LAUNCH_TASK_SCHEDULER
+// #define LAUNCH_TASK_SCHEDULER
 
 // #define LAUNCH_TIMER
 
 // #define PRINT_SOMETHING
+
+#define USE_QUEUE
 
 
 /*
@@ -64,7 +66,11 @@ static xTimerHandle xDragonTimer = NULL;
 #endif
 
 #ifdef SEM_VERSION
+#ifdef USE_QUEUE
+xQueueHandle qGyroDataReady = NULL;
+#else /* USE_SEMAPHORE */
 static xSemaphoreHandle sGyroDataReady = NULL;
+#endif
 static xTaskHandle hGyroDataRead;
 #endif
 
@@ -143,12 +149,17 @@ void dragon_sensors(void) {
 
 #ifdef SEM_VERSION
     portBASE_TYPE retVal = 0;
+
+#ifdef USE_QUEUE
+    qGyroDataReady = xQueueCreate(3,
+                               1);
+#else
     sGyroDataReady = xSemaphoreCreateBinary();
 
     if (NULL == sGyroDataReady) {
         fcb_error();
     }
-
+#endif /* USE_QUEUE */
 #endif
 
 #ifdef DAC_OUTPUT
@@ -167,9 +178,10 @@ void dragon_sensors(void) {
     }
 #else
     dragon_gyro_init();
+
     /* not sure if L3GD20_EnableIT says the right thing */
-    GYRO_IO_Read(&tmpreg,L3GD20_CTRL_REG3_ADDR,1);
-    TRACE_SYNC("L3GD20_CTRL_REG3:0x%02x", tmpreg);
+//    GYRO_IO_Read(&tmpreg,L3GD20_CTRL_REG3_ADDR,1);
+//    TRACE_SYNC("L3GD20_CTRL_REG3:0x%02x", tmpreg);
 
 #ifdef LAUNCH_TIMER
     if (0 == (xDragonTimer = xTimerCreate((const signed char*)"tmrDragon",
@@ -215,10 +227,17 @@ extern void dragon_sensors_isr(void) {
 #ifdef SEM_VERSION
     portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
 
+#ifdef USE_QUEUE
+    uint8_t msg = 0xCC;
+    if (pdTRUE != xQueueSendFromISR(qGyroDataReady, &msg, &higherPriorityTaskWoken)) {
+            fcb_error();
+       }
+#else
     if (pdTRUE != xSemaphoreGiveFromISR(sGyroDataReady,
                                         &higherPriorityTaskWoken)) {
         fcb_error();
     }
+#endif
     portYIELD_FROM_ISR(higherPriorityTaskWoken);
 #endif /* SEM_VERSION */
 
@@ -257,9 +276,20 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
         GYRO_IO_Read(&tmpreg,L3GD20_STATUS_REG_ADDR,1);
         TRACE_SYNC("L3GD20_STATUS_REG:0x%02x", tmpreg);
 #endif
+
+#ifdef USE_QUEUE
+        uint8_t msg = 0;
+        if (pdFALSE == xQueueReceive(qGyroDataReady,
+                                     &msg,
+                                     portMAX_DELAY /* 1000 *//* configTICK_RATE_HZ is 1000 */)) {
+        	fcb_error();
+        }
+#else
+        }
         if (pdTRUE != xSemaphoreTake(sGyroDataReady, portMAX_DELAY)) {
             fcb_error();
         }
+#endif /* USE_QUEUE */
 #endif /* SEM_VERSION */
 
 

@@ -32,4 +32,11 @@ uint8_t InitialiseGyroscope(void);
  */
 void GyroHandleDataReady(void);
 
-#endif
+
+/**
+ * Fetches data (rotation speed, or angle dot) from gyroscope
+ * sensor
+ */
+void GetAngleDotFromGyro(void);
+
+#endif /* GYROSCOPE_H */
