@@ -51,7 +51,6 @@
  *
  * Lighting LED10 if scheduler should exit never shows in any combination.
  */
-#define USE_NEVER_EXIT
 
 /*
  * trace variable via DAC output
@@ -141,9 +140,7 @@ void dragon_gyro_init(void) {
 void dragon_sensors(void) {
     uint8_t tmpreg = 0;
     uint8_t ctrl3 = 0;
-#ifdef USE_NEVER_EXIT
-    xSemaphoreHandle sNeverExit = xSemaphoreCreateBinary();
-#endif /* USE_NEVER_EXIT */
+
 #ifdef SEM_VERSION
     portBASE_TYPE retVal = 0;
     sGyroDataReady = xSemaphoreCreateBinary();
@@ -199,12 +196,6 @@ void dragon_sensors(void) {
      * is started according to ST UM1722 manual section 1.6.
      */
     vTaskStartScheduler();
-#ifdef USE_NEVER_EXIT
-    /* We should never get here as control is now taken by the scheduler */
-    if (pdTRUE != xSemaphoreTake(sNeverExit, portMAX_DELAY)) {
-        // ERROR here
-    }
-#endif /* USE_NEVER_EXIT */
 #endif /* LAUNCH_TASK_SCHEDULER */
 
 }
