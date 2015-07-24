@@ -125,6 +125,11 @@ void dragon_gyro_init(void) {
     /* not sure if L3GD20_EnableIT says the right thing */
     GYRO_IO_Read(&tmpreg,L3GD20_CTRL_REG3_ADDR,1);
     TRACE_SYNC("L3GD20_CTRL_REG3:0x%02x", tmpreg);
+
+#ifdef SEM_VERSION
+    BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
+#endif
+
 }
 
 #ifdef COMPILE_THIS
@@ -255,7 +260,6 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     GYRO_IO_Read(&tmpreg,L3GD20_STATUS_REG_ADDR,1);
     TRACE_SYNC("L3GD20_STATUS_REG:0x%02x", tmpreg);
 
-    BSP_GYRO_GetXYZ(gyro_xyz_dot_buf);
 
     while (1) {
 #if 0
