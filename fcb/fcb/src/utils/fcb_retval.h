@@ -1,5 +1,5 @@
-#ifndef FCB_ERROR_H
-#define FCB_ERROR_H
+#ifndef FCB_RETVAL_H
+#define FCB_RETVAL_H
 
 /**
  * These errors are supposed to be used
@@ -11,4 +11,4 @@ enum fcb_retval {
     FCB_ERR_INIT = 2,
 };
 
-#endif /* FCB_ERROR_H */
+#endif /* FCB_RETVAL_H */
