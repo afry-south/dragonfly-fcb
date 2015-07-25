@@ -8,13 +8,20 @@
 
 #include "fcb_sensors.h"
 #include "gyroscope.h"
-
+#include "fcb_error.h"
+#include "fcb_retval.h"
 #include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
 #include "task.h"
 #include "queue.h"
 
 #include <stdint.h>
+
+#define FCB_SENSORS_DEBUG /* todo delete */
+
+#ifdef FCB_SENSORS_DEBUG
+static uint32_t cbk_gyro_counter = 0;
+#endif
 
 /* static data declarations */
 
@@ -59,6 +66,12 @@ Error:
 
 void FcbSendSensorMessageFromISR(uint8_t msg) {
     portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
+#ifdef FCB_SENSORS_DEBUG
+    if ((cbk_gyro_counter % 48) == 0) {
+        BSP_LED_Toggle(LED5);
+    }
+    cbk_gyro_counter++;
+#endif
 
     if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
         fcb_error();

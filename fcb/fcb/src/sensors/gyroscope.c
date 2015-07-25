@@ -32,7 +32,7 @@ uint8_t InitialiseGyroscope(void) {
     /* configure GYRO DRDY (data ready) interrupt */
     GYRO_CS_GPIO_CLK_ENABLE(); /* happens to be GPIOE */
 
-    GPIO_InitStructure.Pin = GYRO_INT2_PIN;
+    GPIO_InitStructure.Pin = GPIO_PIN_1; /* STM32F3 doc UM1570 page 27/36 */
     GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
@@ -49,9 +49,7 @@ uint8_t InitialiseGyroscope(void) {
         fcb_error();
     }
 
-    /* necessary so a fresh DRDY can be triggered */
-    GetAngleDotFromGyro();
-
+    GetAngleDotFromGyro(); /* necessary so a fresh DRDY can be triggered */
     return retVal;
 }
 

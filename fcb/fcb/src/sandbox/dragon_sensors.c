@@ -25,6 +25,8 @@
 
 #define READ_GYRO_FROM_THR
 
+#define DRAGON_GYRO_INITl
+
 #define ISR_DELEGATE_FCN
 
 // #define READ_GYRO_FROM_ISR
@@ -100,6 +102,7 @@ static uint32_t dac1_scaled = 0;
 
 #endif
 
+#ifdef DRAGON_GYRO_INIT
 void dragon_gyro_init(void) {
     uint8_t tmpreg = 0;
 
@@ -136,6 +139,8 @@ void dragon_gyro_init(void) {
 #endif
 
 }
+#endif /* DRAGON_GYRO_INIT */
+
 
 #ifdef COMPILE_THIS
 
@@ -265,7 +270,11 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
     static uint8_t xdot_or_x = 0; /* 0 = xdot, 1 = x */
 
 #ifdef SEM_VERSION
+#ifdef DRAGON_GYRO_INIT
     dragon_gyro_init();
+#else
+    InitialiseGyroscope();
+#endif
     sens_init_done = 1;
     GYRO_IO_Read(&tmpreg,L3GD20_STATUS_REG_ADDR,1);
     TRACE_SYNC("L3GD20_STATUS_REG:0x%02x", tmpreg);
