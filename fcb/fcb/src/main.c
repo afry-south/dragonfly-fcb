@@ -14,6 +14,7 @@
 #include "sensors.h"
 #include "receiver.h"
 #include "usbd_cdc_if.h"
+#include "usb_cdc_cli.h"
 #include <string.h>
 
 #include "FreeRTOS.h"
@@ -152,6 +153,9 @@ static void System_Init(void)
 
   /* Configure the system clock to 72 Mhz */
   SystemClock_Config();
+
+  /* Initialize Command Line Interface for USB communication */
+  RegisterCLICommands();
 
   /* Init USB communication */
   InitUSBCom();

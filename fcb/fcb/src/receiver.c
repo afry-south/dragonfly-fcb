@@ -3,7 +3,7 @@
  * @author  ÅF Dragonfly
  * @version v. 1.0.0
  * @date    2015-05-28
- * @brief   File contains functionality for signal readubg from the Dragonfly
+ * @brief   File contains functionality for signal reading from the Dragonfly
  *          RC receiver. The receiver model is Spektrum AR610, which uses DSMX
  *          frequency modulation technology. It outputs 6 channels: throttle,
  *          aileron, elevator, rudder, gear and aux1.

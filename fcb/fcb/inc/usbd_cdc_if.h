@@ -20,14 +20,20 @@
 #include "usbd_cdc.h"
 
 /* Exported types ------------------------------------------------------------*/
+
 /* Exported constants --------------------------------------------------------*/
+typedef enum
+{
+  ARRAY_BUFFER,
+  FIFO_BUFFER
+} BufferType_TypeDef;
 
 extern USBD_CDC_ItfTypeDef  USBD_CDC_fops;
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void InitUSBCom(void);
-USBD_StatusTypeDef CDC_Transmit_FS(uint8_t* data, uint16_t size);
+USBD_StatusTypeDef CDCTransmitFS(uint8_t* data, uint16_t size);
 USBD_StatusTypeDef USBComSendString(const char* sendString, const uint32_t maxMutexWaitTicks, const uint32_t maxQueueWaitTicks);
 USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDataSize, const uint32_t maxMutexWaitTicks, const uint32_t maxQueueWaitTicks);
 void CreateUSBComThreads(void);
@@ -36,4 +42,12 @@ void CreateUSBComSemaphores(void);
 
 #endif /* __USBD_CDC_IF_H */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/

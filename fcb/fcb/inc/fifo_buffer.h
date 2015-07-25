@@ -28,15 +28,15 @@ typedef struct{
 
 /* Exported function prototypes --------------------------------------------- */
 void FIFOBufferInit(volatile FIFOBuffer_TypeDef* buffer, uint8_t* bufferDataArray, const uint16_t bufferDataArraySize);
-ErrorStatus BufferPutByte(volatile FIFOBuffer_TypeDef* buffer, const uint8_t putByte);
-ErrorStatus BufferPutData(volatile FIFOBuffer_TypeDef* buffer, const uint8_t* putDataPtr, const uint16_t putDataSize);
-ErrorStatus BufferGetByte(volatile FIFOBuffer_TypeDef* buffer, uint8_t* getByte);
-uint16_t BufferGetData(volatile FIFOBuffer_TypeDef* buffer, uint8_t** getDataPtr, const uint16_t getDataSize);
-void BufferDeleteLastEnteredBytes(volatile FIFOBuffer_TypeDef* buffer, const uint16_t dataSize);
-bool BufferIsEmpty(volatile FIFOBuffer_TypeDef* buffer);
-bool BufferIsFull(volatile FIFOBuffer_TypeDef* buffer);
-uint16_t BufferGetAvailableDataSize(volatile FIFOBuffer_TypeDef* buffer);
-void ResetBuffer(volatile FIFOBuffer_TypeDef* buffer);
+ErrorStatus FIFOBufferPutByte(volatile FIFOBuffer_TypeDef* buffer, const uint8_t putByte);
+ErrorStatus FIFOBufferPutData(volatile FIFOBuffer_TypeDef* buffer, const uint8_t* putDataPtr, const uint16_t putDataSize);
+ErrorStatus FIFOBufferGetByte(volatile FIFOBuffer_TypeDef* buffer, uint8_t* getByte);
+uint16_t FIFOBufferGetData(volatile FIFOBuffer_TypeDef* buffer, uint8_t** getDataPtr, const uint16_t getDataSize);
+void FIFOBufferDeleteLastEnteredBytes(volatile FIFOBuffer_TypeDef* buffer, const uint16_t dataSize);
+bool FIFOBufferIsEmpty(volatile FIFOBuffer_TypeDef* buffer);
+bool FIFOBufferIsFull(volatile FIFOBuffer_TypeDef* buffer);
+uint16_t FIFOBufferGetAvailableDataSize(volatile FIFOBuffer_TypeDef* buffer);
+void FIFOResetBuffer(volatile FIFOBuffer_TypeDef* buffer);
 
 #endif /* __FIFO_BUFFER_H */
 

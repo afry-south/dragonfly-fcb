@@ -1,9 +1,7 @@
 /*
-    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd. 
+    FreeRTOS V7.6.0 - Copyright (C) 2013 Real Time Engineers Ltd.
     All rights reserved
-
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
-
     ***************************************************************************
      *                                                                       *
      *    FreeRTOS provides completely free yet professionally developed,    *
@@ -17,25 +15,19 @@
      *    Thank you!                                                         *
      *                                                                       *
     ***************************************************************************
-
     This file is part of the FreeRTOS distribution.
-
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
     Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
-
     >>! NOTE: The modification to the GPL is included to allow you to distribute
     >>! a combined work that includes FreeRTOS without being obliged to provide
     >>! the source code for proprietary components outside of the FreeRTOS
     >>! kernel.
-
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
     FOR A PARTICULAR PURPOSE.  Full license text is available from the following
     link: http://www.freertos.org/a00114.html
-
     1 tab == 4 spaces!
-
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
@@ -44,22 +36,17 @@
      *    http://www.FreeRTOS.org/FAQHelp.html                               *
      *                                                                       *
     ***************************************************************************
-
     http://www.FreeRTOS.org - Documentation, books, training, latest versions,
     license and Real Time Engineers Ltd. contact details.
-
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool, a DOS
     compatible FAT file system, and our tiny thread aware UDP/IP stack.
-
     http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
     Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
     licenses offer ticketed support, indemnification and middleware.
-
     http://www.SafeRTOS.com - High Integrity Systems also provide a safety
     engineered and independently SIL3 certified version for use in safety and
     mission critical applications that require provable dependability.
-
     1 tab == 4 spaces!
 */
 
@@ -151,19 +138,29 @@ to all Cortex-M ports, and do not rely on any particular library functions. */
 /* !!!! configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to zero !!!!
 See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY  ( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
- 
+
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
-#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); } 
- 
+#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
    standard names. */
 #define vPortSVCHandler    SVC_Handler
 #define xPortPendSVHandler PendSV_Handler
 
-/* IMPORTANT: This define MUST be commented when used with STM32Cube firmware, 
+/* IMPORTANT: This define MUST be commented when used with STM32Cube firmware,
               to prevent overwriting SysTick_Handler defined within STM32Cube HAL */
 /* #define xPortSysTickHandler SysTick_Handler */
 
-#endif /* FREERTOS_CONFIG_H */
+ /* # FreeRTOS Plus CLI # */
 
+ /* The size of the global output buffer that is available for use when there
+ are multiple command interpreters running at once (for example, one on a UART
+ and one on TCP/IP).  This is done to prevent an output buffer being defined by
+ each implementation - which would waste RAM.  In this case, there is only one
+ command interpreter running, and it has its own local output buffer, so the
+ global buffer is just set to be one byte long as it is not used and should not
+ take up unnecessary RAM. */
+ #define configCOMMAND_INT_MAX_OUTPUT_SIZE 1
+
+#endif /* FREERTOS_CONFIG_H */
