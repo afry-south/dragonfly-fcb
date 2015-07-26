@@ -159,8 +159,8 @@
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_rcc_ex.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_rcc_ex.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_nor.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_nor.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_hrtim.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_hrtim.c" type="1"/>
-    <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_adc.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc.c" type="1"/>
     <File name="FreeRTOS/src/tasks.c" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" type="1"/>
+    <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_adc.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_flash_ex.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_flash_ex.h" type="1"/>
     <File name="STM32_USB_Device_Library/Core/src/usbd_ctlreq.c" path="STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_spi.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_spi.c" type="1"/>
@@ -220,9 +220,9 @@
     <File name="FreeRTOS/inc/queue.h" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include/queue.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_i2s.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_i2s.h" type="1"/>
     <File name="fcb/src/common.c" path="fcb/src/common.c" type="1"/>
-    <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_smbus.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_smbus.c" type="1"/>
     <File name="fcb/src/receiver.c" path="fcb/src/receiver.c" type="1"/>
     <File name="CMSIS_BOOT/src/system_stm32f3xx.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/system_stm32f3xx.c" type="1"/>
+    <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_smbus.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_smbus.c" type="1"/>
     <File name="STM32F3xx_HAL_Driver/inc/stm32f3xx_hal_crc_ex.h" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_crc_ex.h" type="1"/>
     <File name="STM32F3xx_HAL_Driver/src/stm32f3xx_hal_iwdg.c" path="STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_iwdg.c" type="1"/>
     <File name="FreeRTOS/portable/port.c" path="STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" type="1"/>

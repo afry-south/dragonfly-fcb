@@ -9,10 +9,21 @@
 <editorArea activeWorkbook="DefaultEditorWorkbook">
 <info part="DefaultEditorWorkbook">
 <folder appearance="1" expanded="2">
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
+<part id="1"/>
+</presentation>
 </folder>
 </info>
 </editorArea>
+<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_cdc_cli.c" partName="usb_cdc_cli.c" path="C:/Users/Daniel/Code/dragonfly-fcb/fcb/fcb/src/usb_cdc_cli.c" title="usb_cdc_cli.c" tooltip="C:/Users/Daniel/Code/dragonfly-fcb/fcb/fcb/src/usb_cdc_cli.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/src/usb_cdc_cli.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="10792" selectionTopPixel="3382"/>
+</editor>
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="usbd_cdc_if.c" partName="usbd_cdc_if.c" path="C:/Users/Daniel/Code/dragonfly-fcb/fcb/fcb/src/usbd_cdc_if.c" title="usbd_cdc_if.c" tooltip="C:/Users/Daniel/Code/dragonfly-fcb/fcb/fcb/src/usbd_cdc_if.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/fcb/fcb/src/usbd_cdc_if.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="47" selectionOffset="2001" selectionTopPixel="697"/>
+</editor>
 </editors>
 <views>
 <view id="org.eclipse.debug.ui.ExpressionView" partName="Expressions">
@@ -21,17 +32,11 @@
 </viewState>
 </view>
 <view id="org.coocox.builder.ui.views.ProjectView" partName="Project">
-<viewState CommonNavigator.LINKING_ENABLED="0" horizontalPosition="0" org.eclipse.ui.navigator.resources.workingSets.showTopLevelWorkingSets="0" verticalPosition="4">
+<viewState CommonNavigator.LINKING_ENABLED="0" horizontalPosition="0" org.eclipse.ui.navigator.resources.workingSets.showTopLevelWorkingSets="0" verticalPosition="0">
 <expanded>
 <element path="/fcb"/>
 <element path="/fcb/fcb"/>
-<element path="/fcb/fcb/inc"/>
-<element path="/fcb/fcb/src"/>
-<element path="/fcb/FreeRTOS-Plus-CLI"/>
 </expanded>
-<selection>
-<element path="/fcb/fcb/src/usbd_cdc_if.c"/>
-</selection>
 </viewState>
 </view>
 <view id="org.eclipse.debug.ui.RegisterView" partName="Registers">
@@ -65,7 +70,7 @@
 <viewState/>
 </view>
 </views>
-<perspectives activePart="org.coocox.builder.ui.views.ProjectView" activePerspective="org.coocox.builder.perspective.CoBuilder">
+<perspectives activePart="org.eclipse.cdt.ui.editor.CEditor" activePerspective="org.coocox.builder.perspective.CoBuilder">
 <perspective editorAreaTrimState="2" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.coocox.builder.ui.PerspectiveCoBuilder" id="org.coocox.builder.perspective.CoBuilder" label="CooCox CoBuilder"/>
 <alwaysOnActionSet id="org.coocox.welcome.ui.actionSet"/>
@@ -87,8 +92,8 @@
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showMemoryBrowserAction"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showVariablesAction"/>
 <hide_menu_item_id id="org.coocox.builder.ui.openProjectExplorerAction"/>
-<hide_menu_item_id id="org.coocox.codebugger.trace.actions.ShowTraceControlAction"/>
 <hide_menu_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
+<hide_menu_item_id id="org.coocox.codebugger.trace.actions.ShowTraceControlAction"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showRegistersAction"/>
 <hide_toolbar_item_id id="org.eclipse.cdt.debug.internal.ui.actions.ToggleInstructionStepModeAction"/>
 <hide_toolbar_item_id id="org.eclipse.ui.edit.text.toggleShowSelectedElementOnly"/>
@@ -112,7 +117,7 @@
 </folder>
 </info>
 <info folder="true" part="org.eclipse.ui.internal.ViewStack@9d64b3" ratio="0.8083067" ratioLeft="759" ratioRight="180" relationship="4" relative="org.eclipse.ui.internal.ViewStack@5f4139">
-<folder activePageID="org.eclipse.search.ui.views.SearchView" appearance="2" expanded="2">
+<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
 <page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
 <page content="org.eclipse.search.ui.views.SearchView" label="Search"/>
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
@@ -254,7 +259,150 @@
 </perspective>
 </perspectives>
 <workingSets/>
-<navigationHistory/>
+<navigationHistory>
+<editors>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/usb_cdc_cli.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/usbd_cdc_if.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/inc/FreeRTOSConfig.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/fcb/src/receiver.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/fcb/FreeRTOS/inc/projdefs.h"/>
+</editors>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="4275" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="4275" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="4825" y="12"/>
+</item>
+<item historyLabel="FreeRTOSConfig.h" index="2">
+<position/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="4825" y="12"/>
+</item>
+<item historyLabel="FreeRTOSConfig.h" index="2">
+<position info="not_deleted" x="7559" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="11301" y="24"/>
+</item>
+<item historyLabel="receiver.c" index="3">
+<position/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position/>
+</item>
+<item historyLabel="receiver.c" index="3">
+<position info="not_deleted" x="19882" y="11"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="10409" y="7"/>
+</item>
+<item historyLabel="projdefs.h" index="4">
+<position info="not_deleted" x="3752" y="7"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="7942" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="10587" y="13"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position info="not_deleted" x="3012" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="13088" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position info="not_deleted" x="8509" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="13088" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position info="not_deleted" x="8509" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="13088" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position info="not_deleted" x="3227" y="20"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="13088" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position info="not_deleted" x="7680" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="10738" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position info="not_deleted" x="6899" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="10738" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position info="not_deleted" x="2686" y="33"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="6107" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position info="not_deleted" x="8730" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="9950" y="0"/>
+</item>
+<item historyLabel="usbd_cdc_if.c" index="1">
+<position info="not_deleted" x="2001" y="47"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="9950" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="8664" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="715" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="12182" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="8618" y="50"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="8616" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="8859" y="108"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="9273" y="0"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="10754" y="67"/>
+</item>
+<item historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="10726" y="24"/>
+</item>
+<item active="true" historyLabel="usb_cdc_cli.c" index="0">
+<position info="not_deleted" x="13055" y="26"/>
+</item>
+</navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
 </page>
 <workbenchWindowAdvisor/>
@@ -264,20 +412,23 @@
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usbd_cdc_if.c" tooltip="fcb/fcb/src/usbd_cdc_if.c">
 <persistable path="/fcb/fcb/src/usbd_cdc_if.c"/>
 </file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="projdefs.h" tooltip="fcb/FreeRTOS/inc/projdefs.h">
+<persistable path="/fcb/FreeRTOS/inc/projdefs.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.c" tooltip="fcb/fcb/src/receiver.c">
+<persistable path="/fcb/fcb/src/receiver.c"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="FreeRTOSConfig.h" tooltip="fcb/fcb/inc/FreeRTOSConfig.h">
+<persistable path="/fcb/fcb/inc/FreeRTOSConfig.h"/>
+</file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_cdc_cli.c" tooltip="fcb/fcb/src/usb_cdc_cli.c">
 <persistable path="/fcb/fcb/src/usb_cdc_cli.c"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="FreeRTOS_CLI.c" tooltip="fcb/FreeRTOS-Plus-CLI/FreeRTOS_CLI.c">
 <persistable path="/fcb/FreeRTOS-Plus-CLI/FreeRTOS_CLI.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="receiver.c" tooltip="fcb/fcb/src/receiver.c">
-<persistable path="/fcb/fcb/src/receiver.c"/>
-</file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="usb_cdc_cli.h" tooltip="fcb/fcb/inc/usb_cdc_cli.h">
 <persistable path="/fcb/fcb/inc/usb_cdc_cli.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="FreeRTOSConfig.h" tooltip="fcb/fcb/inc/FreeRTOSConfig.h">
-<persistable path="/fcb/fcb/inc/FreeRTOSConfig.h"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="FreeRTOS_CLI.h" tooltip="fcb/FreeRTOS-Plus-CLI/FreeRTOS_CLI.h">
 <persistable path="/fcb/FreeRTOS-Plus-CLI/FreeRTOS_CLI.h"/>
@@ -302,9 +453,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="queue.c" tooltip="fcb/FreeRTOS/src/queue.c">
 <persistable path="/fcb/FreeRTOS/src/queue.c"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="syscalls.c" tooltip="fcb/fcb/src/syscalls.c">
-<persistable path="/fcb/fcb/src/syscalls.c"/>
 </file>
 </mruList>
 </workbench>
