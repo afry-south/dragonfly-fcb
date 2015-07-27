@@ -37,6 +37,7 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "l3gd20.h"
+#include <math.h>
 
 /** @addtogroup BSP
   * @{
@@ -374,7 +375,8 @@ void L3GD20_ReadXYZAngRate(float* pfData)
   /* divide by sensitivity */
   for(i=0; i<3; i++)
   {
-    pfData[i]=(float)(RawData[i] * sensitivity);
+	/* translate data from milli degreees/sec to rad/sec */
+    pfData[i]=(float)(RawData[i] * sensitivity * M_PI / 180 / 1000);
   }
 }
 

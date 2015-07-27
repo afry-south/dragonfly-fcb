@@ -1,11 +1,16 @@
 #include "gyroscope.h"
 #include "stm32f3_discovery_gyroscope.h"
-#include "trace.h"
+
 #include "fcb_error.h"
 #include "FreeRTOS.h"
 
-// #define FCB_GYRO_DEBUG
+#include "trace.h"
 
+#define FCB_GYRO_DEBUG
+
+/* static & local declarations */
+
+enum { GYROSCOPE_OFFSET_SAMPLES = 200 };
 /**
  * @todo in the ideal world we shouldn't read the gyro data
  * in the ISR itself, but in a dedicated thread.
@@ -22,7 +27,14 @@
  *
  */
 static float sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 };
+static float sGyroXYZAngleDotOffset[3] = { 0.0, 0.0, 0.0 };
 
+enum { XDOT_IDX = 0 }; /* index of sGyroXYZAngleDot & ditto Offset */
+enum { YDOT_IDX = 1 }; /* as above */
+enum { ZDOT_IDX = 2 }; /* as above */
+
+
+/* global fcn definitions */
 uint8_t InitialiseGyroscope(void) {
     uint8_t retVal = FCB_OK;
 
@@ -43,33 +55,57 @@ uint8_t InitialiseGyroscope(void) {
 
     BSP_GYRO_Reset();
 
+    /* sets full scale (and sensitivity) plus data rate of L3GD20 gyroscope */
     if(BSP_GYRO_Init() != HAL_OK)
     {
+
         /* Initialization Error */
         fcb_error();
     }
 
-    GetAngleDotFromGyro(); /* necessary so a fresh DRDY can be triggered */
+    FetchAngleDotFromGyroscope(); /* necessary so a fresh DRDY can be triggered */
     return retVal;
 }
 
 
-void GetAngleDotFromGyro(void) {
-
+void FetchAngleDotFromGyroscope(void) {
 #ifdef FCB_GYRO_DEBUG
-    static uint32_t call_counter = 0;
+    static uint16_t call_counter = 0;
 #endif
+    /* returns rad/s */
     BSP_GYRO_GetXYZ(sGyroXYZAngleDot);
 
 #ifdef FCB_GYRO_DEBUG
     if (call_counter % 200) {
         TRACE_SYNC("tim:%u sum xyzdot:%1.1f, %1.1f, %1.1f\n",
                    (uint32_t) call_counter,
-                   sGyroXYZAngleDot[0],
-                   sGyroXYZAngleDot[1],
-                   sGyroXYZAngleDot[2]);
+                   sGyroXYZAngleDot[XDOT_IDX],
+                   sGyroXYZAngleDot[YDOT_IDX],
+                   sGyroXYZAngleDot[ZDOT_IDX]);
     }
 
-    call_counter++;
 #endif
+    if (GYROSCOPE_OFFSET_SAMPLES > call_counter) {
+    	sGyroXYZAngleDotOffset[XDOT_IDX] += sGyroXYZAngleDot[XDOT_IDX];
+    	sGyroXYZAngleDotOffset[YDOT_IDX] += sGyroXYZAngleDot[YDOT_IDX];
+    	sGyroXYZAngleDotOffset[ZDOT_IDX] += sGyroXYZAngleDot[ZDOT_IDX];
+        call_counter++;
+    } else if (GYROSCOPE_OFFSET_SAMPLES  == call_counter) {
+    	sGyroXYZAngleDotOffset[XDOT_IDX] = sGyroXYZAngleDotOffset[XDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
+    	sGyroXYZAngleDotOffset[YDOT_IDX] = sGyroXYZAngleDotOffset[YDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
+    	sGyroXYZAngleDotOffset[ZDOT_IDX] = sGyroXYZAngleDotOffset[ZDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
+        call_counter++;
+    } else {
+    	sGyroXYZAngleDot[XDOT_IDX] = sGyroXYZAngleDot[XDOT_IDX] - sGyroXYZAngleDotOffset[XDOT_IDX];
+    	sGyroXYZAngleDot[YDOT_IDX] = sGyroXYZAngleDot[YDOT_IDX] - sGyroXYZAngleDotOffset[YDOT_IDX];
+    	sGyroXYZAngleDot[ZDOT_IDX] = sGyroXYZAngleDot[ZDOT_IDX] - sGyroXYZAngleDotOffset[ZDOT_IDX];
+    }
+}
+
+
+void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot)
+{
+	*xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
+	*yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
+	*zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
 }

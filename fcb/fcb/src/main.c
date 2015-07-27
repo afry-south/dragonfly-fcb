@@ -94,11 +94,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
       UserButtonPressed = 0x0;
     }
   } else if (GPIO_Pin == GPIO_GYRO_DRDY) {
-#ifdef FCB_SENSORS // todo
 	  FcbSendSensorMessageFromISR(FCB_SENSOR_GYRO_DATA_READY);
-#else
-	  dragon_sensors_isr();
-#endif
   }
 }
 
@@ -175,17 +171,11 @@ static void Init_System(void)
   /* Init User button */
   BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
-#ifdef FCB_SENSORS
   if (FCB_OK != FcbSensorsConfig()) {
 	  fcb_error();
   }
-#else
-  dragon_sensors();
-#endif
 
 #ifdef TODO
-  InitialiseGyroscope();
-
   /* sandbox */
 
 

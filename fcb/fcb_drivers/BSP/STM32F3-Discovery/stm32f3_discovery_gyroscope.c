@@ -119,7 +119,7 @@ uint8_t BSP_GYRO_Init(void)
 
     /* Configure Mems : data rate, power mode, full scale and axes */
     L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
-    L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_2;
+    L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_1; /* 96 Hz according to data sheet, 94.5 Hz according to oscilloscope */
     L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
     L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_4;
     L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;

@@ -110,7 +110,7 @@ static void ProcessSensorValues(void* val) {
                  * As settings are in BSP_GYRO_Init, the callback is called with a frequency
                  * of 94.5 Hz according to oscilloscope.
                  */
-                GetAngleDotFromGyro();
+                FetchAngleDotFromGyroscope();
                 break;
             case FCB_SENSOR_GYRO_CALIBRATE:
                 break;
@@ -119,6 +119,12 @@ static void ProcessSensorValues(void* val) {
             case FCB_SENSOR_MAGNETO_ACC_CALIBRATE:
                 break;
         }
+
+        /* todo: call the state correction part of the Kalman Filter every time
+         * we get new sensor values.
+         *
+         * Either from this function or the separate gyro / acc / magnetometer functions.
+         */
     }
 Exit:
     return;

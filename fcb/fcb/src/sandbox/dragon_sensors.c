@@ -25,7 +25,7 @@
 
 #define READ_GYRO_FROM_THR
 
-#define DRAGON_GYRO_INITl
+#define DRAGON_GYRO_INIT
 
 #define ISR_DELEGATE_FCN
 
