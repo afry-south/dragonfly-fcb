@@ -386,6 +386,8 @@ ReceiverErrorStatus StartReceiverCalibration(void)
       /* Set the calibration start time */
       calibrationStartTime = HAL_GetTick();
 
+      receiverCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
+
       return RECEIVER_OK;
     }
 
@@ -403,22 +405,24 @@ ReceiverErrorStatus StartReceiverCalibration(void)
  */
 ReceiverErrorStatus StopReceiverCalibration(void)
 {
+  ReceiverErrorStatus returnStatus;
+
   /* Check so that receiver calibration is currently being performed */
   if(receiverCalibrationState == RECEIVER_CALIBRATION_IN_PROGRESS)
     {
       /* Check so that each channel has collected enough pulse samples during calibration */
       if(ThrottleCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
-        return RECEIVER_ERROR;
+        returnStatus = RECEIVER_ERROR;
       if(AileronCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
-        return RECEIVER_ERROR;
+        returnStatus = RECEIVER_ERROR;
       if(ElevatorCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
-        return RECEIVER_ERROR;
+        returnStatus = RECEIVER_ERROR;
       if(RudderCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
-        return RECEIVER_ERROR;
+        returnStatus = RECEIVER_ERROR;
       if(GearCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
-        return RECEIVER_ERROR;
+        returnStatus = RECEIVER_ERROR;
       if(Aux1CalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
-        return RECEIVER_ERROR;
+        returnStatus = RECEIVER_ERROR;
 
       /* Calculate mean of max and mean sample buffers and store in temporary calibration values struct */
       Receiver_CalibrationValues_TypeDef tmpCalibrationValues;
@@ -437,18 +441,22 @@ ReceiverErrorStatus StopReceiverCalibration(void)
 
       /* Check validity of calibration values */
       if(!IsCalibrationValuesValid(&tmpCalibrationValues))
-        return RECEIVER_ERROR;
+        returnStatus = RECEIVER_ERROR;
 
-      /* Write calibration values to flash for persistent storage */
-      WriteCalibrationValuesToFlash(&tmpCalibrationValues);
+      if(returnStatus != RECEIVER_ERROR)
+        {
+          /* Write calibration values to flash for persistent storage */
+          // TODO: Writing to flash seems to hard fault the system shortly afterwards...
+          // WriteCalibrationValuesToFlash(&tmpCalibrationValues);
 
-      /* Copy values to used calibration values and start using them */
-      EnforceNewCalibrationValues(&tmpCalibrationValues);
+          /* Copy values to used calibration values and start using them */
+          EnforceNewCalibrationValues(&tmpCalibrationValues);
+        }
 
       /* Reset calibration states to waiting so a new calibration may be initiated */
       receiverCalibrationState = RECEIVER_CALIBRATION_WAITING;
 
-      return RECEIVER_OK;
+      return returnStatus;
     }
 
   /* If receiver calibration has not been started yet */

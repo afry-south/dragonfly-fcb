@@ -74,6 +74,7 @@ FlashErrorStatus WriteCalibrationValuesToFlash(const Receiver_CalibrationValues_
 static FlashErrorStatus WriteSettingsToFlash(const uint8_t* writeSettingsData, const uint16_t writeSettingsDataSize, const uint8_t settingsPageNbr, const uint16_t settingsPageOffset)
 {
   /* Check so that page is valid and that there is enough space on page to store the settings together with CRC*/
+  // TODO Make macro functions for valid checks
   if(!IsValidSettingsPage(settingsPageNbr) || !IsValidPageSize(settingsPageOffset, writeSettingsDataSize+FLASH_WORD_BYTE_SIZE))
     return FLASH_ERROR;
 
@@ -148,8 +149,9 @@ static FlashErrorStatus WriteFlashPage(const uint32_t* writeData, const uint8_t 
 
   while(i < FLASH_PAGE_SIZE/FLASH_WORD_BYTE_SIZE && HALStatus == HAL_OK && IsValidFlashAddress(address))
     {
-      //if(writeData[i] != ReadFlashWord(pageNbr, i)) // To prevent unnecessary writing
-      HALStatus = HAL_FLASH_Program(TYPEPROGRAM_WORD, address, writeData[i]); // Word size is 32 bits/4 bytes => 1 page = 2048 bytes = 512 words
+      if(writeData[i] != ReadFlashWord(pageNbr, i)) // To prevent unnecessary writing
+        HALStatus = HAL_FLASH_Program(TYPEPROGRAM_WORD, address, writeData[i]); // Word size is 32 bits/4 bytes => 1 page = 2048 bytes = 512 words
+
       address += FLASH_WORD_BYTE_SIZE;
       i++;
     }

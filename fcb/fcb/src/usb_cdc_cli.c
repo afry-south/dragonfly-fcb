@@ -13,6 +13,7 @@
 #include "usb_cdc_cli.h"
 #include "receiver.h"
 #include "fifo_buffer.h"
+#include "common.h"
 
 #include <string.h>
 
@@ -23,7 +24,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define MAX_DATA_TRANSFER_DELAY         1000 // [ms]
+#define MAX_DATA_TRANSFER_DELAY         2000 // [ms]
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -115,12 +116,6 @@ static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer, size_t xWrite
       /* The first time the function is called after the command has been
                 entered just a header string is returned. */
       strcpy((char*) pcWriteBuffer, "Parameter received:\r\n");
-
-      /* Next time the function is called the parameter will be echoed back */
-      lParameterNumber++;
-
-      /* There is more data to be returned as the parameter has not been echoed back yet */
-      xReturn = pdTRUE;
     }
   else
     {
@@ -139,20 +134,20 @@ static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer, size_t xWrite
       memset(pcWriteBuffer, 0x00, xWriteBufferLen);
       strncat((char*) pcWriteBuffer, (const char*) pcParameter, xParameterStringLength);
       strncat((char*) pcWriteBuffer, "\r\n", strlen("\r\n"));
+    }
 
-      /* Update return value and parameter index */
-      if(lParameterNumber == echoCommand.cExpectedNumberOfParameters)
-        {
-          /* If this is the last parameter then there are no more strings to return after this one. */
-          xReturn = pdFALSE;
-          lParameterNumber = 0;
-        }
-      else
-        {
-          /* There are more parameters to return after this one. */
-          xReturn = pdTRUE;
-          lParameterNumber++;
-        }
+  /* Update return value and parameter index */
+  if(lParameterNumber == echoCommand.cExpectedNumberOfParameters)
+    {
+      /* If this is the last parameter then there are no more strings to return after this one. */
+      xReturn = pdFALSE;
+      lParameterNumber = 0;
+    }
+  else
+    {
+      /* There are more parameters to return after this one. */
+      xReturn = pdTRUE;
+      lParameterNumber++;
     }
 
   return xReturn;
@@ -183,15 +178,8 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer, size_t xW
       /* The first time the function is called after the command has been
                 entered just a header string is returned. */
       strcpy((char*) pcWriteBuffer, "Received data:\r\n");
-
-      /* Next time the function is called the parameter will be echoed
-                back. */
-      lParameterNumber++;
-
-      /* There is more data to be returned as data has not been echoed back yet. */
-      xReturn = pdTRUE;
     }
-  else
+  else if(lParameterNumber == 1)
     {
       /* Obtain the parameter string. */
       pcParameter = (int8_t *) FreeRTOS_CLIGetParameter
@@ -204,45 +192,78 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer, size_t xW
       /* Sanity check something was returned. */
       configASSERT(pcParameter);
 
-      // TODO convert pcParameter string to equivalent int (implement atoi i common.c needed?)
-      // TODO Also check so that pcParameter is a valid int
+      // Convert pcParameter string to equivalent int to get the length of the following data
       int dataLength = atoi((char*)pcParameter);
 
-      // TODO: Pend on USBComRxDataSem for MAX_DATA_TRANSFER_DELAY while waiting for data to enter RX buffer
-      // TODO: Note to self, where to read the received data? RxDataBuffer???
-      // TODO: Only pend on semaphore if data count in FIFO buffer is less than specified by command param
-      if(dataLength > USBCOMRxFIFOBuffer.count && pdPASS == xSemaphoreTake(USBCOMRxDataSem, MAX_DATA_TRANSFER_DELAY))
-        {
-          // Read out new data
-        }
-      else
-        {
-          // TODO check if all data received
-          /* If all data received Return the data */
-          memset(pcWriteBuffer, 0x00, xWriteBufferLen);
-          strncat((char*) pcWriteBuffer, (const char*) pcParameter, xParameterStringLength);
-          strncat((char*) pcWriteBuffer, "\r\n", strlen("\r\n"));
+      /* Check that data length is a positive integer and within buffer bounds */
+      if(!IS_POS(dataLength))
+        return pdFALSE;
 
-          // If not all data received, then the semaphore has timed out. Erase the writeBuffer
+      // Pend on USBComRxDataSem for MAX_DATA_TRANSFER_DELAY while waiting for data to enter RX buffer
+      memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 
-          // TODO If more contents is present in buffer after specified length, give semaphore to wake up RX thread to parse new commands
-        }
+      int previousRxBufferCount = -1; // Init to -1 so that while loop is iterated at least once
 
-      /* Update return value and parameter index */
-      if( lParameterNumber == echoCommand.cExpectedNumberOfParameters )
+     // Check that new data is being received
+      while(previousRxBufferCount != USBCOMRxFIFOBuffer.count)
         {
-          /* If this is the last of the three parameters then there are no more strings to return after this one. */
-          xReturn = pdFALSE;
-          lParameterNumber = 0;
-        }
-      else
-        {
-          /* There are more parameters to return after this one. */
-          xReturn = pdTRUE;
-          lParameterNumber++;
+          if(dataLength <= USBCOMRxFIFOBuffer.count)
+            {
+              // Read out the data
+              ErrorStatus bufferStatus = SUCCESS;
+              uint16_t i = 0;
+              uint8_t getByte;
+              while(bufferStatus == SUCCESS && i < dataLength  && i <= xWriteBufferLen)
+                {
+                  bufferStatus = FIFOBufferGetByte(&USBCOMRxFIFOBuffer, &getByte);
+
+                  if(bufferStatus == SUCCESS)
+                    pcWriteBuffer[i] = getByte;
+
+                  i++;
+                }
+
+
+
+              /* If there is data left in the buffer, it is likely the next command to be handled by the CLI.
+               * Give semaphore to wake up USB RX thread to start handling this. */
+              if(USBCOMRxFIFOBuffer.count > 0)
+                xSemaphoreGive(USBCOMRxDataSem);
+
+              previousRxBufferCount = USBCOMRxFIFOBuffer.count; // Set this to exit while loop
+            }
+          else
+            {
+              previousRxBufferCount = USBCOMRxFIFOBuffer.count;
+              // Wait for new data to arrive (buffer count will be updated when new data arrives)
+              if(pdPASS != xSemaphoreTake(USBCOMRxDataSem, MAX_DATA_TRANSFER_DELAY))
+                {
+                  memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+                  strcpy((char*)pcWriteBuffer, "Data transmission timed out.\r\n");
+                }
+            }
         }
     }
+  else
+    {
+      // Return new line
+      memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+      strcpy((char*)pcWriteBuffer, "\r\n");
+    }
 
+  /* Update return value and parameter index */
+  if(lParameterNumber == echoCommand.cExpectedNumberOfParameters + 1) // Added +1 to output \r\n
+    {
+      /* If this is the last of the parameters then there are no more strings to return after this one. */
+      xReturn = pdFALSE;
+      lParameterNumber = 0;
+    }
+  else
+    {
+      /* There are more parameters/data to return after this one. */
+      xReturn = pdTRUE;
+      lParameterNumber++;
+    }
 
   return xReturn;
 }
@@ -256,31 +277,20 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer, size_t xW
   */
 static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString)
 {
-//  int8_t* pcParameter;
-//  portBASE_TYPE xParameterStringLength;
-  portBASE_TYPE xReturn;
-  static portBASE_TYPE lParameterNumber = 0;
-
   /* Remove compile time warnings about unused parameters, and check the
         write buffer is not NULL.  NOTE - for simplicity, this example assumes the
         write buffer length is adequate, so does not check for buffer overflows. */
   (void) pcCommandString;
   (void) xWriteBufferLen;
   configASSERT( pcWriteBuffer );
+  /* Start the receiver calibration procedure */
+  if(StartReceiverCalibration())
+    strcpy((char*)pcWriteBuffer, "RC receiver calibration started. Please saturate all RC transmitter control sticks and toggle switches.\r\n");
+  else
+    strcpy((char*)pcWriteBuffer, "RC receiver calibration already in progress.\r\n");
 
-  if(lParameterNumber == 0)
-    {
-      /* Start the receiver calibration procedure */
-      if(StartReceiverCalibration())
-        strcpy((char*)pcWriteBuffer, "RC receiver calibration started. Please saturate all RC transmitter control sticks and toggle switches.\r\n");
-      else
-        strcpy((char*)pcWriteBuffer, "RC receiver calibration could not be started.\r\n");
-
-      /* Return false so that this function is not called again */
-      xReturn = pdFALSE;
-    }
-
-  return xReturn;
+  /* Return false to indicate command activity finished */
+  return pdFALSE;
 }
 
 /**
@@ -292,11 +302,6 @@ static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t* pcWriteB
   */
 static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString )
 {
-//  int8_t* pcParameter;
-//  portBASE_TYPE xParameterStringLength;
-  portBASE_TYPE xReturn;
-  static portBASE_TYPE lParameterNumber = 0;
-
   /* Remove compile time warnings about unused parameters, and check the
         write buffer is not NULL.  NOTE - for simplicity, this example assumes the
         write buffer length is adequate, so does not check for buffer overflows. */
@@ -304,23 +309,25 @@ static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(int8_t* pcWriteBu
   (void) xWriteBufferLen;
   configASSERT( pcWriteBuffer );
 
-  if(lParameterNumber == 0)
-    {
-      /* Stop the receiver calibration procedure */
-      if(StopReceiverCalibration())
-        strcpy((char*)pcWriteBuffer, "RC receiver calibration stopped.\r\n");
-      else
-        strcpy((char*)pcWriteBuffer, "RC receiver calibration has to be started before it can be stopped.\r\n");
+  /* Stop the receiver calibration procedure */
+  ReceiverErrorStatus rcCalStatus = StopReceiverCalibration();
+  strcpy((char*)pcWriteBuffer, "RC receiver calibration stopped.\r\n");
+  if(rcCalStatus)
+    strcat((char*)pcWriteBuffer, "RC receiver calibration successful.\r\n");
+  else
+    strcat((char*)pcWriteBuffer, "RC receiver calibration failed or has not been started.\r\n");
 
-      /* Return false so that this function is not called again */
-      xReturn = pdFALSE;
-    }
-
-  return xReturn;
+  /* Return false to indicate command activity finished */
+  return pdFALSE;
 }
 
 /* Exported functions --------------------------------------------------------*/
 
+/**
+  * @brief  Registers CLI commands
+  * @param  None
+  * @retval None
+  */
 void RegisterCLICommands(void)
 {
   /* Register all the command line commands defined immediately above. */

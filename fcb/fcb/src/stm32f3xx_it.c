@@ -79,6 +79,8 @@ void HardFault_Handler(void)
 //  stacked_psr = ((unsigned long) hardfault_args[7]);
 
   // TODO: Print Hard fault message
+  // TODO: More registers? MMAR? BFAR? Etc
+  // TODO: Print active threads (and status?)
 
   /* Go to infinite loop when Hard Fault exception occurs */
   while (1)
