@@ -446,8 +446,7 @@ ReceiverErrorStatus StopReceiverCalibration(void)
       if(returnStatus != RECEIVER_ERROR)
         {
           /* Write calibration values to flash for persistent storage */
-          // TODO: Writing to flash seems to hard fault the system shortly afterwards...
-          // WriteCalibrationValuesToFlash(&tmpCalibrationValues);
+          WriteCalibrationValuesToFlash(&tmpCalibrationValues);
 
           /* Copy values to used calibration values and start using them */
           EnforceNewCalibrationValues(&tmpCalibrationValues);

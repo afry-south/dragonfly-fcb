@@ -79,7 +79,8 @@ static FlashErrorStatus WriteSettingsToFlash(const uint8_t* writeSettingsData, c
     return FLASH_ERROR;
 
   /* Read the whole page and store it in tmpPage - required since when writing a page, its entire contents must first be erased */
-  uint8_t tmpPage[FLASH_PAGE_SIZE];
+  static uint8_t tmpPage[FLASH_PAGE_SIZE]; // Declared as static so stack/RTOS stack is not loaded with this
+  memset(tmpPage, 0x00, sizeof(tmpPage));
   if(!ReadFlashPage(tmpPage, settingsPageNbr))
     return FLASH_ERROR;
 
@@ -87,7 +88,8 @@ static FlashErrorStatus WriteSettingsToFlash(const uint8_t* writeSettingsData, c
   memcpy(&tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET+FLASH_WORD_BYTE_SIZE], writeSettingsData, writeSettingsDataSize);
 
   /* Take the CRC of the data to be inserted into flash storage, except for the first index which is reserved for the CRC itself */
-  tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET] = Calculate_CRC((uint8_t*)writeSettingsData, writeSettingsDataSize);
+  uint32_t crcValue = Calculate_CRC((uint8_t*)writeSettingsData, writeSettingsDataSize);
+  memcpy(&tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET], (uint8_t*)&crcValue, FLASH_WORD_BYTE_SIZE);
   if(!WriteFlashPage((uint32_t*)tmpPage, settingsPageNbr))
     return FLASH_ERROR;
 
@@ -143,13 +145,15 @@ static FlashErrorStatus WriteFlashPage(const uint32_t* writeData, const uint8_t 
   /* Erase flash page and clear all pending flags before writing to it */
   FLASH_PageErase(FLASH_BASE_ADDR+pageNbr*FLASH_PAGE_SIZE);
 
+  CLEAR_BIT(FLASH->CR, FLASH_CR_PER); // Needed for flash writing to work (set when page is erased)
+
   /* Program Flash */
   uint32_t address = FLASH_BASE_ADDR + pageNbr*FLASH_PAGE_SIZE;
   uint32_t i = 0;
 
   while(i < FLASH_PAGE_SIZE/FLASH_WORD_BYTE_SIZE && HALStatus == HAL_OK && IsValidFlashAddress(address))
     {
-      if(writeData[i] != ReadFlashWord(pageNbr, i)) // To prevent unnecessary writing
+      if(writeData[i] != ReadFlashWord(pageNbr, i)) // To prevent unnecessary writing (if byte values should == 0xFF anyway)
         HALStatus = HAL_FLASH_Program(TYPEPROGRAM_WORD, address, writeData[i]); // Word size is 32 bits/4 bytes => 1 page = 2048 bytes = 512 words
 
       address += FLASH_WORD_BYTE_SIZE;
@@ -169,7 +173,6 @@ static FlashErrorStatus WriteFlashPage(const uint32_t* writeData, const uint8_t 
 
   return FLASH_OK;
 }
-
 /*
  * @brief  Reads one page (2048 bytes on STM32F303VC) of flash memory
  * @param  readData : pointer to the byte array where the read data is stored

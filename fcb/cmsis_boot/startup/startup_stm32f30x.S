@@ -39,8 +39,8 @@
   .fpu softvfp
   .thumb
 
-#define __HEAP_SIZE 	0x1000
-#define __STACK_SIZE	0x2000
+#define __HEAP_SIZE 	0x0400
+#define __STACK_SIZE	0x1000
 
 .global  g_pfnVectors
 .global  Default_Handler
@@ -60,7 +60,7 @@ defined in linker script */
 
 .equ  BootRAM,        0xF1E0F85F
 
-	.section .stack
+	.section .co_stack
 	.align	3
 #ifdef __STACK_SIZE
 	.equ	Stack_Size, __STACK_SIZE

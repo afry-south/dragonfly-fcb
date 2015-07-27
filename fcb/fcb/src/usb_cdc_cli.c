@@ -223,8 +223,6 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer, size_t xW
                   i++;
                 }
 
-
-
               /* If there is data left in the buffer, it is likely the next command to be handled by the CLI.
                * Give semaphore to wake up USB RX thread to start handling this. */
               if(USBCOMRxFIFOBuffer.count > 0)
@@ -335,6 +333,7 @@ void RegisterCLICommands(void)
   FreeRTOS_CLIRegisterCommand(&echoDataCommand);
   FreeRTOS_CLIRegisterCommand(&startReceiverCalibrationCommand);
   FreeRTOS_CLIRegisterCommand(&stopReceiverCalibrationCommand);
+  // TODO FreeRTOS_CLIRegisterCommand(&getReceiverChannelsCommand);
 }
 
 /**
