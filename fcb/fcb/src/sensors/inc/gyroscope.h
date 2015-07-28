@@ -1,5 +1,10 @@
 #ifndef GYROSCOPE_H
 #define GYROSCOPE_H
+/**
+ * @file gyroscope.h
+ *
+ * This file exports the API to the L3GD20 gyroscope.
+ */
 
 #include "fcb_retval.h"
 #include "stm32f3_discovery.h"
@@ -14,13 +19,7 @@
 
 
 /**
- * @file gyroscope.h
- *
- * This file exports the API to the gyroscope.
- */
-
-/**
- * Initialises
+ * Initialises gyroscope.
  *
  * @retval DF_OK, error otherwise
  */

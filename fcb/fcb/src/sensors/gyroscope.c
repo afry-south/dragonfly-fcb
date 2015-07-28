@@ -70,21 +70,13 @@ uint8_t InitialiseGyroscope(void) {
 
 void FetchAngleDotFromGyroscope(void) {
 #ifdef FCB_GYRO_DEBUG
+    static uint32_t call_counter = 0;
+#else
     static uint16_t call_counter = 0;
 #endif
     /* returns rad/s */
     BSP_GYRO_GetXYZ(sGyroXYZAngleDot);
 
-#ifdef FCB_GYRO_DEBUG
-    if (call_counter % 200) {
-        TRACE_SYNC("tim:%u sum xyzdot:%1.1f, %1.1f, %1.1f\n",
-                   (uint32_t) call_counter,
-                   sGyroXYZAngleDot[XDOT_IDX],
-                   sGyroXYZAngleDot[YDOT_IDX],
-                   sGyroXYZAngleDot[ZDOT_IDX]);
-    }
-
-#endif
     if (GYROSCOPE_OFFSET_SAMPLES > call_counter) {
     	sGyroXYZAngleDotOffset[XDOT_IDX] += sGyroXYZAngleDot[XDOT_IDX];
     	sGyroXYZAngleDotOffset[YDOT_IDX] += sGyroXYZAngleDot[YDOT_IDX];
@@ -99,10 +91,23 @@ void FetchAngleDotFromGyroscope(void) {
     	sGyroXYZAngleDot[XDOT_IDX] = sGyroXYZAngleDot[XDOT_IDX] - sGyroXYZAngleDotOffset[XDOT_IDX];
     	sGyroXYZAngleDot[YDOT_IDX] = sGyroXYZAngleDot[YDOT_IDX] - sGyroXYZAngleDotOffset[YDOT_IDX];
     	sGyroXYZAngleDot[ZDOT_IDX] = sGyroXYZAngleDot[ZDOT_IDX] - sGyroXYZAngleDotOffset[ZDOT_IDX];
+
+#ifdef FCB_GYRO_DEBUG
+    	if (call_counter % 200) {
+    		trace_sync("tim:%u sum xyzdot:%1.1f, %1.1f, %1.1f\n",
+    				(uint32_t) call_counter,
+    				sGyroXYZAngleDot[XDOT_IDX],
+    				sGyroXYZAngleDot[YDOT_IDX],
+    				sGyroXYZAngleDot[ZDOT_IDX]);
+    	}
+    	call_counter++;
+#endif
     }
+
+
 }
 
-
+#warning TODO - implement get x, y, z separately.
 void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot)
 {
 	*xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
