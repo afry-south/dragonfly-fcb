@@ -16,6 +16,8 @@
 #include "common.h"
 
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -31,22 +33,22 @@
 /*
  * Function implements the "echo" command.
  */
-static portBASE_TYPE CLIEchoCommandFunction( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE CLIEchoCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /*
  * Function implements the "echo-data" command.
  */
-static portBASE_TYPE CLIEchoDataCommandFunction( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE CLIEchoDataCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /*
  * Function implements the "start-receiver-calibration" command.
  */
-static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /*
  * Function implements the "stop-receiver-calibration" command.
  */
-static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -280,7 +282,8 @@ static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t* pcWriteB
         write buffer length is adequate, so does not check for buffer overflows. */
   (void) pcCommandString;
   (void) xWriteBufferLen;
-  configASSERT( pcWriteBuffer );
+  configASSERT(pcWriteBuffer);
+
   /* Start the receiver calibration procedure */
   if(StartReceiverCalibration())
     strcpy((char*)pcWriteBuffer, "RC receiver calibration started. Please saturate all RC transmitter control sticks and toggle switches.\r\n");
@@ -305,7 +308,7 @@ static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(int8_t* pcWriteBu
         write buffer length is adequate, so does not check for buffer overflows. */
   (void) pcCommandString;
   (void) xWriteBufferLen;
-  configASSERT( pcWriteBuffer );
+  configASSERT(pcWriteBuffer);
 
   /* Stop the receiver calibration procedure */
   ReceiverErrorStatus rcCalStatus = StopReceiverCalibration();
