@@ -1,20 +1,22 @@
 /**
- ******************************************************************************
- * @file    stm32f3xx_it.c
- * @author  ï¿½F Embedded Systems Syd
- * @version V1.0.0
- * @date    24-May-2015
- * @brief   Main Interrupt Service Routines.
- *          This file provides all exceptions handler and
- *          peripherals interrupt service routine.
- ******************************************************************************
- **/
+  ******************************************************************************
+  * @file    stm32f3xx_it.c
+  * @author  ÅF Embedded Systems Syd
+  * @version V1.0.0
+  * @date    24-May-2015
+  * @brief   Main Interrupt Service Routines.
+  *          This file provides all exceptions handler and
+  *          peripherals interrupt service routine.
+  ******************************************************************************
+**/
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx_it.h"
 #include "stm32f3_discovery.h"
 
 #include "fcb_error.h"
+
+#define FCB_USE_ACC_DRDY_INT1 // todo
 
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
  * @{
@@ -210,9 +212,21 @@ void EXTI0_IRQHandler(void) {
 }
 
 void EXTI1_IRQHandler(void) {
+  /* gyroscope data ready */
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
 }
 
+#ifdef FCB_USE_ACC_DRDY_INT1
+void EXTI4_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
+}
+#else
+void EXTI2_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+}
+#endif
 /**
  * @brief  This function handles PPP interrupt request.
  * @param  None

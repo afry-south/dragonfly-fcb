@@ -66,7 +66,6 @@ uint8_t InitialiseGyroscope(void) {
     uint8_t retVal = FCB_OK;
 
     GPIO_InitTypeDef GPIO_InitStructure;
-    BSP_LED_On(LED4);
 
     /* configure GYRO DRDY (data ready) interrupt */
     GYRO_CS_GPIO_CLK_ENABLE(); /* happens to be GPIOE */

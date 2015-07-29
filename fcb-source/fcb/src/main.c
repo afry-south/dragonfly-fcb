@@ -20,6 +20,7 @@
 #include "fcb_retval.h"
 #include "fcb_sensors.h"
 #include "gyroscope.h"
+#include "fcb_accelerometer.h"
 
 #include <string.h>
 
@@ -38,6 +39,9 @@ static void InitSystem(void);
 static void InitRTOS(void);
 static void ConfigSystemClock(void);
 static void ConfigPVD(void);
+
+#define FCB_ACCMAG // todo
+#define FCB_USE_ACC_DRDY_INT1
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -61,6 +65,14 @@ int main(void) {
 	InitRTOS();
 
 	while (1);
+  fcb_error();
+#ifdef FCB_USE_ACC_DRDY_INT1
+  } else if (GPIO_Pin == GPIO_PIN_4) {
+#else
+  } else if (GPIO_Pin == GPIO_ACCELEROMETER_DRDY) {
+#endif
+	  FcbSendSensorMessageFromISR(FCB_SENSOR_ACC_DATA_READY);
+
 }
 
 /* Private functions ---------------------------------------------------------*/

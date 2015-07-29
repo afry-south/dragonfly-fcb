@@ -9,6 +9,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "fcb_sensors.h"
 #include "gyroscope.h"
+#include "fcb_accelerometer.h"
 #include "fcb_error.h"
 #include "fcb_retval.h"
 
@@ -148,9 +149,13 @@ static void ProcessSensorValues(void* val) {
 	 * and then polls the queue in an infinite loop
 	 */
     uint8_t msg;
-
+#if 0
     if (FCB_OK != InitialiseGyroscope()) {
     	ErrorHandler();
+    }
+#endif
+    if (FCB_OK != FcbInitialiseAccelerometer()) {
+    	fcb_error();
     }
 
     while (1) {
@@ -175,9 +180,10 @@ static void ProcessSensorValues(void* val) {
                 break;
             case FCB_SENSOR_GYRO_CALIBRATE:
                 break;
-            case FCB_SENSOR_MAGNETO_ACC_DATA_READY:
+            case FCB_SENSOR_ACC_DATA_READY:
+            	FetchDataFromAccelerometer();
                 break;
-            case FCB_SENSOR_MAGNETO_ACC_CALIBRATE:
+            case FCB_SENSOR_ACC_CALIBRATE:
                 break;
         }
 
