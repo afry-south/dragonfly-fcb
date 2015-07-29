@@ -5,7 +5,7 @@
   * @version V1.0.0
   * @date    24-May-2015
   * @brief   Main Interrupt Service Routines.
-  *          This file provides all exceptions handler and 
+  *          This file provides all exceptions handler and
   *          peripherals interrupt service routine.
   ******************************************************************************
 **/
@@ -13,6 +13,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_it.h"
+
+#include "fcb_error.h"
 
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
   * @{
@@ -83,6 +85,7 @@ void HardFault_Handler(void)
   // TODO: Print active threads (and status?)
 
   /* Go to infinite loop when Hard Fault exception occurs */
+	fcb_error();
   while (1)
     {}
 }
@@ -235,6 +238,12 @@ void EXTI0_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(USER_BUTTON_PIN);
 }
 
+void EXTI1_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+}
+
+
 /**
   * @brief  This function handles PPP interrupt request.
   * @param  None
@@ -248,5 +257,5 @@ void EXTI0_IRQHandler(void)
 
 /**
   * @}
-  */ 
+  */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

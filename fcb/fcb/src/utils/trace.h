@@ -1,7 +1,7 @@
 #ifndef TRACE_H
 #define TRACE_H
 
-#define TRACE_SYNC(__FMT__, ...) do { trace_sync(__FMT__ "\n", __VA_ARGS__);  }while(0)
+#define TRACE_SYNC(__FMT__, ...) do { trace_post(__FMT__ "\n", __VA_ARGS__);  }while(0)
 
 /**
  * Initialises a FreeRTOS queue & thread to read from the queue.

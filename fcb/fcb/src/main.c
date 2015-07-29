@@ -15,6 +15,11 @@
 #include "receiver.h"
 #include "usbd_cdc_if.h"
 #include "usb_cdc_cli.h"
+#include "fcb_error.h"
+#include "fcb_retval.h"
+#include "fcb_sensors.h"
+#include "gyroscope.h"
+
 #include <string.h>
 
 #include "FreeRTOS.h"
@@ -97,8 +102,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
    UserButtonPressed++;
    if (UserButtonPressed > 0x7)
     {
+	   BSP_LED_Toggle(LED7);
       UserButtonPressed = 0x0;
     }
+  } else if (GPIO_Pin == GPIO_GYRO_DRDY) {
+	  FcbSendSensorMessageFromISR(FCB_SENSOR_GYRO_DATA_READY);
   }
 }
 
@@ -120,6 +128,15 @@ void HAL_PWR_PVDCallback(void)
  */
 void HAL_SYSTICK_Callback(void)
 {
+#if 1
+
+	static uint32_t kicks = 0;
+	kicks++;
+
+	if ((kicks % 1000) == 0) {
+		BSP_LED_Toggle(LED9);
+	}
+#endif
   HAL_IncTick();
 
   if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
@@ -165,6 +182,10 @@ static void System_Init(void)
 
   /* Init User button */
   BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
+  
+  if (FCB_OK != FcbSensorsConfig()) {
+	fcb_error();
+  }
 
 #ifdef TODO
   /* Setup sensors */

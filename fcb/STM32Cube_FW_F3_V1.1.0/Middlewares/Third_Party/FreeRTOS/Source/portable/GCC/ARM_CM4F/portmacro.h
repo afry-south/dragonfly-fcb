@@ -82,7 +82,7 @@ extern "C" {
  */
 
 /* Type definitions. */
-#define portCHAR		signed char
+#define portCHAR		char
 #define portFLOAT		float
 #define portDOUBLE		double
 #define portLONG		long

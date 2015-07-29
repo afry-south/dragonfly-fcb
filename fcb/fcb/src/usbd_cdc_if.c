@@ -373,8 +373,9 @@ USBD_StatusTypeDef CDCTransmitFS(uint8_t* data, uint16_t size)
   if(hUSBDDevice.dev_state == USBD_STATE_CONFIGURED)
     {
       USBD_CDC_SetTxBuffer(&hUSBDDevice, data, size);
+      // TODO: Use taskDelay / timeout while-loop if USB busy for too long...
       while((result = USBD_CDC_TransmitPacket(&hUSBDDevice)) == USBD_BUSY) { } // Wait while busy with previous transmission
-      if(CDC_DATA_FS_MAX_PACKET_SIZE)
+      if(size % CDC_DATA_FS_MAX_PACKET_SIZE == 0)
         {
           /*
            * According to the USB specification, a packet size of 64 bytes (CDC_DATA_FS_MAX_PACKET_SIZE)
@@ -386,6 +387,7 @@ USBD_StatusTypeDef CDCTransmitFS(uint8_t* data, uint16_t size)
            * See eg http://www.cypress.com/?id=4&rID=92719
            * */
           USBD_CDC_SetTxBuffer(&hUSBDDevice, NULL, 0);      // Zero-length packet (ZLP)
+          // TODO: Use taskDelay / timeout while-loop if USB busy for too long...
           while((result = USBD_CDC_TransmitPacket(&hUSBDDevice)) == USBD_BUSY) { } // Wait while busy with previous transmission
         }
     }
@@ -440,12 +442,13 @@ USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDa
               FIFOBufferDeleteLastEnteredBytes(&USBCOMTxFIFOBuffer, sendDataSize);
               result = USBD_FAIL;
             }
-          xSemaphoreGive(USBCOMTxBufferMutex);      // We have finished accessing the shared resource. Release the mutex.
         }
       else
         {
           result = USBD_FAIL;
         }
+
+      xSemaphoreGive(USBCOMTxBufferMutex);      // We have finished accessing the shared resource. Release the mutex.
     }
   else
     {
@@ -465,7 +468,7 @@ void CreateUSBComThreads(void)
    * Priority: USB_COM_RX_THREAD_PRIO ([0, inf] possible)
    * Handle: USB_ComPortRx_Thread_Handle
    * */
-  if(pdPASS != xTaskCreate((pdTASK_CODE)USB_ComPort_RX_Thread, (portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE, NULL, USB_COM_RX_THREAD_PRIO, &USB_ComPortRx_Thread_Handle))
+  if(pdPASS != xTaskCreate((pdTASK_CODE)USB_ComPort_RX_Thread, (signed portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE, NULL, USB_COM_RX_THREAD_PRIO, &USB_ComPortRx_Thread_Handle))
     {
       Error_Handler();
     }
@@ -478,7 +481,7 @@ void CreateUSBComThreads(void)
    * Priority: USB_COM_TX_THREAD_PRIO ([0, inf] possible)
    * Handle: USB_ComPortTx_Thread_Handle
    * */
-  if(pdPASS != xTaskCreate((pdTASK_CODE)USB_ComPort_TX_Thread, (portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE, NULL, USB_COM_TX_THREAD_PRIO, &USB_ComPortTx_Thread_Handle))
+  if(pdPASS != xTaskCreate((pdTASK_CODE)USB_ComPort_TX_Thread, (signed portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE, NULL, USB_COM_TX_THREAD_PRIO, &USB_ComPortTx_Thread_Handle))
     {
       Error_Handler();
     }
@@ -490,7 +493,7 @@ void CreateUSBComQueues(void)
   usbComTxQueue = xQueueCreate(USB_COM_TX_QUEUE_ITEMS, sizeof(UsbComPortTxQueueItem_TypeDef));
 
   /* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
-  vQueueAddToRegistry(usbComTxQueue, (portCHAR*) "usbComTxQueue");
+  vQueueAddToRegistry(usbComTxQueue, (signed portCHAR*) "usbComTxQueue");
 }
 
 void CreateUSBComSemaphores(void)
