@@ -1,0 +1,115 @@
+// This file contains message definitions for FCB to FSM
+// communications
+
+// When message is a query, current values will be
+// returned
+
+// unfortunately comments aren't transferred to the header file.
+enum MsgFunction {
+  QUERY = 0;
+  COMMAND = 1;
+  RESPONSE = 2;
+}
+
+enum FlightCmdSourceType {
+  RADIO_CONTROLLER = 1;    // FCB receives R/C controller inputs
+  COLLISION_AVOIDANCE = 2; // FCB is engaged in collision avoidance
+  FSM = 3;                 // FCB follows FSM instructions
+}
+
+// FSM waits for this message and FCB sends this
+// message repeatedly until it receives a RESPONSE
+message ConnectToFsm {
+  required MsgFunction fcn = 1;
+}
+
+message FlightSensorSamples {
+	optional uint32 gyroRoll = 1;
+	optional uint32 gyroPitch = 2;
+	optional uint32 gyroYaw = 3;
+	optional uint32 accX = 4;
+	optional uint32 accY = 5;
+	optional uint32 accZ = 6;
+	optional uint32 magX = 7;
+	optional uint32 magY = 8;
+	optional uint32 magZ = 9;
+}
+
+message ProximitySensorSamples {
+  optional uint32 posX = 1; // in front
+  optional uint32 negX = 2; // behind
+  optional uint32 posY = 3; // port side
+  optional uint32 negY = 4; // starboard side
+  optional uint32 posZ = 5; // above
+  optional uint32 negZ = 6; // below
+}
+
+message QuadcopterConfig {
+	optional uint32 Mass = 1;
+	optional uint32 Ixx = 2;
+	optional uint32 Iyy = 3;
+	optional uint32 Izz = 4;
+}
+
+message RCConfig {
+	optional uint32 throttleMinMicroS = 1;
+	optional uint32 throttleMaxMicroS = 2;
+	optional uint32 aileronMinMicroS = 3;
+	optional uint32 aileronMaxMicroS = 4;
+	optional uint32 elevatorMinMicroS = 5;
+	optional uint32 elevatorMaxMicroS = 6;
+	optional uint32 rudderMinMicroS = 7;
+	optional uint32 rudderMaxMicroS = 8;
+	optional uint32 gearOnMicroS = 9;
+	optional uint32 gearOffMicroS = 10;
+	optional uint32 auxOnMicroS = 11;
+	optional uint32 auxOffMicroS = 12;
+}
+
+message RCSamples {
+	optional uint32 throttleMicroS = 1;
+	optional uint32 aileronMicroS = 2;
+	optional uint32 elevatorMicroS = 3;
+	optional uint32 rudderMicroS = 4;
+	optional uint32 gearMicroS = 5;
+	optional uint32 auxMicroS = 6;
+}
+
+message MotorSamples {
+	optional uint32 Motor1NanoS = 1;
+	optional uint32 Motor2NanoS = 2;
+	optional uint32 Motor3NanoS = 3;
+	optional uint32 Motor4NanoS = 4;
+}
+
+message FlightControlSystemParameters {
+	optional uint32 AltitudeCtrl_K = 1;
+	optional uint32 AltitudeCtrl_Ti = 2;
+	optional uint32 AltitudeCtrl_Td = 3;
+	optional uint32 RollPitchCtrl_K = 4;
+	optional uint32 RollPitchCtrl_Ti = 5;
+	optional uint32 RollPitchCtrl_Td = 6;
+	optional uint32 YawCtrl_K = 7;
+	optional uint32 YawCtrl_Ti = 8;
+	optional uint32 YawCtrl_Td = 9;
+}
+
+// Unidirectional FSM -> FCB
+//
+// clock directions are as viewed from above quadcopter
+message FlightCommands {
+	optional uint32 Climb = 1;
+  optional uint32 Descend = 2;
+  optional uint32 RotateClockwise = 3;
+  optional uint32 RotateAnticlockwise = 4;
+  optional uint32 SidewaysToPort = 5;
+  optional uint32 SidewaysToStarboard = 6;
+}
+
+// Unidirectional FCB -> FSM
+//
+// This message is sent to FSM as soon as FCB has connected
+// and every time a change occurs.
+message CurrentFlightCmdSource {
+  required FlightCmdSourceType source = 1;
+}
