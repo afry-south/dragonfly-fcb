@@ -267,7 +267,7 @@ static FlashErrorStatus IsValidFlashAddress(const uint32_t address)
  */
 static FlashErrorStatus IsValidSettingsPage(const uint8_t page)
 {
-  return (page >= FLASH_SETTINGS_START_PAGE && page < (FLASH_SETTINGS_START_ADDR + FLASH_TOTAL_SIZE)); // TODO bug here, compare with uppe settings page limit
+  return (page >= FLASH_SETTINGS_START_PAGE && page < (FLASH_SETTINGS_START_ADDR + FLASH_TOTAL_SIZE)); // TODO small bug here, compare with uppe settings page limit
 }
 
 /*
