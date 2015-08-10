@@ -1,6 +1,6 @@
 /******************************************************************************
- * @file    fcb/flash.c
- * @author  �F Dragonfly
+ * @file    flash.c
+ * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-06-09
  * @brief   Module contains flash reading/writing functions
@@ -267,7 +267,7 @@ static FlashErrorStatus IsValidFlashAddress(const uint32_t address)
  */
 static FlashErrorStatus IsValidSettingsPage(const uint8_t page)
 {
-  return (page >= FLASH_SETTINGS_START_PAGE && page < (FLASH_SETTINGS_START_ADDR + FLASH_TOTAL_SIZE)); // TODO small bug here, compare with uppe settings page limit
+  return (page >= FLASH_SETTINGS_START_PAGE && page <= FLASH_SETTINGS_END_PAGE);
 }
 
 /*

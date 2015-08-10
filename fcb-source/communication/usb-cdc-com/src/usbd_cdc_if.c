@@ -1,10 +1,10 @@
 /**
   ******************************************************************************
   * @file    usbd_cdc_if.c
-  * @author  ÅF Dragonfly - Embedded Systems
+  * @author  ï¿½F Dragonfly - Embedded Systems
   * @version v. 0.1.0
   * @date    2015-07-16
-  * @brief   USB CDC Interface functions for the ÅF Dragonfly quadrotor UAV
+  * @brief   USB CDC Interface functions for the ï¿½F Dragonfly quadrotor UAV
   ******************************************************************************
   */
 
@@ -276,7 +276,7 @@ static void USB_ComPort_RX_Thread(void const *argument)
             }
 
           // If rxTempBuffer full without found command
-          if(i >= MAX_CLI_COMMAND_SIZE);
+          if(i >= MAX_CLI_COMMAND_SIZE)
           {
             i = 0;
             memset(cliInBuffer, 0x00, sizeof(cliInBuffer));

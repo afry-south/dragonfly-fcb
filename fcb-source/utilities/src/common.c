@@ -1,6 +1,6 @@
 /******************************************************************************
- * @file    fcb/common.c
- * @author  ÅF Dragonfly
+ * @file    common.c
+ * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-06-09
  * @brief   Module contains common functions
