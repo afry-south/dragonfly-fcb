@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    usb_cdc_cli.c
+ * @file    fcb_sensors.c
  * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-07-24
@@ -53,18 +53,21 @@ int FcbSensorsConfig(void) {
     portBASE_TYPE rtosRetVal;
     int retVal = FCB_OK;
 
-    if (pdFAIL == (qFcbSensors = xQueueCreate(FCB_SENSORS_QUEUE_SIZE, FCB_SENSORS_Q_MSG_SIZE))) {
-    	ErrorHandler();
+    if (0 == (qFcbSensors = xQueueCreate(FCB_SENSORS_QUEUE_SIZE,
+                                         FCB_SENSORS_Q_MSG_SIZE))) {
+        fcb_error();
         goto Error;
     }
 
-    if (pdPASS != (rtosRetVal = xTaskCreate((pdTASK_CODE)ProcessSensorValues,
-                                (signed portCHAR*)"tFcbSensors",
-                                4 * configMINIMAL_STACK_SIZE,
-                                NULL /* parameter */,
-                                1 /* priority */,
-                                &tFcbSensors))) {
-    	ErrorHandler();
+
+    if (pdPASS != (rtosRetVal =
+                   xTaskCreate((pdTASK_CODE)ProcessSensorValues,
+                               (signed portCHAR*)"tFcbSensors",
+                               4 * configMINIMAL_STACK_SIZE,
+                               NULL /* parameter */,
+                               1 /* priority */,
+                               &tFcbSensors))) {
+        fcb_error();
         goto Error;
     }
 
@@ -87,7 +90,7 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
 #endif
 
     if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
-    	ErrorHandler();
+        fcb_error();
     }
 
     portYIELD_FROM_ISR(higherPriorityTaskWoken);
@@ -120,7 +123,7 @@ SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint
 	 * */
 	if (pdPASS != xTaskCreate((pdTASK_CODE )SensorPrintSamplingTask, (signed portCHAR*)"SENS_PRINT_SAMPL",
 			configMINIMAL_STACK_SIZE, NULL, SENSOR_PRINT_SAMPLING_TASK_PRIO, &SensorPrintSamplingTaskHandle)) {
-		ErrorHandler();
+		fcb_error);
 		return SENSORS_ERROR;
 	}
 
@@ -149,11 +152,11 @@ static void ProcessSensorValues(void* val) {
 	 * and then polls the queue in an infinite loop
 	 */
     uint8_t msg;
-#if 0
+
     if (FCB_OK != InitialiseGyroscope()) {
-    	ErrorHandler();
+    	fcb_error();
     }
-#endif
+
     if (FCB_OK != FcbInitialiseAccelerometer()) {
     	fcb_error();
     }
@@ -166,7 +169,7 @@ static void ProcessSensorValues(void* val) {
              * if no message was received, no interrupts from the sensors
              * aren't arriving and this is a serious error.
              */
-        	ErrorHandler();
+            fcb_error();
             goto Error;
         }
 
