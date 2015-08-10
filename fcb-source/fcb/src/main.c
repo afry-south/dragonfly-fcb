@@ -1,13 +1,15 @@
 /******************************************************************************
  * @file    fcb/main.c
- * @author  ÅF Dragonfly
+ * @author  ï¿½F Dragonfly
  * @version v. 0.1.0
  * @date    2015-05-28
- * @brief   Flight Control program for the ÅF Dragonfly quadcopter
+ * @brief   Flight Control program for the ï¿½F Dragonfly quadcopter
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
+#include "stm32f3_discovery.h"
 #include "common.h"
 #include "motor_control.h"
 #include "flight_control.h"
@@ -97,17 +99,19 @@ void Error_Handler(void)
   */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if(GPIO_Pin == USER_BUTTON_PIN)
-  {
-   UserButtonPressed++;
-   if (UserButtonPressed > 0x7)
+  if (GPIO_Pin == USER_BUTTON_PIN)
     {
-	   BSP_LED_Toggle(LED7);
-      UserButtonPressed = 0x0;
+      UserButtonPressed++;
+      if (UserButtonPressed > 0x7)
+	{
+	  BSP_LED_Toggle(LED7);
+	  UserButtonPressed = 0x0;
+	}
     }
-  } else if (GPIO_Pin == GPIO_GYRO_DRDY) {
-	  FcbSendSensorMessageFromISR(FCB_SENSOR_GYRO_DATA_READY);
-  }
+  else if (GPIO_Pin == GPIO_GYRO_DRDY)
+    {
+      FcbSendSensorMessageFromISR (FCB_SENSOR_GYRO_DATA_READY);
+    }
 }
 
 /**

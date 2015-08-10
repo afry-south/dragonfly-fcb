@@ -90,7 +90,7 @@ int main(void)
   
   /* Configure the system clock to 72 MHz */
   SystemClock_Config();
-
+
   /*##-1- Configure ADC1 and ADC2 peripherals ################################*/
   ADC_Config();
 

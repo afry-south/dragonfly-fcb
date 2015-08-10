@@ -1,14 +1,16 @@
 /******************************************************************************
  * @file    fcb/flight_control.c
- * @author  ÅF Dragonfly
+ * @author  ï¿½F Dragonfly
  * @version v. 0.0.1
  * @date    2014-09-29
- * @brief   Flight Control program for the ÅF Dragonfly quadcopter
+ * @brief   Flight Control program for the ï¿½F Dragonfly quadcopter
  *          File contains flight controller logic (input->control->output).
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
 #include "flight_control.h"
+
+#include "stm32f3_discovery.h"
 #include "main.h"
 #include "receiver.h"
 #include "sensors.h"

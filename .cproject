@@ -46,7 +46,7 @@
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.1770032341" name="Float ABI" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.abi.hard" valueType="enumerated"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.unit.387484855" name="FPU Type" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.unit" value="ilg.gnuarmeclipse.managedbuild.cross.option.arm.target.fpu.unit.fpv4spd16" valueType="enumerated"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.1053005217" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
-							<builder buildPath="${workspace_loc:/dragonfly-fcb}/Debug" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="ilg.gnuarmeclipse.managedbuild.cross.builder.386579545" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder">
+							<builder autoBuildTarget="all" buildPath="${workspace_loc:/dragonfly-fcb}/Debug" cleanBuildTarget="clean" enableAutoBuild="false" enableCleanBuild="true" enabledIncrementalBuild="true" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="ilg.gnuarmeclipse.managedbuild.cross.builder.386579545" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="false" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder">
 								<outputEntries>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Release"/>
@@ -55,6 +55,8 @@
 							<tool command="${cross_prefix}${cross_c}${cross_suffix}" commandLinePattern="${COMMAND} ${cross_toolchain_flags} ${FLAGS} -c ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.472460231" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.1371870132" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths.1117113106" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/fcb/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/cmsis-boot}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/communication}&quot;"/>
@@ -69,10 +71,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32F3-Discovery}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.496365341" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs" valueType="definedSymbols">
@@ -87,6 +86,9 @@
 							</tool>
 							<tool command="${cross_prefix}${cross_c}${cross_suffix}" commandLinePattern="${COMMAND} ${cross_toolchain_flags} ${FLAGS} -c ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.979988201" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1317419700" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/fcb/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/cmsis-boot}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/communication}&quot;"/>
@@ -101,10 +103,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32F3-Discovery}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1564222692" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
@@ -119,6 +117,8 @@
 							</tool>
 							<tool command="${cross_prefix}${cross_cpp}${cross_suffix}" commandLinePattern="${COMMAND} ${cross_toolchain_flags} ${FLAGS} -c ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.217682518" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.1232018183" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/fcb/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/cmsis-boot}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/communication}&quot;"/>
@@ -133,10 +133,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32F3-Discovery}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions.2041835387" name="Do not use exceptions (-fno-exceptions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions" useByScannerDiscovery="true" value="true" valueType="boolean"/>
@@ -172,7 +169,7 @@
 							</tool>
 							<tool command="${cross_prefix}${cross_cpp}${cross_suffix}" commandLinePattern="${COMMAND} ${cross_toolchain_flags} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="" id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.845741352" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.1047207630" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
-								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths.835592847" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths" valueType="libPaths"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths.835592847" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile.897433924" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile" valueType="stringList">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/fcb-source/ldscripts/arm-gcc-link.ld}&quot;"/>
 								</option>
@@ -199,9 +196,8 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="Source/FreeRTOS-Plus-UDP|Source/FreeRTOS-Plus-Trace|Source/FreeRTOS-Plus-Nabto|Source/FreeRTOS-Plus-IO|Source/FreeRTOS-Plus-FAT-SL|Source/CyaSSL|Demo" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/FreeRTOS-Plus"/>
-						<entry excluding="Components|STM32F3xx-Nucleo|STM32F3348-Discovery|STM32373C_EVAL|STM32303E_EVAL|STM32303C_EVAL|Adafruit_Shield" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP"/>
-						<entry excluding="DSP_Lib/Examples|Device/ST/STM32F3xx/Source/Templates/iar|Device/ST/STM32F3xx/Source/Templates/gcc|Device/ST/STM32F3xx/Source/Templates/arm" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS"/>
-						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver"/>
+						<entry excluding="Lib|DSP_Lib|SVD|RTOS|Documentation|DSP_Lib/Examples|Device/ST/STM32F3xx/Source/Templates/iar|Device/ST/STM32F3xx/Source/Templates/gcc|Device/ST/STM32F3xx/Source/Templates/arm" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS"/>
+						<entry excluding="Src/stm32f3xx_hal_msp_template.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver"/>
 						<entry excluding="Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c|Third_Party/FreeRTOS/Source/portable/MemMang/heap_3.c|Third_Party/FreeRTOS/Source/portable/MemMang/heap_2.c|Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3|Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0|Third_Party/FreeRTOS/Source/portable/Tasking|Third_Party/FreeRTOS/Source/portable/RVDS|Third_Party/FreeRTOS/Source/portable/Keil|Third_Party/FreeRTOS/Source/portable/IAR|Third_Party/FreeRTOS/Source/CMSIS_RTOS|Third_Party/FreeRTOS/License|Third_Party/FatFs|ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc_if_template.c|ST/STM32_USB_Device_Library/Class/Template|ST/STM32_USB_Device_Library/Class/MSC|ST/STM32_USB_Device_Library/Class/HID|ST/STM32_USB_Device_Library/Class/DFU|ST/STM32_USB_Device_Library/Class/CustomHID|ST/STM32_USB_Device_Library/Class/AUDIO|ST/STM32_USB_Device_Library/Core/Src/usbd_conf_template.c|ST/STM32_TouchSensing_Library|ST/STemWin" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/cmsis-boot"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/communication"/>
@@ -297,6 +293,7 @@
 									<listOptionValue builtIn="false" value="__FPU_USED"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="USE_USB_INTERRUPT_REMAPPED"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.1655216994" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -337,6 +334,7 @@
 									<listOptionValue builtIn="false" value="__FPU_USED"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="USE_USB_INTERRUPT_REMAPPED"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.2044275597" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
@@ -381,6 +379,7 @@
 									<listOptionValue builtIn="false" value="__FPU_USED"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="USE_USB_INTERRUPT_REMAPPED"/>
+									<listOptionValue builtIn="false" value="__FPU_PRESENT"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.430608746" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input"/>
 							</tool>
@@ -433,7 +432,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_3.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_2.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/Tasking|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/Keil|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/IAR|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/License|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FatFs|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc_if_template.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/Template|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/MSC|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/HID|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/DFU|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_conf_template.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_TouchSensing_Library|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STemWin|fcb-source/nanopb-0.3.3-windows-x86/tools|fcb-source/nanopb-0.3.3-windows-x86/tests|fcb-source/nanopb-0.3.3-windows-x86/generator-bin|fcb-source/nanopb-0.3.3-windows-x86/generator|fcb-source/nanopb-0.3.3-windows-x86/extra|fcb-source/nanopb-0.3.3-windows-x86/examples|fcb-source/nanopb-0.3.3-windows-x86/docs|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/DSP_Lib/Examples|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/Components|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32F3xx-Nucleo|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32F3348-Discovery|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32373C_EVAL|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32303E_EVAL|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32303C_EVAL|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/Adafruit_Shield|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-UDP|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-Trace|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-Nabto|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-IO|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-FAT-SL|fcb-source/FreeRTOS-Plus/Source/CyaSSL|fcb-source/FreeRTOS-Plus/Demo|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/iar|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/gcc|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/arm|fcb-source/sandbox" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32F3-Discovery/stm32f3_discovery_gyroscope.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_msp_template.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Lib|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/DSP_Lib|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/SVD|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/RTOS|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Documentation|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_3.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_2.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3_MPU|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/Tasking|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/Keil|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/IAR|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/License|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FatFs|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc_if_template.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/Template|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/MSC|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/HID|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/DFU|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Class/AUDIO|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_conf_template.c|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STM32_TouchSensing_Library|fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/ST/STemWin|fcb-source/nanopb-0.3.3-windows-x86/tools|fcb-source/nanopb-0.3.3-windows-x86/tests|fcb-source/nanopb-0.3.3-windows-x86/generator-bin|fcb-source/nanopb-0.3.3-windows-x86/generator|fcb-source/nanopb-0.3.3-windows-x86/extra|fcb-source/nanopb-0.3.3-windows-x86/examples|fcb-source/nanopb-0.3.3-windows-x86/docs|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/DSP_Lib/Examples|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/Components|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32F3xx-Nucleo|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32F3348-Discovery|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32373C_EVAL|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32303E_EVAL|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/STM32303C_EVAL|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/BSP/Adafruit_Shield|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-UDP|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-Trace|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-Nabto|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-IO|fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-FAT-SL|fcb-source/FreeRTOS-Plus/Source/CyaSSL|fcb-source/FreeRTOS-Plus/Demo|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/iar|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/gcc|fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Source/Templates/arm|fcb-source/sandbox" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -444,7 +443,14 @@
 		<project id="dragonfly-fcb.ilg.gnuarmeclipse.managedbuild.cross.target.elf.1500134114" name="Executable" projectType="ilg.gnuarmeclipse.managedbuild.cross.target.elf"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/dragonfly-fcb"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/dragonfly-fcb"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1432920172;ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1432920172.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.593731194;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.2044275597">
