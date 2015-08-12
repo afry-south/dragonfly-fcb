@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    fcb/common.c
+ * @file    common.h
  * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-06-09
@@ -20,11 +20,11 @@
 #define IS_POS(X) ((X) >= 0)
 
 /* Exported function prototypes --------------------------------------------- */
-uint32_t Calculate_CRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize);
-uint16_t UInt16_Mean(const uint16_t* buffer, const uint16_t length);
+uint32_t CalculateCRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize);
+uint16_t UInt16Mean(const uint16_t* buffer, const uint16_t length);
 
-void Init_LEDs(void);
-void LEDs_Off(void);
+void InitLEDs(void);
+void LEDsOff(void);
 void ToggleLEDs(void);
 
 #endif /* __COMMON_H */

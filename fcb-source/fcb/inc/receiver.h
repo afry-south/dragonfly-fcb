@@ -1,9 +1,9 @@
 /******************************************************************************
  * @file    receiver.h
- * @author  ÅF Dragonfly
+ * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-04-16
- * @brief   Flight Control program for the ÅF Dragonfly quadcopter
+ * @brief   Flight Control program for the Dragonfly quadcopter
  *          Header file for reading signals from the RC receiver
  ******************************************************************************/
 
@@ -106,38 +106,32 @@
 #define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.092 s
 
 /* Exported types ------------------------------------------------------------*/
-typedef enum
-{
-  PULSE_LOW = 0,
-  PULSE_HIGH = !PULSE_LOW
+typedef enum {
+	PULSE_LOW = 0, PULSE_HIGH = !PULSE_LOW
 } Pulse_State;
 
-typedef enum
-{
-  RECEIVER_ERROR = 0,
-  RECEIVER_OK = !RECEIVER_ERROR
+typedef enum {
+	RECEIVER_ERROR = 0, RECEIVER_OK = !RECEIVER_ERROR
 } ReceiverErrorStatus;
 
-typedef struct
-{
-  uint16_t ChannelMaxCount;
-  uint16_t ChannelMinCount;
-}Receiver_IC_ChannelCalibrationValues_TypeDef;
+typedef struct {
+	uint16_t ChannelMaxCount;
+	uint16_t ChannelMinCount;
+} Receiver_IC_ChannelCalibrationValues_TypeDef;
 
-typedef struct
-{
-  Receiver_IC_ChannelCalibrationValues_TypeDef ThrottleChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef AileronChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef ElevatorChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef RudderChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef GearChannel;
-  Receiver_IC_ChannelCalibrationValues_TypeDef Aux1Channel;
-}Receiver_CalibrationValues_TypeDef;
+typedef struct {
+	Receiver_IC_ChannelCalibrationValues_TypeDef ThrottleChannel;
+	Receiver_IC_ChannelCalibrationValues_TypeDef AileronChannel;
+	Receiver_IC_ChannelCalibrationValues_TypeDef ElevatorChannel;
+	Receiver_IC_ChannelCalibrationValues_TypeDef RudderChannel;
+	Receiver_IC_ChannelCalibrationValues_TypeDef GearChannel;
+	Receiver_IC_ChannelCalibrationValues_TypeDef Aux1Channel;
+} Receiver_CalibrationValues_TypeDef;
 
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported function prototypes --------------------------------------------- */
-ReceiverErrorStatus ReceiverInput_Config(void);
+ReceiverErrorStatus ReceiverInputConfig(void);
 ReceiverErrorStatus StartReceiverCalibration(void);
 ReceiverErrorStatus StopReceiverCalibration(void);
 ReceiverErrorStatus IsReceiverActive(void);

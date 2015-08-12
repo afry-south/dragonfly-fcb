@@ -1,8 +1,6 @@
 /****************************************************************************
- * @file    fcb/sensors.c
- * @author  ÅF Dragonfly:
- * Daniel Nilsson, Embedded Systems
- * Daniel Stenberg, Embedded Systems
+ * @file    sensors.c
+ * @author  Dragonfly
  * @version v. 0.0.1
  * @date    2014-09-26
  * @brief   Functions for reading and filtering the on-board MEMS sensor

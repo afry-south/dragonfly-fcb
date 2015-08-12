@@ -1,7 +1,7 @@
 /****************************************************************************
-* @file    fcb/sensors.h
-* @author  �F Dragonfly - Daniel Stenberg, Embedded Systems
-* @version v. 0.0.1
+* @file    sensors.h
+* @author  Dragonfly
+* @version v. 1.0.0
 * @date    2014-09-26
 * @brief   Header file for sensors.c
 *****************************************************************************/

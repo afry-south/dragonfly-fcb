@@ -1,12 +1,11 @@
 /*****************************************************************************
-* @file    motor_control.h
-* @author  ÅF Embedded Systems SydDragonfly
-*          Daniel Stenberg
-* @version v. 1.0.0
-* @date    2015-05-07
-* @brief   Flight Control program for the ÅF Dragonfly quadcopter
-*          Header file for motor PWM output
-******************************************************************************/
+ * @file    motor_control.h
+ * @author  Dragonfly
+ * @version v. 1.0.0
+ * @date    2015-05-07
+ * @brief   Flight Control program for the ï¿½F Dragonfly quadcopter
+ *          Header file for motor PWM output
+ ******************************************************************************/
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MOTOR_CONTROL_H
@@ -48,7 +47,7 @@
 #define ESC_MIN_OUTPUT                          24000 // 1.0 ms pulse
 
 /* Exported functions ------------------------------------------------------- */
-void MotorControl_Config(void);
+void MotorControlConfig(void);
 void SetMotor1(uint16_t ctrlVal);
 void SetMotor2(uint16_t ctrlVal);
 void SetMotor3(uint16_t ctrlVal);

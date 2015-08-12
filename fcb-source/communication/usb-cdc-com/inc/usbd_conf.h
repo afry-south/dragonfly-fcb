@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    USB_Device/CDC_Standalone/Inc/usbd_conf.h
+  * @file    usbd_conf.h
   * @author  MCD Application Team
   * @version V1.0.0
   * @date    18-June-2014

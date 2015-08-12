@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    fcb/flash.h
+ * @file    flash.h
  * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-06-09
@@ -17,10 +17,8 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 
-typedef enum
-{
-  FLASH_ERROR = 0,
-  FLASH_OK = !FLASH_ERROR
+typedef enum {
+	FLASH_ERROR = 0, FLASH_OK = !FLASH_ERROR
 } FlashErrorStatus;
 
 /* Exported macro ------------------------------------------------------------*/
@@ -51,8 +49,10 @@ typedef enum
 #define FLASH_RECEIVER_CALIBRATION_SIZE         sizeof(Receiver_CalibrationValues_TypeDef) + HAL_CRC_LENGTH_32B/4       // Added room for CRC
 
 /* Exported function prototypes --------------------------------------------- */
-FlashErrorStatus ReadCalibrationValuesFromFlash(volatile Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
-FlashErrorStatus WriteCalibrationValuesToFlash(const Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
+FlashErrorStatus ReadCalibrationValuesFromFlash(
+		volatile Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
+FlashErrorStatus WriteCalibrationValuesToFlash(
+		const Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
 
 #endif /* __FLASH_H */
 
