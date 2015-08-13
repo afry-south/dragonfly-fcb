@@ -15,6 +15,7 @@
 #include "stm32f3xx.h"
 
 /* Exported constants --------------------------------------------------------*/
+
 /* Definitions for Primary Receiver ##########################################*/
 /* Definitions for Primary Receiver TIM clock */
 #define PRIMARY_RECEIVER_TIM                            TIM2
@@ -105,6 +106,9 @@
 
 #define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.092 s
 
+#define RECEIVER_PRINT_SAMPLING_THREAD_PRIO				3
+#define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
+
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
 	PULSE_LOW = 0, PULSE_HIGH = !PULSE_LOW
@@ -136,12 +140,29 @@ ReceiverErrorStatus StartReceiverCalibration(void);
 ReceiverErrorStatus StopReceiverCalibration(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
+ReceiverErrorStatus StartReceiverSamplingTask(uint16_t sampleTime,
+		uint32_t sampleDuration);
+ReceiverErrorStatus StopReceiverSamplingTask(void);
+
 uint16_t GetThrottleReceiverChannel(void);
 int16_t GetAileronReceiverChannel(void);
 int16_t GetElevatorReceiverChannel(void);
 int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
+
+uint16_t GetThrottleReceiverCalibrationMaxValue(void);
+uint16_t GetThrottleReceiverCalibrationMinValue(void);
+uint16_t GetAileronReceiverCalibrationMaxValue(void);
+uint16_t GetAileronReceiverCalibrationMinValue(void);
+uint16_t GetElevatorReceiverCalibrationMaxValue(void);
+uint16_t GetElevatorReceiverCalibrationMinValue(void);
+uint16_t GetRudderReceiverCalibrationMaxValue(void);
+uint16_t GetRudderReceiverCalibrationMinValue(void);
+uint16_t GetGearReceiverCalibrationMaxValue(void);
+uint16_t GetGearReceiverCalibrationMinValue(void);
+uint16_t GetAux1ReceiverCalibrationMaxValue(void);
+uint16_t GetAux1ReceiverCalibrationMinValue(void);
 
 uint16_t GetThrottleReceiverChannelPulseMicros(void);
 uint16_t GetAileronReceiverChannelPulseMicros(void);

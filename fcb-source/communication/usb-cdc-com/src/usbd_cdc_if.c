@@ -46,8 +46,8 @@ static int8_t CDCItfDeInit(void);
 static int8_t CDCItfControl(uint8_t cmd, uint8_t* pbuf, uint16_t length);
 static int8_t CDCItfReceive(uint8_t* rxData, uint32_t* rxDataLen);
 
-static void USBComPortRXThread(void const *argument);
-static void USBComPortTXThread(void const *argument);
+static void USBComPortRXTask(void const *argument);
+static void USBComPortTXTask(void const *argument);
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -74,8 +74,8 @@ USBD_CDC_LineCodingTypeDef LineCoding = { 115200, /* baud rate */
 };
 
 /* USB RTOS variables */
-xTaskHandle USB_ComPortRx_Thread_Handle;
-xTaskHandle USB_ComPortTx_Thread_Handle;
+xTaskHandle USBComPortRxTaskHandle;
+xTaskHandle USBComPortTxTaskHandle;
 
 xQueueHandle usbComTxQueue;
 
@@ -190,7 +190,7 @@ static int8_t CDCItfReceive(uint8_t* rxData, uint32_t* rxDataLen) {
 		result = USBD_CDC_ReceivePacket(&hUSBDDevice);
 		if (result == USBD_OK) {
 			if (FIFOBufferPutData(&USBCOMRxFIFOBuffer, rxData, *rxDataLen)) {
-				/* # Signal RX thread that new USB CDC data has arrived #### */
+				/* # Signal RX task that new USB CDC data has arrived #### */
 				xSemaphoreGiveFromISR(USBCOMRxDataSem,
 						&xHigherPriorityTaskWoken);
 			} else {
@@ -204,11 +204,11 @@ static int8_t CDCItfReceive(uint8_t* rxData, uint32_t* rxDataLen) {
 }
 
 /**
- * @brief  Thread code handles the USB Com Port Rx communication
+ * @brief  Task code handles the USB Com Port Rx communication
  * @param  argument : Unused parameter
  * @retval None
  */
-static void USBComPortRXThread(void const *argument) {
+static void USBComPortRXTask(void const *argument) {
 	(void) argument;
 
 	static uint16_t i = 0;
@@ -245,7 +245,7 @@ static void USBComPortRXThread(void const *argument) {
 							);
 
 					USBComSendString((char*) cliOutBuffer, portMAX_DELAY,
-							portMAX_DELAY);
+					portMAX_DELAY);
 
 				} while (xMoreDataToFollow != pdFALSE);
 
@@ -263,11 +263,11 @@ static void USBComPortRXThread(void const *argument) {
 }
 
 /**
- * @brief  Thread code handles the USB Com Port Tx communication
+ * @brief  Task code handles the USB Com Port Tx communication
  * @param  argument : Unused parameter
  * @retval None
  */
-static void USBComPortTXThread(void const *argument) {
+static void USBComPortTXTask(void const *argument) {
 	(void) argument;
 
 	static UsbComPortTxQueueItem_TypeDef CompPortTxQueueItem;
@@ -282,8 +282,7 @@ static void USBComPortTXThread(void const *argument) {
 				/* Take the buffer mutex (if it has one) */
 				if ((*CompPortTxQueueItem.FIFOBufferMutex != NULL
 						&& xSemaphoreTake(*CompPortTxQueueItem.FIFOBufferMutex,
-								portMAX_DELAY)
-								== pdPASS)
+								portMAX_DELAY) == pdPASS)
 						|| *CompPortTxQueueItem.FIFOBufferMutex == NULL) {
 
 					if (CompPortTxQueueItem.bufferType == ARRAY_BUFFER) {
@@ -437,34 +436,34 @@ USBD_StatusTypeDef USBComSendData(const uint8_t* sendData,
 	return result;
 }
 
-void CreateUSBComThreads(void) {
-	/* USB Virtual Com Port Rx handler thread creation
-	 * Task function pointer: USBComPortRXThread
+void CreateUSBComTasks(void) {
+	/* USB Virtual Com Port Rx handler task creation
+	 * Task function pointer: USBComPortRXTask
 	 * Task name: USB_COM_RX
 	 * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
 	 * Parameter: NULL
 	 * Priority: USB_COM_RX_THREAD_PRIO ([0, inf] possible)
-	 * Handle: USB_ComPortRx_Thread_Handle
+	 * Handle: USBComPortRxTaskHandle
 	 * */
 	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )USBComPortRXThread,
+			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask,
 					(signed portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE,
-					NULL, USB_COM_RX_THREAD_PRIO, &USB_ComPortRx_Thread_Handle)) {
+					NULL, USB_COM_RX_THREAD_PRIO, &USBComPortRxTaskHandle)) {
 		Error_Handler();
 	}
 
-	/* USB Virtual Com Port Tx handler thread creation
-	 * Task function pointer: USBComPortRXThread
+	/* USB Virtual Com Port Tx handler task creation
+	 * Task function pointer: USBComPortRXTask
 	 * Task name: USB_COM_TX
 	 * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
 	 * Parameter: NULL
 	 * Priority: USB_COM_TX_THREAD_PRIO ([0, inf] possible)
-	 * Handle: USB_ComPortTx_Thread_Handle
+	 * Handle: USBComPortTxTaskHandle
 	 * */
 	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )USBComPortTXThread,
+			!= xTaskCreate((pdTASK_CODE )USBComPortTXTask,
 					(signed portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE,
-					NULL, USB_COM_TX_THREAD_PRIO, &USB_ComPortTx_Thread_Handle)) {
+					NULL, USB_COM_TX_THREAD_PRIO, &USBComPortTxTaskHandle)) {
 		Error_Handler();
 	}
 }

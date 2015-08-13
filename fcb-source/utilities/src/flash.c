@@ -108,7 +108,7 @@ static FlashErrorStatus WriteSettingsToFlash(const uint8_t* writeSettingsData,
 			writeSettingsDataSize);
 
 	/* Take the CRC of the data to be inserted into flash storage, except for the first index which is reserved for the CRC itself */
-	uint32_t crcValue = Calculate_CRC((uint8_t*) writeSettingsData,
+	uint32_t crcValue = CalculateCRC((uint8_t*) writeSettingsData,
 			writeSettingsDataSize);
 	memcpy(&tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET],
 			(uint8_t*) &crcValue, FLASH_WORD_BYTE_SIZE);

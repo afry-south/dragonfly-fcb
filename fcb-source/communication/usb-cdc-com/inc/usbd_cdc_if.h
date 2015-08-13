@@ -37,7 +37,7 @@ USBD_StatusTypeDef USBComSendString(const char* sendString,
 USBD_StatusTypeDef USBComSendData(const uint8_t* sendData,
 		const uint16_t sendDataSize, const uint32_t maxMutexWaitTicks,
 		const uint32_t maxQueueWaitTicks);
-void CreateUSBComThreads(void);
+void CreateUSBComTasks(void);
 void CreateUSBComQueues(void);
 void CreateUSBComSemaphores(void);
 

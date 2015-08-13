@@ -46,6 +46,10 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+
 /* Private typedef -----------------------------------------------------------*/
 typedef enum {
 	RECEIVER_CALIBRATION_WAITING = 0, RECEIVER_CALIBRATION_IN_PROGRESS = 1,
@@ -122,6 +126,11 @@ static volatile Receiver_ChannelCalibrationSampling_TypeDef Aux1CalibrationSampl
 static volatile uint16_t PrimaryReceiverTimerPeriodCount;
 static volatile uint16_t AuxReceiverTimerPeriodCount;
 
+/* Task handle for printing of receiver values task */
+xTaskHandle ReceiverPrintSamplingTaskHandle = NULL;
+static volatile uint16_t receiverPrintSampleTime;
+static volatile uint16_t receiverPrintSampleDuration;
+
 /* Private function prototypes -----------------------------------------------*/
 static ReceiverErrorStatus InitReceiverCalibrationValues(void);
 static ReceiverErrorStatus LoadReceiverCalibrationValuesFromFlash(
@@ -177,6 +186,8 @@ static void EnforceNewCalibrationValues(
 static void ResetCalibrationSampling(
 		volatile Receiver_ChannelCalibrationSampling_TypeDef* channelCalibrationSampling);
 
+static void ReceiverPrintSamplingTask(void const *argument);
+
 /* Exported functions --------------------------------------------------------*/
 
 /*
@@ -193,6 +204,48 @@ ReceiverErrorStatus ReceiverInputConfig(void) {
 	if (!AuxReceiverInput_Config())
 		return RECEIVER_ERROR;
 
+	return RECEIVER_OK;
+}
+
+/*
+ * @brief  Creates a task to sample print receiver values over USB
+ * @param  sampleTime : Sets how often a sample should be printed
+ * @param  sampleDuration : Sets for how long sampling should be performed
+ * @retval RECEIVER_OK if thread started, else RECEIVER_ERROR
+ */
+ReceiverErrorStatus StartReceiverSamplingTask(uint16_t sampleTime,
+		uint32_t sampleDuration) {
+	receiverPrintSampleTime = sampleTime;
+	receiverPrintSampleDuration = sampleDuration;
+
+	/* Receiver value print sampling handler thread creation
+	 * Task function pointer: USBComPortRXTask
+	 * Task name: USB_COM_TX
+	 * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
+	 * Parameter: NULL
+	 * Priority: USB_COM_TX_THREAD_PRIO ([0, inf] possible)
+	 * Handle: ReceiverPrintSamplingTask
+	 * */
+	if (pdPASS
+			!= xTaskCreate((pdTASK_CODE )ReceiverPrintSamplingTask,
+					(signed portCHAR*)"RC_PRINT_SAMPL",
+					configMINIMAL_STACK_SIZE, NULL,
+					RECEIVER_PRINT_SAMPLING_THREAD_PRIO,
+					&ReceiverPrintSamplingTaskHandle)) {
+		Error_Handler();
+		return RECEIVER_ERROR;
+	}
+
+	return RECEIVER_OK;
+}
+
+/*
+ * @brief  Stops receiver print sampling by deleting the task
+ * @param  None
+ * @retval RECEIVER_OK if task deleted
+ */
+ReceiverErrorStatus StopReceiverSamplingTask(void) {
+	vTaskDelete(ReceiverPrintSamplingTaskHandle);
 	return RECEIVER_OK;
 }
 
@@ -547,6 +600,114 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	} else if (htim->Instance == AUX_RECEIVER_TIM) {
 		AuxReceiverTimerPeriodCount++;
 	}
+}
+
+/**
+ * @brief  Gets current throttle calibration max value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetThrottleReceiverCalibrationMaxValue(void) {
+	return CalibrationValues.ThrottleChannel.ChannelMaxCount;
+}
+
+/**
+ * @brief  Gets current throttle calibration min value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetThrottleReceiverCalibrationMinValue(void) {
+	return CalibrationValues.ThrottleChannel.ChannelMinCount;
+}
+
+/**
+ * @brief  Gets current aileron calibration max value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetAileronReceiverCalibrationMaxValue(void) {
+	return CalibrationValues.AileronChannel.ChannelMaxCount;
+}
+
+/**
+ * @brief  Gets current aileron calibration min value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetAileronReceiverCalibrationMinValue(void) {
+	return CalibrationValues.AileronChannel.ChannelMinCount;
+}
+
+/**
+ * @brief  Gets current elevator calibration max value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetElevatorReceiverCalibrationMaxValue(void) {
+	return CalibrationValues.ElevatorChannel.ChannelMaxCount;
+}
+
+/**
+ * @brief  Gets current elevator calibration min value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetElevatorReceiverCalibrationMinValue(void) {
+	return CalibrationValues.ElevatorChannel.ChannelMinCount;
+}
+
+/**
+ * @brief  Gets current rudder calibration max value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetRudderReceiverCalibrationMaxValue(void) {
+	return CalibrationValues.RudderChannel.ChannelMaxCount;
+}
+
+/**
+ * @brief  Gets current rudder calibration min value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetRudderReceiverCalibrationMinValue(void) {
+	return CalibrationValues.RudderChannel.ChannelMinCount;
+}
+
+/**
+ * @brief  Gets current gear calibration max value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetGearReceiverCalibrationMaxValue(void) {
+	return CalibrationValues.GearChannel.ChannelMaxCount;
+}
+
+/**
+ * @brief  Gets current gear calibration min value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetGearReceiverCalibrationMinValue(void) {
+	return CalibrationValues.GearChannel.ChannelMinCount;
+}
+
+/**
+ * @brief  Gets current aux1 calibration max value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetAux1ReceiverCalibrationMaxValue(void) {
+	return CalibrationValues.Aux1Channel.ChannelMaxCount;
+}
+
+/**
+ * @brief  Gets current aux1 calibration min value
+ * @param  None
+ * @retval Calibrated value
+ */
+uint16_t GetAux1ReceiverCalibrationMinValue(void) {
+	return CalibrationValues.Aux1Channel.ChannelMinCount;
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -1320,6 +1481,98 @@ static void ResetCalibrationSampling(
 	RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE * sizeof(uint16_t));
 	channelCalibrationSampling->tmpMinBufferMaxValue = 0;
 	channelCalibrationSampling->tmpMinIndex = 0;
+}
+
+/**
+ * @brief  Task code handles receiver print sampling
+ * @param  argument : Unused parameter
+ * @retval None
+ */
+static void ReceiverPrintSamplingTask(void const *argument) {
+	(void) argument;
+
+	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE]; // TODO trim size and define
+	char sampleValueTmpString[8]; // Only needs enough space to store an int16_t in string format
+	portTickType xLastWakeTime;
+	portTickType xSampleStartTime;
+
+	/* Initialise the xLastWakeTime variable with the current time */
+	xLastWakeTime = xTaskGetTickCount();
+	xSampleStartTime = xLastWakeTime;
+
+	for (;;) {
+		vTaskDelayUntil(&xLastWakeTime, receiverPrintSampleTime);
+
+		strncpy(sampleString, "Receiver channel values:\r\nStatus: ",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		if (IsReceiverActive())
+			strncat((char*) sampleString, "ACTIVE\r\n",
+			RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		else
+			strncat((char*) sampleString, "INACTIVE\r\n",
+			RECEIVER_SAMPLING_MAX_STRING_SIZE);
+
+		strncat((char*) sampleString, "Throttle (0-65535): ",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		snprintf((char*) sampleValueTmpString, 8, "%u",
+				GetThrottleReceiverChannel());
+		strncat((char*) sampleString, sampleValueTmpString,
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		strncat((char*) sampleString, "\r\n",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+
+		strncat((char*) sampleString, "Aileron (-32768-32767): ",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		snprintf((char*) sampleValueTmpString, 16, "%d",
+				GetAileronReceiverChannel());
+		strncat((char*) sampleString, sampleValueTmpString,
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		strncat((char*) sampleString, "\r\n",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+
+		strncat((char*) sampleString, "Elevator (-32768-32767): ",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		snprintf((char*) sampleValueTmpString, 16, "%d",
+				GetElevatorReceiverChannel());
+		strncat((char*) sampleString, sampleValueTmpString,
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		strncat((char*) sampleString, "\r\n",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+
+		strncat((char*) sampleString, "Rudder (-32768-32767): ",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		snprintf((char*) sampleValueTmpString, 16, "%d",
+				GetRudderReceiverChannel());
+		strncat((char*) sampleString, sampleValueTmpString,
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		strncat((char*) sampleString, "\r\n",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+
+		strncat((char*) sampleString, "Gear (-32768-32767): ",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		snprintf((char*) sampleValueTmpString, 16, "%d",
+				GetGearReceiverChannel());
+		strncat((char*) sampleString, sampleValueTmpString,
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		strncat((char*) sampleString, "\r\n",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+
+		strncat((char*) sampleString, "Aux1 (-32768-32767): ",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		snprintf((char*) sampleValueTmpString, 16, "%d",
+				GetAux1ReceiverChannel());
+		strncat((char*) sampleString, sampleValueTmpString,
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		strncat((char*) sampleString, "\r\n\r\n",
+		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+
+		USBComSendString(sampleString, portMAX_DELAY, portMAX_DELAY);
+
+		/* If sampling duration exceeded, delete task to stop sampling */
+		if (xTaskGetTickCount()
+				>= xSampleStartTime + receiverPrintSampleDuration*configTICK_RATE_HZ)
+			StopReceiverSamplingTask();
+	}
 }
 
 /**

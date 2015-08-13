@@ -56,6 +56,31 @@ static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(
 		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
+/*
+ * Function implements the "get-receiver" command.
+ */
+static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer,
+		size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "get-receiver-calibration" command.
+ */
+static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer,
+		size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "start-receiver-sampling" command.
+ */
+static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t *pcWriteBuffer,
+		size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "start-receiver-sampling" command.
+ */
+static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t *pcWriteBuffer,
+		size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+
 /* Private variables ---------------------------------------------------------*/
 
 /* Structure that defines the "echo" command line command. */
@@ -90,8 +115,60 @@ static const CLI_Command_Definition_t stopReceiverCalibrationCommand =
 				0 /* Number of parameters expected */
 		};
 
+/* Structure that defines the "get-receiver" command line command. */
+static const CLI_Command_Definition_t getReceiverCommand =
+		{ (const int8_t * const ) "get-receiver",
+				(const int8_t * const ) "\r\nget-receiver:\r\n Prints the current receiver value\r\n",
+				CLIGetReceiverCommandFunction, /* The function to run. */
+				0 /* Number of parameters expected */
+		};
+
+/* Structure that defines the "get-receiver-calibration" command line command. */
+static const CLI_Command_Definition_t getReceiverCalibrationCommand =
+		{ (const int8_t * const ) "get-receiver-calibration",
+				(const int8_t * const ) "\r\nget-receiver-calibration:\r\n Prints the current receiver calibration values\r\n",
+				CLIGetReceiverCalibrationCommandFunction, /* The function to run. */
+				0 /* Number of parameters expected */
+		};
+
+/* Structure that defines the "start-receiver-sampling" command line command. */
+static const CLI_Command_Definition_t startReceiverSamplingCommand =
+		{ (const int8_t * const ) "start-receiver-sampling",
+				(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s\r\n",
+				CLIStartReceiverSamplingCommandFunction, /* The function to run. */
+				2 /* Number of parameters expected */
+		};
+
+/* Structure that defines the "stop-receiver-sampling" command line command. */
+static const CLI_Command_Definition_t stopReceiverSamplingCommand =
+		{ (const int8_t * const ) "stop-receiver-sampling",
+				(const int8_t * const ) "\r\nstop-receiver-sampling:\r\n Stops the printing of receiver sample values\r\n",
+				CLIStopReceiverSamplingCommandFunction, /* The function to run. */
+				2 /* Number of parameters expected */
+		};
+
 extern volatile FIFOBuffer_TypeDef USBCOMRxFIFOBuffer;
 extern xSemaphoreHandle USBCOMRxDataSem;
+
+/* Exported functions --------------------------------------------------------*/
+
+/**
+ * @brief  Registers CLI commands
+ * @param  None
+ * @retval None
+ */
+void RegisterCLICommands(void) {
+	/* Register all the command line commands defined immediately above. */
+	FreeRTOS_CLIRegisterCommand(&echoCommand);
+	FreeRTOS_CLIRegisterCommand(&echoDataCommand);
+
+	FreeRTOS_CLIRegisterCommand(&startReceiverCalibrationCommand);
+	FreeRTOS_CLIRegisterCommand(&stopReceiverCalibrationCommand);
+	FreeRTOS_CLIRegisterCommand(&getReceiverCommand);
+	FreeRTOS_CLIRegisterCommand(&getReceiverCalibrationCommand);
+	FreeRTOS_CLIRegisterCommand(&startReceiverSamplingCommand);
+	FreeRTOS_CLIRegisterCommand(&stopReceiverSamplingCommand);
+}
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -239,7 +316,7 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer,
 	}
 
 	/* Update return value and parameter index */
-	if (lParameterNumber == echoCommand.cExpectedNumberOfParameters + 1) // Added +1 to output \r\n
+	if (lParameterNumber == echoDataCommand.cExpectedNumberOfParameters + 1) // Added +1 to output \r\n
 			{
 		/* If this is the last of the parameters then there are no more strings to return after this one. */
 		xReturn = pdFALSE;
@@ -313,21 +390,262 @@ static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(
 	return pdFALSE;
 }
 
-/* Exported functions --------------------------------------------------------*/
+/**
+ * @brief  Implements the CLI command to print receiver values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer,
+		size_t xWriteBufferLen, const int8_t *pcCommandString) {
+
+	static uint8_t currentChannelPrint = 0;
+
+	/* Remove compile time warnings about unused parameters, and check the
+	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
+	 write buffer length is adequate, so does not check for buffer overflows. */
+	(void) pcCommandString;
+	(void) xWriteBufferLen;
+	configASSERT(pcWriteBuffer);
+
+	/* Get the current receiver values */
+	switch(currentChannelPrint) {
+	case 0:
+		strncpy((char*) pcWriteBuffer, "Receiver channel values:\r\nStatus: ", xWriteBufferLen);
+		if (IsReceiverActive())
+			strncat((char*) pcWriteBuffer, "ACTIVE\r\n", xWriteBufferLen);
+		else
+			strncat((char*) pcWriteBuffer, "INACTIVE\r\n", xWriteBufferLen);
+		break;
+	case 1:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Throttle (0-65535): %u\r\n",
+				GetThrottleReceiverChannel());
+		break;
+	case 2:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aileron (-32768-32767): %d\r\n",
+				GetAileronReceiverChannel());
+		break;
+	case 3:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Elevator (-32768-32767): %d\r\n",
+				GetElevatorReceiverChannel());
+		break;
+	case 4:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Rudder (-32768-32767): %d\r\n",
+				GetRudderReceiverChannel());
+		break;
+	case 5:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Gear (-32768-32767): %d\r\n",
+				GetGearReceiverChannel());
+		break;
+	case 6:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aux1 (-32768-32767): %d\r\n",
+				GetAux1ReceiverChannel());
+		break;
+	default:
+		strncpy((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
+		/* Reset receiver print iteration number*/
+		currentChannelPrint = 0;
+		/* Return false to indicate command activity finished */
+		return pdFALSE;
+	}
+
+	currentChannelPrint++;
+	return pdTRUE;
+}
 
 /**
- * @brief  Registers CLI commands
- * @param  None
- * @retval None
+ * @brief  Implements the CLI command to print receiver calibration values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-void RegisterCLICommands(void) {
-	/* Register all the command line commands defined immediately above. */
-	FreeRTOS_CLIRegisterCommand(&echoCommand);
-	FreeRTOS_CLIRegisterCommand(&echoDataCommand);
-	FreeRTOS_CLIRegisterCommand(&startReceiverCalibrationCommand);
-	FreeRTOS_CLIRegisterCommand(&stopReceiverCalibrationCommand);
-	// TODO FreeRTOS_CLIRegisterCommand(&getReceiverChannelsCommand);
+static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
+		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString) {
+
+	static uint8_t currentChannelPrint = 0;
+
+	/* Remove compile time warnings about unused parameters, and check the
+	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
+	 write buffer length is adequate, so does not check for buffer overflows. */
+	(void) pcCommandString;
+	(void) xWriteBufferLen;
+	configASSERT(pcWriteBuffer);
+
+	/* Get the current receiver values */
+	switch (currentChannelPrint) {
+	case 0:
+		strncpy((char*) pcWriteBuffer,
+				"Receiver channel calibration values:\r\nNOTE: Values are specified in timer ticks.\r\n",
+				xWriteBufferLen);
+		break;
+	case 1:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Throttle Max: %u\r\n",
+				GetThrottleReceiverCalibrationMaxValue());
+		break;
+	case 2:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Throttle Min: %u\r\n",
+				GetThrottleReceiverCalibrationMinValue());
+		break;
+	case 3:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aileron Max: %u\r\n",
+				GetAileronReceiverCalibrationMaxValue());
+		break;
+	case 4:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aileron Min: %u\r\n",
+				GetAileronReceiverCalibrationMinValue());
+		break;
+	case 5:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Elevator Max: %u\r\n",
+				GetElevatorReceiverCalibrationMaxValue());
+		break;
+	case 6:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Elevator Min: %u\r\n",
+				GetElevatorReceiverCalibrationMinValue());
+		break;
+	case 7:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Rudder Max: %u\r\n",
+				GetRudderReceiverCalibrationMaxValue());
+		break;
+	case 8:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Rudder Min: %u\r\n",
+				GetRudderReceiverCalibrationMinValue());
+		break;
+	case 9:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Gear Max: %u\r\n",
+				GetGearReceiverCalibrationMaxValue());
+		break;
+	case 10:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Gear Min: %u\r\n",
+				GetGearReceiverCalibrationMinValue());
+		break;
+	case 11:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aux1 Max: %u\r\n",
+				GetAux1ReceiverCalibrationMaxValue());
+		break;
+	case 12:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aux1 Min: %u\r\n",
+				GetAux1ReceiverCalibrationMinValue());
+		break;
+	default:
+		strncpy((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
+		/* Reset receiver print iteration number*/
+		currentChannelPrint = 0;
+		/* Return false to indicate command activity finished */
+		return pdFALSE;
+	}
+
+	currentChannelPrint++;
+	return pdTRUE;
 }
+
+
+
+/**
+ * @brief  Starts receiver sampling for a specified sample time and duration
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuffer,
+		size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength, xReturn;
+	static portBASE_TYPE lParameterNumber = 0;
+
+	/* Remove compile time warnings about unused parameters, and check the
+	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
+	 write buffer length is adequate, so does not check for buffer overflows. */
+	(void) pcCommandString;
+	(void) xWriteBufferLen;
+	configASSERT(pcWriteBuffer);
+
+	if (lParameterNumber == 0) {
+		/* The first time the function is called after the command has been
+		 entered just a header string is returned. */
+		strncpy((char*) pcWriteBuffer,
+				"Starting print sampling of receiver values...\r\n", xWriteBufferLen);
+	} else {
+		uint16_t receiverSampleTime;
+		uint16_t receiverSampleDuration;
+
+		/* Obtain the parameter string */
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */
+		);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		// TODO strncat : we must count how much space we have left before using it
+		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
+		strncat((char*) pcWriteBuffer, (char*)pcParameter, xParameterStringLength);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
+
+		receiverSampleTime = atoi((char*)pcParameter); // TODO sanity check?
+
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */		);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		strncat((char*) pcWriteBuffer, "Duration (s): ", xWriteBufferLen);
+		strncat((char*) pcWriteBuffer, (char*)pcParameter, xParameterStringLength);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
+
+		receiverSampleDuration = atoi((char*)pcParameter); // TODO sanity check?
+
+		StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
+	}
+
+	/* Update return value and parameter index */
+	if (lParameterNumber == startReceiverSamplingCommand.cExpectedNumberOfParameters) {
+		/* If this is the last parameter then there are no more strings to return after this one. */
+		xReturn = pdFALSE;
+		lParameterNumber = 0;
+	} else {
+		/* There are more parameters to return after this one. */
+		xReturn = pdTRUE;
+		lParameterNumber++;
+	}
+
+	return xReturn;
+}
+
+/**
+ * @brief  Stops printing of receiver sample values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t* pcWriteBuffer,
+		size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the
+	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
+	 write buffer length is adequate, so does not check for buffer overflows. */
+	(void) pcCommandString;
+	(void) xWriteBufferLen;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer,
+			"Stopping printing of receiver sample values...\r\n",
+			xWriteBufferLen);
+
+	/* Stop the receiver printing task */
+	StopReceiverSamplingTask();
+
+	return pdFALSE;
+}
+
 
 /**
  * @}

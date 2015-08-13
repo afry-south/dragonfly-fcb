@@ -586,7 +586,7 @@ void UpdateRollEstimate(void)
 
   /* Prediction */
   States.roll = States.roll + CONTROL_SAMPLE_PERTIOD*rollRateGyro - CONTROL_SAMPLE_PERTIOD*States.rollRateBias;
-  States.rollRateBias = States.rollRateBias;
+  //States.rollRateBias = States.rollRateBias;
 
   RollEstimator.p11 = RollEstimator.p11-RollEstimator.p21*CONTROL_SAMPLE_PERTIOD - CONTROL_SAMPLE_PERTIOD*(RollEstimator.p12-RollEstimator.p22*CONTROL_SAMPLE_PERTIOD) + RollEstimator.q1;
   RollEstimator.p12 = RollEstimator.p12 - RollEstimator.p22*CONTROL_SAMPLE_PERTIOD;
@@ -635,7 +635,7 @@ void UpdatePitchEstimate(void)
 
   /* Prediction */
   States.pitch = States.pitch + CONTROL_SAMPLE_PERTIOD*pitchRateGyro - CONTROL_SAMPLE_PERTIOD*States.pitchRateBias;
-  States.pitchRateBias = States.pitchRateBias;
+  //States.pitchRateBias = States.pitchRateBias;
 
   PitchEstimator.p11 = PitchEstimator.p11-PitchEstimator.p21*CONTROL_SAMPLE_PERTIOD - CONTROL_SAMPLE_PERTIOD*(PitchEstimator.p12-PitchEstimator.p22*CONTROL_SAMPLE_PERTIOD) + PitchEstimator.q1;
   PitchEstimator.p12 = PitchEstimator.p12 - PitchEstimator.p22*CONTROL_SAMPLE_PERTIOD;

@@ -201,7 +201,7 @@ static void System_Init(void) {
  */
 static void RTOS_Init(void) {
 	/* # CREATE THREADS ####################################################### */
-	CreateUSBComThreads();
+	CreateUSBComTasks();
 
 	/* # CREATE QUEUES ######################################################## */
 	CreateUSBComQueues();
