@@ -449,6 +449,7 @@ static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer,
 	}
 
 	currentChannelPrint++;
+	/* Return true to indicate command activity not yet completed */
 	return pdTRUE;
 }
 
@@ -534,6 +535,7 @@ static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
 	}
 
 	currentChannelPrint++;
+	/* Return true to indicate command activity not yet completed */
 	return pdTRUE;
 }
 

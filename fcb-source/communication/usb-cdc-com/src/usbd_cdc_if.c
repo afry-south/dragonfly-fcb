@@ -64,8 +64,7 @@ volatile FIFOBuffer_TypeDef USBCOMRxFIFOBuffer;
 uint8_t USBCOMTxBufferArray[USB_COM_TX_BUFFER_SIZE];
 volatile FIFOBuffer_TypeDef USBCOMTxFIFOBuffer;
 
-USBD_CDC_ItfTypeDef USBD_CDC_fops = { CDCItfInit, CDCItfDeInit, CDCItfControl,
-		CDCItfReceive };
+USBD_CDC_ItfTypeDef USBD_CDC_fops = { CDCItfInit, CDCItfDeInit, CDCItfControl, CDCItfReceive };
 
 USBD_CDC_LineCodingTypeDef LineCoding = { 115200, /* baud rate */
 0x00, /* stop bits-1 */
@@ -139,8 +138,7 @@ static int8_t CDCItfControl(uint8_t cmd, uint8_t* pbuf, uint16_t length) {
 		break;
 
 	case CDC_SET_LINE_CODING:
-		LineCoding.bitrate = (uint32_t) (pbuf[0] | (pbuf[1] << 8)
-				|\
+		LineCoding.bitrate = (uint32_t) (pbuf[0] | (pbuf[1] << 8) |\
  (pbuf[2] << 16) | (pbuf[3] << 24));
 		LineCoding.format = pbuf[4];
 		LineCoding.paritytype = pbuf[5];
@@ -191,8 +189,7 @@ static int8_t CDCItfReceive(uint8_t* rxData, uint32_t* rxDataLen) {
 		if (result == USBD_OK) {
 			if (FIFOBufferPutData(&USBCOMRxFIFOBuffer, rxData, *rxDataLen)) {
 				/* # Signal RX task that new USB CDC data has arrived #### */
-				xSemaphoreGiveFromISR(USBCOMRxDataSem,
-						&xHigherPriorityTaskWoken);
+				xSemaphoreGiveFromISR(USBCOMRxDataSem, &xHigherPriorityTaskWoken);
 			} else {
 				result = USBD_FAIL;
 			}
@@ -223,8 +220,7 @@ static void USBComPortRXTask(void const *argument) {
 			uint8_t getByte;
 
 			// Empty buffer
-			while (bufferStatus == SUCCESS
-					&& (i < MAX_CLI_COMMAND_SIZE || getByte != '\n')) {
+			while (bufferStatus == SUCCESS && (i < MAX_CLI_COMMAND_SIZE || getByte != '\n')) {
 				bufferStatus = FIFOBufferGetByte(&USBCOMRxFIFOBuffer, &getByte);
 
 				if (bufferStatus == SUCCESS)
@@ -238,11 +234,10 @@ static void USBComPortRXTask(void const *argument) {
 				do {
 					/* Send the command string to the command interpreter. Any output generated
 					 * by the command interpreter will be placed in the cliOutBuffer buffer. */
-					xMoreDataToFollow = FreeRTOS_CLIProcessCommand(
-							(int8_t*) cliInBuffer, /* The command string.*/
-							(int8_t*) cliOutBuffer, /* The output buffer. */
-							MAX_CLI_OUTPUT_SIZE /* The size of the output buffer. */
-							);
+					xMoreDataToFollow = FreeRTOS_CLIProcessCommand((int8_t*) cliInBuffer, /* The command string.*/
+					(int8_t*) cliOutBuffer, /* The output buffer. */
+					MAX_CLI_OUTPUT_SIZE /* The size of the output buffer. */
+					);
 
 					USBComSendString((char*) cliOutBuffer, portMAX_DELAY,
 					portMAX_DELAY);
@@ -274,39 +269,29 @@ static void USBComPortTXTask(void const *argument) {
 
 	for (;;) {
 		/* Wait forever for incoming data over USB by pending on the USB Tx queue */
-		if (pdPASS
-				== xQueueReceive(usbComTxQueue, &CompPortTxQueueItem,
-						portMAX_DELAY)) {
+		if (pdPASS == xQueueReceive(usbComTxQueue, &CompPortTxQueueItem, portMAX_DELAY)) {
 			if (xSemaphoreTake(USBTxMutex, portMAX_DELAY) == pdPASS) // Pend on mutex while previous transmission is in progress
 			{
 				/* Take the buffer mutex (if it has one) */
 				if ((*CompPortTxQueueItem.FIFOBufferMutex != NULL
 						&& xSemaphoreTake(*CompPortTxQueueItem.FIFOBufferMutex,
-								portMAX_DELAY) == pdPASS)
-						|| *CompPortTxQueueItem.FIFOBufferMutex == NULL) {
+								portMAX_DELAY) == pdPASS) || *CompPortTxQueueItem.FIFOBufferMutex == NULL) {
 
 					if (CompPortTxQueueItem.bufferType == ARRAY_BUFFER) {
 						// Tx buffer is just a good ol' array of data
-						CDCTransmitFS((uint8_t*) CompPortTxQueueItem.bufferPtr,
-								CompPortTxQueueItem.dataSize);
+						CDCTransmitFS((uint8_t*) CompPortTxQueueItem.bufferPtr, CompPortTxQueueItem.dataSize);
 					} else if (CompPortTxQueueItem.bufferType == FIFO_BUFFER) {
 						// Tx buffer is a FIFO ring buffer that wraps around its zero index
 						uint8_t* txDataPtr;
-						uint16_t tmpSize =
-								FIFOBufferGetData(
-										(volatile FIFOBuffer_TypeDef*) CompPortTxQueueItem.bufferPtr,
-										&txDataPtr,
-										CompPortTxQueueItem.dataSize);
+						uint16_t tmpSize = FIFOBufferGetData(
+								(volatile FIFOBuffer_TypeDef*) CompPortTxQueueItem.bufferPtr, &txDataPtr,
+								CompPortTxQueueItem.dataSize);
 						CDCTransmitFS(txDataPtr, tmpSize);
 
 						// If not all data received from buffer (due to FIFO wrap-around), get the rest
 						if (tmpSize < CompPortTxQueueItem.dataSize) {
-							tmpSize =
-									FIFOBufferGetData(
-											(volatile FIFOBuffer_TypeDef*) CompPortTxQueueItem.bufferPtr,
-											&txDataPtr,
-											CompPortTxQueueItem.dataSize
-													- tmpSize);
+							tmpSize = FIFOBufferGetData((volatile FIFOBuffer_TypeDef*) CompPortTxQueueItem.bufferPtr,
+									&txDataPtr, CompPortTxQueueItem.dataSize - tmpSize);
 							CDCTransmitFS(txDataPtr, tmpSize);
 						}
 					}
@@ -324,12 +309,10 @@ static void USBComPortTXTask(void const *argument) {
 
 void InitUSBCom(void) {
 	/* Create CDC RX FIFO Buffer */
-	FIFOBufferInit(&USBCOMRxFIFOBuffer, USBCOMRxBufferArray,
-			sizeof(USBCOMRxBufferArray));
+	FIFOBufferInit(&USBCOMRxFIFOBuffer, USBCOMRxBufferArray, sizeof(USBCOMRxBufferArray));
 
 	/* Create CDC TX FIFO Buffer */
-	FIFOBufferInit(&USBCOMTxFIFOBuffer, USBCOMTxBufferArray,
-			sizeof(USBCOMTxBufferArray));
+	FIFOBufferInit(&USBCOMTxFIFOBuffer, USBCOMTxBufferArray, sizeof(USBCOMTxBufferArray));
 
 	/* Init Device Library */
 	USBD_Init(&hUSBDDevice, &VCP_Desc, 0);
@@ -388,10 +371,9 @@ USBD_StatusTypeDef CDCTransmitFS(uint8_t* data, uint16_t size) {
  * @param  maxQueueWaitTicks : Max ticks to wait for the queue
  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
  */
-USBD_StatusTypeDef USBComSendString(const char* sendString,
-		const uint32_t maxMutexWaitTicks, const uint32_t maxQueueWaitTicks) {
-	return USBComSendData((uint8_t*) sendString, strlen(sendString),
-			maxMutexWaitTicks, maxQueueWaitTicks);
+USBD_StatusTypeDef USBComSendString(const char* sendString, const uint32_t maxMutexWaitTicks,
+		const uint32_t maxQueueWaitTicks) {
+	return USBComSendData((uint8_t*) sendString, strlen(sendString), maxMutexWaitTicks, maxQueueWaitTicks);
 }
 
 /**
@@ -402,9 +384,8 @@ USBD_StatusTypeDef USBComSendString(const char* sendString,
  * @param  maxQueueWaitTicks : Max ticks to wait for the queue
  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
  */
-USBD_StatusTypeDef USBComSendData(const uint8_t* sendData,
-		const uint16_t sendDataSize, const uint32_t maxMutexWaitTicks,
-		const uint32_t maxQueueWaitTicks) {
+USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDataSize,
+		const uint32_t maxMutexWaitTicks, const uint32_t maxQueueWaitTicks) {
 	UsbComPortTxQueueItem_TypeDef CompPortTxQueueItem;
 	USBD_StatusTypeDef result = USBD_OK;
 
@@ -420,8 +401,7 @@ USBD_StatusTypeDef USBComSendData(const uint8_t* sendData,
 			if (xQueueSend(usbComTxQueue, &CompPortTxQueueItem,
 					maxQueueWaitTicks) != pdPASS) {
 				// Queue full, delete data from FIFO
-				FIFOBufferDeleteLastEnteredBytes(&USBCOMTxFIFOBuffer,
-						sendDataSize);
+				FIFOBufferDeleteLastEnteredBytes(&USBCOMTxFIFOBuffer, sendDataSize);
 				result = USBD_FAIL;
 			}
 		} else {
@@ -446,8 +426,7 @@ void CreateUSBComTasks(void) {
 	 * Handle: USBComPortRxTaskHandle
 	 * */
 	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask,
-					(signed portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE,
+			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask, (signed portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE,
 					NULL, USB_COM_RX_THREAD_PRIO, &USBComPortRxTaskHandle)) {
 		Error_Handler();
 	}
@@ -461,8 +440,7 @@ void CreateUSBComTasks(void) {
 	 * Handle: USBComPortTxTaskHandle
 	 * */
 	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )USBComPortTXTask,
-					(signed portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE,
+			!= xTaskCreate((pdTASK_CODE )USBComPortTXTask, (signed portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE,
 					NULL, USB_COM_TX_THREAD_PRIO, &USBComPortTxTaskHandle)) {
 		Error_Handler();
 	}
@@ -470,8 +448,7 @@ void CreateUSBComTasks(void) {
 
 void CreateUSBComQueues(void) {
 	/* # Create queue for outgoing data ####################################### */
-	usbComTxQueue = xQueueCreate(USB_COM_TX_QUEUE_ITEMS,
-			sizeof(UsbComPortTxQueueItem_TypeDef));
+	usbComTxQueue = xQueueCreate(USB_COM_TX_QUEUE_ITEMS, sizeof(UsbComPortTxQueueItem_TypeDef));
 
 	/* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
 	vQueueAddToRegistry(usbComTxQueue, (signed portCHAR*) "usbComTxQueue");

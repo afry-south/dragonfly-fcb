@@ -59,7 +59,7 @@
 
 /* Definitions for Aux Receiver TIM pins */
 #define AUX_RECEIVER_TIM_CHANNEL_GPIO_PORT()            __GPIOB_CLK_ENABLE()
-#define AUX_RECEIVER_TIM_AF                             GPIO_AF2_TIM2
+#define AUX_RECEIVER_TIM_AF                             GPIO_AF2_TIM3
 #define AUX_RECEIVER_TIM_PIN_PORT                       GPIOB
 #define AUX_RECEIVER_PIN_CHANNEL1                       GPIO_PIN_4
 #define AUX_RECEIVER_PIN_CHANNEL2                       GPIO_PIN_5

@@ -87,8 +87,8 @@
 							</tool>
 							<tool command="${cross_prefix}${cross_c}${cross_suffix}" commandLinePattern="${COMMAND} ${cross_toolchain_flags} ${FLAGS} -c ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.979988201" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1317419700" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/STM32F3xx_HAL_Driver/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/fcb/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/cmsis-boot}&quot;"/>
@@ -118,8 +118,8 @@
 							</tool>
 							<tool command="${cross_prefix}${cross_cpp}${cross_suffix}" commandLinePattern="${COMMAND} ${cross_toolchain_flags} ${FLAGS} -c ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.217682518" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.1232018183" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/fcb/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/cmsis-boot}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/communication}&quot;"/>
@@ -176,7 +176,7 @@
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart.1118228404" name="Do not use standard start files (-nostartfiles)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.nostart" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.usenewlibnano.774670053" name="Use newlib-nano (--specs=nano.specs)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.usenewlibnano" value="true" valueType="boolean"/>
-								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.1154645156" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" valueType="libs"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.1154645156" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other.249364238" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.other" value="-specs=nosys.specs" valueType="string"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.input.1725910299" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -471,4 +471,5 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

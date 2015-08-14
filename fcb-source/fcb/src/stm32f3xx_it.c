@@ -11,8 +11,9 @@
  **/
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
 #include "stm32f3xx_it.h"
+#include "stm32f3xx.h"
+#include "main.h"
 
 #include "fcb_error.h"
 
@@ -26,7 +27,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd;
-extern USBD_HandleTypeDef hUSBDDevice;
 
 extern TIM_HandleTypeDef PrimaryReceiverTimHandle;
 extern TIM_HandleTypeDef AuxReceiverTimHandle;

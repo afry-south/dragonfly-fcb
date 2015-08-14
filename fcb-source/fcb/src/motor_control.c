@@ -62,32 +62,28 @@ void MotorControlConfig(void) {
 
 	/* Set the pulse value for Motor 1 */
 	ocConfig.Pulse = 0;
-	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR1_CHANNEL)
-			!= HAL_OK) {
+	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR1_CHANNEL) != HAL_OK) {
 		/* Configuration Error */
 		Error_Handler();
 	}
 
 	/* Set the pulse value for Motor 2 */
 	ocConfig.Pulse = 0;
-	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR2_CHANNEL)
-			!= HAL_OK) {
+	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR2_CHANNEL) != HAL_OK) {
 		/* Configuration Error */
 		Error_Handler();
 	}
 
 	/* Set the pulse value for Motor 3 */
 	ocConfig.Pulse = 0;
-	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR3_CHANNEL)
-			!= HAL_OK) {
+	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR3_CHANNEL) != HAL_OK) {
 		/* Configuration Error */
 		Error_Handler();
 	}
 
 	/* Set the pulse value for Motor 4 */
 	ocConfig.Pulse = 0;
-	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR4_CHANNEL)
-			!= HAL_OK) {
+	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR4_CHANNEL) != HAL_OK) {
 		/* Configuration Error */
 		Error_Handler();
 	}
@@ -121,8 +117,7 @@ void MotorControlConfig(void) {
  * @retval      None.
  */
 void SetMotor1(uint16_t ctrlVal) {
-	uint32_t ccrVal = ESC_MIN_OUTPUT
-			+ ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
+	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
 	__HAL_TIM_SetCompare(&TimHandle, MOTOR1_CHANNEL, (uint16_t )ccrVal);
 }
 
@@ -132,8 +127,7 @@ void SetMotor1(uint16_t ctrlVal) {
  * @retval      None.
  */
 void SetMotor2(uint16_t ctrlVal) {
-	uint32_t ccrVal = ESC_MIN_OUTPUT
-			+ ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
+	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
 	__HAL_TIM_SetCompare(&TimHandle, MOTOR2_CHANNEL, ccrVal);
 }
 
@@ -143,8 +137,7 @@ void SetMotor2(uint16_t ctrlVal) {
  * @retval      None.
  */
 void SetMotor3(uint16_t ctrlVal) {
-	uint32_t ccrVal = ESC_MIN_OUTPUT
-			+ ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
+	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
 	__HAL_TIM_SetCompare(&TimHandle, MOTOR3_CHANNEL, ccrVal);
 }
 
@@ -154,8 +147,7 @@ void SetMotor3(uint16_t ctrlVal) {
  * @retval      None.
  */
 void SetMotor4(uint16_t ctrlVal) {
-	uint32_t ccrVal = ESC_MIN_OUTPUT
-			+ ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
+	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
 	__HAL_TIM_SetCompare(&TimHandle, MOTOR4_CHANNEL, ccrVal);
 }
 

@@ -49,6 +49,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx_hal.h"
+#include "stm32f3xx.h"
 
 #include "motor_control.h"
 #include "receiver.h"
@@ -146,8 +147,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
 		PRIMARY_RECEIVER_TIM_CLK_ENABLE();
 
 		/*##-2- Configure the NVIC for PRIMARY_RECEIVER_TIM ########################*/
-		HAL_NVIC_SetPriority(PRIMARY_RECEIVER_TIM_IRQn,
-		PRIMARY_RECEIVER_TIM_IRQ_PREEMPT_PRIO,
+		HAL_NVIC_SetPriority(PRIMARY_RECEIVER_TIM_IRQn, PRIMARY_RECEIVER_TIM_IRQ_PREEMPT_PRIO,
 		PRIMARY_RECEIVER_TIM_IRQ_SUB_PRIO);
 
 		/* Enable the PRIMARY_RECEIVER_TIM global Interrupt */
@@ -159,9 +159,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
 		AUX_RECEIVER_TIM_CLK_ENABLE();
 
 		/*##-2- Configure the NVIC for AUX_RECEIVER_TIM ############################*/
-		HAL_NVIC_SetPriority(AUX_RECEIVER_TIM_IRQn,
-		AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO,
-		AUX_RECEIVER_TIM_IRQ_SUB_PRIO);
+		HAL_NVIC_SetPriority(AUX_RECEIVER_TIM_IRQn, AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO, AUX_RECEIVER_TIM_IRQ_SUB_PRIO);
 
 		/* Enable the AUX_RECEIVER_TIM global Interrupt */
 		HAL_NVIC_EnableIRQ(AUX_RECEIVER_TIM_IRQn);
@@ -274,9 +272,8 @@ void HAL_TIM_IC_MspInit(TIM_HandleTypeDef *htim) {
 		HAL_GPIO_Init(PRIMARY_RECEIVER_TIM_PIN_PORT, &GPIO_InitStruct);
 
 		/*##-2- Configure the NVIC for PRIMARY_RECEIVER_TIM ########################*/
-		HAL_NVIC_SetPriority(PRIMARY_RECEIVER_TIM_IRQn,
-		PRIMARY_RECEIVER_TIM_IRQ_PREEMPT_PRIO,
-		PRIMARY_RECEIVER_TIM_IRQ_SUB_PRIO);
+		HAL_NVIC_SetPriority(PRIMARY_RECEIVER_TIM_IRQn, PRIMARY_RECEIVER_TIM_IRQ_PREEMPT_PRIO,
+				PRIMARY_RECEIVER_TIM_IRQ_SUB_PRIO);
 
 		/* Enable the PRIMARY_RECEIVER_TIM global Interrupt */
 		HAL_NVIC_EnableIRQ(PRIMARY_RECEIVER_TIM_IRQn);
@@ -305,9 +302,7 @@ void HAL_TIM_IC_MspInit(TIM_HandleTypeDef *htim) {
 		HAL_GPIO_Init(AUX_RECEIVER_TIM_PIN_PORT, &GPIO_InitStruct);
 
 		/*##-2- Configure the NVIC for AUX_RECEIVER_TIM ############################*/
-		HAL_NVIC_SetPriority(AUX_RECEIVER_TIM_IRQn,
-		AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO,
-		AUX_RECEIVER_TIM_IRQ_SUB_PRIO);
+		HAL_NVIC_SetPriority(AUX_RECEIVER_TIM_IRQn, AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO, AUX_RECEIVER_TIM_IRQ_SUB_PRIO);
 
 		/* Enable the AUX_RECEIVER_TIM global Interrupt */
 		HAL_NVIC_EnableIRQ(AUX_RECEIVER_TIM_IRQn);
