@@ -38,8 +38,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "lsm303dlhc.h"
 
-// #define  FCB_USE_ACC_DRDY_INT1
-#define FCB_USE_MAG_DRDY_INT1
+#define  FCB_USE_ACC_DRDY_INT1
+// #define FCB_USE_MAG_DRDY_INT1
 
 
 /** @addtogroup BSP
@@ -66,6 +66,20 @@
 /** @defgroup LSM303DLHC_Private_Defines
   * @{
   */
+
+struct MagnetometerConfig {
+  float xNorm;
+  float yNorm;
+  float zNorm;
+  float xOffset;
+  float yOffset;
+  float zOffset;
+  int16_t xySensitivity;
+  int16_t zSensitivity;
+  uint8_t fullScale;
+  uint8_t dataRate;
+  uint8_t temperatureSensor;
+};
 
 /**
   * @}
@@ -96,6 +110,8 @@ ACCELERO_DrvTypeDef Lsm303dlhcDrv =
   LSM303DLHC_AccFilterCmd,
   LSM303DLHC_AccReadXYZ
 };
+
+struct MagnetometerConfig magConfig = { 0 };
 
 uint8_t tmpreg2A[8] = {0x00};
 uint8_t tmpreg3A = 0x00;
@@ -570,6 +586,8 @@ void LSM303DLHC_AccZClickITConfig(void)
 
 }
 
+#define MAGNET
+
 #ifdef MAGNET
 /**
   * @brief  Set LSM303DLHC Mag Initialization.
@@ -577,27 +595,39 @@ void LSM303DLHC_AccZClickITConfig(void)
   *         that contains the configuration setting for the LSM303DLHC.
   * @retval None
   */
-void LSM303DLHC_MagInit(LSM303DLHCMag_InitTypeDef *LSM303DLHC_InitStruct)
+void LSM303DLHC_MagInit(void)
 {
-  uint8_t cra_regm = 0x00, crb_regm = 0x00, mr_regm = 0x00;
+  uint8_t mr_regm = 0x00, cra_regm = 0x00, crb_regm = 0x00;
+  magConfig.xNorm = 1;
+  magConfig.yNorm = 1;
+  magConfig.zNorm = 1;
+
+  magConfig.xOffset = 0;
+  magConfig.yOffset = 0;
+  magConfig.zOffset = 0;
+  magConfig.fullScale = LSM303DLHC_FS_1_3_GA; /* earth's magnetic field vector is .5 Gauss */
+  magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
+  magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
+  magConfig.dataRate = LSM303DLHC_ODR_0_75_HZ;
+  magConfig.temperatureSensor = LSM303DLHC_TEMPSENSOR_DISABLE;
 
   /* Configure MEMS: temp and Data rate */
-  cra_regm |= (uint8_t) (LSM303DLHC_InitStruct->Temperature_Sensor | LSM303DLHC_InitStruct->MagOutput_DataRate);
+  cra_regm |= (uint8_t) (magConfig.temperatureSensor | magConfig.dataRate);
 
   /* Configure MEMS: full Scale */
-  crb_regm |= (uint8_t) (LSM303DLHC_InitStruct->MagFull_Scale);
+  crb_regm |= (uint8_t) (magConfig.fullScale);
 
   /* Configure MEMS: working mode */
-  mr_regm |= (uint8_t) (LSM303DLHC_InitStruct->Working_Mode);
+  mr_regm = (uint8_t) LSM303DLHC_CONTINUOS_CONVERSION;
 
   /* Write value to Mag MEMS CRA_REG regsister */
-  COMPASSACCELERO_IO_Write(MAG_I2C_ADDRESS, LSM303DLHC_CRA_REG_M, 1, &cra_regm);
+  COMPASSACCELERO_IO_Write(MAG_I2C_ADDRESS, LSM303DLHC_CRA_REG_M, cra_regm);
 
   /* Write value to Mag MEMS CRB_REG regsister */
-  COMPASSACCELERO_IO_Write(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M, 1, &crb_regm);
+  COMPASSACCELERO_IO_Write(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M, crb_regm);
 
   /* Write value to Mag MEMS MR_REG regsister */
-  COMPASSACCELERO_IO_Write(MAG_I2C_ADDRESS, LSM303DLHC_MR_REG_M, 1, &mr_regm);
+  COMPASSACCELERO_IO_Write(MAG_I2C_ADDRESS, LSM303DLHC_MR_REG_M, mr_regm);
 }
 
 /**
@@ -610,7 +640,7 @@ uint8_t LSM303DLHC_MagGetDataStatus(void)
   uint8_t tmpreg;
 
   /* Read Mag STATUS register */
-  COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_SR_REG_M, 1, &tmpreg);
+  tmpreg = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_SR_REG_M);
 
   return tmpreg;
 }
@@ -621,26 +651,24 @@ uint8_t LSM303DLHC_MagGetDataStatus(void)
   * @param  pfData : Data out pointer
   * @retval None
   */
-void LSM303DLHC_MagReadXYZ(float* pData)
+void LSM303DLHC_MagReadXYZ(float* pfData)
 {
   int16_t pnRawData[3];
   uint8_t ctrlx[2]={0,0};
   int8_t buffer[6];
   uint8_t i = 0;
-  uint8_t xyMagSensitivity = LSM303DLHC_M_SENSITIVITY_XY_1_3Ga; /* unit LSB/Gauss */
-  uint8_t zMagSensitivity = LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;  /* unit LSB/Gauss */
 
   /* Read the acceleration control register content */
   ctrlx[0] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M);
   ctrlx[1] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M);
 
   /* Read output register X, Y & Z acceleration */
-  buffer[0] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_L_M);
   buffer[1] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M);
-  buffer[2] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_M);
-  buffer[3] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_M);
-  buffer[4] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_M);
+  buffer[0] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_L_M);
   buffer[5] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_H_M);
+  buffer[4] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_M);
+  buffer[3] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_M);
+  buffer[2] = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_M);
 
 #warning skip the reading of the ctrl reg for LSB/MSB ... we use only one!
   /* check in the control register4 the data alignment*/
@@ -659,44 +687,48 @@ void LSM303DLHC_MagReadXYZ(float* pData)
     }
   }
 
+#warning delete this
+#if 0
   /* normal mode */
   /* switch the sensitivity value set in the CRTL4*/
   switch(ctrlx[1] & LSM303DLHC_FS_8_1_GA)
   {
       case LSM303DLHC_FS_1_3_GA:
-          xyMagSensitivity = LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
-          zMagSensitivity = LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
+          magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
+          magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
           break;
       case LSM303DLHC_FS_1_9_GA:
-          xyMagSensitivity = LSM303DLHC_M_SENSITIVITY_XY_1_9Ga;
-          zMagSensitivity = LSM303DLHC_M_SENSITIVITY_Z_1_9Ga;
+          magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_1_9Ga;
+          magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_1_9Ga;
           break;
       case LSM303DLHC_FS_2_5_GA:
-          xyMagSensitivity = LSM303DLHC_M_SENSITIVITY_XY_2_5Ga;
-          zMagSensitivity = LSM303DLHC_M_SENSITIVITY_Z_2_5Ga;
+          magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_2_5Ga;
+          magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_2_5Ga;
           break;
       case LSM303DLHC_FS_4_0_GA:
-          xyMagSensitivity = LSM303DLHC_M_SENSITIVITY_XY_4Ga;
-          zMagSensitivity = LSM303DLHC_M_SENSITIVITY_Z_4Ga;
+          magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_4Ga;
+          magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_4Ga;
           break;
       case LSM303DLHC_FS_4_7_GA:
-          xyMagSensitivity = LSM303DLHC_M_SENSITIVITY_XY_4_7Ga;
-          zMagSensitivity = LSM303DLHC_M_SENSITIVITY_Z_4_7Ga;
+          magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_4_7Ga;
+          magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_4_7Ga;
           break;
       case LSM303DLHC_FS_5_6_GA:
-          xyMagSensitivity = LSM303DLHC_M_SENSITIVITY_XY_5_6Ga;
-          zMagSensitivity = LSM303DLHC_M_SENSITIVITY_Z_5_6Ga;
+          magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_5_6Ga;
+          magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_5_6Ga;
           break;
       case LSM303DLHC_FS_8_1_GA:
-          xyMagSensitivity = LSM303DLHC_M_SENSITIVITY_XY_8_1Ga;
-          zMagSensitivity = LSM303DLHC_M_SENSITIVITY_Z_8_1Ga;
+          magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_8_1Ga;
+          magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_8_1Ga;
           break;
   }
+#endif
+
   /* Obtain the Gauss value for the three axis */
 
-  pfData[0] = (float) (((int16_t)(((uint16_t)buffer[0] << 8) + buffer[1])*1000)/Magn_Sensitivity_XY - MagOffsets[0])/MagXNorm;
-  pfData[1] = (float) (((int16_t)(((uint16_t)buffer[4] << 8) + buffer[5])*1000)/Magn_Sensitivity_XY - MagOffsets[1])/MagYNorm;
-  pfData[2] = (float) (((int16_t)(((uint16_t)buffer[2] << 8) + buffer[3])*1000)/Magn_Sensitivity_Z - MagOffsets[2])/MagZNorm;
+  pfData[0] = (float) (((int16_t)(((uint16_t)buffer[0] << 8) + buffer[1])*1000)/magConfig.xySensitivity - magConfig.xOffset)/ magConfig.xNorm;
+  pfData[1] = (float) (((int16_t)(((uint16_t)buffer[4] << 8) + buffer[5])*1000)/magConfig.xySensitivity - magConfig.yOffset)/magConfig.yNorm;
+  pfData[2] = (float) (((int16_t)(((uint16_t)buffer[2] << 8) + buffer[3])*1000)/magConfig.zSensitivity - magConfig.zOffset)/magConfig.zNorm;
 }
 #endif
 /**

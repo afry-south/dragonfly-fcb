@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @file    stm32f3xx_it.c
-  * @author  ÅF Embedded Systems Syd
+  * @author  ï¿½F Embedded Systems Syd
   * @version V1.0.0
   * @date    24-May-2015
   * @brief   Main Interrupt Service Routines.
@@ -222,7 +222,7 @@ void EXTI4_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
 }
 #else
-void EXTI2_IRQHandler(void)
+void EXTI2_TS_IRQHandler(void)
 {
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
 }

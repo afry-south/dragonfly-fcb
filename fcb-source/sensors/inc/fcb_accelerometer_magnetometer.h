@@ -26,18 +26,7 @@
  *
  * @retval FCB_OK, error otherwise
  */
-uint8_t FcbInitialiseAccelerometer(void);
-
-
-/**
- * This method is intended to be called from the EXTI1 ISR.
- *
- * It won't get called until InitialiseAccelerometer has returned
- * success.
- *
- * It reads the accelerometer values.
- */
-void AccelerometerHandleDataReady(void);
+uint8_t FcbInitialiseAccMagSensor(void);
 
 
 /**
@@ -52,5 +41,31 @@ void FetchDataFromAccelerometer(void);
  * It is updated at a rate of 50 Hz (configurable).
  */
 void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot);
+
+
+/**
+ * This method is intended to be called from the EXTI1 ISR.
+ *
+ * It won't get called until InitialiseAccMag has returned
+ * success.
+ *
+ * It reads the accelerometer values.
+ */
+void MagnetometerHandleDataReady(void);
+
+
+/**
+ * Fetches data (rotation speed, or angle dot) from accelerometer
+ * sensor.
+ */
+void FetchDataFromMagnetometer(void);
+
+/*
+ * get the current reading from the accelerometer.
+ *
+ * It is updated at a rate of 50 Hz (configurable).
+ */
+void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot);
+
 
 #endif /* FCB_ACCELEROMETER_H */

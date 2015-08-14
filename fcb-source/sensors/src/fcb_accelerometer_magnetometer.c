@@ -5,7 +5,7 @@
  *
  * @see fcb_accelerometer.h
  */
-#include "fcb_accelerometer.h"
+#include <fcb_accelerometer_magnetometer.h>
 #include "fcb_error.h"
 #include "stm32f3_discovery_accelerometer.h"
 
@@ -15,29 +15,35 @@
 #define FCB_USE_ACC_DRDY_INT1
 
 int16_t sXYZDotDot[] = { 0, 0 , 0 };
+float sXYZMagVector[] = { 0, 0 , 0 };
 
-enum { XDOTDOT_IDX = 0 }; /* index into sGyroXYZDotDot & ditto Offset */
-enum { YDOTDOT_IDX = 1 }; /* as above */
-enum { ZDOTDOT_IDX = 2 }; /* as above */
 
+enum { X_IDX = 0 }; /* index into sGyroXYZDotDot & ditto Offset sXYZMagVectors */
+enum { Y_IDX = 1 }; /* as above */
+enum { Z_IDX = 2 }; /* as above */
+
+/* static fcn declarations */
 
 /* public fcn definitions */
 
-uint8_t FcbInitialiseAccelerometer(void) {
+uint8_t FcbInitialiseAccMagSensor(void) {
 	uint8_t retVal = FCB_OK;
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* configure STM32 interrupts & GPIO */
 	ACCELERO_DRDY_GPIO_CLK_ENABLE(); /* GPIOE clock */
+
 #ifdef FCB_USE_ACC_DRDY_INT1
-	GPIO_InitStructure.Pin = GPIO_PIN_4; /* STM32F3 doc UM1570 page 27/36 */
-#else
-	GPIO_InitStructure.Pin = GPIO_PIN_2; /* STM32F3 doc UM1570 page 27/36 */
+	/* STM32F3 doc UM1570 page 27/36. Accelerometer interrupt */
+	FcbSensorsInitGpioPinForInterrupt(GPIOE, GPIO_PIN_4);
+#ifdef MAG_TODO
+	/* STM32F3 doc UM1570 page 27/36. Magnetometer interrupt */
+	FcbSensorsInitGpioPinForInterrupt(GPIOE, GPIO_PIN_2);
 #endif
-	GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
-	GPIO_InitStructure.Pull = GPIO_NOPULL;
-	GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-	HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
+#else
+	/* STM32F3 doc UM1570 page 27/36 */
+	FcbSensorsInitGpioPinForInterrupt(GPIOE, GPIO_PIN_2;
+#endif
 
 #ifdef FCB_ACCMAG_DEBUG
 	{
@@ -52,8 +58,14 @@ uint8_t FcbInitialiseAccelerometer(void) {
 #endif
 
 #ifdef FCB_USE_ACC_DRDY_INT1
-	HAL_NVIC_SetPriority(EXTI4_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
+	HAL_NVIC_SetPriority(EXTI4_IRQn,
+			configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
 	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+#ifdef MAG_TODO
+	HAL_NVIC_SetPriority(EXTI2_TSC_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
+	HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
+#endif
 #else
 	HAL_NVIC_SetPriority(EXTI2_TSC_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
 	HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
@@ -67,10 +79,19 @@ uint8_t FcbInitialiseAccelerometer(void) {
 		goto Exit;
 	}
 
-
+	/* do a pre-read to get the DRDY interrupts going. Since we trig on
+	 * rising flank and the sensor has data from power-on, by the time we get
+	 * here the interrupt is already high. Reading the data trigs the
+	 * sensor to load a new set of values into its registers.
+	 */
 	BSP_ACCELERO_GetXYZ(sXYZDotDot);
-	Exit:
-	return retVal;
+
+#ifdef MAG_TODO
+	LSM303DLHC_MagInit();
+
+	LSM303DLHC_MagReadXYZ(sXYZMagVector);
+#endif
+	Exit: return retVal;
 }
 
 void FetchDataFromAccelerometer(void) {
@@ -94,9 +115,18 @@ void FetchDataFromAccelerometer(void) {
 #endif
 }
 
+void FetchDataFromMagnetometer(void) {
+	LSM303DLHC_MagReadXYZ(sXYZMagVector);
+}
 
 void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot) {
-	*xDotDot = sXYZDotDot[XDOTDOT_IDX];
-	*yDotDot = sXYZDotDot[YDOTDOT_IDX];
-	*zDotDot = sXYZDotDot[ZDOTDOT_IDX];
+	*xDotDot = sXYZDotDot[X_IDX];
+	*yDotDot = sXYZDotDot[Y_IDX];
+	*zDotDot = sXYZDotDot[Z_IDX];
+}
+
+void GetMagVector(int16_t * x, int16_t * y, int16_t * z) {
+	*x = sXYZMagVector[X_IDX];
+	*y = sXYZMagVector[Y_IDX];
+	*z = sXYZMagVector[Z_IDX];
 }

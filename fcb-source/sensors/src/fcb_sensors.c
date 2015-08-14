@@ -6,10 +6,9 @@
  * @brief   Implementation of interface publicised in fcb_sensors.h
  ******************************************************************************/
 
-/* Includes ------------------------------------------------------------------*/
+#include "fcb_accelerometer_magnetometer.h"
 #include "fcb_sensors.h"
 #include "gyroscope.h"
-#include "fcb_accelerometer.h"
 #include "fcb_error.h"
 #include "fcb_retval.h"
 
@@ -157,7 +156,8 @@ static void ProcessSensorValues(void* val) {
     	fcb_error();
     }
 
-    if (FCB_OK != FcbInitialiseAccelerometer()) {
+
+    if (FCB_OK != FcbInitialiseAccMagSensor()) {
     	fcb_error();
     }
 
@@ -179,7 +179,7 @@ static void ProcessSensorValues(void* val) {
                  * As settings are in BSP_GYRO_Init, the callback is called with a frequency
                  * of 94.5 Hz according to oscilloscope.
                  */
-                FetchAngleDotFromGyroscope();
+                FetchDataFromGyroscope();
                 break;
             case FCB_SENSOR_GYRO_CALIBRATE:
                 break;
@@ -188,6 +188,12 @@ static void ProcessSensorValues(void* val) {
                 break;
             case FCB_SENSOR_ACC_CALIBRATE:
                 break;
+            case FCB_SENSOR_MAGNETO_DATA_READY:
+            	FetchDataFromMagnetometer();
+                break;
+            case FCB_SENSOR_MAGNETO_CALIBRATE:
+                break;
+
         }
 
         /* todo: call the state correction part of the Kalman Filter every time
@@ -201,6 +207,16 @@ Exit:
 Error:
     goto Exit;
 }
+
+void FcbSensorsInitGpioPinForInterrupt(GPIO_TypeDef  *GPIOx, uint32_t pin) {
+	GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitStructure.Pin = pin;
+	GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStructure.Pull = GPIO_NOPULL;
+	GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+	HAL_GPIO_Init(GPIOx, &GPIO_InitStructure);
+}
+
 
 /**
  * @brief  Task code handles sensor print sampling

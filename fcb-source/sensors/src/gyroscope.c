@@ -88,12 +88,12 @@ uint8_t InitialiseGyroscope(void) {
     	ErrorHandler();
     }
 
-    FetchAngleDotFromGyroscope(); /* necessary so a fresh DRDY can be triggered */
+    FetchDataFromGyroscope(); /* necessary so a fresh DRDY can be triggered */
     return retVal;
 }
 
 
-void FetchAngleDotFromGyroscope(void) {
+void FetchDataFromGyroscope(void) {
 #ifdef FCB_GYRO_DEBUG
     static uint32_t call_counter = 0;
 #else

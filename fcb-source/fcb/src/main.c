@@ -20,8 +20,6 @@
 #include "fcb_retval.h"
 #include "fcb_sensors.h"
 #include "gyroscope.h"
-#include "fcb_accelerometer.h"
-
 #include <string.h>
 
 #include "FreeRTOS.h"
@@ -72,6 +70,11 @@ int main(void) {
   } else if (GPIO_Pin == GPIO_ACCELEROMETER_DRDY) {
 #endif
 	  FcbSendSensorMessageFromISR(FCB_SENSOR_ACC_DATA_READY);
+#ifdef FCB_USE_ACC_DRDY_INT1
+  } else if (GPIO_Pin == GPIO_PIN_2) {
+	  FcbSendSensorMessageFromISR(FCB_SENSOR_MAGNETO_DATA_READY);
+#endif
+  }
 
 }
 

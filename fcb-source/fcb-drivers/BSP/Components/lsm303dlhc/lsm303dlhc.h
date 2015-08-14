@@ -459,9 +459,23 @@ void      LSM303DLHC_AccClickITEnable(uint8_t ITClick);
 void      LSM303DLHC_AccClickITDisable(uint8_t ITClick);
 void      LSM303DLHC_AccZClickITConfig(void);
 
-#if 0
+
 /* Mag functions */ 
-void LSM303DLHC_MagInit(LSM303DLHCMag_InitTypeDef *LSM303DLHC_InitStruct);
+
+/**
+ *  @param cra_regm magnetometer control register A
+ *  @param crb_regm magnetometer control register B
+ */
+void LSM303DLHC_MagInit(void);
+
+/**
+  * @brief  Read X, Y & Z Magnetometer  values
+  * @param  pfData : Data out pointer (size 3)
+  * @retval None
+  */
+void LSM303DLHC_MagReadXYZ(float* pfData);
+
+#if 0
 uint8_t LSM303DLHC_MagGetDataStatus(void);
 void LSM303DLHC_CompassReadAcc(int16_t* pData);
 #endif

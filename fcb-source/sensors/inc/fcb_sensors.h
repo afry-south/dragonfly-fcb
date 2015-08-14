@@ -65,4 +65,15 @@ void FcbSendSensorMessageFromISR(uint8_t msg);
 SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 SensorsErrorStatus StopSensorSamplingTask(void);
 
+/**
+ * Wrapper fcn for enabling GPIO pin with default settings for receiving
+ * interrupts by calling HAL_GPIO_Init.
+ *
+ * @param  GPIOx: where x can be (A..F) to select the GPIO peripheral
+ * @param pin the pin to enable.
+ *
+ * @todo
+ */
+void FcbSensorsInitGpioPinForInterrupt(GPIO_TypeDef  *GPIOx, uint32_t pin);
+
 #endif /* FCB_SENSORS_H */
