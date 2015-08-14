@@ -1506,71 +1506,70 @@ static void ReceiverPrintSamplingTask(void const *argument) {
 		strncpy(sampleString, "Receiver channel values:\r\nStatus: ",
 		RECEIVER_SAMPLING_MAX_STRING_SIZE);
 		if (IsReceiverActive())
-			strncat((char*) sampleString, "ACTIVE\r\n",
-			RECEIVER_SAMPLING_MAX_STRING_SIZE);
+			strncat(sampleString, "ACTIVE\r\n",
+			RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		else
 			strncat((char*) sampleString, "INACTIVE\r\n",
-			RECEIVER_SAMPLING_MAX_STRING_SIZE);
+			RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
 		strncat((char*) sampleString, "Throttle (0-65535): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		snprintf((char*) sampleValueTmpString, 8, "%u",
 				GetThrottleReceiverChannel());
 		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
 		strncat((char*) sampleString, "Aileron (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		snprintf((char*) sampleValueTmpString, 16, "%d",
 				GetAileronReceiverChannel());
 		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
 		strncat((char*) sampleString, "Elevator (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		snprintf((char*) sampleValueTmpString, 16, "%d",
 				GetElevatorReceiverChannel());
 		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
 		strncat((char*) sampleString, "Rudder (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		snprintf((char*) sampleValueTmpString, 16, "%d",
 				GetRudderReceiverChannel());
 		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
 		strncat((char*) sampleString, "Gear (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		snprintf((char*) sampleValueTmpString, 16, "%d",
 				GetGearReceiverChannel());
 		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
 		strncat((char*) sampleString, "Aux1 (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		snprintf((char*) sampleValueTmpString, 16, "%d",
 				GetAux1ReceiverChannel());
 		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		strncat((char*) sampleString, "\r\n\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
 		USBComSendString(sampleString, portMAX_DELAY, portMAX_DELAY);
 
 		/* If sampling duration exceeded, delete task to stop sampling */
-		if (xTaskGetTickCount()
-				>= xSampleStartTime + receiverPrintSampleDuration*configTICK_RATE_HZ)
+		if (xTaskGetTickCount() >= xSampleStartTime + receiverPrintSampleDuration*configTICK_RATE_HZ)
 			StopReceiverSamplingTask();
 	}
 }

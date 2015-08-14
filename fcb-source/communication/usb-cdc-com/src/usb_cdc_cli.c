@@ -65,21 +65,23 @@ static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer,
 /*
  * Function implements the "get-receiver-calibration" command.
  */
-static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t *pcCommandString);
+static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
+		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
 
 /*
  * Function implements the "start-receiver-sampling" command.
  */
-static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t *pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t *pcCommandString);
+static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(
+		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
 
 /*
  * Function implements the "start-receiver-sampling" command.
  */
-static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t *pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t *pcCommandString);
-
+static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(
+		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -185,17 +187,14 @@ static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer,
 	portBASE_TYPE xParameterStringLength, xReturn;
 	static portBASE_TYPE lParameterNumber = 0;
 
-	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
-	 write buffer length is adequate, so does not check for buffer overflows. */
-	(void) pcCommandString;
-	(void) xWriteBufferLen;
+	/* Check the write buffer is not NULL */
 	configASSERT(pcWriteBuffer);
 
 	if (lParameterNumber == 0) {
 		/* The first time the function is called after the command has been
 		 entered just a header string is returned. */
-		strcpy((char*) pcWriteBuffer, "Parameter received:\r\n");
+		strncpy((char*) pcWriteBuffer, "Parameter received:\r\n",
+				xWriteBufferLen);
 	} else {
 		/* Obtain the parameter string */
 		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
@@ -207,10 +206,11 @@ static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer,
 		configASSERT(pcParameter);
 
 		/* Return the parameter string. */
-		memset(pcWriteBuffer, 0x00, xWriteBufferLen);
-		strncat((char*) pcWriteBuffer, (const char*) pcParameter,
+		strncpy((char*) pcWriteBuffer, (const char*) pcParameter,
 				xParameterStringLength);
-		strncat((char*) pcWriteBuffer, "\r\n", strlen("\r\n"));
+
+		strncat((char*) pcWriteBuffer, "\r\n",
+				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 	}
 
 	/* Update return value and parameter index */
@@ -240,17 +240,13 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer,
 	portBASE_TYPE xParameterStringLength, xReturn;
 	static portBASE_TYPE lParameterNumber = 0;
 
-	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
-	 write buffer length is adequate, so does not check for buffer overflows. */
-	(void) pcCommandString;
-	(void) xWriteBufferLen;
+	/* Check the write buffer is not NULL */
 	configASSERT(pcWriteBuffer);
 
 	if (lParameterNumber == 0) {
 		/* The first time the function is called after the command has been
 		 entered just a header string is returned. */
-		strcpy((char*) pcWriteBuffer, "Received data:\r\n");
+		strncpy((char*) pcWriteBuffer, "Received data:\r\n", xWriteBufferLen);
 	} else if (lParameterNumber == 1) {
 		/* Obtain the parameter string. */
 		pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
@@ -268,15 +264,13 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer,
 		if (!IS_POS(dataLength))
 			return pdFALSE;
 
-		// Pend on USBComRxDataSem for MAX_DATA_TRANSFER_DELAY while waiting for data to enter RX buffer
 		memset(pcWriteBuffer, 0x00, xWriteBufferLen);
-
 		int previousRxBufferCount = -1; // Init to -1 so that while loop is iterated at least once
 
-		// Check that new data is being received
+		/* Check that new data is being received */
 		while (previousRxBufferCount != USBCOMRxFIFOBuffer.count) {
 			if (dataLength <= USBCOMRxFIFOBuffer.count) {
-				// Read out the data
+				/* Read out the data */
 				ErrorStatus bufferStatus = SUCCESS;
 				uint16_t i = 0;
 				uint8_t getByte;
@@ -299,20 +293,21 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer,
 				previousRxBufferCount = USBCOMRxFIFOBuffer.count; // Set this to exit while loop
 			} else {
 				previousRxBufferCount = USBCOMRxFIFOBuffer.count;
-				// Wait for new data to arrive (buffer count will be updated when new data arrives)
+				/*/ Pend on USBComRxDataSem for MAX_DATA_TRANSFER_DELAY while waiting for data to enter RX buffer */
 				if (pdPASS
 						!= xSemaphoreTake(USBCOMRxDataSem,
 								MAX_DATA_TRANSFER_DELAY)) {
 					memset(pcWriteBuffer, 0x00, xWriteBufferLen);
-					strcpy((char*) pcWriteBuffer,
-							"Data transmission timed out.\r\n");
+					strncpy((char*) pcWriteBuffer,
+							"Data transmission timed out.\r\n",
+							xWriteBufferLen);
 				}
 			}
 		}
 	} else {
-		// Return new line
+		/* Return new line */
 		memset(pcWriteBuffer, 0x00, xWriteBufferLen);
-		strcpy((char*) pcWriteBuffer, "\r\n");
+		strncpy((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
 	}
 
 	/* Update return value and parameter index */
@@ -341,19 +336,19 @@ static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(
 		int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
-	 write buffer length is adequate, so does not check for buffer overflows. */
+	 write buffer is not NULL.   */
 	(void) pcCommandString;
-	(void) xWriteBufferLen;
 	configASSERT(pcWriteBuffer);
 
 	/* Start the receiver calibration procedure */
 	if (StartReceiverCalibration())
-		strcpy((char*) pcWriteBuffer,
-				"RC receiver calibration started. Please saturate all RC transmitter control sticks and toggle switches.\r\n");
+		strncpy((char*) pcWriteBuffer,
+				"RC receiver calibration started. Please saturate all RC transmitter control sticks and toggle switches.\r\n",
+				xWriteBufferLen);
 	else
-		strcpy((char*) pcWriteBuffer,
-				"RC receiver calibration already in progress.\r\n");
+		strncpy((char*) pcWriteBuffer,
+				"RC receiver calibration already in progress.\r\n",
+				xWriteBufferLen);
 
 	/* Return false to indicate command activity finished */
 	return pdFALSE;
@@ -370,21 +365,22 @@ static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(
 		int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
-	 write buffer length is adequate, so does not check for buffer overflows. */
+	 write buffer is not NULL */
 	(void) pcCommandString;
-	(void) xWriteBufferLen;
 	configASSERT(pcWriteBuffer);
 
 	/* Stop the receiver calibration procedure */
 	ReceiverErrorStatus rcCalStatus = StopReceiverCalibration();
-	strcpy((char*) pcWriteBuffer, "RC receiver calibration stopped.\r\n");
+	strncpy((char*) pcWriteBuffer, "RC receiver calibration stopped.\r\n",
+			xWriteBufferLen);
 	if (rcCalStatus)
-		strcat((char*) pcWriteBuffer,
-				"RC receiver calibration successful.\r\n");
+		strncat((char*) pcWriteBuffer,
+				"RC receiver calibration successful.\r\n",
+				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 	else
-		strcat((char*) pcWriteBuffer,
-				"RC receiver calibration failed or has not been started.\r\n");
+		strncat((char*) pcWriteBuffer,
+				"RC receiver calibration failed or has not been started.\r\n",
+				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 	/* Return false to indicate command activity finished */
 	return pdFALSE;
@@ -403,44 +399,46 @@ static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer,
 	static uint8_t currentChannelPrint = 0;
 
 	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
-	 write buffer length is adequate, so does not check for buffer overflows. */
+	 write buffer is not NULL */
 	(void) pcCommandString;
-	(void) xWriteBufferLen;
 	configASSERT(pcWriteBuffer);
 
 	/* Get the current receiver values */
-	switch(currentChannelPrint) {
+	switch (currentChannelPrint) {
 	case 0:
-		strncpy((char*) pcWriteBuffer, "Receiver channel values:\r\nStatus: ", xWriteBufferLen);
+		strncpy((char*) pcWriteBuffer, "Receiver channel values:\r\nStatus: ",
+				xWriteBufferLen);
 		if (IsReceiverActive())
-			strncat((char*) pcWriteBuffer, "ACTIVE\r\n", xWriteBufferLen);
+			strncat((char*) pcWriteBuffer, "ACTIVE\r\n",
+					xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 		else
-			strncat((char*) pcWriteBuffer, "INACTIVE\r\n", xWriteBufferLen);
+			strncat((char*) pcWriteBuffer, "INACTIVE\r\n",
+					xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 		break;
 	case 1:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Throttle (0-65535): %u\r\n",
-				GetThrottleReceiverChannel());
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+				"Throttle (0-65535): %u\r\n", GetThrottleReceiverChannel());
 		break;
 	case 2:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aileron (-32768-32767): %d\r\n",
-				GetAileronReceiverChannel());
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+				"Aileron (-32768-32767): %d\r\n", GetAileronReceiverChannel());
 		break;
 	case 3:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Elevator (-32768-32767): %d\r\n",
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+				"Elevator (-32768-32767): %d\r\n",
 				GetElevatorReceiverChannel());
 		break;
 	case 4:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Rudder (-32768-32767): %d\r\n",
-				GetRudderReceiverChannel());
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+				"Rudder (-32768-32767): %d\r\n", GetRudderReceiverChannel());
 		break;
 	case 5:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Gear (-32768-32767): %d\r\n",
-				GetGearReceiverChannel());
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+				"Gear (-32768-32767): %d\r\n", GetGearReceiverChannel());
 		break;
 	case 6:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aux1 (-32768-32767): %d\r\n",
-				GetAux1ReceiverChannel());
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+				"Aux1 (-32768-32767): %d\r\n", GetAux1ReceiverChannel());
 		break;
 	default:
 		strncpy((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
@@ -468,10 +466,8 @@ static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
 	static uint8_t currentChannelPrint = 0;
 
 	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
-	 write buffer length is adequate, so does not check for buffer overflows. */
+	 write buffer is not NULL */
 	(void) pcCommandString;
-	(void) xWriteBufferLen;
 	configASSERT(pcWriteBuffer);
 
 	/* Get the current receiver values */
@@ -541,8 +537,6 @@ static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
 	return pdTRUE;
 }
 
-
-
 /**
  * @brief  Starts receiver sampling for a specified sample time and duration
  * @param  pcWriteBuffer : Reference to output buffer
@@ -550,24 +544,22 @@ static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t* pcCommandString) {
+static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(
+		int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t* pcCommandString) {
 	int8_t* pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
 	static portBASE_TYPE lParameterNumber = 0;
 
-	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
-	 write buffer length is adequate, so does not check for buffer overflows. */
-	(void) pcCommandString;
-	(void) xWriteBufferLen;
+	/* Check the write buffer is not NULL */
 	configASSERT(pcWriteBuffer);
 
 	if (lParameterNumber == 0) {
 		/* The first time the function is called after the command has been
 		 entered just a header string is returned. */
 		strncpy((char*) pcWriteBuffer,
-				"Starting print sampling of receiver values...\r\n", xWriteBufferLen);
+				"Starting print sampling of receiver values...\r\n",
+				xWriteBufferLen);
 	} else {
 		uint16_t receiverSampleTime;
 		uint16_t receiverSampleDuration;
@@ -581,33 +573,51 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuff
 		/* Sanity check something was returned. */
 		configASSERT(pcParameter);
 
-		// TODO strncat : we must count how much space we have left before using it
 		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
-		strncat((char*) pcWriteBuffer, (char*)pcParameter, xParameterStringLength);
-		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
 
-		receiverSampleTime = atoi((char*)pcParameter); // TODO sanity check?
+		size_t paramMaxSize; // TODO make function for this comparison?
+		if ((unsigned long) xParameterStringLength
+				> xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n",
+				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		receiverSampleTime = atoi((char*) pcParameter);
 
 		lParameterNumber++;
 
 		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
 		lParameterNumber, /* Return the next parameter. */
-		&xParameterStringLength /* Store the parameter string length. */		);
+		&xParameterStringLength /* Store the parameter string length. */);
 
 		/* Sanity check something was returned. */
 		configASSERT(pcParameter);
 
-		strncat((char*) pcWriteBuffer, "Duration (s): ", xWriteBufferLen);
-		strncat((char*) pcWriteBuffer, (char*)pcParameter, xParameterStringLength);
-		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
+		strncat((char*) pcWriteBuffer, "Duration (s): ",
+				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
-		receiverSampleDuration = atoi((char*)pcParameter); // TODO sanity check?
+		if ((unsigned long) xParameterStringLength
+				> xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n",
+				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		receiverSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
 
 		StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
 	}
 
 	/* Update return value and parameter index */
-	if (lParameterNumber == startReceiverSamplingCommand.cExpectedNumberOfParameters) {
+	if (lParameterNumber
+			== startReceiverSamplingCommand.cExpectedNumberOfParameters) {
 		/* If this is the last parameter then there are no more strings to return after this one. */
 		xReturn = pdFALSE;
 		lParameterNumber = 0;
@@ -627,13 +637,12 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuff
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t* pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t* pcCommandString) {
+static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(
+		int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.  NOTE - for simplicity, this example assumes the
-	 write buffer length is adequate, so does not check for buffer overflows. */
+	 write buffer is not NULL */
 	(void) pcCommandString;
-	(void) xWriteBufferLen;
 	configASSERT(pcWriteBuffer);
 
 	strncpy((char*) pcWriteBuffer,
@@ -645,7 +654,6 @@ static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t* pcWriteBuffe
 
 	return pdFALSE;
 }
-
 
 /**
  * @}
