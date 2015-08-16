@@ -97,6 +97,7 @@
 
 /* Receiver calibration definitions - must at least be withing valid pulse range */
 #define RECEIVER_MAX_CALIBRATION_DURATION               1200000 // [ms] Max receiver calibration duration
+#define RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD		1000	// [ms] How often receiver sample is printed
 #define RECEIVER_CALIBRATION_MIN_PULSE_COUNT            1000    // Corresponds to ~22.0 s of calibration (assuming period is 22 ms)
 #define RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE        16
 #define RECEIVER_MAX_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MAX_COUNT*11/10
@@ -144,12 +145,14 @@ ReceiverErrorStatus StartReceiverSamplingTask(uint16_t sampleTime,
 		uint32_t sampleDuration);
 ReceiverErrorStatus StopReceiverSamplingTask(void);
 
-uint16_t GetThrottleReceiverChannel(void);
+int16_t GetThrottleReceiverChannel(void);
 int16_t GetAileronReceiverChannel(void);
 int16_t GetElevatorReceiverChannel(void);
 int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
+
+void PrintReceiverValues(void);
 
 uint16_t GetThrottleReceiverCalibrationMaxValue(void);
 uint16_t GetThrottleReceiverCalibrationMinValue(void);
@@ -177,6 +180,20 @@ uint16_t GetElevatorReceiverChannelPeriodMicros(void);
 uint16_t GetRudderReceiverChannelPeriodMicros(void);
 uint16_t GetGearReceiverChannelPeriodMicros(void);
 uint16_t GetAux1ReceiverChannelPeriodMicros(void);
+
+uint16_t GetThrottleReceiverChannelPulseTicks(void);
+uint16_t GetAileronReceiverChannelPulseTicks(void);
+uint16_t GetElevatorReceiverChannelPulseTicks(void);
+uint16_t GetRudderReceiverChannelPulseTicks(void);
+uint16_t GetGearReceiverChannelPulseTicks(void);
+uint16_t GetAux1ReceiverChannelPulseTicks(void);
+
+uint32_t GetThrottleReceiverChannelPeriodTicks(void);
+uint32_t GetAileronReceiverChannelPeriodTicks(void);
+uint32_t GetElevatorReceiverChannelPeriodTicks(void);
+uint32_t GetRudderReceiverChannelPeriodTicks(void);
+uint32_t GetGearReceiverChannelPeriodTicks(void);
+uint32_t GetAux1ReceiverChannelPeriodTicks(void);
 
 #endif /* __RECEIVER_H */
 

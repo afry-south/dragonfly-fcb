@@ -145,7 +145,7 @@ static ReceiverErrorStatus AuxReceiverInput_Config(void);
 
 static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC,
 		Pulse_State* channelInputState, volatile Receiver_IC_Values_TypeDef* ChannelICValues,
-		const uint32_t receiverChannel, volatile const uint16_t* ReceiverTimerPeriodCount,
+		const uint32_t receiverChannel, volatile const uint16_t ReceiverTimerPeriodCount,
 		volatile Receiver_ChannelCalibrationSampling_TypeDef* ChannelCalibrationSampling);
 static ReceiverErrorStatus UpdateChannelCalibrationSamples(
 		volatile Receiver_ChannelCalibrationSampling_TypeDef* channelCalibrationSampling,
@@ -159,8 +159,8 @@ static ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 
 static int16_t GetSignedReceiverChannel(volatile const Receiver_IC_Values_TypeDef* ChannelICValues,
 		volatile const Receiver_IC_ChannelCalibrationValues_TypeDef* ChannelCalibrationValues);
-static uint16_t GetUnsignedReceiverChannel(volatile const Receiver_IC_Values_TypeDef* ChannelICValues,
-		volatile const Receiver_IC_ChannelCalibrationValues_TypeDef* ChannelCalibrationValues);
+//static uint16_t GetUnsignedReceiverChannel(volatile const Receiver_IC_Values_TypeDef* ChannelICValues,
+//		volatile const Receiver_IC_ChannelCalibrationValues_TypeDef* ChannelCalibrationValues);
 static uint16_t GetReceiverChannelPulseMicros(volatile const Receiver_IC_Values_TypeDef* ChannelICValues);
 static uint16_t GetReceiverChannelPeriodMicros(volatile const Receiver_IC_Values_TypeDef* ChannelICValues);
 
@@ -240,10 +240,10 @@ ReceiverErrorStatus StopReceiverSamplingTask(void) {
 /*
  * @brief  Returns a normalized receiver throttle pulse value as an unsigned integer.
  * @param  None
- * @retval throttle value [0, 65535]
+ * @retval throttle value [-32768, 32767]
  */
-uint16_t GetThrottleReceiverChannel(void) {
-	return GetUnsignedReceiverChannel(&ThrottleICValues, &CalibrationValues.ThrottleChannel);
+int16_t GetThrottleReceiverChannel(void) {
+	return GetSignedReceiverChannel(&ThrottleICValues, &CalibrationValues.ThrottleChannel);
 }
 
 /*
@@ -400,6 +400,176 @@ uint16_t GetAux1ReceiverChannelPeriodMicros(void) {
 }
 
 /*
+ * @brief  Returns the last throttle pulse value in timer ticks
+ * @param  None
+ * @retval throttle pulse value in timer ticks
+ */
+uint16_t GetThrottleReceiverChannelPulseTicks(void) {
+	return ThrottleICValues.PulseTimerCount;
+}
+
+/*
+ * @brief  Returns the last aileron pulse value in timer ticks
+ * @param  None
+ * @retval aileron pulse value in timer ticks
+ */
+uint16_t GetAileronReceiverChannelPulseTicks(void) {
+	return AileronICValues.PulseTimerCount;
+}
+
+/*
+ * @brief  Returns the last elevator pulse value in timer ticks
+ * @param  None
+ * @retval elevator pulse value in timer ticks
+ */
+uint16_t GetElevatorReceiverChannelPulseTicks(void) {
+	return ElevatorICValues.PulseTimerCount;
+}
+
+/*
+ * @brief  Returns the last rudder pulse value in timer ticks
+ * @param  None
+ * @retval rudder pulse value in timer ticks
+ */
+uint16_t GetRudderReceiverChannelPulseTicks(void) {
+	return RudderICValues.PulseTimerCount;
+}
+
+/*
+ * @brief  Returns the last gear pulse value in timer ticks
+ * @param  None
+ * @retval gear pulse value in timer ticks
+ */
+uint16_t GetGearReceiverChannelPulseTicks(void) {
+	return GearICValues.PulseTimerCount;
+}
+
+/*
+ * @brief  Returns the last aux1 pulse value in timer ticks
+ * @param  None
+ * @retval aux1 pulse value in timer ticks
+ */
+uint16_t GetAux1ReceiverChannelPulseTicks(void) {
+	return Aux1ICValues.PulseTimerCount;
+}
+
+/*
+ * @brief  Returns the last throttle period value in timer ticks
+ * @param  None
+ * @retval throttle period value in timer ticks
+ */
+uint32_t GetThrottleReceiverChannelPeriodTicks(void) {
+	return ThrottleICValues.PeriodCount;
+}
+
+/*
+ * @brief  Returns the last aileron period value in timer ticks
+ * @param  None
+ * @retval aileron period value in timer ticks
+ */
+uint32_t GetAileronReceiverChannelPeriodTicks(void) {
+	return AileronICValues.PeriodCount;
+}
+
+/*
+ * @brief  Returns the last elevator period value in timer ticks
+ * @param  None
+ * @retval elevator period value in timer ticks
+ */
+uint32_t GetElevatorReceiverChannelPeriodTicks(void) {
+	return ElevatorICValues.PeriodCount;
+}
+
+/*
+ * @brief  Returns the last rudder period value in timer ticks
+ * @param  None
+ * @retval rudder period value in timer ticks
+ */
+uint32_t GetRudderReceiverChannelPeriodTicks(void) {
+	return RudderICValues.PeriodCount;
+}
+
+/*
+ * @brief  Returns the last gear period value in timer ticks
+ * @param  None
+ * @retval gear period value in timer ticks
+ */
+uint32_t GetGearReceiverChannelPeriodTicks(void) {
+	return GearICValues.PeriodCount;
+}
+
+/*
+ * @brief  Returns the last aux1 period value in timer ticks
+ * @param  None
+ * @retval aux1 period value in timer ticks
+ */
+uint32_t GetAux1ReceiverChannelPeriodTicks(void) {
+	return Aux1ICValues.PeriodCount;
+}
+
+void PrintReceiverValues(void)
+{
+	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE]; // TODO trim size and define
+	char sampleValueTmpString[8]; // Only needs enough space to store an uint16_t/int16_t in string format
+
+	strncpy(sampleString, "Receiver channel values (Norm / Ticks):\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
+	if (IsReceiverActive())
+		strncat(sampleString, "ACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	else
+		strncat((char*) sampleString, "INACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+
+	strncat((char*) sampleString, "Throttle: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%d", GetThrottleReceiverChannel());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%u", GetThrottleReceiverChannelPulseTicks());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+
+	strncat((char*) sampleString, "Aileron: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 16, "%d", GetAileronReceiverChannel());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%u", GetAileronReceiverChannelPulseTicks());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+
+	strncat((char*) sampleString, "Elevator: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 16, "%d", GetElevatorReceiverChannel());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%u", GetElevatorReceiverChannelPulseTicks());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+
+	strncat((char*) sampleString, "Rudder: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 16, "%d", GetRudderReceiverChannel());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%u", GetRudderReceiverChannelPulseTicks());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+
+	strncat((char*) sampleString, "Gear: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 16, "%d", GetGearReceiverChannel());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%u", GetGearReceiverChannelPulseTicks());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+
+	strncat((char*) sampleString, "Aux1: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 16, "%d", GetAux1ReceiverChannel());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%u", GetAux1ReceiverChannelPulseTicks());
+	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\r\n\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+
+	USBComSendString(sampleString, portMAX_DELAY, portMAX_DELAY);
+}
+
+/*
  * @brief  Starts the receiver calibration procedure to identify stick/switch max and min values. During
  *         calibration, make sure the receiver and transmitter has connected and that the receiver is
  *         actively reading from the transmitter. Be sure to push the four sticks (throttle, aileron,
@@ -423,6 +593,9 @@ ReceiverErrorStatus StartReceiverCalibration(void) {
 		calibrationStartTime = HAL_GetTick();
 
 		receiverCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
+
+		/* Start printing calibration samples */
+		StartReceiverSamplingTask(RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD, RECEIVER_MAX_CALIBRATION_DURATION/configTICK_RATE_HZ);
 
 		return RECEIVER_OK;
 	}
@@ -511,6 +684,9 @@ ReceiverErrorStatus StopReceiverCalibration(void) {
 
 		/* Reset calibration states to waiting so a new calibration may be initiated */
 		receiverCalibrationState = RECEIVER_CALIBRATION_WAITING;
+
+		/* Stop printing calibration samples */
+		StopReceiverSamplingTask();
 
 		return returnStatus;
 	}
@@ -762,18 +938,18 @@ static int16_t GetSignedReceiverChannel(volatile const Receiver_IC_Values_TypeDe
  * @param  ChannelCalibrationValues : Reference to channel's calibration values struct
  * @retval channel value [0, 65535]
  */
-static uint16_t GetUnsignedReceiverChannel(volatile const Receiver_IC_Values_TypeDef* ChannelICValues,
-		volatile const Receiver_IC_ChannelCalibrationValues_TypeDef* ChannelCalibrationValues) {
-	if (ChannelICValues->PulseTimerCount < ChannelCalibrationValues->ChannelMinCount)
-		return 0;
-	else if (ChannelICValues->PulseTimerCount > ChannelCalibrationValues->ChannelMaxCount)
-		return UINT16_MAX;
-	else if (ChannelCalibrationValues->ChannelMaxCount > ChannelCalibrationValues->ChannelMinCount)
-		return ((uint32_t) (ChannelICValues->PulseTimerCount - ChannelCalibrationValues->ChannelMinCount) * UINT16_MAX)
-				/ (ChannelCalibrationValues->ChannelMaxCount - ChannelCalibrationValues->ChannelMinCount);
-	else
-		return 0;
-}
+//static uint16_t GetUnsignedReceiverChannel(volatile const Receiver_IC_Values_TypeDef* ChannelICValues,
+//		volatile const Receiver_IC_ChannelCalibrationValues_TypeDef* ChannelCalibrationValues) {
+//	if (ChannelICValues->PulseTimerCount < ChannelCalibrationValues->ChannelMinCount)
+//		return 0;
+//	else if (ChannelICValues->PulseTimerCount > ChannelCalibrationValues->ChannelMaxCount)
+//		return UINT16_MAX;
+//	else if (ChannelCalibrationValues->ChannelMaxCount > ChannelCalibrationValues->ChannelMinCount)
+//		return ((uint32_t) (ChannelICValues->PulseTimerCount - ChannelCalibrationValues->ChannelMinCount) * UINT16_MAX)
+//				/ (ChannelCalibrationValues->ChannelMaxCount - ChannelCalibrationValues->ChannelMinCount);
+//	else
+//		return 0;
+//}
 
 /*
  * @brief  Returns the receiver channel pulse count in microseconds
@@ -882,7 +1058,7 @@ static ReceiverErrorStatus PrimaryReceiverInputConfig(void) {
 	RudderChannelICConfig.ICPrescaler = TIM_ICPSC_DIV1;
 	RudderChannelICConfig.ICFilter = 0;
 	RudderChannelICConfig.ICPolarity = TIM_ICPOLARITY_RISING;
-	RudderChannelICConfig.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+	RudderChannelICConfig.ICSelection = TIM_ICSELECTION_DIRECTTI;
 	/* Configure the Input Capture of rudder channel */
 	if (HAL_TIM_IC_ConfigChannel(&PrimaryReceiverTimHandle, &RudderChannelICConfig, PRIMARY_RECEIVER_RUDDER_CHANNEL)
 			!= HAL_OK) {
@@ -1015,7 +1191,7 @@ static ReceiverErrorStatus AuxReceiverInput_Config(void) {
  */
 static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, TIM_IC_InitTypeDef* TimIC,
 		Pulse_State* channelInputState, volatile Receiver_IC_Values_TypeDef* ChannelICValues,
-		const uint32_t receiverChannel, volatile const uint16_t* ReceiverTimerPeriodCount,
+		const uint32_t receiverChannel, volatile const uint16_t ReceiverTimerPeriodCount,
 		volatile Receiver_ChannelCalibrationSampling_TypeDef* ChannelCalibrationSampling) {
 	ReceiverErrorStatus errorStatus = RECEIVER_OK;
 
@@ -1036,10 +1212,10 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
 		/* Calculate the period between pulses by computing the difference between current and previous rising edge timer counts.
 		 * Since the counter typically resets more often than a new pulse is triggered for the receiver, one must also use the
 		 * number of timer period resets since the last pulse. */
-		if ((*ReceiverTimerPeriodCount) > ChannelICValues->PreviousRisingCountTimerPeriodCount)
+		if (ReceiverTimerPeriodCount > ChannelICValues->PreviousRisingCountTimerPeriodCount)
 			tempPeriodTimerCount = ChannelICValues->RisingCount + UINT16_MAX - ChannelICValues->PreviousRisingCount
 					+ UINT16_MAX
-							* ((*ReceiverTimerPeriodCount) - ChannelICValues->PreviousRisingCountTimerPeriodCount - 1);
+							* (ReceiverTimerPeriodCount - ChannelICValues->PreviousRisingCountTimerPeriodCount - 1);
 		else
 			tempPeriodTimerCount = ChannelICValues->RisingCount - ChannelICValues->PreviousRisingCount; // Short period value, likely incorrect
 
@@ -1048,7 +1224,7 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
 		else
 			errorStatus = RECEIVER_ERROR;
 
-		ChannelICValues->PreviousRisingCountTimerPeriodCount = (*ReceiverTimerPeriodCount);
+		ChannelICValues->PreviousRisingCountTimerPeriodCount = ReceiverTimerPeriodCount;
 	}
 	/* Detected falling pulse edge */
 	else if ((*channelInputState) == PULSE_HIGH) {
@@ -1067,7 +1243,7 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
 		tempPulseTimerCount = ChannelICValues->FallingCounter - ChannelICValues->RisingCount;
 
 		/* Sanity check of pulse count before updating it */
-		if (IsReceiverPulseValid(tempPulseTimerCount, (*ReceiverTimerPeriodCount),
+		if (IsReceiverPulseValid(tempPulseTimerCount, ReceiverTimerPeriodCount,
 				ChannelICValues->PreviousRisingCountTimerPeriodCount)) {
 			ChannelICValues->PulseTimerCount = tempPulseTimerCount;
 			ChannelICValues->IsActive = RECEIVER_OK; // Set channel to active
@@ -1085,8 +1261,15 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
 	}
 
 	/* Toggle the IC Polarity */
+	/* TODO: Write function that only updates IC polarity */
 	if (HAL_TIM_IC_ConfigChannel(TimHandle, TimIC, receiverChannel) != HAL_OK) {
 		/* Configuration Error */
+		errorStatus = RECEIVER_ERROR;
+		Error_Handler();
+	}
+	/* Restart the input capture interrupt */
+	if (HAL_TIM_IC_Start_IT(TimHandle, receiverChannel) != HAL_OK) {
+		/* Starting Error */
 		errorStatus = RECEIVER_ERROR;
 		Error_Handler();
 	}
@@ -1153,7 +1336,7 @@ static ReceiverErrorStatus UpdateChannelCalibrationSamples(
 static ReceiverErrorStatus UpdateReceiverThrottleChannel(void) {
 	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &ThrottleChannelICConfig,
 			&ReceiverPulseStates.ThrottleInputState, &ThrottleICValues, PRIMARY_RECEIVER_THROTTLE_CHANNEL,
-			&PrimaryReceiverTimerPeriodCount, &ThrottleCalibrationSampling);
+			PrimaryReceiverTimerPeriodCount, &ThrottleCalibrationSampling);
 }
 
 /*
@@ -1164,7 +1347,7 @@ static ReceiverErrorStatus UpdateReceiverThrottleChannel(void) {
 static ReceiverErrorStatus UpdateReceiverAileronChannel(void) {
 	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &AileronChannelICConfig,
 			&ReceiverPulseStates.AileronInputState, &AileronICValues, PRIMARY_RECEIVER_AILERON_CHANNEL,
-			&PrimaryReceiverTimerPeriodCount, &AileronCalibrationSampling);
+			PrimaryReceiverTimerPeriodCount, &AileronCalibrationSampling);
 }
 
 /*
@@ -1175,7 +1358,7 @@ static ReceiverErrorStatus UpdateReceiverAileronChannel(void) {
 static ReceiverErrorStatus UpdateReceiverElevatorChannel(void) {
 	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &ElevatorChannelICConfig,
 			&ReceiverPulseStates.ElevatorInputState, &ElevatorICValues, PRIMARY_RECEIVER_ELEVATOR_CHANNEL,
-			&PrimaryReceiverTimerPeriodCount, &ElevatorCalibrationSampling);
+			PrimaryReceiverTimerPeriodCount, &ElevatorCalibrationSampling);
 }
 
 /*
@@ -1186,7 +1369,7 @@ static ReceiverErrorStatus UpdateReceiverElevatorChannel(void) {
 static ReceiverErrorStatus UpdateReceiverRudderChannel(void) {
 	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &RudderChannelICConfig,
 			&ReceiverPulseStates.RudderInputState, &RudderICValues, PRIMARY_RECEIVER_RUDDER_CHANNEL,
-			&PrimaryReceiverTimerPeriodCount, &RudderCalibrationSampling);
+			PrimaryReceiverTimerPeriodCount, &RudderCalibrationSampling);
 }
 
 /*
@@ -1196,7 +1379,7 @@ static ReceiverErrorStatus UpdateReceiverRudderChannel(void) {
  */
 static ReceiverErrorStatus UpdateReceiverGearChannel(void) {
 	return UpdateReceiverChannel(&AuxReceiverTimHandle, &GearChannelICConfig, &ReceiverPulseStates.GearInputState,
-			&GearICValues, AUX_RECEIVER_GEAR_CHANNEL, &AuxReceiverTimerPeriodCount, &GearCalibrationSampling);
+			&GearICValues, AUX_RECEIVER_GEAR_CHANNEL, AuxReceiverTimerPeriodCount, &GearCalibrationSampling);
 }
 
 /*
@@ -1206,7 +1389,7 @@ static ReceiverErrorStatus UpdateReceiverGearChannel(void) {
  */
 static ReceiverErrorStatus UpdateReceiverAux1Channel(void) {
 	return UpdateReceiverChannel(&AuxReceiverTimHandle, &Aux1ChannelICConfig, &ReceiverPulseStates.Aux1InputState,
-			&Aux1ICValues, AUX_RECEIVER_AUX1_CHANNEL, &AuxReceiverTimerPeriodCount, &Aux1CalibrationSampling);
+			&Aux1ICValues, AUX_RECEIVER_AUX1_CHANNEL, AuxReceiverTimerPeriodCount, &Aux1CalibrationSampling);
 }
 
 /*
@@ -1374,8 +1557,6 @@ static void ResetCalibrationSampling(volatile Receiver_ChannelCalibrationSamplin
 static void ReceiverPrintSamplingTask(void const *argument) {
 	(void) argument;
 
-	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE]; // TODO trim size and define
-	char sampleValueTmpString[8]; // Only needs enough space to store an int16_t in string format
 	portTickType xLastWakeTime;
 	portTickType xSampleStartTime;
 
@@ -1386,64 +1567,7 @@ static void ReceiverPrintSamplingTask(void const *argument) {
 	for (;;) {
 		vTaskDelayUntil(&xLastWakeTime, receiverPrintSampleTime);
 
-		strncpy(sampleString, "Receiver channel values:\r\nStatus: ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE);
-		if (IsReceiverActive())
-			strncat(sampleString, "ACTIVE\r\n",
-			RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		else
-			strncat((char*) sampleString, "INACTIVE\r\n",
-			RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-		strncat((char*) sampleString, "Throttle (0-65535): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		snprintf((char*) sampleValueTmpString, 8, "%u", GetThrottleReceiverChannel());
-		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-		strncat((char*) sampleString, "Aileron (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		snprintf((char*) sampleValueTmpString, 16, "%d", GetAileronReceiverChannel());
-		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-		strncat((char*) sampleString, "Elevator (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		snprintf((char*) sampleValueTmpString, 16, "%d", GetElevatorReceiverChannel());
-		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-		strncat((char*) sampleString, "Rudder (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		snprintf((char*) sampleValueTmpString, 16, "%d", GetRudderReceiverChannel());
-		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-		strncat((char*) sampleString, "Gear (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		snprintf((char*) sampleValueTmpString, 16, "%d", GetGearReceiverChannel());
-		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		strncat((char*) sampleString, "\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-		strncat((char*) sampleString, "Aux1 (-32768-32767): ",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		snprintf((char*) sampleValueTmpString, 16, "%d", GetAux1ReceiverChannel());
-		strncat((char*) sampleString, sampleValueTmpString,
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-		strncat((char*) sampleString, "\r\n\r\n",
-		RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-		USBComSendString(sampleString, portMAX_DELAY, portMAX_DELAY);
+		PrintReceiverValues();
 
 		/* If sampling duration exceeded, delete task to stop sampling */
 		if (xTaskGetTickCount() >= xSampleStartTime + receiverPrintSampleDuration * configTICK_RATE_HZ)

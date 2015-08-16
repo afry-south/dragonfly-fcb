@@ -393,64 +393,18 @@ static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t *pcCommandString) {
-
-	static uint8_t currentChannelPrint = 0;
-
-	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL */
+static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString) {
+	/* Remove compile time warnings about unused parameters */
 	(void) pcCommandString;
-	configASSERT(pcWriteBuffer);
+	(void) pcWriteBuffer;
+	(void) xWriteBufferLen;
 
 	/* Get the current receiver values */
-	switch (currentChannelPrint) {
-	case 0:
-		strncpy((char*) pcWriteBuffer, "Receiver channel values:\r\nStatus: ",
-				xWriteBufferLen);
-		if (IsReceiverActive())
-			strncat((char*) pcWriteBuffer, "ACTIVE\r\n",
-					xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
-		else
-			strncat((char*) pcWriteBuffer, "INACTIVE\r\n",
-					xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
-		break;
-	case 1:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-				"Throttle (0-65535): %u\r\n", GetThrottleReceiverChannel());
-		break;
-	case 2:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-				"Aileron (-32768-32767): %d\r\n", GetAileronReceiverChannel());
-		break;
-	case 3:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-				"Elevator (-32768-32767): %d\r\n",
-				GetElevatorReceiverChannel());
-		break;
-	case 4:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-				"Rudder (-32768-32767): %d\r\n", GetRudderReceiverChannel());
-		break;
-	case 5:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-				"Gear (-32768-32767): %d\r\n", GetGearReceiverChannel());
-		break;
-	case 6:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-				"Aux1 (-32768-32767): %d\r\n", GetAux1ReceiverChannel());
-		break;
-	default:
-		strncpy((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
-		/* Reset receiver print iteration number*/
-		currentChannelPrint = 0;
-		/* Return false to indicate command activity finished */
-		return pdFALSE;
-	}
+	PrintReceiverValues();
 
-	currentChannelPrint++;
-	/* Return true to indicate command activity not yet completed */
-	return pdTRUE;
+	/* Return false to indicate command activity finished */
+	return pdFALSE;
 }
 
 /**
