@@ -50,6 +50,8 @@
 #include "task.h"
 #include "semphr.h"
 
+#include "stm32f3xx_hal.h"
+
 /* Private typedef -----------------------------------------------------------*/
 typedef enum {
 	RECEIVER_CALIBRATION_WAITING = 0, RECEIVER_CALIBRATION_IN_PROGRESS = 1,
@@ -176,6 +178,7 @@ static ReceiverErrorStatus IsCalibrationMinPulseValueValid(const uint16_t minPul
 
 static void EnforceNewCalibrationValues(volatile Receiver_CalibrationValues_TypeDef* newCalibrationValues);
 static void ResetCalibrationSampling(volatile Receiver_ChannelCalibrationSampling_TypeDef* channelCalibrationSampling);
+static void ReceiverToggleICPolarity(TIM_HandleTypeDef* htim, TIM_IC_InitTypeDef* sConfig, uint32_t Channel);
 
 static void ReceiverPrintSamplingTask(void const *argument);
 
@@ -1261,18 +1264,7 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
 	}
 
 	/* Toggle the IC Polarity */
-	/* TODO: Write function that only updates IC polarity */
-	if (HAL_TIM_IC_ConfigChannel(TimHandle, TimIC, receiverChannel) != HAL_OK) {
-		/* Configuration Error */
-		errorStatus = RECEIVER_ERROR;
-		Error_Handler();
-	}
-	/* Restart the input capture interrupt */
-	if (HAL_TIM_IC_Start_IT(TimHandle, receiverChannel) != HAL_OK) {
-		/* Starting Error */
-		errorStatus = RECEIVER_ERROR;
-		Error_Handler();
-	}
+	ReceiverToggleICPolarity(TimHandle, TimIC, receiverChannel);
 
 	return errorStatus;
 }
@@ -1547,6 +1539,86 @@ static void ResetCalibrationSampling(volatile Receiver_ChannelCalibrationSamplin
 	RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE * sizeof(uint16_t));
 	channelCalibrationSampling->tmpMinBufferMaxValue = 0;
 	channelCalibrationSampling->tmpMinIndex = 0;
+}
+
+/**
+ * @brief  Toggles the IC polarity
+ * @param  argument : Unused parameter
+ * @retval htim : timer handle reference
+ * @retval sConfig : timer IC init struct reference
+ * @retval Channel : timer channel
+ */
+static void ReceiverToggleICPolarity(TIM_HandleTypeDef* htim, TIM_IC_InitTypeDef* sConfig, uint32_t Channel) {
+	uint32_t tmpccmrx = 0;
+	uint32_t tmpccer = 0;
+
+	htim->State = HAL_TIM_STATE_BUSY;
+
+	if (Channel == TIM_CHANNEL_1)
+	{
+		/* Disable the Channel 1: Reset the CC1E Bit */
+		htim->Instance->CCER &= ~TIM_CCER_CC1E;
+		tmpccmrx = htim->Instance->CCMR1;
+		tmpccer = htim->Instance->CCER;
+
+		/* Select the Polarity and set the CC1E Bit */
+		tmpccer &= ~(TIM_CCER_CC1P | TIM_CCER_CC1NP);
+		tmpccer |= (sConfig->ICPolarity & (TIM_CCER_CC1P | TIM_CCER_CC1NP));
+
+		/* Write to TIMx CCMR1 and CCER registers */
+		htim->Instance->CCMR1 = tmpccmrx;
+		htim->Instance->CCER = tmpccer;
+	}
+	else if (Channel == TIM_CHANNEL_2)
+	{
+		/* Disable the Channel 2: Reset the CC2E Bit */
+		htim->Instance->CCER &= ~TIM_CCER_CC2E;
+		tmpccmrx = htim->Instance->CCMR1;
+		tmpccer = htim->Instance->CCER;
+
+		/* Select the Polarity and set the CC2E Bit */
+		tmpccer &= ~(TIM_CCER_CC2P | TIM_CCER_CC2NP);
+		tmpccer |= ((sConfig->ICPolarity << 4) & (TIM_CCER_CC2P | TIM_CCER_CC2NP));
+
+		/* Write to TIMx CCMR1 and CCER registers */
+		htim->Instance->CCMR1 = tmpccmrx ;
+		htim->Instance->CCER = tmpccer;
+	}
+	else if (Channel == TIM_CHANNEL_3)
+	{
+		/* Disable the Channel 3: Reset the CC3E Bit */
+		htim->Instance->CCER &= ~TIM_CCER_CC3E;
+		tmpccmrx = htim->Instance->CCMR2;
+		tmpccer = htim->Instance->CCER;
+
+		/* Select the Polarity and set the CC3E Bit */
+		tmpccer &= ~(TIM_CCER_CC3P | TIM_CCER_CC3NP);
+		tmpccer |= ((sConfig->ICPolarity << 8) & (TIM_CCER_CC3P | TIM_CCER_CC3NP));
+
+		/* Write to TIMx CCMR2 and CCER registers */
+		htim->Instance->CCMR2 = tmpccmrx;
+		htim->Instance->CCER = tmpccer;
+	}
+	else
+	{
+		/* Disable the Channel 4: Reset the CC4E Bit */
+		htim->Instance->CCER &= ~TIM_CCER_CC4E;
+		tmpccmrx = htim->Instance->CCMR2;
+		tmpccer = htim->Instance->CCER;
+
+		/* Select the Polarity and set the CC4E Bit */
+		tmpccer &= ~(TIM_CCER_CC4P | TIM_CCER_CC4NP);
+		tmpccer |= ((sConfig->ICPolarity << 12) & (TIM_CCER_CC4P | TIM_CCER_CC4NP));
+
+		/* Write to TIMx CCMR2 and CCER registers */
+		htim->Instance->CCMR2 = tmpccmrx;
+		htim->Instance->CCER = tmpccer;
+	}
+
+	htim->State = HAL_TIM_STATE_READY;
+
+	/* Enable the Input Capture channel */
+	TIM_CCxChannelCmd(htim->Instance, Channel, TIM_CCx_ENABLE);
 }
 
 /**
