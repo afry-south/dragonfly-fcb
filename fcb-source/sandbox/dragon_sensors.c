@@ -127,7 +127,7 @@ void dragon_gyro_init(void) {
     if(BSP_GYRO_Init() != HAL_OK)
     {
         /* Initialization Error */
-        fcb_error();
+    	ErrorHandler();
     }
 
     /* not sure if L3GD20_EnableIT says the right thing */
@@ -162,7 +162,7 @@ void dragon_sensors(void) {
     sGyroDataReady = xSemaphoreCreateBinary();
 
     if (NULL == sGyroDataReady) {
-        fcb_error();
+    	ErrorHandler();
     }
 #endif /* USE_QUEUE */
 #endif
@@ -179,7 +179,7 @@ void dragon_sensors(void) {
                                NULL /* parameter */,
                                1 /* priority */,
                                &hGyroDataRead))) {
-        fcb_error();
+    	ErrorHandler();
     }
 #else
     dragon_gyro_init();
@@ -194,12 +194,12 @@ void dragon_sensors(void) {
                                           pdTRUE, /* uxAutoReload */
                                           (void*)DRAGON_TIMER_ID, /* pvTimerID */
                                           dragon_timer_read_sensors))) {
-        fcb_error();
+    	ErrorHandler();
         return;
     }
 
     if (pdFAIL == xTimerStart(xDragonTimer, 0)) {
-        fcb_error();
+    	ErrorHandler();
         return;
     }
 #endif /* LAUNCH_TIMER */
@@ -235,12 +235,12 @@ extern void dragon_sensors_isr(void) {
 #ifdef USE_QUEUE
     uint8_t msg = 0xCC;
     if (pdTRUE != xQueueSendFromISR(qGyroDataReady, &msg, &higherPriorityTaskWoken)) {
-            fcb_error();
+    	ErrorHandler();
        }
 #else
     if (pdTRUE != xSemaphoreGiveFromISR(sGyroDataReady,
                                         &higherPriorityTaskWoken)) {
-        fcb_error();
+    	ErrorHandler();
     }
 #endif
     portYIELD_FROM_ISR(higherPriorityTaskWoken);
@@ -291,12 +291,12 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
         if (pdFALSE == xQueueReceive(qGyroDataReady,
                                      &msg,
                                      portMAX_DELAY /* 1000 *//* configTICK_RATE_HZ is 1000 */)) {
-        	fcb_error();
+        	ErrorHandler();
         }
 #else
         }
         if (pdTRUE != xSemaphoreTake(sGyroDataReady, portMAX_DELAY)) {
-            fcb_error();
+        	ErrorHandler();
         }
 #endif /* USE_QUEUE */
 #endif /* SEM_VERSION */
@@ -423,7 +423,7 @@ static void dragon_timer_read_sensors(xTimerHandle xTimer ) {
                                                         DAC1_CHANNEL_1 /* uint32_t channel */,
                                                         DAC_ALIGN_12B_R /* uint32_t alignment */, /* 0 - 4095 */
                                                         dac1_scaled /* uint32_t data */))) {
-                fcb_error();
+            	ErrorHandler();
             }
         }
 #endif /* DAC_OUTPUT */
@@ -444,7 +444,7 @@ void dragon_dac_init(void) {
 
     if ((halRetVal = HAL_DAC_Init(&sDacHandle)) != HAL_OK) {
         /* Initiliazation Error */
-        fcb_error();
+    	ErrorHandler();
     }
 
     /* set PA4 to analog mode */
@@ -466,18 +466,18 @@ void dragon_dac_init(void) {
     if (HAL_OK != (halRetVal = HAL_DAC_ConfigChannel(&sDacHandle /* DAC_HandleTypeDef* hdac */,
                                                      &sDacChannelOneConf /* DAC_ChannelConfTypeDef* sConfig */,
                                                      DAC1_CHANNEL_1 /* uint32_t channel */))) {
-        fcb_error();
+    	ErrorHandler();
     }
 
     if (HAL_OK != (halRetVal = HAL_DAC_SetValue(&sDacHandle /* DAC_HandleTypeDef* hdac */,
                                                 DAC1_CHANNEL_1 /* uint32_t channel */,
                                                 DAC_ALIGN_12B_R /* uint32_t alignment */, /* 0 - 4095 */
                                                 0xFFF /* uint32_t data */))) {
-        fcb_error();
+    	ErrorHandler();
     }
 
     if (HAL_OK != (halRetVal = HAL_DAC_Start(&sDacHandle, DAC1_CHANNEL_1 /* uint32_t channel */))) {
-        fcb_error();
+    	ErrorHandler();
     }
 
 }

@@ -15,6 +15,7 @@
 #include "fifo_buffer.h"
 #include "common.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -193,8 +194,8 @@ static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer,
 	if (lParameterNumber == 0) {
 		/* The first time the function is called after the command has been
 		 entered just a header string is returned. */
-		strncpy((char*) pcWriteBuffer, "Parameter received:\r\n",
-				xWriteBufferLen);
+		memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+		strncpy((char*) pcWriteBuffer, "Parameter received:\r\n", xWriteBufferLen);
 	} else {
 		/* Obtain the parameter string */
 		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
@@ -206,11 +207,9 @@ static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer,
 		configASSERT(pcParameter);
 
 		/* Return the parameter string. */
-		strncpy((char*) pcWriteBuffer, (const char*) pcParameter,
-				xParameterStringLength);
-
-		strncat((char*) pcWriteBuffer, "\r\n",
-				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+		strncpy((char*) pcWriteBuffer, (const char*) pcParameter, xParameterStringLength);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 	}
 
 	/* Update return value and parameter index */
@@ -234,8 +233,8 @@ static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer,
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t* pcCommandString) {
+static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t* pcCommandString) {
 	int8_t *pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
 	static portBASE_TYPE lParameterNumber = 0;
@@ -274,10 +273,8 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer,
 				ErrorStatus bufferStatus = SUCCESS;
 				uint16_t i = 0;
 				uint8_t getByte;
-				while (bufferStatus == SUCCESS && i < dataLength
-						&& i <= xWriteBufferLen) {
-					bufferStatus = FIFOBufferGetByte(&USBCOMRxFIFOBuffer,
-							&getByte);
+				while (bufferStatus == SUCCESS && i < dataLength && i <= xWriteBufferLen) {
+					bufferStatus = FIFOBufferGetByte(&USBCOMRxFIFOBuffer, &getByte);
 
 					if (bufferStatus == SUCCESS)
 						pcWriteBuffer[i] = getByte;
@@ -294,13 +291,9 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer,
 			} else {
 				previousRxBufferCount = USBCOMRxFIFOBuffer.count;
 				/*/ Pend on USBComRxDataSem for MAX_DATA_TRANSFER_DELAY while waiting for data to enter RX buffer */
-				if (pdPASS
-						!= xSemaphoreTake(USBCOMRxDataSem,
-								MAX_DATA_TRANSFER_DELAY)) {
+				if (pdPASS != xSemaphoreTake(USBCOMRxDataSem, MAX_DATA_TRANSFER_DELAY)) {
 					memset(pcWriteBuffer, 0x00, xWriteBufferLen);
-					strncpy((char*) pcWriteBuffer,
-							"Data transmission timed out.\r\n",
-							xWriteBufferLen);
+					strncpy((char*) pcWriteBuffer, "Data transmission timed out.\r\n", xWriteBufferLen);
 				}
 			}
 		}
@@ -346,9 +339,7 @@ static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(
 				"RC receiver calibration started. Please saturate all RC transmitter control sticks and toggle switches.\r\n",
 				xWriteBufferLen);
 	else
-		strncpy((char*) pcWriteBuffer,
-				"RC receiver calibration already in progress.\r\n",
-				xWriteBufferLen);
+		strncpy((char*) pcWriteBuffer, "RC receiver calibration already in progress.\r\n", xWriteBufferLen);
 
 	/* Return false to indicate command activity finished */
 	return pdFALSE;
@@ -371,15 +362,12 @@ static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(
 
 	/* Stop the receiver calibration procedure */
 	ReceiverErrorStatus rcCalStatus = StopReceiverCalibration();
-	strncpy((char*) pcWriteBuffer, "RC receiver calibration stopped.\r\n",
-			xWriteBufferLen);
+	strncpy((char*) pcWriteBuffer, "RC receiver calibration stopped.\r\n", xWriteBufferLen);
 	if (rcCalStatus)
-		strncat((char*) pcWriteBuffer,
-				"RC receiver calibration successful.\r\n",
+		strncat((char*) pcWriteBuffer, "RC receiver calibration successful.\r\n",
 				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 	else
-		strncat((char*) pcWriteBuffer,
-				"RC receiver calibration failed or has not been started.\r\n",
+		strncat((char*) pcWriteBuffer, "RC receiver calibration failed or has not been started.\r\n",
 				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 	/* Return false to indicate command activity finished */
@@ -397,8 +385,9 @@ static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer, size_t
 		const int8_t *pcCommandString) {
 	/* Remove compile time warnings about unused parameters */
 	(void) pcCommandString;
-	(void) pcWriteBuffer;
 	(void) xWriteBufferLen;
+
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 
 	/* Get the current receiver values */
 	PrintReceiverValues();
@@ -424,6 +413,7 @@ static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
 	 write buffer is not NULL */
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 
 	/* Get the current receiver values */
 	switch (currentChannelPrint) {
@@ -500,8 +490,7 @@ static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(
-		int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
 	int8_t* pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
@@ -513,9 +502,7 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(
 	if (lParameterNumber == 0) {
 		/* The first time the function is called after the command has been
 		 entered just a header string is returned. */
-		strncpy((char*) pcWriteBuffer,
-				"Starting print sampling of receiver values...\r\n",
-				xWriteBufferLen);
+		strncpy((char*) pcWriteBuffer, "Starting print sampling of receiver values...\r\n", xWriteBufferLen);
 	} else {
 		uint16_t receiverSampleTime;
 		uint16_t receiverSampleDuration;
@@ -532,15 +519,13 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(
 		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
 
 		size_t paramMaxSize; // TODO make function for this comparison?
-		if ((unsigned long) xParameterStringLength
-				> xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
 			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
 		else
 			paramMaxSize = xParameterStringLength;
 
 		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
-		strncat((char*) pcWriteBuffer, "\r\n",
-				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 		receiverSampleTime = atoi((char*) pcParameter);
 
@@ -553,18 +538,15 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(
 		/* Sanity check something was returned. */
 		configASSERT(pcParameter);
 
-		strncat((char*) pcWriteBuffer, "Duration (s): ",
-				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		strncat((char*) pcWriteBuffer, "Duration (s): ", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
-		if ((unsigned long) xParameterStringLength
-				> xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
 			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
 		else
 			paramMaxSize = xParameterStringLength;
 
 		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
-		strncat((char*) pcWriteBuffer, "\r\n",
-				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 		receiverSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
 
@@ -572,8 +554,7 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(
 	}
 
 	/* Update return value and parameter index */
-	if (lParameterNumber
-			== startReceiverSamplingCommand.cExpectedNumberOfParameters) {
+	if (lParameterNumber == startReceiverSamplingCommand.cExpectedNumberOfParameters) {
 		/* If this is the last parameter then there are no more strings to return after this one. */
 		xReturn = pdFALSE;
 		lParameterNumber = 0;
@@ -601,9 +582,7 @@ static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
-	strncpy((char*) pcWriteBuffer,
-			"Stopping printing of receiver sample values...\r\n",
-			xWriteBufferLen);
+	strncpy((char*) pcWriteBuffer, "Stopping printing of receiver sample values...\r\n", xWriteBufferLen);
 
 	/* Stop the receiver printing task */
 	StopReceiverSamplingTask();

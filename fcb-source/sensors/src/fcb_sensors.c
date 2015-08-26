@@ -39,7 +39,7 @@ int FcbSensorsConfig(void) {
 
     if (0 == (qFcbSensors = xQueueCreate(FCB_SENSORS_QUEUE_SIZE,
                                          FCB_SENSORS_Q_MSG_SIZE))) {
-        fcb_error();
+    	ErrorHandler();
         goto Error;
     }
 
@@ -51,7 +51,7 @@ int FcbSensorsConfig(void) {
                                NULL /* parameter */,
                                1 /* priority */,
                                &tFcbSensors))) {
-        fcb_error();
+    	ErrorHandler();
         goto Error;
     }
 
@@ -74,7 +74,7 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
 #endif
 
     if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
-        fcb_error();
+    	ErrorHandler();
     }
 
     portYIELD_FROM_ISR(higherPriorityTaskWoken);
@@ -89,7 +89,7 @@ static void ProcessSensorValues(void* val) {
     uint8_t msg;
 
     if (FCB_OK != InitialiseGyroscope()) {
-    	fcb_error();
+    	ErrorHandler();
     }
 
     while (1) {
@@ -100,7 +100,7 @@ static void ProcessSensorValues(void* val) {
              * if no message was received, no interrupts from the sensors
              * aren't arriving and this is a serious error.
              */
-            fcb_error();
+        	ErrorHandler();
             goto Error;
         }
 

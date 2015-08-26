@@ -38,7 +38,7 @@ typedef struct {
 #define USB_COM_RX_THREAD_PRIO          1
 #define USB_COM_TX_THREAD_PRIO          1
 
-#define USB_COM_TX_QUEUE_ITEMS          8
+#define USB_COM_TX_QUEUE_ITEMS          16
 
 /* Private function prototypes -----------------------------------------------*/
 static int8_t CDCItfInit(void);
@@ -208,17 +208,17 @@ static int8_t CDCItfReceive(uint8_t* rxData, uint32_t* rxDataLen) {
 static void USBComPortRXTask(void const *argument) {
 	(void) argument;
 
-	static uint16_t i = 0;
+	uint16_t i = 0;
 	portBASE_TYPE xMoreDataToFollow;
+	ErrorStatus bufferStatus = SUCCESS;
+	uint8_t getByte;
 	static uint8_t cliInBuffer[MAX_CLI_COMMAND_SIZE];
 	static uint8_t cliOutBuffer[MAX_CLI_OUTPUT_SIZE];
 
 	for (;;) {
+		bufferStatus = SUCCESS;
 		/* Wait forever for incoming data over USB by pending on the USB Rx queue */
 		if (pdPASS == xSemaphoreTake(USBCOMRxDataSem, portMAX_DELAY)) {
-			ErrorStatus bufferStatus = SUCCESS;
-			uint8_t getByte;
-
 			// Empty buffer
 			while (bufferStatus == SUCCESS && (i < MAX_CLI_COMMAND_SIZE || getByte != '\n')) {
 				bufferStatus = FIFOBufferGetByte(&USBCOMRxFIFOBuffer, &getByte);
@@ -239,8 +239,7 @@ static void USBComPortRXTask(void const *argument) {
 					MAX_CLI_OUTPUT_SIZE /* The size of the output buffer. */
 					);
 
-					USBComSendString((char*) cliOutBuffer, portMAX_DELAY,
-					portMAX_DELAY);
+					USBComSendString((char*) cliOutBuffer, portMAX_DELAY, portMAX_DELAY);
 
 				} while (xMoreDataToFollow != pdFALSE);
 
@@ -398,8 +397,7 @@ USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDa
 			CompPortTxQueueItem.dataSize = sendDataSize;
 
 			// The Tx Queue needs to be accessed in critical region since we don't want items from the same FIFO entering it in the wrong order!
-			if (xQueueSend(usbComTxQueue, &CompPortTxQueueItem,
-					maxQueueWaitTicks) != pdPASS) {
+			if (xQueueSend(usbComTxQueue, &CompPortTxQueueItem, maxQueueWaitTicks) != pdPASS) {
 				// Queue full, delete data from FIFO
 				FIFOBufferDeleteLastEnteredBytes(&USBCOMTxFIFOBuffer, sendDataSize);
 				result = USBD_FAIL;
@@ -428,7 +426,7 @@ void CreateUSBComTasks(void) {
 	if (pdPASS
 			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask, (signed portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE,
 					NULL, USB_COM_RX_THREAD_PRIO, &USBComPortRxTaskHandle)) {
-		Error_Handler();
+		ErrorHandler();
 	}
 
 	/* USB Virtual Com Port Tx handler task creation
@@ -442,7 +440,7 @@ void CreateUSBComTasks(void) {
 	if (pdPASS
 			!= xTaskCreate((pdTASK_CODE )USBComPortTXTask, (signed portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE,
 					NULL, USB_COM_TX_THREAD_PRIO, &USBComPortTxTaskHandle)) {
-		Error_Handler();
+		ErrorHandler();
 	}
 }
 
@@ -457,19 +455,19 @@ void CreateUSBComQueues(void) {
 void CreateUSBComSemaphores(void) {
 	USBCOMRxDataSem = xSemaphoreCreateBinary();
 	if (USBCOMRxDataSem == NULL) {
-		Error_Handler();
+		ErrorHandler();
 	}
 
 	USBCOMTxBufferMutex = xSemaphoreCreateMutex();
 	if (USBCOMTxBufferMutex == NULL) {
-		Error_Handler();
+		ErrorHandler();
 	}
 
 	/* Create binary semaphore to synchronize USB CDC class output. The semaphore is taken when device is
 	 * transmitting (USB CDC busy) and given when transfer has completed. */
 	USBTxMutex = xSemaphoreCreateMutex();
 	if (USBTxMutex == NULL) {
-		Error_Handler();
+		ErrorHandler();
 	}
 }
 

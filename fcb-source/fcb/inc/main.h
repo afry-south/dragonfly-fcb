@@ -13,17 +13,10 @@
 #define __MAIN_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f3xx.h"
-#include "stm32f3_discovery.h"
-#include "stm32f3xx_hal_conf.h"
-
-#include "usbd_cdc_if.h"
-
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void Error_Handler(void);
 
 #endif /* __MAIN_H */
 

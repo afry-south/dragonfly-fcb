@@ -10,7 +10,7 @@
 #define __FIFO_BUFFER_H
 
 /* Includes -----------------------------------------------------------------*/
-#include "main.h"
+#include "stm32f3xx.h"
 #include <stdbool.h>
 
 /* Exported constants --------------------------------------------------------*/

@@ -8,7 +8,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "common.h"
-#include "main.h"
+
+#include "stm32f3_discovery.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -16,21 +17,19 @@
 /* Private variables ---------------------------------------------------------*/
 extern volatile uint8_t UserButtonPressed;
 
+CRC_HandleTypeDef CrcHandle;
+
 /* Private function prototypes -----------------------------------------------*/
 
 /* Exported functions --------------------------------------------------------*/
 
 /*
- * @brief  Calculates Cyclic Redundancy Check (CRC) using the STM32 CRC Peripheral
- * @param  dataBuffer : Pointer to data buffer (byte array)
- * @param  dataBufferSize : byte size of dataBuffer
- * @retval CRC value
+ * @brief  Initializes the Cyclic Redundancy Check peripheral
+ * @param  None
+ * @retval None
  */
-uint32_t CalculateCRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize) {
-	/*##-1- Configure the CRC peripheral #######################################*/
-	/* CRC handler declaration */
-	CRC_HandleTypeDef CrcHandle;
-
+void InitCRC(void)
+{
 	CrcHandle.Instance = CRC;
 
 	/* The default polynomial is used */
@@ -51,17 +50,24 @@ uint32_t CalculateCRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize) 
 	/* Initialize the CRC peripheral */
 	if (HAL_CRC_Init(&CrcHandle) != HAL_OK) {
 		/* Initialization Error */
-		Error_Handler();
+		ErrorHandler();
 	}
+}
 
-	/*##-2- Compute the CRC of "dataBuffer" ####################################*/
-	uint32_t CrcVal = HAL_CRC_Calculate(&CrcHandle, (uint32_t*) dataBuffer,
-			dataBufferSize);
+/*
+ * @brief  Calculates Cyclic Redundancy Check (CRC) using the STM32 CRC Peripheral
+ * @param  dataBuffer : Pointer to data buffer (byte array)
+ * @param  dataBufferSize : byte size of dataBuffer
+ * @retval CRC value
+ */
+uint32_t CalculateCRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize) {
 
-	/* Deinitialize the CRC peripheral */
-	HAL_CRC_DeInit(&CrcHandle);
+	uint32_t crcVal;
 
-	return CrcVal;
+	/* Compute the CRC of dataBuffer */
+	crcVal = HAL_CRC_Calculate(&CrcHandle, (uint32_t*) dataBuffer, dataBufferSize);
+
+	return crcVal;
 }
 
 /*
@@ -77,7 +83,7 @@ uint16_t UInt16Mean(const uint16_t* buffer, const uint16_t length) {
 	for (i = 0; i < length; i++)
 		tmpInt += buffer[i];
 
-	return (uint16_t) (tmpInt /= length);
+	return (uint16_t) (tmpInt / length);
 }
 
 /**

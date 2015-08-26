@@ -20,6 +20,7 @@
 #define IS_POS(X) ((X) >= 0)
 
 /* Exported function prototypes --------------------------------------------- */
+void InitCRC(void);
 uint32_t CalculateCRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize);
 uint16_t UInt16Mean(const uint16_t* buffer, const uint16_t length);
 

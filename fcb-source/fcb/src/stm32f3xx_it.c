@@ -12,8 +12,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx_it.h"
-#include "stm32f3xx.h"
-#include "main.h"
+#include "stm32f3_discovery.h"
 
 #include "fcb_error.h"
 
@@ -81,7 +80,7 @@ void HardFault_Handler(void) {
 // TODO: More registers? MMAR? BFAR? Etc
 // TODO: Print active threads (and status?)
 	/* Go to infinite loop when Hard Fault exception occurs */
-	fcb_error();
+	ErrorHandler();
 	while (1) {
 	}
 }

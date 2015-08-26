@@ -60,7 +60,7 @@ uint8_t InitialiseGyroscope(void) {
     {
 
         /* Initialization Error */
-        fcb_error();
+    	ErrorHandler();
     }
 
     FetchAngleDotFromGyroscope(); /* necessary so a fresh DRDY can be triggered */

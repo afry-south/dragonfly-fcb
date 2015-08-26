@@ -26,7 +26,10 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32f3_discovery.h"
+#include "usbd_core.h"
+#include "usbd_cdc.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #define USB_DISCONNECT_PORT                 GPIOB  

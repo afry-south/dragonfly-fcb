@@ -36,10 +36,10 @@
 volatile uint8_t UserButtonPressed;
 
 /* Private function prototypes -----------------------------------------------*/
-static void SystemClock_Config(void);
-static void System_Init(void);
-static void RTOS_Init(void);
-static void PVD_Config(void);
+static void InitSystem(void);
+static void InitRTOS(void);
+static void ConfigSystemClock(void);
+static void ConfigPVD(void);
 
 /* Called every system tick to drive the RTOS */
 extern void xPortSysTickHandler(void);
@@ -60,31 +60,13 @@ int main(void) {
 	 */
 
 	/* Init system at low level */
-	System_Init();
+	InitSystem();
 
 	/* Initialize RTOS tasks */
-	RTOS_Init();
+	InitRTOS();
 
 	while (1) {
 		ToggleLEDs();
-	}
-}
-
-/**
- * @brief  This function is executed in case of error occurrence.
- * @param  None
- * @retval None
- */
-void Error_Handler(void) {
-	/* Turn LED3 on */
-	LEDsOff();
-	// BSP_LED_On(LED3);
-	fcb_error();
-	// TODO: Based on the current state of the quadrotor, appropriate
-	// action should be taken (i.e. attempt to land and shut down
-	// motors within 20 seconds)
-
-	while (1) {
 	}
 }
 
@@ -112,7 +94,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  */
 void HAL_PWR_PVDCallback(void) {
 	/* Voltage drop detected - Go to error handler */
-	Error_Handler();
+	ErrorHandler();
 }
 
 /**
@@ -144,7 +126,7 @@ void HAL_SYSTICK_Callback(void) {
  * @param  None
  * @retval None
  */
-static void System_Init(void) {
+static void InitSystem(void) {
 	/* STM32F3xx HAL library initialization:
 	 - Configure the Flash prefetch
 	 - Systick timer is configured by default as source of time base, but user
@@ -157,11 +139,13 @@ static void System_Init(void) {
 	 */
 	HAL_Init();
 
+	InitCRC();
+
 	/* Initialize Programmable Voltage Detection (PVD) */
-	PVD_Config();
+	ConfigPVD();
 
 	/* Configure the system clock to 72 Mhz */
-	SystemClock_Config();
+	ConfigSystemClock();
 
 	/* Initialize Command Line Interface for USB communication */
 	RegisterCLICommands();
@@ -176,7 +160,7 @@ static void System_Init(void) {
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
 	if (FCB_OK != FcbSensorsConfig()) {
-		fcb_error();
+		ErrorHandler();
 	}
 
 #ifdef TODO
@@ -199,7 +183,7 @@ static void System_Init(void) {
  * @param  None
  * @retval None
  */
-static void RTOS_Init(void) {
+static void InitRTOS(void) {
 	/* # CREATE THREADS ####################################################### */
 	CreateUSBComTasks();
 
@@ -222,7 +206,7 @@ static void RTOS_Init(void) {
  * @param  None
  * @retval None
  */
-static void PVD_Config(void) {
+static void ConfigPVD(void) {
 	PWR_PVDTypeDef sConfigPVD;
 
 	/*##-1- Enable Power Clock #################################################*/
@@ -259,7 +243,7 @@ static void PVD_Config(void) {
  * @param  None
  * @retval None
  */
-static void SystemClock_Config(void) {
+static void ConfigSystemClock(void) {
 	RCC_ClkInitTypeDef RCC_ClkInitStruct;
 	RCC_OscInitTypeDef RCC_OscInitStruct;
 	RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;

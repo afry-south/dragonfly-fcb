@@ -51,7 +51,7 @@ void MotorControlConfig(void) {
 	TimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
 	if (HAL_TIM_PWM_Init(&TimHandle) != HAL_OK) {
 		/* Capture initialization Error */
-		Error_Handler();
+		ErrorHandler();
 	}
 
 	/*##-2- Configure the PWM channels #########################################*/
@@ -64,50 +64,50 @@ void MotorControlConfig(void) {
 	ocConfig.Pulse = 0;
 	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR1_CHANNEL) != HAL_OK) {
 		/* Configuration Error */
-		Error_Handler();
+		ErrorHandler();
 	}
 
 	/* Set the pulse value for Motor 2 */
 	ocConfig.Pulse = 0;
 	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR2_CHANNEL) != HAL_OK) {
 		/* Configuration Error */
-		Error_Handler();
+		ErrorHandler();
 	}
 
 	/* Set the pulse value for Motor 3 */
 	ocConfig.Pulse = 0;
 	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR3_CHANNEL) != HAL_OK) {
 		/* Configuration Error */
-		Error_Handler();
+		ErrorHandler();
 	}
 
 	/* Set the pulse value for Motor 4 */
 	ocConfig.Pulse = 0;
 	if (HAL_TIM_PWM_ConfigChannel(&TimHandle, &ocConfig, MOTOR4_CHANNEL) != HAL_OK) {
 		/* Configuration Error */
-		Error_Handler();
+		ErrorHandler();
 	}
 
 	/*##-3- Start PWM signals generation #######################################*/
 	/* Start Motor 1 channel */
 	if (HAL_TIM_PWM_Start(&TimHandle, MOTOR1_CHANNEL) != HAL_OK) {
 		/* PWM Generation Error */
-		Error_Handler();
+		ErrorHandler();
 	}
 	/* Start Motor 2 channel */
 	if (HAL_TIM_PWM_Start(&TimHandle, MOTOR2_CHANNEL) != HAL_OK) {
 		/* PWM Generation Error */
-		Error_Handler();
+		ErrorHandler();
 	}
 	/* Start Motor 3 channel */
 	if (HAL_TIM_PWM_Start(&TimHandle, MOTOR3_CHANNEL) != HAL_OK) {
 		/* PWM Generation Error */
-		Error_Handler();
+		ErrorHandler();
 	}
 	/* Start Motor 4 channel */
 	if (HAL_TIM_PWM_Start(&TimHandle, MOTOR4_CHANNEL) != HAL_OK) {
 		/* PWM Generation Error */
-		Error_Handler();
+		ErrorHandler();
 	}
 }
 
