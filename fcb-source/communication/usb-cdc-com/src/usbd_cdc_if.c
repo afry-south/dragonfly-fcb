@@ -243,7 +243,7 @@ static void USBComPortRXTask(void const *argument) {
 					MAX_CLI_OUTPUT_SIZE /* The size of the output buffer. */
 					);
 
-					USBComSendString((char*) cliOutBuffer, portMAX_DELAY, portMAX_DELAY);
+					USBComSendString((char*) cliOutBuffer);
 
 				} while (xMoreDataToFollow != pdFALSE);
 
@@ -382,9 +382,8 @@ USBD_StatusTypeDef CDCTransmitFS(uint8_t* data, uint16_t size) {
  * @param  maxQueueWaitTicks : Max ticks to wait for the queue
  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
  */
-USBD_StatusTypeDef USBComSendString(const char* sendString, const uint32_t maxMutexWaitTicks,
-		const uint32_t maxQueueWaitTicks) {
-	return USBComSendData((uint8_t*) sendString, strlen(sendString), maxMutexWaitTicks, maxQueueWaitTicks);
+USBD_StatusTypeDef USBComSendString(const char* sendString) {
+	return USBComSendData((uint8_t*) sendString, strlen(sendString));
 }
 
 /**
@@ -395,12 +394,11 @@ USBD_StatusTypeDef USBComSendString(const char* sendString, const uint32_t maxMu
  * @param  maxQueueWaitTicks : Max ticks to wait for the queue
  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
  */
-USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDataSize,
-		const uint32_t maxMutexWaitTicks, const uint32_t maxQueueWaitTicks) {
+USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDataSize) {
 	UsbComPortTxQueueItem_TypeDef CompPortTxQueueItem;
 	USBD_StatusTypeDef result = USBD_OK;
 
-	if (xSemaphoreTake(USBCOMTxBufferMutex, maxMutexWaitTicks) == pdPASS) {
+	if (xSemaphoreTake(USBCOMTxBufferMutex, USB_COM_MAX_DELAY) == pdPASS) {
 		// Mutex obtained - access the shared resource
 		if (FIFOBufferPutData(&USBCOMTxFIFOBuffer, sendData, sendDataSize)) {
 			CompPortTxQueueItem.bufferType = FIFO_BUFFER;
@@ -409,7 +407,7 @@ USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDa
 			CompPortTxQueueItem.dataSize = sendDataSize;
 
 			// The Tx Queue needs to be accessed in critical region since we don't want items from the same FIFO entering it in the wrong order!
-			if (xQueueSend(usbComTxQueue, &CompPortTxQueueItem, maxQueueWaitTicks) != pdPASS) {
+			if (xQueueSend(usbComTxQueue, &CompPortTxQueueItem, USB_COM_MAX_DELAY) != pdPASS) {
 				// Queue full, delete data from FIFO
 				FIFOBufferDeleteLastEnteredBytes(&USBCOMTxFIFOBuffer, sendDataSize);
 				result = USBD_FAIL;

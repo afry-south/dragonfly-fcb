@@ -34,11 +34,11 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName) {
 	(void) xTask;
 	char hookString[HOOK_STRING_SIZE];
 	memset(hookString, 0x00, sizeof(hookString));
-	USBComSendString("FreeRTOS stack overflow\n", portMAX_DELAY, portMAX_DELAY);
+	USBComSendString("FreeRTOS stack overflow\n");
 	strncpy(hookString, "Task: ", HOOK_STRING_SIZE);
 	strncat(hookString, (char*)pcTaskName, HOOK_STRING_SIZE - strlen(hookString) - 1);
 	strncat(hookString, "\r\n", HOOK_STRING_SIZE - strlen(hookString) - 1);
-	USBComSendString(hookString, portMAX_DELAY, portMAX_DELAY);
+	USBComSendString(hookString);
 	ErrorHandler();
 }
 
@@ -52,9 +52,9 @@ void vApplicationMallocFailedHook(xTaskHandle xTask, signed char *pcTaskName) {
 	(void) xTask;
 	char hookString[HOOK_STRING_SIZE];
 	memset(hookString, 0x00, sizeof(hookString));
-	USBComSendString("FreeRTOS malloc failed\n", portMAX_DELAY, portMAX_DELAY);
+	USBComSendString("FreeRTOS malloc failed\n");
 	strncat(hookString, (char*)pcTaskName, HOOK_STRING_SIZE - strlen(hookString) - 1);
 	strncat(hookString, "\r\n", HOOK_STRING_SIZE - strlen(hookString) - 1);
-	USBComSendString(hookString, portMAX_DELAY, portMAX_DELAY);
+	USBComSendString(hookString);
 	ErrorHandler();
 }

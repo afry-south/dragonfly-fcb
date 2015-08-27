@@ -576,7 +576,7 @@ void PrintReceiverValues(void)
 	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 	strncat((char*) sampleString, "\r\n\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
-	USBComSendString(sampleString, portMAX_DELAY, portMAX_DELAY);
+	USBComSendString(sampleString);
 }
 
 /*
@@ -675,9 +675,9 @@ ReceiverErrorStatus StopReceiverCalibration(void) {
 		if (returnStatus != RECEIVER_ERROR) {
 			/* Write calibration values to flash for persistent storage */
 			if(WriteCalibrationValuesToFlash(&tmpCalibrationValues))
-				USBComSendString("Receiver calibration values saved.\n\n", portMAX_DELAY, portMAX_DELAY);
+				USBComSendString("Receiver calibration values saved.\n\n");
 			else
-				USBComSendString("Receiver calibration values save failed.\n\n", portMAX_DELAY, portMAX_DELAY);
+				USBComSendString("Receiver calibration values save failed.\n\n");
 
 			/* Copy values to used calibration values and start using them */
 			EnforceNewCalibrationValues(&tmpCalibrationValues);

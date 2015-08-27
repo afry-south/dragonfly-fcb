@@ -170,5 +170,5 @@ void PrintGyroscopeValues(void)
 	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 	strncat((char*) sampleString, "\r\n\n", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
-	USBComSendString(sampleString, portMAX_DELAY, portMAX_DELAY);
+	USBComSendString(sampleString);
 }

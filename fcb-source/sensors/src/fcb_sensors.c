@@ -206,6 +206,8 @@ static void SensorPrintSamplingTask(void const *argument) {
 		vTaskDelayUntil(&xLastWakeTime, sensorPrintSampleTime);
 
 		PrintGyroscopeValues();
+		// TODO PrintAccelerometerValues();
+		// TODO PrintMagnetometerValues();
 
 		/* If sampling duration exceeded, delete task to stop sampling */
 		if (xTaskGetTickCount() >= xSampleStartTime + sensorPrintSampleDuration * configTICK_RATE_HZ)

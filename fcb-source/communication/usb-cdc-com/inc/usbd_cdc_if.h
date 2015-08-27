@@ -28,15 +28,14 @@ typedef enum {
 
 extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
 
+#define USB_COM_MAX_DELAY			1000
+
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void InitUSBCom(void);
 USBD_StatusTypeDef CDCTransmitFS(uint8_t* data, uint16_t size);
-USBD_StatusTypeDef USBComSendString(const char* sendString,
-		const uint32_t maxMutexWaitTicks, const uint32_t maxQueueWaitTicks);
-USBD_StatusTypeDef USBComSendData(const uint8_t* sendData,
-		const uint16_t sendDataSize, const uint32_t maxMutexWaitTicks,
-		const uint32_t maxQueueWaitTicks);
+USBD_StatusTypeDef USBComSendString(const char* sendString);
+USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDataSize);
 void CreateUSBComTasks(void);
 void CreateUSBComQueues(void);
 void CreateUSBComSemaphores(void);

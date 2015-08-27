@@ -16,7 +16,6 @@
 /* configuration & type declarations */
 enum { TRACE_SINK_MSG_SIZE = USB_FS_MAX_PACKET_SIZE /* 64 at time of writing */ };
 enum { TRACE_ARGS_MAX = 6 };
-enum { TRACE_WAIT = 10}; /* ticks */
 
 
 /* public function definitions */
@@ -38,7 +37,7 @@ int trace_post(const char * fmt, ...) {
     va_end(arg_list);
 
 
-    USBComSendData(trace_out_buf, len, TRACE_WAIT, TRACE_WAIT);
+    USBComSendData(trace_out_buf, len);
 
     return ret_val;
 }
