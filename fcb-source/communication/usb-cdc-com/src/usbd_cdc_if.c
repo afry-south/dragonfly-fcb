@@ -273,11 +273,11 @@ static void USBComPortTXTask(void const *argument) {
 	for (;;) {
 		/* Wait forever for incoming data over USB by pending on the USB Tx queue */
 		if (pdPASS == xQueueReceive(usbComTxQueue, &CompPortTxQueueItem, portMAX_DELAY)) {
-			if (xSemaphoreTake(USBTxMutex, portMAX_DELAY) == pdPASS) // Pend on mutex while previous transmission is in progress
+			if (xSemaphoreTake(USBTxMutex, USB_COM_MAX_DELAY) == pdPASS) // Pend on mutex while previous transmission is in progress
 			{
 				/* Take the buffer mutex (if it has one) */
 				if ((*CompPortTxQueueItem.FIFOBufferMutex != NULL
-						&& xSemaphoreTake(*CompPortTxQueueItem.FIFOBufferMutex, portMAX_DELAY) == pdPASS)
+						&& xSemaphoreTake(*CompPortTxQueueItem.FIFOBufferMutex, USB_COM_MAX_DELAY) == pdPASS)
 						|| *CompPortTxQueueItem.FIFOBufferMutex == NULL) {
 
 					if (CompPortTxQueueItem.bufferType == ARRAY_BUFFER) {

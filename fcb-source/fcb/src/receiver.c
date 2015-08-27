@@ -870,12 +870,9 @@ uint16_t GetAux1ReceiverCalibrationMinValue(void) {
 static ReceiverErrorStatus InitReceiverCalibrationValues(void) {
 	if (!LoadReceiverCalibrationValuesFromFlash(&CalibrationValues)) {
 		SetDefaultReceiverCalibrationValues(&CalibrationValues);
-		// TODO This hangs the system as it is sent before USB configured?  USBComSendString("No valid receiver calibration values could be loaded. Setting to default.\n\n", portMAX_DELAY,
-		//		portMAX_DELAY);
 		return RECEIVER_ERROR;
 	}
 
-	// TODO This hangs the system as it is sent before USB configured? USBComSendString("Receiver calibration values loaded succesfully.\n\n", portMAX_DELAY, portMAX_DELAY);
 	return RECEIVER_OK;
 }
 
