@@ -430,12 +430,12 @@ static portBASE_TYPE CLIStopReceiverCalibration(int8_t* pcWriteBuffer, size_t xW
 
 	/* Stop the receiver calibration procedure */
 	ReceiverErrorStatus rcCalStatus = StopReceiverCalibration();
-	strncpy((char*) pcWriteBuffer, "RC receiver calibration stopped.\r\n", xWriteBufferLen);
+	strncpy((char*) pcWriteBuffer, "RC receiver calibration stopped\r\n", xWriteBufferLen);
 	if (rcCalStatus)
-		strncat((char*) pcWriteBuffer, "RC receiver calibration successful.\r\n",
+		strncat((char*) pcWriteBuffer, "RC receiver calibration successful\r\n",
 				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 	else
-		strncat((char*) pcWriteBuffer, "RC receiver calibration failed or has not been started.\r\n",
+		strncat((char*) pcWriteBuffer, "RC receiver calibration failed\r\n",
 				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 	/* Return false to indicate command activity finished */
@@ -588,7 +588,7 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 
 	if (lParameterNumber == 0) {
 		/* The first time the function is called after the command has been entered just a header string is returned. */
-		strncpy((char*) pcWriteBuffer, "Starting print sampling of receiver values...\r\n", xWriteBufferLen);
+		strncpy((char*) pcWriteBuffer, "Starting print sampling of receiver values\r\n", xWriteBufferLen);
 	} else {
 		uint16_t receiverSampleTime;
 		uint16_t receiverSampleDuration;

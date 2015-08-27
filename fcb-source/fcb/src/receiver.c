@@ -96,6 +96,7 @@ typedef struct {
 
 #define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
 #define RECEIVER_SAMPLE_VALUE_STRING_SIZE				8
+#define RECEIVER_CALRES_MAX_STRING_SIZE					256
 
 /* Private macro -------------------------------------------------------------*/
 #define IS_RECEIVER_PULSE_VALID(PULSE_TIM_CNT, CURR_PERIOD_CNT, PRE_PERIOD_CNT)	(((PULSE_TIM_CNT) <= RECEIVER_MAX_VALID_IC_PULSE_COUNT) \
@@ -248,7 +249,8 @@ ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const u
  * @retval RECEIVER_OK if task deleted
  */
 ReceiverErrorStatus StopReceiverSamplingTask(void) {
-	vTaskDelete(ReceiverPrintSamplingTaskHandle);
+	if(ReceiverPrintSamplingTaskHandle != NULL)
+		vTaskDelete(ReceiverPrintSamplingTaskHandle);
 	return RECEIVER_OK;
 }
 
@@ -532,6 +534,7 @@ ReceiverErrorStatus StopReceiverCalibration(void) {
 
 	/* Check so that receiver calibration is currently being performed */
 	if (receiverCalibrationState == RECEIVER_CALIBRATION_IN_PROGRESS) {
+
 		/* Check so that each channel has collected enough pulse samples during calibration */
 		if (ThrottleCalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
 			returnStatus = RECEIVER_ERROR;
@@ -545,6 +548,9 @@ ReceiverErrorStatus StopReceiverCalibration(void) {
 			returnStatus = RECEIVER_ERROR;
 		if (Aux1CalibrationSampling.channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_PULSE_COUNT)
 			returnStatus = RECEIVER_ERROR;
+
+		if(returnStatus == RECEIVER_ERROR)
+			USBComSendString("Too few receiver calibration samples\n");
 
 		/* Calculate mean of max and mean sample buffers and store in temporary calibration values struct */
 		Receiver_CalibrationValues_TypeDef tmpCalibrationValues;
@@ -575,7 +581,10 @@ ReceiverErrorStatus StopReceiverCalibration(void) {
 
 		/* Check validity of calibration values */
 		if (!IsCalibrationValuesValid(&tmpCalibrationValues))
+		{
+			USBComSendString("Invalid receiver calibration values - make sure you saturate all sticks and toggle switches\n");
 			returnStatus = RECEIVER_ERROR;
+		}
 
 		if (returnStatus != RECEIVER_ERROR) {
 			/* Write calibration values to flash for persistent storage */
@@ -598,6 +607,7 @@ ReceiverErrorStatus StopReceiverCalibration(void) {
 	}
 
 	/* If receiver calibration has not been started yet */
+	USBComSendString("Receiver calibration not started.\n\n");
 	return RECEIVER_ERROR;
 }
 
