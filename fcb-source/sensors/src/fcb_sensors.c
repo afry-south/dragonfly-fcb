@@ -1,11 +1,12 @@
-/**
- * @file fcb_sensors.c
- *
- * Implementation of interface publicised in fcb_sensors.h
- *
- * @see fcb_sensors.h
- */
+/******************************************************************************
+ * @file    usb_cdc_cli.c
+ * @author  Dragonfly
+ * @version v. 1.0.0
+ * @date    2015-07-24
+ * @brief   Implementation of interface publicised in fcb_sensors.h
+ ******************************************************************************/
 
+/* Includes ------------------------------------------------------------------*/
 #include "fcb_sensors.h"
 #include "gyroscope.h"
 #include "fcb_error.h"
@@ -17,40 +18,53 @@
 
 #include <stdint.h>
 
+/* Private define ------------------------------------------------------------*/
 #define FCB_SENSORS_DEBUG /* todo delete */
+
+#define SENSOR_PRINT_SAMPLING_THREAD_PRIO		3
 
 #ifdef FCB_SENSORS_DEBUG
 static uint32_t cbk_gyro_counter = 0;
 #endif
 
+/* Private typedef -----------------------------------------------------------*/
+/* Private macro -------------------------------------------------------------*/
+
+/* Private variables ---------------------------------------------------------*/
 /* static data declarations */
 
 static xTaskHandle tFcbSensors;
 static xQueueHandle qFcbSensors = NULL;
 
+/* Task handle for printing of sensor values task */
+xTaskHandle SensorPrintSamplingTaskHandle = NULL;
+static volatile uint16_t sensorPrintSampleTime;
+static volatile uint16_t sensorPrintSampleDuration;
+
+/* Private function prototypes -----------------------------------------------*/
 static void ProcessSensorValues(void*);
+static void SensorPrintSamplingTask(void const *argument);
 
 /* static fcn declarations */
 
+/* Exported functions --------------------------------------------------------*/
 /* global fcn definitions */
 int FcbSensorsConfig(void) {
     portBASE_TYPE rtosRetVal;
     int retVal = FCB_OK;
 
-    if (0 == (qFcbSensors = xQueueCreate(FCB_SENSORS_QUEUE_SIZE,
-                                         FCB_SENSORS_Q_MSG_SIZE))) {
+    if (pdFAIL == (qFcbSensors = xQueueCreate(FCB_SENSORS_QUEUE_SIZE, FCB_SENSORS_Q_MSG_SIZE))) {
     	ErrorHandler();
         goto Error;
     }
 
 
-    if (pdPASS != (rtosRetVal =
-                   xTaskCreate((pdTASK_CODE)ProcessSensorValues,
-                               (signed portCHAR*)"tFcbSensors",
-                               4 * configMINIMAL_STACK_SIZE,
-                               NULL /* parameter */,
-                               1 /* priority */,
-                               &tFcbSensors))) {
+    if (pdPASS != (rtosRetVal = xTaskCreate((pdTASK_CODE)ProcessSensorValues,
+                                (signed portCHAR*)"tFcbSensors",
+                                4 * configMINIMAL_STACK_SIZE,
+                                NULL /* parameter */,
+                                1 /* priority */,
+                                &tFcbSensors))) {
     	ErrorHandler();
         goto Error;
     }
@@ -80,6 +94,47 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
     portYIELD_FROM_ISR(higherPriorityTaskWoken);
 }
 
+/*
+ * @brief  Creates a task to sample print receiver values over USB
+ * @param  sampleTime : Sets how often a sample should be printed
+ * @param  sampleDuration : Sets for how long sampling should be performed
+ * @retval RECEIVER_OK if thread started, else RECEIVER_ERROR
+ */
+SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
+	sensorPrintSampleTime = sampleTime;
+	sensorPrintSampleDuration = sampleDuration;
+//	bool printGyroSamples; // TODO booleans to set which sensors should be sampled
+//	bool printAccSamples;
+//	bool printMagnSamples;
+
+	/* Sensor value print sampling handler thread creation
+	 * Task function pointer: SensorPrintSamplingTask
+	 * Task name: SENS_PRINT_SAMPL
+	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Parameter: NULL
+	 * Priority: SENSOR_PRINT_SAMPLING_THREAD_PRIO ([0, inf] possible)
+	 * Handle: SensorPrintSamplingTaskHandle
+	 * */
+	if (pdPASS != xTaskCreate((pdTASK_CODE )SensorPrintSamplingTask, (signed portCHAR*)"SENS_PRINT_SAMPL",
+			configMINIMAL_STACK_SIZE, NULL, SENSOR_PRINT_SAMPLING_THREAD_PRIO, &SensorPrintSamplingTaskHandle)) {
+		ErrorHandler();
+		return SENSORS_ERROR;
+	}
+
+	return SENSORS_OK;
+}
+
+/*
+ * @brief  Stops receiver print sampling by deleting the task
+ * @param  None
+ * @retval RECEIVER_OK if task deleted
+ */
+SensorsErrorStatus StopSensorSamplingTask(void) {
+	vTaskDelete(SensorPrintSamplingTaskHandle);
+	return SENSORS_OK;
+}
+
+/* Private functions ---------------------------------------------------------*/
 
 static void ProcessSensorValues(void* val) {
 	/*
@@ -132,4 +187,37 @@ Error:
     goto Exit;
 }
 
-/* static fcn definitions */
+/**
+ * @brief  Task code handles sensor print sampling
+ * @param  argument : Unused parameter
+ * @retval None
+ */
+static void SensorPrintSamplingTask(void const *argument) {
+	(void) argument;
+
+	portTickType xLastWakeTime;
+	portTickType xSampleStartTime;
+
+	/* Initialise the xLastWakeTime variable with the current time */
+	xLastWakeTime = xTaskGetTickCount();
+	xSampleStartTime = xLastWakeTime;
+
+	for (;;) {
+		vTaskDelayUntil(&xLastWakeTime, sensorPrintSampleTime);
+
+		PrintGyroscopeValues();
+
+		/* If sampling duration exceeded, delete task to stop sampling */
+		if (xTaskGetTickCount() >= xSampleStartTime + sensorPrintSampleDuration * configTICK_RATE_HZ)
+			StopSensorSamplingTask();
+	}
+}
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/

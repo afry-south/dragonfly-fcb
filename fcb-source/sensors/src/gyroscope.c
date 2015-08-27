@@ -1,16 +1,39 @@
+/******************************************************************************
+ * @file    gyroscope.c
+ * @author  Dragonfly
+ * @version v. 1.0.0
+ * @date    2015-08-26
+ * @brief   File contains functionality to handle and read the STM32F3-Discovery
+ * 			on-board gyroscope sensor L3DG20.
+ ******************************************************************************/
+
+/* Includes ------------------------------------------------------------------*/
 #include "gyroscope.h"
+
 #include "stm32f3_discovery_gyroscope.h"
 
 #include "fcb_error.h"
 #include "FreeRTOS.h"
+#include "usbd_cdc_if.h"
 
 #include "trace.h"
 
+#include <string.h>
+#include <stdio.h>
+
+/* Private typedef -----------------------------------------------------------*/
+
+/* Private define ------------------------------------------------------------*/
 // #define FCB_GYRO_DEBUG
 
 /* static & local declarations */
 
 enum { GYROSCOPE_OFFSET_SAMPLES = 200 };
+
+enum { XDOT_IDX = 0 }; /* index of sGyroXYZAngleDot & ditto Offset */
+enum { YDOT_IDX = 1 }; /* as above */
+enum { ZDOT_IDX = 2 }; /* as above */
+
 /**
  * @todo in the ideal world we shouldn't read the gyro data
  * in the ISR itself, but in a dedicated thread.
@@ -21,18 +44,23 @@ enum { GYROSCOPE_OFFSET_SAMPLES = 200 };
  * So this is an interim solution.
  */
 #define READ_GYRO_FROM_ISR
+#define GYRO_SAMPLING_MAX_STRING_SIZE			128
+#define	GYRO_SAMPLE_VALUE_STRING_SIZE			8
 
 /**
  * Angular velocities, in degrees.
  *
  */
-static float sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 };
-static float sGyroXYZAngleDotOffset[3] = { 0.0, 0.0, 0.0 };
 
-enum { XDOT_IDX = 0 }; /* index of sGyroXYZAngleDot & ditto Offset */
-enum { YDOT_IDX = 1 }; /* as above */
-enum { ZDOT_IDX = 2 }; /* as above */
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
 
+static volatile float sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 };
+static volatile float sGyroXYZAngleDotOffset[3] = { 0.0, 0.0, 0.0 };
+
+/* Private function prototypes -----------------------------------------------*/
+
+/* Exported functions --------------------------------------------------------*/
 
 /* global fcn definitions */
 uint8_t InitialiseGyroscope(void) {
@@ -75,7 +103,7 @@ void FetchAngleDotFromGyroscope(void) {
     static uint16_t call_counter = 0;
 #endif
     /* returns rad/s */
-    BSP_GYRO_GetXYZ(sGyroXYZAngleDot);
+    BSP_GYRO_GetXYZ((float*)sGyroXYZAngleDot);
 
     if (GYROSCOPE_OFFSET_SAMPLES > call_counter) {
     	sGyroXYZAngleDotOffset[XDOT_IDX] += sGyroXYZAngleDot[XDOT_IDX];
@@ -107,10 +135,40 @@ void FetchAngleDotFromGyroscope(void) {
 
 }
 
-#warning TODO - implement get x, y, z separately.
+#warning TODO - implement get x, y, z separately. And perphaps use integer values to represent sensor values
 void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot)
 {
 	*xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
 	*yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
 	*zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
+}
+
+/**
+ * @brief  Prints the latest gyroscope sensor values to the USB com port
+ * @param  none
+ * @retval none
+ */
+void PrintGyroscopeValues(void)
+{
+	static char sampleString[GYRO_SAMPLING_MAX_STRING_SIZE];
+
+	float rollDot, pitchDot, yawDot;
+	char sampleValueTmpString[GYRO_SAMPLE_VALUE_STRING_SIZE]; // Only needs enough space to store a float in string format
+	memset(sampleValueTmpString, 0x00, sizeof(sampleValueTmpString));
+
+	GetAngleDot(&rollDot, &pitchDot, &yawDot);
+
+	strncpy(sampleString, "Gyroscope roll rates [rad/s]: ", GYRO_SAMPLING_MAX_STRING_SIZE);
+	strncat((char*) sampleString, "\nRoll: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%1.6f", rollDot);
+	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\nPitch: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%1.6f", pitchDot);
+	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\nYaw: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleValueTmpString, 8, "%1.6f", yawDot);
+	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\r\n\n", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+
+	USBComSendString(sampleString, portMAX_DELAY, portMAX_DELAY);
 }

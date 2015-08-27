@@ -40,11 +40,14 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "receiver.h"
-#include "main.h"
+#include "usbd_cdc_if.h"
 #include "flash.h"
 #include "common.h"
+#include "fcb_error.h"
+
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -89,6 +92,11 @@ typedef struct {
 } Receiver_ChannelCalibrationSampling_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
+#define RECEIVER_PRINT_SAMPLING_THREAD_PRIO				3
+
+#define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
+#define RECEIVER_SAMPLE_VALUE_STRING_SIZE				8
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
@@ -207,20 +215,19 @@ ReceiverErrorStatus ReceiverInputConfig(void) {
  * @param  sampleDuration : Sets for how long sampling should be performed
  * @retval RECEIVER_OK if thread started, else RECEIVER_ERROR
  */
-ReceiverErrorStatus StartReceiverSamplingTask(uint16_t sampleTime, uint32_t sampleDuration) {
+ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
 	receiverPrintSampleTime = sampleTime;
 	receiverPrintSampleDuration = sampleDuration;
 
 	/* Receiver value print sampling handler thread creation
-	 * Task function pointer: USBComPortRXTask
-	 * Task name: USB_COM_TX
-	 * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
+	 * Task function pointer: ReceiverPrintSamplingTask
+	 * Task name: RC_PRINT_SAMPL
+	 * Stack depth: configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
-	 * Priority: USB_COM_TX_THREAD_PRIO ([0, inf] possible)
+	 * Priority: RECEIVER_PRINT_SAMPLING_THREAD_PRIO ([0, inf] possible)
 	 * Handle: ReceiverPrintSamplingTask
 	 * */
-	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )ReceiverPrintSamplingTask, (signed portCHAR*)"RC_PRINT_SAMPL",
+	if (pdPASS != xTaskCreate((pdTASK_CODE )ReceiverPrintSamplingTask, (signed portCHAR*)"RC_PRINT_SAMPL",
 					configMINIMAL_STACK_SIZE, NULL, RECEIVER_PRINT_SAMPLING_THREAD_PRIO,
 					&ReceiverPrintSamplingTaskHandle)) {
 		ErrorHandler();
@@ -512,8 +519,8 @@ uint32_t GetAux1ReceiverChannelPeriodTicks(void) {
 
 void PrintReceiverValues(void)
 {
-	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE]; // TODO trim size and define
-	char sampleValueTmpString[8]; // Only needs enough space to store an uint16_t/int16_t in string format
+	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE];
+	char sampleValueTmpString[RECEIVER_SAMPLE_VALUE_STRING_SIZE]; // Only needs enough space to store an uint16_t/int16_t in string format
 
 	strncpy(sampleString, "Receiver channel values (Norm / Ticks):\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
 	if (IsReceiverActive())
@@ -863,12 +870,12 @@ uint16_t GetAux1ReceiverCalibrationMinValue(void) {
 static ReceiverErrorStatus InitReceiverCalibrationValues(void) {
 	if (!LoadReceiverCalibrationValuesFromFlash(&CalibrationValues)) {
 		SetDefaultReceiverCalibrationValues(&CalibrationValues);
-		USBComSendString("No valid receiver calibration values could be loaded. Setting to default.\n\n", portMAX_DELAY,
-				portMAX_DELAY);
+		// TODO This hangs the system as it is sent before USB configured?  USBComSendString("No valid receiver calibration values could be loaded. Setting to default.\n\n", portMAX_DELAY,
+		//		portMAX_DELAY);
 		return RECEIVER_ERROR;
 	}
 
-	USBComSendString("Receiver calibration values loaded succesfully.\n\n", portMAX_DELAY, portMAX_DELAY);
+	// TODO This hangs the system as it is sent before USB configured? USBComSendString("Receiver calibration values loaded succesfully.\n\n", portMAX_DELAY, portMAX_DELAY);
 	return RECEIVER_OK;
 }
 

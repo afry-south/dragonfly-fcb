@@ -13,6 +13,8 @@
 #include "main.h"
 #include "fifo_buffer.h"
 #include "usb_cdc_cli.h"
+#include "usbd_cdc.h"
+#include "fcb_error.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -273,8 +275,8 @@ static void USBComPortTXTask(void const *argument) {
 			{
 				/* Take the buffer mutex (if it has one) */
 				if ((*CompPortTxQueueItem.FIFOBufferMutex != NULL
-						&& xSemaphoreTake(*CompPortTxQueueItem.FIFOBufferMutex,
-								portMAX_DELAY) == pdPASS) || *CompPortTxQueueItem.FIFOBufferMutex == NULL) {
+						&& xSemaphoreTake(*CompPortTxQueueItem.FIFOBufferMutex, portMAX_DELAY) == pdPASS)
+						|| *CompPortTxQueueItem.FIFOBufferMutex == NULL) {
 
 					if (CompPortTxQueueItem.bufferType == ARRAY_BUFFER) {
 						// Tx buffer is just a good ol' array of data
@@ -335,12 +337,17 @@ void InitUSBCom(void) {
  */
 USBD_StatusTypeDef CDCTransmitFS(uint8_t* data, uint16_t size) {
 	uint8_t result = USBD_OK;
+	static uint16_t timeoutCnt = UINT16_MAX;
+	USBD_CDC_HandleTypeDef *hCDC = hUSBDDevice.pClassData;
 
 	if (hUSBDDevice.dev_state == USBD_STATE_CONFIGURED) {
 		USBD_CDC_SetTxBuffer(&hUSBDDevice, data, size);
-		// TODO: Use taskDelay / timeout while-loop if USB busy for too long...
-		while ((result = USBD_CDC_TransmitPacket(&hUSBDDevice)) == USBD_BUSY) {
+		while (((result = USBD_CDC_TransmitPacket(&hUSBDDevice)) == USBD_BUSY) && timeoutCnt != 0) {
+			timeoutCnt--;
 		} // Wait while busy with previous transmission
+		if(timeoutCnt == 0)
+			hCDC->TxState = 0;	// Reset the USB transfer state
+		timeoutCnt = UINT16_MAX;
 		if (size % CDC_DATA_FS_MAX_PACKET_SIZE == 0) {
 			/*
 			 * According to the USB specification, a packet size of 64 bytes (CDC_DATA_FS_MAX_PACKET_SIZE)
@@ -352,9 +359,12 @@ USBD_StatusTypeDef CDCTransmitFS(uint8_t* data, uint16_t size) {
 			 * See eg http://www.cypress.com/?id=4&rID=92719
 			 * */
 			USBD_CDC_SetTxBuffer(&hUSBDDevice, NULL, 0); // Zero-length packet (ZLP)
-			// TODO: Use taskDelay / timeout while-loop if USB busy for too long...
-			while ((result = USBD_CDC_TransmitPacket(&hUSBDDevice)) == USBD_BUSY) {
+			while (((result = USBD_CDC_TransmitPacket(&hUSBDDevice)) == USBD_BUSY) && timeoutCnt != 0) {
+				timeoutCnt--;
 			} // Wait while busy with previous transmission
+			if(timeoutCnt == 0)
+				hCDC->TxState = 0;	// Reset the USB transfer state
+			timeoutCnt = UINT16_MAX;
 		}
 	} else {
 		result = USBD_FAIL; // USB not connected and/or configured
@@ -418,7 +428,7 @@ void CreateUSBComTasks(void) {
 	/* USB Virtual Com Port Rx handler task creation
 	 * Task function pointer: USBComPortRXTask
 	 * Task name: USB_COM_RX
-	 * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
+	 * Stack depth: configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: USB_COM_RX_THREAD_PRIO ([0, inf] possible)
 	 * Handle: USBComPortRxTaskHandle
@@ -432,7 +442,7 @@ void CreateUSBComTasks(void) {
 	/* USB Virtual Com Port Tx handler task creation
 	 * Task function pointer: USBComPortRXTask
 	 * Task name: USB_COM_TX
-	 * Stack depth: configMINIMAL_STACK_SIZE (128 byte)
+	 * Stack depth: configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: USB_COM_TX_THREAD_PRIO ([0, inf] possible)
 	 * Handle: USBComPortTxTaskHandle

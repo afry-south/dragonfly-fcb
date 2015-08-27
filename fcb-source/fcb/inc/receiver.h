@@ -108,9 +108,6 @@
 
 #define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.092 s
 
-#define RECEIVER_PRINT_SAMPLING_THREAD_PRIO				3
-#define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
-
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
 	PULSE_LOW = 0, PULSE_HIGH = !PULSE_LOW
@@ -142,8 +139,7 @@ ReceiverErrorStatus StartReceiverCalibration(void);
 ReceiverErrorStatus StopReceiverCalibration(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
-ReceiverErrorStatus StartReceiverSamplingTask(uint16_t sampleTime,
-		uint32_t sampleDuration);
+ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 ReceiverErrorStatus StopReceiverSamplingTask(void);
 
 int16_t GetThrottleReceiverChannel(void);

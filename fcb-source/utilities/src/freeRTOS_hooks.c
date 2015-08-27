@@ -31,6 +31,7 @@
  * @retval None
  */
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName) {
+	(void) xTask;
 	char hookString[HOOK_STRING_SIZE];
 	memset(hookString, 0x00, sizeof(hookString));
 	USBComSendString("FreeRTOS stack overflow\n", portMAX_DELAY, portMAX_DELAY);
@@ -48,6 +49,7 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName) {
  * @retval None
  */
 void vApplicationMallocFailedHook(xTaskHandle xTask, signed char *pcTaskName) {
+	(void) xTask;
 	char hookString[HOOK_STRING_SIZE];
 	memset(hookString, 0x00, sizeof(hookString));
 	USBComSendString("FreeRTOS malloc failed\n", portMAX_DELAY, portMAX_DELAY);

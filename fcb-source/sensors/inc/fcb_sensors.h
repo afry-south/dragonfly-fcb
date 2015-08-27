@@ -38,6 +38,10 @@ enum FcbSensorMessage {
     FCB_SENSOR_MAGNETO_ACC_CALIBRATE = 0x1B,
 };
 
+typedef enum {
+	SENSORS_ERROR = 0, SENSORS_OK = !SENSORS_ERROR
+} SensorsErrorStatus;
+
 
 /**
  * Creates a thread which is pended on a queue. The threads runs when FreeRTOS scheduler
@@ -50,11 +54,13 @@ int FcbSensorsConfig(void);
 
 
 
-
 /**
  * posts a FcbSensorMessage to the queue which is
  * polled by tFcbSensors thread.
  */
 void FcbSendSensorMessageFromISR(uint8_t msg);
+
+SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
+SensorsErrorStatus StopSensorSamplingTask(void);
 
 #endif /* FCB_SENSORS_H */

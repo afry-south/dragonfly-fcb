@@ -14,6 +14,8 @@
 #include "receiver.h"
 #include "fifo_buffer.h"
 #include "common.h"
+#include "gyroscope.h"
+#include "fcb_sensors.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -34,54 +36,67 @@
 /*
  * Function implements the "echo" command.
  */
-static portBASE_TYPE CLIEchoCommandFunction(int8_t *pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t *pcCommandString);
+static portBASE_TYPE CLIEchoCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
 
 /*
  * Function implements the "echo-data" command.
  */
-static portBASE_TYPE CLIEchoDataCommandFunction(int8_t *pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t *pcCommandString);
+static portBASE_TYPE CLIEchoDataCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
 
 /*
  * Function implements the "start-receiver-calibration" command.
  */
-static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(
-		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
  * Function implements the "stop-receiver-calibration" command.
  */
-static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(
-		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
  * Function implements the "get-receiver" command.
  */
-static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t *pcCommandString);
+static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
 
 /*
  * Function implements the "get-receiver-calibration" command.
  */
-static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
-		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
  * Function implements the "start-receiver-sampling" command.
  */
-static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(
-		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
- * Function implements the "start-receiver-sampling" command.
+ * Function implements the "stop-receiver-sampling" command.
  */
-static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(
-		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
+
+/*
+ * Function implements the "get-sensors" command.
+ */
+static portBASE_TYPE CLIGetSensorsCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
+
+/*
+ * Function implements the "start-sensor-sampling" command.
+ */
+static portBASE_TYPE CLIStartSensorSamplingCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
+
+/*
+ * Function implements the "stop-sensor-sampling" command.
+ */
+static portBASE_TYPE CLIStopSensorSamplingCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /* Private variables ---------------------------------------------------------*/
@@ -135,20 +150,44 @@ static const CLI_Command_Definition_t getReceiverCalibrationCommand =
 		};
 
 /* Structure that defines the "start-receiver-sampling" command line command. */
-static const CLI_Command_Definition_t startReceiverSamplingCommand =
-		{ (const int8_t * const ) "start-receiver-sampling",
+static const CLI_Command_Definition_t startReceiverSamplingCommand = {
+		(const int8_t * const ) "start-receiver-sampling",
 				(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s\r\n",
 				CLIStartReceiverSamplingCommandFunction, /* The function to run. */
 				2 /* Number of parameters expected */
 		};
 
 /* Structure that defines the "stop-receiver-sampling" command line command. */
-static const CLI_Command_Definition_t stopReceiverSamplingCommand =
-		{ (const int8_t * const ) "stop-receiver-sampling",
-				(const int8_t * const ) "\r\nstop-receiver-sampling:\r\n Stops the printing of receiver sample values\r\n",
-				CLIStopReceiverSamplingCommandFunction, /* The function to run. */
+static const CLI_Command_Definition_t stopReceiverSamplingCommand = {
+		(const int8_t * const ) "stop-receiver-sampling",
+		(const int8_t * const ) "\r\nstop-receiver-sampling:\r\n Stops the printing of receiver sample values\r\n",
+		CLIStopReceiverSamplingCommandFunction, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "get-sensors" command line command. */
+static const CLI_Command_Definition_t getSensorsCommand = {
+		(const int8_t * const ) "get-sensors",
+		(const int8_t * const ) "\r\nget-sensors:\r\n Prints the last read sensor values\r\n",
+		CLIGetSensorsCommandFunction, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "start-sensor-sampling" command line command. */
+static const CLI_Command_Definition_t startSensorSamplingCommand = {
+		(const int8_t * const ) "start-sensor-sampling",
+				(const int8_t * const ) "\r\nstart-sensor-sampling <sampletime> <sampleduration>:\r\n Prints sensor values once every <sampletime> ms for <sampleduration> s\r\n",
+				CLIStartSensorSamplingCommandFunction, /* The function to run. */
 				2 /* Number of parameters expected */
 		};
+
+/* Structure that defines the "stop-sensor-sampling" command line command. */
+static const CLI_Command_Definition_t stopSensorSamplingCommand = {
+		(const int8_t * const ) "stop-sensor-sampling",
+		(const int8_t * const ) "\r\nstop-sensor-sampling:\r\n Stops the printing of sensor sample values\r\n",
+		CLIStopSensorSamplingCommandFunction, /* The function to run. */
+		0 /* Number of parameters expected */
+};
 
 extern volatile FIFOBuffer_TypeDef USBCOMRxFIFOBuffer;
 extern xSemaphoreHandle USBCOMRxDataSem;
@@ -171,6 +210,10 @@ void RegisterCLICommands(void) {
 	FreeRTOS_CLIRegisterCommand(&getReceiverCalibrationCommand);
 	FreeRTOS_CLIRegisterCommand(&startReceiverSamplingCommand);
 	FreeRTOS_CLIRegisterCommand(&stopReceiverSamplingCommand);
+
+	FreeRTOS_CLIRegisterCommand(&getSensorsCommand);
+	FreeRTOS_CLIRegisterCommand(&startSensorSamplingCommand);
+	FreeRTOS_CLIRegisterCommand(&stopSensorSamplingCommand);
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -182,8 +225,8 @@ void RegisterCLICommands(void) {
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer,
-		size_t xWriteBufferLen, const int8_t* pcCommandString) {
+static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t* pcCommandString) {
 	int8_t* pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
 	static portBASE_TYPE lParameterNumber = 0;
@@ -325,8 +368,7 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer, size_t xW
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(
-		int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the
 	 write buffer is not NULL.   */
@@ -403,8 +445,7 @@ static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer, size_t
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(
-		int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString) {
 
 	static uint8_t currentChannelPrint = 0;
@@ -500,8 +541,7 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuff
 	configASSERT(pcWriteBuffer);
 
 	if (lParameterNumber == 0) {
-		/* The first time the function is called after the command has been
-		 entered just a header string is returned. */
+		/* The first time the function is called after the command has been entered just a header string is returned. */
 		strncpy((char*) pcWriteBuffer, "Starting print sampling of receiver values...\r\n", xWriteBufferLen);
 	} else {
 		uint16_t receiverSampleTime;
@@ -574,8 +614,7 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuff
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(
-		int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the
 	 write buffer is not NULL */
@@ -586,6 +625,134 @@ static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(
 
 	/* Stop the receiver printing task */
 	StopReceiverSamplingTask();
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements CLI command to prints the last sampled sensor values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetSensorsCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	(void) xWriteBufferLen;
+
+	configASSERT(pcWriteBuffer);
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+
+	PrintGyroscopeValues();
+	// TODO PrintAccelerometerValues();
+	// TODO PrintMagnetometerValues();
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Starts sensor sampling for a specified sample time and duration
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStartSensorSamplingCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t* pcCommandString) {
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength, xReturn;
+	static portBASE_TYPE lParameterNumber = 0;
+
+	/* Check the write buffer is not NULL */
+	configASSERT(pcWriteBuffer);
+
+	if (lParameterNumber == 0) {
+		/* The first time the function is called after the command has been entered just a header string is returned. */
+		strncpy((char*) pcWriteBuffer, "Starting print sampling of sensor values...\r\n", xWriteBufferLen);
+	} else {
+		uint16_t sensorSampleTime;
+		uint16_t sensorSampleDuration;
+
+		/* Obtain the parameter string */
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */
+		);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
+
+		size_t paramMaxSize; // TODO make function for this comparison?
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		sensorSampleTime = atoi((char*) pcParameter);
+
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		strncat((char*) pcWriteBuffer, "Duration (s): ", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		sensorSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
+
+		StartSensorSamplingTask(sensorSampleTime, sensorSampleDuration);
+	}
+
+	/* Update return value and parameter index */
+	if (lParameterNumber == startSensorSamplingCommand.cExpectedNumberOfParameters) {
+		/* If this is the last parameter then there are no more strings to return after this one. */
+		xReturn = pdFALSE;
+		lParameterNumber = 0;
+	} else {
+		/* There are more parameters to return after this one. */
+		xReturn = pdTRUE;
+		lParameterNumber++;
+	}
+
+	return xReturn;
+}
+
+/**
+ * @brief  Stops printing of sensor sample values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStopSensorSamplingCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+
+	strncpy((char*) pcWriteBuffer, "Stopping printing of sensor sample values...\r\n", xWriteBufferLen);
+
+	/* Stop the sensor sample printing task */
+	StopSensorSamplingTask();
 
 	return pdFALSE;
 }

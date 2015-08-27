@@ -139,6 +139,7 @@ static void InitSystem(void) {
 	 */
 	HAL_Init();
 
+	/* Initialize the CRC peripheral */
 	InitCRC();
 
 	/* Initialize Programmable Voltage Detection (PVD) */

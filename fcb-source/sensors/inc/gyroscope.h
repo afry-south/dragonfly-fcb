@@ -48,4 +48,6 @@ void FetchAngleDotFromGyroscope(void);
  */
 void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot);
 
+void PrintGyroscopeValues(void);
+
 #endif /* GYROSCOPE_H */
