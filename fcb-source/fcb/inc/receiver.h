@@ -137,10 +137,10 @@ typedef struct {
 ReceiverErrorStatus ReceiverInputConfig(void);
 ReceiverErrorStatus StartReceiverCalibration(void);
 ReceiverErrorStatus StopReceiverCalibration(void);
-ReceiverErrorStatus IsReceiverActive(void);
-
+void ResetReceiverCalibrationValues(void);
 ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 ReceiverErrorStatus StopReceiverSamplingTask(void);
+ReceiverErrorStatus IsReceiverActive(void);
 
 int16_t GetThrottleReceiverChannel(void);
 int16_t GetAileronReceiverChannel(void);

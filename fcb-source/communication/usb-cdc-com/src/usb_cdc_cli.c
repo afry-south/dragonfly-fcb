@@ -58,6 +58,12 @@ static portBASE_TYPE CLIStopReceiverCalibration(int8_t *pcWriteBuffer, size_t xW
 		const int8_t *pcCommandString);
 
 /*
+ * Function implements the "reset-receiver-calibration" command.
+ */
+static portBASE_TYPE CLIResetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
+
+/*
  * Function implements the "get-receiver" command.
  */
 static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
@@ -123,28 +129,35 @@ static const CLI_Command_Definition_t echoDataCommand = { (const int8_t * const 
 
 /* Structure that defines the "start-receiver-calibration" command line command. */
 static const CLI_Command_Definition_t startReceiverCalibrationCommand = { (const int8_t * const ) "start-receiver-calibration",
-		(const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts the receiver calibration procedure\r\n",
+		(const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts receiver calibration procedure\r\n",
 		CLIStartReceiverCalibration, /* The function to run. */
 		0 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-receiver-calibration" command line command. */
 static const CLI_Command_Definition_t stopReceiverCalibrationCommand = { (const int8_t * const ) "stop-receiver-calibration",
-		(const int8_t * const ) "\r\nstop-receiver-calibration:\r\n Stops the receiver calibration procedure\r\n",
+		(const int8_t * const ) "\r\nstop-receiver-calibration:\r\n Stops receiver calibration procedure\r\n",
 		CLIStopReceiverCalibration, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "reset-receiver-calibration" command line command. */
+static const CLI_Command_Definition_t resetReceiverCalibrationCommand = { (const int8_t * const ) "reset-receiver-calibration",
+		(const int8_t * const ) "\r\nreset-receiver-calibration:\r\n Resets receiver calibration to default values\r\n",
+		CLIResetReceiverCalibration, /* The function to run. */
 		0 /* Number of parameters expected */
 };
 
 /* Structure that defines the "get-receiver" command line command. */
 static const CLI_Command_Definition_t getReceiverCommand = { (const int8_t * const ) "get-receiver",
-		(const int8_t * const ) "\r\nget-receiver:\r\n Prints the current receiver value\r\n",
+		(const int8_t * const ) "\r\nget-receiver:\r\n Prints current receiver values\r\n",
 		CLIGetReceiver, /* The function to run. */
 		0 /* Number of parameters expected */
 };
 
 /* Structure that defines the "get-receiver-calibration" command line command. */
 static const CLI_Command_Definition_t getReceiverCalibrationCommand = { (const int8_t * const ) "get-receiver-calibration",
-		(const int8_t * const ) "\r\nget-receiver-calibration:\r\n Prints the current receiver calibration values\r\n",
+		(const int8_t * const ) "\r\nget-receiver-calibration:\r\n Prints current receiver calibration values\r\n",
 		CLIGetReceiverCalibration, /* The function to run. */
 		0 /* Number of parameters expected */
 };
@@ -158,14 +171,14 @@ static const CLI_Command_Definition_t startReceiverSamplingCommand = { (const in
 
 /* Structure that defines the "stop-receiver-sampling" command line command. */
 static const CLI_Command_Definition_t stopReceiverSamplingCommand = { (const int8_t * const ) "stop-receiver-sampling",
-		(const int8_t * const ) "\r\nstop-receiver-sampling:\r\n Stops the printing of receiver sample values\r\n",
+		(const int8_t * const ) "\r\nstop-receiver-sampling:\r\n Stops printing of receiver sample values\r\n",
 		CLIStopReceiverSampling, /* The function to run. */
 		0 /* Number of parameters expected */
 };
 
 /* Structure that defines the "get-sensors" command line command. */
 static const CLI_Command_Definition_t getSensorsCommand = { (const int8_t * const ) "get-sensors",
-		(const int8_t * const ) "\r\nget-sensors:\r\n Prints the last read sensor values\r\n",
+		(const int8_t * const ) "\r\nget-sensors:\r\n Prints last read sensor values\r\n",
 		CLIGetSensors, /* The function to run. */
 		0 /* Number of parameters expected */
 };
@@ -179,7 +192,7 @@ static const CLI_Command_Definition_t startSensorSamplingCommand = { (const int8
 
 /* Structure that defines the "stop-sensor-sampling" command line command. */
 static const CLI_Command_Definition_t stopSensorSamplingCommand = { (const int8_t * const ) "stop-sensor-sampling",
-		(const int8_t * const ) "\r\nstop-sensor-sampling:\r\n Stops the printing of sensor sample values\r\n",
+		(const int8_t * const ) "\r\nstop-sensor-sampling:\r\n Stops printing of sensor sample values\r\n",
 		CLIStopSensorSampling, /* The function to run. */
 		0 /* Number of parameters expected */
 };
@@ -210,20 +223,26 @@ extern xSemaphoreHandle USBCOMRxDataSem;
  */
 void RegisterCLICommands(void) {
 	/* Register all the command line commands defined immediately above. */
+
+	/* Sample CLI commands */
 	FreeRTOS_CLIRegisterCommand(&echoCommand);
 	FreeRTOS_CLIRegisterCommand(&echoDataCommand);
 
+	/* RC receiver CLI commands*/
 	FreeRTOS_CLIRegisterCommand(&startReceiverCalibrationCommand);
 	FreeRTOS_CLIRegisterCommand(&stopReceiverCalibrationCommand);
+	FreeRTOS_CLIRegisterCommand(&resetReceiverCalibrationCommand);
 	FreeRTOS_CLIRegisterCommand(&getReceiverCommand);
 	FreeRTOS_CLIRegisterCommand(&getReceiverCalibrationCommand);
 	FreeRTOS_CLIRegisterCommand(&startReceiverSamplingCommand);
 	FreeRTOS_CLIRegisterCommand(&stopReceiverSamplingCommand);
 
+	/* Sensor CLI commands */
 	FreeRTOS_CLIRegisterCommand(&getSensorsCommand);
 	FreeRTOS_CLIRegisterCommand(&startSensorSamplingCommand);
 	FreeRTOS_CLIRegisterCommand(&stopSensorSamplingCommand);
 
+	/* System info CLI commands */
 	FreeRTOS_CLIRegisterCommand(&aboutCommand);
 	FreeRTOS_CLIRegisterCommand(&systimeCommand);
 }
@@ -380,8 +399,7 @@ static portBASE_TYPE CLIEchoData(int8_t* pcWriteBuffer, size_t xWriteBufferLen, 
  */
 static portBASE_TYPE CLIStartReceiverCalibration(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
-	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.   */
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL.   */
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
@@ -406,8 +424,7 @@ static portBASE_TYPE CLIStartReceiverCalibration(int8_t* pcWriteBuffer, size_t x
  */
 static portBASE_TYPE CLIStopReceiverCalibration(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
-	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL */
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
@@ -420,6 +437,27 @@ static portBASE_TYPE CLIStopReceiverCalibration(int8_t* pcWriteBuffer, size_t xW
 	else
 		strncat((char*) pcWriteBuffer, "RC receiver calibration failed or has not been started.\r\n",
 				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+	/* Return false to indicate command activity finished */
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements the CLI command to reset receiver calibration to default values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIResetReceiverCalibration(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	/* Resets calibration values to default */
+	ResetReceiverCalibrationValues();
+	strncpy((char*) pcWriteBuffer, "RC receiver calibration set to default values.\r\n", xWriteBufferLen);
 
 	/* Return false to indicate command activity finished */
 	return pdFALSE;

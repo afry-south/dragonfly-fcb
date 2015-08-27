@@ -712,6 +712,28 @@ ReceiverErrorStatus StopReceiverCalibration(void) {
 }
 
 /*
+* @brief  Resets the currently used receiver calibration to default values and saves it to flash.
+* @param  None.
+* @retval None.
+*/
+void ResetReceiverCalibrationValues(void)
+{
+	Receiver_CalibrationValues_TypeDef tmpCalibrationValues;
+
+	/* Set values to default */
+	SetDefaultReceiverCalibrationValues(&tmpCalibrationValues);
+
+	/* Write calibration values to flash for persistent storage */
+	if(WriteCalibrationValuesToFlash(&tmpCalibrationValues))
+		USBComSendString("Receiver calibration values saved.\n\n");
+	else
+		USBComSendString("Receiver calibration values save failed.\n\n");
+
+	/* Copy values to used calibration values and start using them */
+	EnforceNewCalibrationValues(&tmpCalibrationValues);
+}
+
+/*
  * @brief  Checks if the RC transmission between transmitter and receiver is active.
  * @param  None.
  * @retval RECEIVER_OK if transmission is active, else RECEIVER_ERROR.
