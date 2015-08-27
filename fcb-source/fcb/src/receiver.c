@@ -183,8 +183,6 @@ static int16_t GetSignedReceiverChannel(volatile const Receiver_IC_Values_TypeDe
 		volatile const Receiver_IC_ChannelCalibrationValues_TypeDef* ChannelCalibrationValues);
 //static uint16_t GetUnsignedReceiverChannel(volatile const Receiver_IC_Values_TypeDef* ChannelICValues,
 //		volatile const Receiver_IC_ChannelCalibrationValues_TypeDef* ChannelCalibrationValues);
-static uint16_t GetReceiverChannelPulseMicros(volatile const Receiver_IC_Values_TypeDef* ChannelICValues);
-static uint16_t GetReceiverChannelPeriodMicros(volatile const Receiver_IC_Values_TypeDef* ChannelICValues);
 
 static ReceiverErrorStatus IsReceiverChannelActive(volatile Receiver_IC_Values_TypeDef* ChannelICValues,
 		const uint16_t ReceiverTimerPeriodCount);
@@ -306,114 +304,6 @@ int16_t GetGearReceiverChannel(void) {
  */
 int16_t GetAux1ReceiverChannel(void) {
 	return GetSignedReceiverChannel(&Aux1ICValues, &CalibrationValues.Aux1Channel);
-}
-
-/*
- * @brief  Returns the last throttle pulse value in microseconds
- * @param  None
- * @retval throttle pulse value in microseconds
- */
-uint16_t GetThrottleReceiverChannelPulseMicros(void) {
-	return GetReceiverChannelPulseMicros(&ThrottleICValues);
-}
-
-/*
- * @brief  Returns the last aileron pulse value in microseconds
- * @param  None
- * @retval aileron pulse value in microseconds
- */
-uint16_t GetAileronReceiverChannelPulseMicros(void) {
-	return GetReceiverChannelPulseMicros(&AileronICValues);
-}
-
-/*
- * @brief  Returns the last elevator pulse value in microseconds
- * @param  None
- * @retval elevator pulse value in microseconds
- */
-uint16_t GetElevatorReceiverChannelPulseMicros(void) {
-	return GetReceiverChannelPulseMicros(&ElevatorICValues);
-}
-
-/*
- * @brief  Returns the last rudder pulse value in microseconds
- * @param  None
- * @retval rudder pulse value in microseconds
- */
-uint16_t GetRudderReceiverChannelPulseMicros(void) {
-	return GetReceiverChannelPulseMicros(&RudderICValues);
-}
-
-/*
- * @brief  Returns the last gear pulse value in microseconds
- * @param  None
- * @retval gear pulse value in microseconds
- */
-uint16_t GetGearReceiverChannelPulseMicros(void) {
-	return GetReceiverChannelPulseMicros(&GearICValues);
-}
-
-/*
- * @brief  Returns the last aux1 pulse value in microseconds
- * @param  None
- * @retval aux1 pulse value in microseconds
- */
-uint16_t GetAux1ReceiverChannelPulseMicros(void) {
-	return GetReceiverChannelPulseMicros(&Aux1ICValues);
-}
-
-/*
- * @brief  Returns the last throttle period value in microseconds
- * @param  None
- * @retval throttle period value in microseconds
- */
-uint16_t GetThrottleReceiverChannelPeriodMicros(void) {
-	return GetReceiverChannelPeriodMicros(&ThrottleICValues);
-}
-
-/*
- * @brief  Returns the last aileron period value in microseconds
- * @param  None
- * @retval aileron period value in microseconds
- */
-uint16_t GetAileronReceiverChannelPeriodMicros(void) {
-	return GetReceiverChannelPeriodMicros(&AileronICValues);
-}
-
-/*
- * @brief  Returns the last elevator period value in microseconds
- * @param  None
- * @retval elevator period value in microseconds
- */
-uint16_t GetElevatorReceiverChannelPeriodMicros(void) {
-	return GetReceiverChannelPeriodMicros(&ElevatorICValues);
-}
-
-/*
- * @brief  Returns the last rudder period value in microseconds
- * @param  None
- * @retval rudder period value in microseconds
- */
-uint16_t GetRudderReceiverChannelPeriodMicros(void) {
-	return GetReceiverChannelPeriodMicros(&RudderICValues);
-}
-
-/*
- * @brief  Returns the last gear period value in microseconds
- * @param  None
- * @retval gear period value in microseconds
- */
-uint16_t GetGearReceiverChannelPeriodMicros(void) {
-	return GetReceiverChannelPeriodMicros(&GearICValues);
-}
-
-/*
- * @brief  Returns the last aux1 period value in microseconds
- * @param  None
- * @retval aux1 period value in microseconds
- */
-uint16_t GetAux1ReceiverChannelPeriodMicros(void) {
-	return GetReceiverChannelPeriodMicros(&Aux1ICValues);
 }
 
 /*
@@ -977,25 +867,6 @@ static int16_t GetSignedReceiverChannel(volatile const Receiver_IC_Values_TypeDe
 //	else
 //		return 0;
 //}
-
-/*
- * @brief  Returns the receiver channel pulse count in microseconds
- * @param  ChannelICValues : Reference to a channel's IC values struct
- * @retval Channel pulse timer count in microseconds
- */
-static uint16_t GetReceiverChannelPulseMicros(volatile const Receiver_IC_Values_TypeDef* ChannelICValues) {
-	return (uint16_t) (((uint32_t) ChannelICValues->PulseTimerCount * 1000000) / RECEIVER_TIM_COUNTER_CLOCK);
-}
-
-/*
- * @brief  Returns the receiver channel period count in microseconds
- * @param  ChannelICValues : Reference to a channel's IC values struct
- * @retval Channel period timer count in microseconds
- */
-static uint16_t GetReceiverChannelPeriodMicros(volatile const Receiver_IC_Values_TypeDef* ChannelICValues) {
-	/* The period count will never be more than RECEIVER_MAX_VALID_PERIOD_COUNT, take care so that 32-bit overflow does not occur below */
-	return (uint16_t) (((uint32_t) ChannelICValues->PeriodCount * 100000) / RECEIVER_TIM_COUNTER_CLOCK * 10);
-}
 
 /*
  * @brief  Gets calibration values stored in flash after previously performed receiver calibration
