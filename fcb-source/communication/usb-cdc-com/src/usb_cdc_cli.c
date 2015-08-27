@@ -391,7 +391,7 @@ static portBASE_TYPE CLIStartReceiverCalibration(int8_t* pcWriteBuffer, size_t x
 				"RC receiver calibration started. Please saturate all RC transmitter control sticks and toggle switches.\r\n",
 				xWriteBufferLen);
 	else
-		strncpy((char*) pcWriteBuffer, "RC receiver calibration already in progress.\r\n", xWriteBufferLen);
+		strncpy((char*) pcWriteBuffer, "RC receiver calibration could not be started.\r\n", xWriteBufferLen);
 
 	/* Return false to indicate command activity finished */
 	return pdFALSE;
@@ -796,7 +796,7 @@ static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, c
 
 	strncpy((char*) pcWriteBuffer, "System time:", xWriteBufferLen);
 	snprintf((char*) pcWriteBuffer, xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1, "System time: %u\r\n",
-				HAL_GetTick());
+				(unsigned int)HAL_GetTick());
 
 	return pdFALSE;
 }

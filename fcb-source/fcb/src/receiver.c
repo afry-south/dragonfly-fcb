@@ -598,6 +598,12 @@ void PrintReceiverValues(void)
 ReceiverErrorStatus StartReceiverCalibration(void) {
 	/* Check so that calibration is not already being performed */
 	if (receiverCalibrationState != RECEIVER_CALIBRATION_IN_PROGRESS) {
+		if(!IsReceiverActive())
+		{
+			USBComSendString("Receiver transmission not active.\n");
+			return RECEIVER_ERROR;
+		}
+
 		/* Reset the receiver channel's calibration sampling structs */
 		ResetCalibrationSampling(&ThrottleCalibrationSampling);
 		ResetCalibrationSampling(&ElevatorCalibrationSampling);
@@ -616,6 +622,8 @@ ReceiverErrorStatus StartReceiverCalibration(void) {
 
 		return RECEIVER_OK;
 	}
+
+	USBComSendString("Receiver calibration already in progress.\n");
 
 	/* Calibration busy */
 	return RECEIVER_ERROR;
