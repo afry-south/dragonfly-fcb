@@ -18,7 +18,7 @@
 
 /* Includes */
 #include "motor_control.h"
-#include "main.h"
+#include "fcb_error.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

@@ -118,6 +118,8 @@ static int8_t CDCItfDeInit(void) {
  * @retval Result of the opeartion: USBD_OK if all operations are OK else USBD_FAIL
  */
 static int8_t CDCItfControl(uint8_t cmd, uint8_t* pbuf, uint16_t length) {
+	(void) length;
+
 	switch (cmd) {
 	case CDC_SEND_ENCAPSULATED_COMMAND:
 		/* Add your code here */
