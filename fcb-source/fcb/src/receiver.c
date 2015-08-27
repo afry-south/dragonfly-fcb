@@ -98,6 +98,18 @@ typedef struct {
 #define RECEIVER_SAMPLE_VALUE_STRING_SIZE				8
 
 /* Private macro -------------------------------------------------------------*/
+#define IS_RECEIVER_PULSE_VALID(PULSE_TIM_CNT, CURR_PERIOD_CNT, PRE_PERIOD_CNT)	(((PULSE_TIM_CNT) <= RECEIVER_MAX_VALID_IC_PULSE_COUNT) \
+		&& ((PULSE_TIM_CNT) >= RECEIVER_MIN_VALID_IC_PULSE_COUNT) && ((CURR_PERIOD_CNT) - (PRE_PERIOD_CNT) <= 1))
+
+#define IS_RECEIVER_PERIOD_VALID(PERIOD_TIM_CNT)	((PERIOD_TIM_CNT) <= RECEIVER_MAX_VALID_PERIOD_COUNT \
+		&& (PERIOD_TIM_CNT) >= RECEIVER_MIN_VALID_PERIOD_COUNT)
+
+#define IS_RECEIVER_CALIBRATION_MAX_PULSE_VALID(PULSE_TIM_CNT)	(((PULSE_TIM_CNT) <= RECEIVER_MAX_CALIBRATION_MAX_PULSE_COUNT) \
+		&& ((PULSE_TIM_CNT) >= RECEIVER_MAX_CALIBRATION_MIN_PULSE_COUNT))
+
+#define IS_RECEIVER_CALIBRATION_MIN_PULSE_VALID(PULSE_TIM_CNT)	(((PULSE_TIM_CNT) <= RECEIVER_MIN_CALIBRATION_MAX_PULSE_COUNT) \
+		&& ((PULSE_TIM_CNT) >= RECEIVER_MIN_CALIBRATION_MIN_PULSE_COUNT))
+
 /* Private variables ---------------------------------------------------------*/
 
 /* Timer time base handlers for each timer - These are exported to stm32f3xx_it.c */
@@ -176,13 +188,8 @@ static uint16_t GetReceiverChannelPeriodMicros(volatile const Receiver_IC_Values
 
 static ReceiverErrorStatus IsReceiverChannelActive(volatile Receiver_IC_Values_TypeDef* ChannelICValues,
 		const uint16_t ReceiverTimerPeriodCount);
-static ReceiverErrorStatus IsReceiverPulseValid(const uint16_t pulseTimerCount, const uint16_t currentPeriodCount,
-		const uint16_t previousPeriodCount);
-static ReceiverErrorStatus IsReceiverPeriodValid(const uint32_t periodTimerCount);
 static ReceiverErrorStatus IsCalibrationValuesValid(
 		volatile const Receiver_CalibrationValues_TypeDef* calibrationValues);
-static ReceiverErrorStatus IsCalibrationMaxPulseValueValid(const uint16_t maxPulseValue);
-static ReceiverErrorStatus IsCalibrationMinPulseValueValid(const uint16_t minPulseValue);
 
 static void EnforceNewCalibrationValues(volatile Receiver_CalibrationValues_TypeDef* newCalibrationValues);
 static void ResetCalibrationSampling(volatile Receiver_ChannelCalibrationSampling_TypeDef* channelCalibrationSampling);
@@ -1210,7 +1217,7 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
 		else
 			tempPeriodTimerCount = ChannelICValues->RisingCount - ChannelICValues->PreviousRisingCount; // Short period value, likely incorrect
 
-		if (IsReceiverPeriodValid(tempPeriodTimerCount))
+		if (IS_RECEIVER_PERIOD_VALID(tempPeriodTimerCount))
 			ChannelICValues->PeriodCount = tempPeriodTimerCount;
 		else
 			errorStatus = RECEIVER_ERROR;
@@ -1234,7 +1241,7 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
 		tempPulseTimerCount = ChannelICValues->FallingCounter - ChannelICValues->RisingCount;
 
 		/* Sanity check of pulse count before updating it */
-		if (IsReceiverPulseValid(tempPulseTimerCount, ReceiverTimerPeriodCount,
+		if (IS_RECEIVER_PULSE_VALID(tempPulseTimerCount, ReceiverTimerPeriodCount,
 				ChannelICValues->PreviousRisingCountTimerPeriodCount)) {
 			ChannelICValues->PulseTimerCount = tempPulseTimerCount;
 			ChannelICValues->IsActive = RECEIVER_OK; // Set channel to active
@@ -1395,30 +1402,6 @@ static ReceiverErrorStatus IsReceiverChannelActive(volatile Receiver_IC_Values_T
 }
 
 /*
- * @brief  Checks if a receiver channel pulse count is within a valid range
- * @param  pulseTimerCount : pulse timer count value
- * @param  currentPeriodCount : The current period count
- * @param  previousPeriodCount : The previous period count
- * @retval RECEIVER_OK if receiver pulse count is valid, else RECEIVER_ERROR.
- */
-static ReceiverErrorStatus IsReceiverPulseValid(const uint16_t pulseTimerCount, const uint16_t currentPeriodCount,
-		const uint16_t previousPeriodCount) {
-	/* Pulse count considered valid if it is within defined bounds and doesn't strech over more than 2 timer periods */
-	return (pulseTimerCount <= RECEIVER_MAX_VALID_IC_PULSE_COUNT && pulseTimerCount >= RECEIVER_MIN_VALID_IC_PULSE_COUNT
-			&& currentPeriodCount - previousPeriodCount <= 1);
-}
-
-/*
- * @brief  Checks if a receiver channel period count is within a valid range
- * @param  periodTimerCount : period timer count value
- * @retval RECEIVER_OK if receiver period count is valid, else RECEIVER_ERROR.
- */
-static ReceiverErrorStatus IsReceiverPeriodValid(const uint32_t periodTimerCount) {
-	/* Period count considered valid if it is within defined bounds */
-	return (periodTimerCount <= RECEIVER_MAX_VALID_PERIOD_COUNT && periodTimerCount >= RECEIVER_MIN_VALID_PERIOD_COUNT);
-}
-
-/*
  * @brief  Checks if receiver calibration values are valid
  * @param  calibrationValues : pointer to calibration values struct
  * @retval RECEIVER_OK if receiver calibration values are valid, else RECEIVER_ERROR.
@@ -1426,68 +1409,42 @@ static ReceiverErrorStatus IsReceiverPeriodValid(const uint32_t periodTimerCount
 static ReceiverErrorStatus IsCalibrationValuesValid(
 		volatile const Receiver_CalibrationValues_TypeDef* calibrationValues) {
 	/* Check throttle channel calibration */
-	if (!IsCalibrationMaxPulseValueValid(calibrationValues->ThrottleChannel.ChannelMaxCount))
+	if (!IS_RECEIVER_CALIBRATION_MAX_PULSE_VALID(calibrationValues->ThrottleChannel.ChannelMaxCount))
 		return RECEIVER_ERROR;
-	if (!IsCalibrationMinPulseValueValid(calibrationValues->ThrottleChannel.ChannelMinCount))
+	if (!IS_RECEIVER_CALIBRATION_MIN_PULSE_VALID(calibrationValues->ThrottleChannel.ChannelMinCount))
 		return RECEIVER_ERROR;
 
 	/* Check aileron channel calibration */
-	if (!IsCalibrationMaxPulseValueValid(calibrationValues->AileronChannel.ChannelMaxCount))
+	if (!IS_RECEIVER_CALIBRATION_MAX_PULSE_VALID(calibrationValues->AileronChannel.ChannelMaxCount))
 		return RECEIVER_ERROR;
-	if (!IsCalibrationMinPulseValueValid(calibrationValues->AileronChannel.ChannelMinCount))
+	if (!IS_RECEIVER_CALIBRATION_MIN_PULSE_VALID(calibrationValues->AileronChannel.ChannelMinCount))
 		return RECEIVER_ERROR;
 
 	/* Check elevator channel calibration */
-	if (!IsCalibrationMaxPulseValueValid(calibrationValues->ElevatorChannel.ChannelMaxCount))
+	if (!IS_RECEIVER_CALIBRATION_MAX_PULSE_VALID(calibrationValues->ElevatorChannel.ChannelMaxCount))
 		return RECEIVER_ERROR;
-	if (!IsCalibrationMinPulseValueValid(calibrationValues->ElevatorChannel.ChannelMinCount))
+	if (!IS_RECEIVER_CALIBRATION_MIN_PULSE_VALID(calibrationValues->ElevatorChannel.ChannelMinCount))
 		return RECEIVER_ERROR;
 
 	/* Check rudder channel calibration */
-	if (!IsCalibrationMaxPulseValueValid(calibrationValues->RudderChannel.ChannelMaxCount))
+	if (!IS_RECEIVER_CALIBRATION_MAX_PULSE_VALID(calibrationValues->RudderChannel.ChannelMaxCount))
 		return RECEIVER_ERROR;
-	if (!IsCalibrationMinPulseValueValid(calibrationValues->RudderChannel.ChannelMinCount))
+	if (!IS_RECEIVER_CALIBRATION_MIN_PULSE_VALID(calibrationValues->RudderChannel.ChannelMinCount))
 		return RECEIVER_ERROR;
 
 	/* Check gear channel calibration */
-	if (!IsCalibrationMaxPulseValueValid(calibrationValues->GearChannel.ChannelMaxCount))
+	if (!IS_RECEIVER_CALIBRATION_MAX_PULSE_VALID(calibrationValues->GearChannel.ChannelMaxCount))
 		return RECEIVER_ERROR;
-	if (!IsCalibrationMinPulseValueValid(calibrationValues->GearChannel.ChannelMinCount))
+	if (!IS_RECEIVER_CALIBRATION_MIN_PULSE_VALID(calibrationValues->GearChannel.ChannelMinCount))
 		return RECEIVER_ERROR;
 
 	/* Check aux1 channel calibration */
-	if (!IsCalibrationMaxPulseValueValid(calibrationValues->Aux1Channel.ChannelMaxCount))
+	if (!IS_RECEIVER_CALIBRATION_MAX_PULSE_VALID(calibrationValues->Aux1Channel.ChannelMaxCount))
 		return RECEIVER_ERROR;
-	if (!IsCalibrationMinPulseValueValid(calibrationValues->Aux1Channel.ChannelMinCount))
+	if (!IS_RECEIVER_CALIBRATION_MIN_PULSE_VALID(calibrationValues->Aux1Channel.ChannelMinCount))
 		return RECEIVER_ERROR;
 
 	return RECEIVER_OK;
-}
-
-/*
- * @brief  Checks if receiver pulse value is a valid max calibration value
- * @param  maxPulseValue : pulse value
- * @retval RECEIVER_OK if receiver pulse value valid for max calibration, else RECEIVER_ERROR
- */
-static ReceiverErrorStatus IsCalibrationMaxPulseValueValid(const uint16_t maxPulseValue) {
-	if (maxPulseValue <= RECEIVER_MAX_CALIBRATION_MAX_PULSE_COUNT
-			&& maxPulseValue >= RECEIVER_MAX_CALIBRATION_MIN_PULSE_COUNT)
-		return RECEIVER_OK;
-
-	return RECEIVER_ERROR;
-}
-
-/*
- * @brief  Checks if receiver pulse value is a valid min calibration value
- * @param  minPulseValue : pulse value
- * @retval RECEIVER_OK if receiver pulse value valid for min calibration, else RECEIVER_ERROR
- */
-static ReceiverErrorStatus IsCalibrationMinPulseValueValid(const uint16_t minPulseValue) {
-	if (minPulseValue <= RECEIVER_MIN_CALIBRATION_MAX_PULSE_COUNT
-			&& minPulseValue >= RECEIVER_MIN_CALIBRATION_MIN_PULSE_COUNT)
-		return RECEIVER_OK;
-
-	return RECEIVER_ERROR;
 }
 
 /*
