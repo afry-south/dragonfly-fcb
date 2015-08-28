@@ -156,5 +156,6 @@ void PrintGyroscopeValues(void)
 	snprintf((char*) sampleString, GYRO_SAMPLING_MAX_STRING_SIZE,
 			"Gyroscope readings [rad/s]:\nAngRateXb: %1.6f\nAngRateYb: %1.6f\nAngRateZb: %1.6f\n\r\n", angRateXb,
 			angRateYb, angRateZb);
+
 	USBComSendString(sampleString);
 }
