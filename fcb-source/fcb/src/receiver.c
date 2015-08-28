@@ -95,7 +95,6 @@ typedef struct {
 #define RECEIVER_PRINT_SAMPLING_THREAD_PRIO				3
 
 #define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
-#define RECEIVER_SAMPLE_VALUE_STRING_SIZE				8
 #define RECEIVER_CALRES_MAX_STRING_SIZE					256
 
 /* Private macro -------------------------------------------------------------*/
@@ -422,61 +421,21 @@ uint32_t GetAux1ReceiverChannelPeriodTicks(void) {
 void PrintReceiverValues(void)
 {
 	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE];
-	char sampleValueTmpString[RECEIVER_SAMPLE_VALUE_STRING_SIZE]; // Only needs enough space to store an uint16_t/int16_t in string format
 
-	strncpy(sampleString, "Receiver channel values (Norm / Ticks):\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
+	strncpy(sampleString, "Receiver channel values (Value / Ticks):\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
 	if (IsReceiverActive())
 		strncat(sampleString, "ACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 	else
 		strncat((char*) sampleString, "INACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
-	strncat((char*) sampleString, "Throttle: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 8, "%d", GetThrottleReceiverChannel());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 8, "%u", GetThrottleReceiverChannelPulseTicks());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	USBComSendString(sampleString);
 
-	strncat((char*) sampleString, "Aileron: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 16, "%d", GetAileronReceiverChannel());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 8, "%u", GetAileronReceiverChannelPulseTicks());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-	strncat((char*) sampleString, "Elevator: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 16, "%d", GetElevatorReceiverChannel());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 8, "%u", GetElevatorReceiverChannelPulseTicks());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-	strncat((char*) sampleString, "Rudder: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 16, "%d", GetRudderReceiverChannel());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 8, "%u", GetRudderReceiverChannelPulseTicks());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-	strncat((char*) sampleString, "Gear: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 16, "%d", GetGearReceiverChannel());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 8, "%u", GetGearReceiverChannelPulseTicks());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
-	strncat((char*) sampleString, "Aux1: ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 16, "%d", GetAux1ReceiverChannel());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, " / ", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, 8, "%u", GetAux1ReceiverChannelPulseTicks());
-	strncat((char*) sampleString, sampleValueTmpString, RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\r\n\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	snprintf((char*) sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE,
+			"Throttle: %d / %u\nAileron: %d / %u\nElevator: %d / %u\nRudder: %d / %u\nGear: %d / %u\nAux1: %d / %u\n\r\n",
+			GetThrottleReceiverChannel(), GetThrottleReceiverChannelPulseTicks(), GetAileronReceiverChannel(),
+			GetAileronReceiverChannelPulseTicks(), GetElevatorReceiverChannel(), GetElevatorReceiverChannelPulseTicks(),
+			GetRudderReceiverChannel(), GetRudderReceiverChannelPulseTicks(), GetGearReceiverChannel(),
+			GetGearReceiverChannelPulseTicks(), GetAux1ReceiverChannel(), GetAux1ReceiverChannelPulseTicks());
 
 	USBComSendString(sampleString);
 }

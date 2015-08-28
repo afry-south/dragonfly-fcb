@@ -45,7 +45,6 @@ enum { ZDOT_IDX = 2 }; /* as above */
  */
 #define READ_GYRO_FROM_ISR
 #define GYRO_SAMPLING_MAX_STRING_SIZE			128
-#define	GYRO_SAMPLE_VALUE_STRING_SIZE			8
 
 /**
  * Angular velocities, in degrees.
@@ -135,7 +134,7 @@ void FetchAngleDotFromGyroscope(void) {
 
 }
 
-#warning "TODO - implement get x, y, z separately. And perphaps use integer values to represent sensor values"
+#warning "TODO - implement get x, y, z separately. And perhaps use integer values to represent sensor values"
 void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot)
 {
 	*xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
@@ -151,25 +150,11 @@ void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot)
 void PrintGyroscopeValues(void)
 {
 	static char sampleString[GYRO_SAMPLING_MAX_STRING_SIZE];
-
 	float angRateXb, angRateYb, angRateZb;
-	char sampleValueTmpString[GYRO_SAMPLE_VALUE_STRING_SIZE]; // Only needs enough space to store a float in string format
-	memset(sampleValueTmpString, 0x00, sizeof(sampleValueTmpString));
 
 	GetAngleDot(&angRateXb, &angRateYb, &angRateZb);
-
-	// TODO format whole string in one snprintf call! Scrap the sampleValueTmpString?!
-	strncpy(sampleString, "Gyroscope readings [rad/s]: ", GYRO_SAMPLING_MAX_STRING_SIZE);
-	strncat((char*) sampleString, "\nAngRateXb: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, GYRO_SAMPLE_VALUE_STRING_SIZE, "%1.6f", angRateXb);
-	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\nAngRateYb: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, GYRO_SAMPLE_VALUE_STRING_SIZE, "%1.6f", angRateYb);
-	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\nAngRateZb: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	snprintf((char*) sampleValueTmpString, GYRO_SAMPLE_VALUE_STRING_SIZE, "%1.6f", angRateZb);
-	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\n\r\n", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-
+	snprintf((char*) sampleString, GYRO_SAMPLING_MAX_STRING_SIZE,
+			"Gyroscope readings [rad/s]:\nAngRateXb: %1.6f\nAngRateYb: %1.6f\nAngRateZb: %1.6f\n\r\n", angRateXb,
+			angRateYb, angRateZb);
 	USBComSendString(sampleString);
 }

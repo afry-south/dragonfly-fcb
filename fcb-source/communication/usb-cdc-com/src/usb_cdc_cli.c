@@ -257,6 +257,7 @@ extern xSemaphoreHandle USBCOMRxDataSem;
  * @brief  Registers CLI commands
  * @param  None
  * @retval None
+ * @note   Too many CLI commands may cause problems with the "help" command if the UsbTxQueue is not large enough
  */
 void RegisterCLICommands(void) {
 	/* Register all the command line commands defined immediately above. */
@@ -942,7 +943,9 @@ static portBASE_TYPE CLIAbout(int8_t* pcWriteBuffer, size_t xWriteBufferLen, con
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
-	strncpy((char*) pcWriteBuffer, "Dragonfly\nThe Dragonfly system is developed at AF Consult in Malmoe, Sweden. It is designed to control a quadrotor UAV.\n\nVersion:", xWriteBufferLen);
+	strncpy((char*) pcWriteBuffer,
+			"Dragonfly\nThe Dragonfly system is developed at AF Consult in Malmoe, Sweden. It is designed to control a quadrotor UAV.\n\nVersion:",
+			xWriteBufferLen);
 	strncat((char*) pcWriteBuffer, DF_FCB_VERSION, xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 	strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
@@ -961,8 +964,7 @@ static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, c
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
-	strncpy((char*) pcWriteBuffer, "System time [ms]:", xWriteBufferLen);
-	snprintf((char*) pcWriteBuffer, xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1, "System time: %u\r\n",
+	snprintf((char*) pcWriteBuffer, xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1, "System time [ms]: %u\r\n",
 			(unsigned int) HAL_GetTick());
 
 	return pdFALSE;
