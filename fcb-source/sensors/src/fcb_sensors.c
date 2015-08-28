@@ -45,8 +45,6 @@ static volatile uint16_t sensorPrintSampleDuration;
 static void ProcessSensorValues(void*);
 static void SensorPrintSamplingTask(void const *argument);
 
-/* static fcn declarations */
-
 /* Exported functions --------------------------------------------------------*/
 /* global fcn definitions */
 int FcbSensorsConfig(void) {

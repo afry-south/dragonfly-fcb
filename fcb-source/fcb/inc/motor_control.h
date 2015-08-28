@@ -60,6 +60,8 @@ void SetMotor4(uint16_t ctrlVal);
 MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 MotorControlErrorStatus StopMotorControlSamplingTask(void);
 
+void PrintMotorControlValues(void);
+
 #endif /* __MOTOR_CONTROL_H */
 
 /**

@@ -3,14 +3,11 @@
 #include "fcb_error.h"
 #include "trace.h"
 
-
 #include "stm32f3xx.h"
 #include "stm32f3_discovery.h"
 #include "stm32f3xx_hal_gpio.h"
 #include "stm32f3_discovery_gyroscope.h"
 #include "usbd_cdc_if.h"
-
-
 
 #include "FreeRTOS.h"
 #include "timers.h"

@@ -961,9 +961,9 @@ static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, c
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
-	strncpy((char*) pcWriteBuffer, "System time:", xWriteBufferLen);
+	strncpy((char*) pcWriteBuffer, "System time [ms]:", xWriteBufferLen);
 	snprintf((char*) pcWriteBuffer, xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1, "System time: %u\r\n",
-				(unsigned int)HAL_GetTick());
+			(unsigned int) HAL_GetTick());
 
 	return pdFALSE;
 }
