@@ -510,54 +510,17 @@ static portBASE_TYPE CLIGetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWr
 				xWriteBufferLen);
 		break;
 	case 1:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Throttle Max: %u\r\n",
-				GetThrottleReceiverCalibrationMaxValue());
-		break;
-	case 2:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Throttle Min: %u\r\n",
-				GetThrottleReceiverCalibrationMinValue());
-		break;
-	case 3:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aileron Max: %u\r\n",
-				GetAileronReceiverCalibrationMaxValue());
-		break;
-	case 4:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aileron Min: %u\r\n",
-				GetAileronReceiverCalibrationMinValue());
-		break;
-	case 5:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Elevator Max: %u\r\n",
-				GetElevatorReceiverCalibrationMaxValue());
-		break;
-	case 6:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Elevator Min: %u\r\n",
-				GetElevatorReceiverCalibrationMinValue());
-		break;
-	case 7:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Rudder Max: %u\r\n",
-				GetRudderReceiverCalibrationMaxValue());
-		break;
-	case 8:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Rudder Min: %u\r\n",
-				GetRudderReceiverCalibrationMinValue());
-		break;
-	case 9:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Gear Max: %u\r\n",
-				GetGearReceiverCalibrationMaxValue());
-		break;
-	case 10:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Gear Min: %u\r\n",
-				GetGearReceiverCalibrationMinValue());
-		break;
-	case 11:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aux1 Max: %u\r\n",
-				GetAux1ReceiverCalibrationMaxValue());
-		break;
-	case 12:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aux1 Min: %u\r\n",
-				GetAux1ReceiverCalibrationMinValue());
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+				"Throttle Max: %u\nThrottle Min: %u\nAileron Max: %u\nAileron Min: %u\nElevator Max: %u\nElevator Min: %u\nRudder Max: %u\nRudder Min: %u\nGear Max: %u\nGear Min: %u\nAux1 Max: %u\nAux1 Min: %u\n\r\n",
+				GetThrottleReceiverCalibrationMaxValue(), GetThrottleReceiverCalibrationMinValue(),
+				GetAileronReceiverCalibrationMaxValue(), GetAileronReceiverCalibrationMinValue(),
+				GetElevatorReceiverCalibrationMaxValue(), GetElevatorReceiverCalibrationMinValue(),
+				GetRudderReceiverCalibrationMaxValue(), GetRudderReceiverCalibrationMinValue(),
+				GetGearReceiverCalibrationMaxValue(), GetGearReceiverCalibrationMinValue(),
+				GetAux1ReceiverCalibrationMaxValue(), GetAux1ReceiverCalibrationMinValue());
 		break;
 	default:
+		// memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 		strncpy((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
 		/* Reset receiver print iteration number*/
 		currentChannelPrint = 0;

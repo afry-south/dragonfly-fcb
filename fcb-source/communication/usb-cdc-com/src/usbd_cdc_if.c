@@ -30,7 +30,7 @@ typedef struct {
 	BufferType_TypeDef bufferType;
 	uint16_t dataSize;
 	void* bufferPtr;
-	xSemaphoreHandle* FIFOBufferMutex;
+	xSemaphoreHandle* BufferMutex;
 } UsbComPortTxQueueItem_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
@@ -276,9 +276,8 @@ static void USBComPortTXTask(void const *argument) {
 			if (xSemaphoreTake(USBTxMutex, USB_COM_MAX_DELAY) == pdPASS) // Pend on mutex while previous transmission is in progress
 			{
 				/* Take the buffer mutex (if it has one) */
-				if ((*CompPortTxQueueItem.FIFOBufferMutex != NULL
-						&& xSemaphoreTake(*CompPortTxQueueItem.FIFOBufferMutex, USB_COM_MAX_DELAY) == pdPASS)
-						|| *CompPortTxQueueItem.FIFOBufferMutex == NULL) {
+				if ((*CompPortTxQueueItem.BufferMutex == NULL
+						|| xSemaphoreTake(*CompPortTxQueueItem.BufferMutex, portMAX_DELAY) == pdPASS)) {
 
 					if (CompPortTxQueueItem.bufferType == ARRAY_BUFFER) {
 						// Tx buffer is just a good ol' array of data
@@ -299,7 +298,7 @@ static void USBComPortTXTask(void const *argument) {
 						}
 					}
 
-					xSemaphoreGive(*CompPortTxQueueItem.FIFOBufferMutex);
+					xSemaphoreGive(*CompPortTxQueueItem.BufferMutex);
 				}
 
 				xSemaphoreGive(USBTxMutex); // Give mutex when transmission completed
@@ -403,7 +402,7 @@ USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDa
 		if (FIFOBufferPutData(&USBCOMTxFIFOBuffer, sendData, sendDataSize)) {
 			CompPortTxQueueItem.bufferType = FIFO_BUFFER;
 			CompPortTxQueueItem.bufferPtr = (void*) &USBCOMTxFIFOBuffer;
-			CompPortTxQueueItem.FIFOBufferMutex = &USBCOMTxBufferMutex;
+			CompPortTxQueueItem.BufferMutex = &USBCOMTxBufferMutex;
 			CompPortTxQueueItem.dataSize = sendDataSize;
 
 			// The Tx Queue needs to be accessed in critical region since we don't want items from the same FIFO entering it in the wrong order!
