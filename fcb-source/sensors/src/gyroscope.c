@@ -158,17 +158,17 @@ void PrintGyroscopeValues(void)
 
 	GetAngleDot(&rollDot, &pitchDot, &yawDot);
 
-	strncpy(sampleString, "Gyroscope roll rates [rad/s]: ", GYRO_SAMPLING_MAX_STRING_SIZE);
-	strncat((char*) sampleString, "\nRoll: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncpy(sampleString, "Gyroscope readings [rad/s]: ", GYRO_SAMPLING_MAX_STRING_SIZE);
+	strncat((char*) sampleString, "\nAngRateXb: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 	snprintf((char*) sampleValueTmpString, 8, "%1.6f", rollDot);
 	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\nPitch: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\nAngRateYb: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 	snprintf((char*) sampleValueTmpString, 8, "%1.6f", pitchDot);
 	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\nYaw: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\nAngRateZb: ", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 	snprintf((char*) sampleValueTmpString, 8, "%1.6f", yawDot);
 	strncat((char*) sampleString, sampleValueTmpString, GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	strncat((char*) sampleString, "\r\n\n", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	strncat((char*) sampleString, "\n\r\n", GYRO_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
 	USBComSendString(sampleString);
 }
