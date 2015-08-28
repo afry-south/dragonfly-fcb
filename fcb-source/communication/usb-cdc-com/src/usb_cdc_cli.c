@@ -103,6 +103,11 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t *pcWriteBuffer, size_t xWrite
 static portBASE_TYPE CLIStopSensorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /*
+ * Function implements the "get-motors" command.
+ */
+static portBASE_TYPE CLIGetMotorValues(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
  * Function implements the "about" command.
  */
 static portBASE_TYPE CLIAbout(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
@@ -197,6 +202,13 @@ static const CLI_Command_Definition_t stopSensorSamplingCommand = { (const int8_
 		0 /* Number of parameters expected */
 };
 
+/* Structure that defines the "get-motors" command line command. */
+static const CLI_Command_Definition_t getMotorsCommand = { (const int8_t * const ) "get-motors",
+		(const int8_t * const ) "\r\nget-motors:\r\n Prints motor control values\r\n",
+		CLIGetMotorValues, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
 /* Structure that defines the "about" command line command. */
 static const CLI_Command_Definition_t aboutCommand = { (const int8_t * const ) "about",
 		(const int8_t * const ) "\r\nabout:\r\n Prints system info\r\n",
@@ -241,6 +253,9 @@ void RegisterCLICommands(void) {
 	FreeRTOS_CLIRegisterCommand(&getSensorsCommand);
 	FreeRTOS_CLIRegisterCommand(&startSensorSamplingCommand);
 	FreeRTOS_CLIRegisterCommand(&stopSensorSamplingCommand);
+
+	/* Motors CLI commands */
+	FreeRTOS_CLIRegisterCommand(&getMotorsCommand);
 
 	/* System info CLI commands */
 	FreeRTOS_CLIRegisterCommand(&aboutCommand);
@@ -639,7 +654,7 @@ static portBASE_TYPE CLIStopReceiverSampling(int8_t* pcWriteBuffer, size_t xWrit
 }
 
 /**
- * @brief  Implements CLI command to prints the last sampled sensor values
+ * @brief  Implements CLI command to print the last sampled sensor values
  * @param  pcWriteBuffer : Reference to output buffer
  * @param  xWriteBufferLen : Size of output buffer
  * @param  pcCommandString : Command line string
@@ -760,6 +775,26 @@ static portBASE_TYPE CLIStopSensorSampling(int8_t* pcWriteBuffer, size_t xWriteB
 
 	/* Stop the sensor sample printing task */
 	StopSensorSamplingTask();
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements CLI command to print the last control signal values sent to the motors
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetMotorValues(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	(void) xWriteBufferLen;
+
+	configASSERT(pcWriteBuffer);
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+
+	PrintMotorControlValues();
 
 	return pdFALSE;
 }
