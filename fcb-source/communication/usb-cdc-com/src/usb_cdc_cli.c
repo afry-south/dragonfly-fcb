@@ -14,6 +14,7 @@
 
 #include "main.h"
 #include "receiver.h"
+#include "motor_control.h"
 #include "fifo_buffer.h"
 #include "common.h"
 #include "gyroscope.h"
@@ -106,6 +107,16 @@ static portBASE_TYPE CLIStopSensorSampling(int8_t *pcWriteBuffer, size_t xWriteB
  * Function implements the "get-motors" command.
  */
 static portBASE_TYPE CLIGetMotorValues(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "start-motor-sampling" command.
+ */
+static portBASE_TYPE CLIStartMotorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "stop-motor-sampling" command.
+ */
+static portBASE_TYPE CLIStopMotorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /*
  * Function implements the "about" command.
@@ -209,6 +220,20 @@ static const CLI_Command_Definition_t getMotorsCommand = { (const int8_t * const
 		0 /* Number of parameters expected */
 };
 
+/* Structure that defines the "start-motor-sampling" command line command. */
+static const CLI_Command_Definition_t startMotorSamplingCommand = { (const int8_t * const ) "start-motor-sampling",
+		(const int8_t * const ) "\r\nstart-motor-sampling <sampletime> <sampleduration>:\r\n Prints motor control values once every <sampletime> ms for <sampleduration> s\r\n",
+		CLIStartMotorSampling, /* The function to run. */
+		2 /* Number of parameters expected */
+};
+
+/* Structure that defines the "stop-motor-sampling" command line command. */
+static const CLI_Command_Definition_t stopMotorSamplingCommand = { (const int8_t * const ) "stop-motor-sampling",
+		(const int8_t * const ) "\r\nstop-motor-sampling:\r\n Stops printing of motor control sample values\r\n",
+		CLIStopMotorSampling, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
 /* Structure that defines the "about" command line command. */
 static const CLI_Command_Definition_t aboutCommand = { (const int8_t * const ) "about",
 		(const int8_t * const ) "\r\nabout:\r\n Prints system info\r\n",
@@ -256,6 +281,8 @@ void RegisterCLICommands(void) {
 
 	/* Motors CLI commands */
 	FreeRTOS_CLIRegisterCommand(&getMotorsCommand);
+	FreeRTOS_CLIRegisterCommand(&startMotorSamplingCommand);
+	FreeRTOS_CLIRegisterCommand(&stopMotorSamplingCommand);
 
 	/* System info CLI commands */
 	FreeRTOS_CLIRegisterCommand(&aboutCommand);
@@ -614,6 +641,7 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 
 		receiverSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
 
+		/* Start the receiver value sampling task */
 		StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
 	}
 
@@ -741,6 +769,7 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
 
 		sensorSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
 
+		/* Start the sensor sample printing task */
 		StartSensorSamplingTask(sensorSampleTime, sensorSampleDuration);
 	}
 
@@ -770,7 +799,6 @@ static portBASE_TYPE CLIStopSensorSampling(int8_t* pcWriteBuffer, size_t xWriteB
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
-
 	strncpy((char*) pcWriteBuffer, "Stopping printing of sensor sample values...\r\n", xWriteBufferLen);
 
 	/* Stop the sensor sample printing task */
@@ -795,6 +823,109 @@ static portBASE_TYPE CLIGetMotorValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 
 	PrintMotorControlValues();
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Starts sensor sampling for a specified sample time and duration
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStartMotorSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength, xReturn;
+	static portBASE_TYPE lParameterNumber = 0;
+
+	/* Check the write buffer is not NULL */
+	configASSERT(pcWriteBuffer);
+
+	if (lParameterNumber == 0) {
+		/* The first time the function is called after the command has been entered just a header string is returned. */
+		strncpy((char*) pcWriteBuffer, "Starting print sampling of motor control signal values...\r\n", xWriteBufferLen);
+	} else {
+		uint16_t motorSampleTime;
+		uint16_t motorSampleDuration;
+
+		/* Obtain the parameter string */
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */
+		);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
+
+		size_t paramMaxSize; // TODO make function for this comparison?
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		motorSampleTime = atoi((char*) pcParameter);
+
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		strncat((char*) pcWriteBuffer, "Duration (s): ", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		motorSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
+
+		/* Start the motor control sampling task */
+		StartMotorControlSamplingTask(motorSampleTime, motorSampleDuration);
+	}
+
+	/* Update return value and parameter index */
+	if (lParameterNumber == startMotorSamplingCommand.cExpectedNumberOfParameters) {
+		/* If this is the last parameter then there are no more strings to return after this one. */
+		xReturn = pdFALSE;
+		lParameterNumber = 0;
+	} else {
+		/* There are more parameters to return after this one. */
+		xReturn = pdTRUE;
+		lParameterNumber++;
+	}
+
+	return xReturn;
+}
+
+/**
+ * @brief  Stops printing of motor control signal sample values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStopMotorSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer, "Stopping printing of sensor sample values...\r\n", xWriteBufferLen);
+
+	/* Stop the motor control sample printing task */
+	StopMotorControlSamplingTask();
 
 	return pdFALSE;
 }

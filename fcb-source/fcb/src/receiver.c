@@ -249,9 +249,12 @@ ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const u
  * @retval RECEIVER_OK if task deleted
  */
 ReceiverErrorStatus StopReceiverSamplingTask(void) {
-	if(ReceiverPrintSamplingTaskHandle != NULL)
+	if(ReceiverPrintSamplingTaskHandle != NULL) {
 		vTaskDelete(ReceiverPrintSamplingTaskHandle);
-	return RECEIVER_OK;
+		ReceiverPrintSamplingTaskHandle = NULL;
+		return RECEIVER_OK;
+	}
+	return RECEIVER_ERROR;
 }
 
 /*

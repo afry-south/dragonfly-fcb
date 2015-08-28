@@ -18,7 +18,15 @@
 
 /* Includes */
 #include "motor_control.h"
+#include "usbd_cdc_if.h"
 #include "fcb_error.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+
+#include <string.h>
+#include <stdio.h>
 
 /* Private typedef -----------------------------------------------------------*/
 
@@ -43,7 +51,14 @@ MotorControlValues_TypeDef MotorControlValues;
 /* Timer time base handler */
 TIM_HandleTypeDef MotorControlTimHandle;
 
+/* Task handle for printing of sensor values task */
+xTaskHandle MotorControlPrintSamplingTaskHandle = NULL;
+static volatile uint16_t motorControlPrintSampleTime;
+static volatile uint16_t motorControlPrintSampleDuration;
+
 /* Private function prototypes -----------------------------------------------*/
+static void MotorControlPrintSamplingTask(void const *argument);
+
 /* Exported functions --------------------------------------------------------*/
 
 /*
@@ -179,6 +194,75 @@ void PrintMotorControlValues(void)
 			MotorControlValues.Motor2, MotorControlValues.Motor3, MotorControlValues.Motor4);
 
 	USBComSendString(motorCtrlString);
+}
+
+/*
+ * @brief  Creates a task to sample print motor signal values over USB
+ * @param  sampleTime : Sets how often a sample should be printed
+ * @param  sampleDuration : Sets for how long sampling should be performed
+ * @retval MOTORCTRL_OK if thread started, else MOTORCTRL_ERROR
+ */
+MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
+	motorControlPrintSampleTime = sampleTime;
+	motorControlPrintSampleDuration = sampleDuration;
+
+	/* Motor control signal value print sampling handler thread creation
+	 * Task function pointer: MotorControlPrintSamplingTask
+	 * Task name: MOTORCTRL_PRINT_SAMPL
+	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Parameter: NULL
+	 * Priority: MOTOR_CONTROL_PRINT_SAMPLING_THREAD_PRIO ([0, inf] possible)
+	 * Handle: MotorControlPrintSamplingTaskHandle
+	 * */
+	if (pdPASS != xTaskCreate((pdTASK_CODE )MotorControlPrintSamplingTask, (signed portCHAR*)"MOTORCTRL_PRINT_SAMPL",
+			configMINIMAL_STACK_SIZE, NULL, MOTOR_CONTROL_PRINT_SAMPLING_THREAD_PRIO, &MotorControlPrintSamplingTaskHandle)) {
+		ErrorHandler();
+		return MOTORCTRL_ERROR;
+	}
+
+	return MOTORCTRL_OK;
+}
+
+/*
+ * @brief  Stops motor control print sampling by deleting the task
+ * @param  None
+ * @retval MOTORCTRL_OK if task deleted, MOTORCTRL_ERROR if not
+ */
+MotorControlErrorStatus StopMotorControlSamplingTask(void) {
+	if(MotorControlPrintSamplingTaskHandle != NULL) {
+		vTaskDelete(MotorControlPrintSamplingTaskHandle);
+		MotorControlPrintSamplingTaskHandle = NULL;
+		return MOTORCTRL_OK;
+	}
+	return MOTORCTRL_ERROR;
+}
+
+/* Private functions ---------------------------------------------------------*/
+
+/**
+ * @brief  Task code handles motor control signal print sampling
+ * @param  argument : Unused parameter
+ * @retval None
+ */
+static void MotorControlPrintSamplingTask(void const *argument) {
+	(void) argument;
+
+	portTickType xLastWakeTime;
+	portTickType xSampleStartTime;
+
+	/* Initialise the xLastWakeTime variable with the current time */
+	xLastWakeTime = xTaskGetTickCount();
+	xSampleStartTime = xLastWakeTime;
+
+	for (;;) {
+		vTaskDelayUntil(&xLastWakeTime, motorControlPrintSampleTime);
+
+		PrintMotorControlValues();
+
+		/* If sampling duration exceeded, delete task to stop sampling */
+		if (xTaskGetTickCount() >= xSampleStartTime + motorControlPrintSampleDuration * configTICK_RATE_HZ)
+			StopMotorControlSamplingTask();
+	}
 }
 
 /* Private functions ---------------------------------------------------------*/
