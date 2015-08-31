@@ -12,6 +12,7 @@
 
 #include "stm32f3_discovery.h"
 
+#include "fcb_error.h"
 #include "receiver.h"
 #include "motor_control.h"
 #include "pid_control.h"
@@ -21,19 +22,50 @@
 #include "queue.h"
 
 /* Private typedef -----------------------------------------------------------*/
+
 /* Private define ------------------------------------------------------------*/
+#define FLIGHT_CONTROL_TASK_PRIO		configMAX_PRIORITIES-1
+#define FLIGHT_CONTROL_TASK_PERIOD		10 // [ms]
+
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
 RefSignals_TypeDef RefSignals; // Control reference signals
 
 /* Flight mode */
-enum FlightControlMode flightMode = FLIGHT_CONTROL_IDLE;
+enum FlightControlMode flightControlMode = FLIGHT_CONTROL_IDLE;
+
+xTaskHandle FlightControlTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
-static void UpdateControl(void);
+static void UpdateFlightControl(void);
 static void SetFlightMode(void);
 static void SetReferenceSignals(void);
+
+static void FlightControlTask(void const *argument);
+
+/* Exported functions --------------------------------------------------------*/
+
+/**
+ * @brief  Creates flight control task.
+ * @param  None.
+ * @retval None.
+ */
+void CreateFlightControlTask(void) {
+	/* Flight Control task creation
+	 * Task function pointer: FlightControlTask
+	 * Task name: FLIGHT_CTRL
+	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Parameter: NULL
+	 * Priority: FLIGHT_CONTROL_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
+	 * Handle: FlightControlTaskHandle
+	 * */
+	if (pdPASS
+			!= xTaskCreate((pdTASK_CODE )FlightControlTask, (signed portCHAR*)"FLIGHT_CTRL", configMINIMAL_STACK_SIZE,
+					NULL, FLIGHT_CONTROL_TASK_PRIO, &FlightControlTaskHandle)) {
+		ErrorHandler();
+	}
+}
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -42,24 +74,24 @@ static void SetReferenceSignals(void);
  * @param  None.
  * @retval None.
  */
-static void UpdateControl(void) {
+static void UpdateFlightControl(void) {
 
 	/* Updates the current flight mode */
 	SetFlightMode();
 
-	switch (flightMode) {
+	switch (flightControlMode) {
 
 	case FLIGHT_CONTROL_IDLE:
 		ShutdownMotors();
 		return;
 
 	case FLIGHT_CONTROL_RAW:
-		// Check that motors are armed
-		RawFlightControl();
+		// TODO Check that motors are armed
+		MotorAllocationRaw();
 		return;
 
 	case FLIGHT_CONTROL_PID:
-		// Check that motors are armed
+		// TODO Check that motors are armed
 		SetReferenceSignals();
 		// Do PID control
 		// Set motors
@@ -77,11 +109,11 @@ static void UpdateControl(void) {
  */
 static void SetFlightMode(void) {
 	if (!IsReceiverActive()) {
-		flightMode = FLIGHT_CONTROL_IDLE;
+		flightControlMode = FLIGHT_CONTROL_IDLE;
 	} else if (GetReceiverRawFlightSet()) {
-		flightMode = FLIGHT_CONTROL_RAW;
+		flightControlMode = FLIGHT_CONTROL_RAW;
 	} else {
-		flightMode = FLIGHT_CONTROL_IDLE;
+		flightControlMode = FLIGHT_CONTROL_IDLE;
 	}
 }
 
@@ -122,6 +154,27 @@ static void SetReferenceSignals(void) {
 	else
 	RefSignals.YawRate = GetRCmid();
 #endif
+}
+
+/**
+ * @brief  Flight control task function
+ * @param  argument : Unused parameter
+ * @retval None
+ */
+static void FlightControlTask(void const *argument) {
+	(void) argument;
+
+	portTickType xLastWakeTime;
+
+	/* Initialise the xLastWakeTime variable with the current time */
+	xLastWakeTime = xTaskGetTickCount();
+
+	for (;;) {
+		vTaskDelayUntil(&xLastWakeTime, FLIGHT_CONTROL_TASK_PERIOD);
+
+		/* Update the flight control state and perform flight control activities */
+		UpdateFlightControl();
+	}
 }
 
 /**

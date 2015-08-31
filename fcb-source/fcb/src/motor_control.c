@@ -20,6 +20,7 @@
 #include "motor_control.h"
 #include "usbd_cdc_if.h"
 #include "fcb_error.h"
+#include "receiver.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -198,6 +199,57 @@ void PrintMotorControlValues(void)
 			MotorControlValues.Motor2, MotorControlValues.Motor3, MotorControlValues.Motor4);
 
 	USBComSendString(motorCtrlString);
+}
+
+/*
+ * @brief  Allocates RC receiver input directly to motor output
+ * @param  None.
+ * @retval None.
+ */
+void MotorAllocationRaw(void) {
+	int32_t u1, u2, u3, u4, m1, m2, m3, m4;
+
+	if (IsReceiverActive()) {
+		u1 = ESC_MIN_OUTPUT + (ESC_MAX_OUTPUT-ESC_MIN_OUTPUT)*(GetThrottleReceiverChannel()-INT16_MIN)/UINT16_MAX;
+		u2 = u1*GetAileronReceiverChannel()/INT16_MAX;
+		u3 = u1*GetElevatorReceiverChannel()/INT16_MAX;
+		u4 = u1*GetRudderReceiverChannel()/INT16_MAX;
+
+		// Motor 2 and 4 CW, Motor 1 and 3 CCW
+		// TODO make define that specifies motor location on aircraft and rotational direction
+		m1 = u1 +u2 - u3 + MOTOR_CHANNEL1_ROTATION_DIRECTION*u4;
+		m2 = u1 -u2 - u3 + MOTOR_CHANNEL2_ROTATION_DIRECTION*u4;
+		m3 = u1 -u2 + u3 + MOTOR_CHANNEL3_ROTATION_DIRECTION*u4;
+		m4 = u1 +u2 + u3 + MOTOR_CHANNEL4_ROTATION_DIRECTION*u4;
+
+		/* Check unsigned 16-bit overflow */
+		if (m1 > UINT16_MAX)
+			m1 = UINT16_MAX;
+		if (m2 > UINT16_MAX)
+			m2 = UINT16_MAX;
+		if (m3 > UINT16_MAX)
+			m3 = UINT16_MAX;
+		if (m4 > UINT16_MAX)
+			m4 = UINT16_MAX;
+
+		/* Check unsigned 16-bit underflow */
+		if (m1 < 0)
+			m1 = 0;
+		if (m2 < 0)
+			m2 = 0;
+		if (m3 < 0)
+			m3 = 0;
+		if (m4 < 0)
+			m4 = 0;
+
+		/* Set the motor signal values */
+		SetMotor1(m1);
+		SetMotor2(m2);
+		SetMotor3(m3);
+		SetMotor4(m4);
+	} else {
+		ShutdownMotors();
+	}
 }
 
 /*

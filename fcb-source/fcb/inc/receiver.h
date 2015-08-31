@@ -14,6 +14,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
+#include <stdbool.h>
+
 /* Exported constants --------------------------------------------------------*/
 
 /* Definitions for Primary Receiver ##########################################*/
@@ -177,6 +179,8 @@ uint32_t GetElevatorReceiverChannelPeriodTicks(void);
 uint32_t GetRudderReceiverChannelPeriodTicks(void);
 uint32_t GetGearReceiverChannelPeriodTicks(void);
 uint32_t GetAux1ReceiverChannelPeriodTicks(void);
+
+bool GetReceiverRawFlightSet(void);
 
 #endif /* __RECEIVER_H */
 

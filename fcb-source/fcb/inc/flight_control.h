@@ -14,6 +14,7 @@
 /* Exported constants --------------------------------------------------------*/
 
 /* Physical properties of aircraft */
+// TODO make physical properties struct
 #define LENGTH_ARM 	        0.30		// Quadcopter arm length [m]
 #define MASS		        2.100		// Total mass of the quadcopter [kg]
 #define IXX					0.030		// X-axis moment of inertia [kg/(m^2)]
@@ -44,6 +45,7 @@ typedef struct
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported function prototypes --------------------------------------------- */
+void CreateFlightControlTask(void);
 
 #endif /* __FLIGHT_CONTROL_H */
 

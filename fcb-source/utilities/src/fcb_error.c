@@ -9,6 +9,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "fcb_error.h"
 #include "usbd_cdc_if.h"
+#include "motor_control.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -28,7 +29,8 @@ void ErrorHandler(void) {
   BSP_LED_On (LED9);
   BSP_LED_On (LED10);
 
-  // TODO turn off motors!
+  /* Shut down motors immediately if error occurs */
+  ShutdownMotors();
 
   /* TODO in the future this function should accept a text
    * string that could be printed to USB, or elsewhere

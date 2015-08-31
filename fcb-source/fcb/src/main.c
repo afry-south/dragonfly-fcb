@@ -64,9 +64,7 @@ int main(void) {
 	/* Initialize RTOS tasks */
 	InitRTOS();
 
-	while (1) {
-		ToggleLEDs();
-	}
+	while (1);
 }
 
 /**
@@ -185,6 +183,7 @@ static void InitSystem(void) {
  */
 static void InitRTOS(void) {
 	/* # CREATE THREADS ####################################################### */
+	CreateFlightControlTask();
 	CreateUSBComTasks();
 
 	/* # CREATE QUEUES ######################################################## */

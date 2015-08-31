@@ -423,6 +423,11 @@ USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDa
 	return result;
 }
 
+/**
+ * @brief  Creates tasks used for USB communication
+ * @param  None
+ * @retval None
+ */
 void CreateUSBComTasks(void) {
 	/* USB Virtual Com Port Rx handler task creation
 	 * Task function pointer: USBComPortRXTask
@@ -453,6 +458,11 @@ void CreateUSBComTasks(void) {
 	}
 }
 
+/**
+ * @brief  Creates RTOS queues used for USB communication
+ * @param  None
+ * @retval None
+ */
 void CreateUSBComQueues(void) {
 	/* # Create queue for outgoing data ####################################### */
 	usbComTxQueue = xQueueCreate(USB_COM_TX_QUEUE_ITEMS, sizeof(UsbComPortTxQueueItem_TypeDef));
@@ -461,6 +471,11 @@ void CreateUSBComQueues(void) {
 	vQueueAddToRegistry(usbComTxQueue, (signed portCHAR*) "usbComTxQueue");
 }
 
+/**
+ * @brief  Creates semaphores used for USB communication
+ * @param  None
+ * @retval None
+ */
 void CreateUSBComSemaphores(void) {
 	USBCOMRxDataSem = xSemaphoreCreateBinary();
 	if (USBCOMRxDataSem == NULL) {

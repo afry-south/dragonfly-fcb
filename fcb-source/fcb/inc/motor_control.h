@@ -50,6 +50,12 @@ typedef enum {
 #define ESC_MAX_OUTPUT                          48000 // 2.0 ms pulse
 #define ESC_MIN_OUTPUT                          24000 // 1.0 ms pulse
 
+/* Defines the rotational direction of each motor: 1 means CCW, -1 means CW */
+#define MOTOR_CHANNEL1_ROTATION_DIRECTION		1
+#define MOTOR_CHANNEL2_ROTATION_DIRECTION		-1
+#define MOTOR_CHANNEL3_ROTATION_DIRECTION		1
+#define MOTOR_CHANNEL4_ROTATION_DIRECTION		-1
+
 /* Data fitting variables to map physical outputs to PWM widths
  * Thrust T = AT*t_out + CT 		[Unit: N] [t_out unit in seconds]
  * Draq torque Q = BQ*t_out + DQ	[Unit: Nm]
@@ -65,6 +71,8 @@ void SetMotor1(uint16_t ctrlVal);
 void SetMotor2(uint16_t ctrlVal);
 void SetMotor3(uint16_t ctrlVal);
 void SetMotor4(uint16_t ctrlVal);
+
+void MotorAllocationRaw(void);
 void ShutdownMotors(void);
 
 MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
