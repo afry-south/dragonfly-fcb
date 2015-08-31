@@ -85,7 +85,6 @@ uint8_t InitialiseGyroscope(void) {
     /* sets full scale (and sensitivity) plus data rate of L3GD20 gyroscope */
     if(BSP_GYRO_Init() != HAL_OK)
     {
-
         /* Initialization Error */
     	ErrorHandler();
     }

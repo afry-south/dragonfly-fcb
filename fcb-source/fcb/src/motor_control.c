@@ -16,7 +16,7 @@
  *          can spin at up to 8700 rpm providing a lifting force of ~12 N.
  ******************************************************************************/
 
-/* Includes */
+/* Includes ------------------------------------------------------------------*/
 #include "motor_control.h"
 #include "usbd_cdc_if.h"
 #include "fcb_error.h"
@@ -32,7 +32,6 @@
 
 /* Private define ------------------------------------------------------------*/
 #define MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO			1
-
 #define MOTOR_CONTROL_PRINT_MAX_STRING_SIZE				128
 
 /* Private macro -------------------------------------------------------------*/
@@ -149,7 +148,7 @@ void MotorControlConfig(void) {
 void SetMotor1(uint16_t ctrlVal) {
 	MotorControlValues.Motor1 = ctrlVal;
 	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
-	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR1_CHANNEL, (uint16_t )ccrVal);
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR1_CHANNEL, (uint16_t)ccrVal);
 }
 
 /*
@@ -160,7 +159,7 @@ void SetMotor1(uint16_t ctrlVal) {
 void SetMotor2(uint16_t ctrlVal) {
 	MotorControlValues.Motor2 = ctrlVal;
 	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
-	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR2_CHANNEL, ccrVal);
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR2_CHANNEL, (uint16_t)ccrVal);
 }
 
 /*
@@ -171,7 +170,7 @@ void SetMotor2(uint16_t ctrlVal) {
 void SetMotor3(uint16_t ctrlVal) {
 	MotorControlValues.Motor3 = ctrlVal;
 	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
-	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR3_CHANNEL, ccrVal);
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR3_CHANNEL, (uint16_t)ccrVal);
 }
 
 /*
@@ -182,9 +181,14 @@ void SetMotor3(uint16_t ctrlVal) {
 void SetMotor4(uint16_t ctrlVal) {
 	MotorControlValues.Motor4 = ctrlVal;
 	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
-	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR4_CHANNEL, ccrVal);
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR4_CHANNEL, (uint16_t)ccrVal);
 }
 
+/*
+ * @brief  Prints motor control signal values
+ * @param  None.
+ * @retval None.
+ */
 void PrintMotorControlValues(void)
 {
 	static char motorCtrlString[MOTOR_CONTROL_PRINT_MAX_STRING_SIZE];
@@ -195,6 +199,128 @@ void PrintMotorControlValues(void)
 
 	USBComSendString(motorCtrlString);
 }
+
+/*
+ * @brief  Turns off all the motors
+ * @param  None.
+ * @retval None.
+ */
+void ShutdownMotors(void) {
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR1_CHANNEL, 0);
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR2_CHANNEL, 0);
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR3_CHANNEL, 0);
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR4_CHANNEL, 0);
+}
+
+/*
+ * @brief  Allocates the desired thrust force and moments to corresponding motor action.
+ * 		   Data has been fitted to map thrust force [N] and roll/pitch/yaw moments [Nm] to
+ * 		   motor output PWM widths [us] of each of the four motors.
+ * @param  None
+ * @retval None
+ */
+// TODO below is old code, but we need motor control allocated with mapping to thrust force and rotational moments
+// void ControlAllocation(void) {
+//	PWMMotorTimes.M1 = (BQ * LENGTH_ARM * CtrlSignals.Thrust
+//			- M_SQRT2 * BQ * CtrlSignals.Roll - M_SQRT2 * BQ * CtrlSignals.Pitch
+//			- AT * LENGTH_ARM * CtrlSignals.Yaw - 4 * BQ * CT * LENGTH_ARM)
+//			/ ((float) 4 * AT * BQ * LENGTH_ARM);
+//	PWMMotorTimes.M2 = (BQ * LENGTH_ARM * CtrlSignals.Thrust
+//			+ M_SQRT2 * BQ * CtrlSignals.Roll - M_SQRT2 * BQ * CtrlSignals.Pitch
+//			+ AT * LENGTH_ARM * CtrlSignals.Yaw - 4 * BQ * CT * LENGTH_ARM)
+//			/ ((float) 4 * AT * BQ * LENGTH_ARM);
+//	PWMMotorTimes.M3 = (BQ * LENGTH_ARM * CtrlSignals.Thrust
+//			+ M_SQRT2 * BQ * CtrlSignals.Roll + M_SQRT2 * BQ * CtrlSignals.Pitch
+//			- AT * LENGTH_ARM * CtrlSignals.Yaw - 4 * BQ * CT * LENGTH_ARM)
+//			/ ((float) 4 * AT * BQ * LENGTH_ARM);
+//	PWMMotorTimes.M4 = (BQ * LENGTH_ARM * CtrlSignals.Thrust
+//			- M_SQRT2 * BQ * CtrlSignals.Roll + M_SQRT2 * BQ * CtrlSignals.Pitch
+//			+ AT * LENGTH_ARM * CtrlSignals.Yaw - 4 * BQ * CT * LENGTH_ARM)
+//			/ ((float) 4 * AT * BQ * LENGTH_ARM);
+
+//  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
+//    PWMMotorTimes.M1 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M1 = PWMMotorTimes.M1;
+//  else
+//    PWMMotorTimes.M1 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
+//    PWMMotorTimes.M2 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M2 = PWMMotorTimes.M2;
+//  else
+//    PWMMotorTimes.M2 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
+//    PWMMotorTimes.M3 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M3 = PWMMotorTimes.M3;
+//  else
+//    PWMMotorTimes.M3 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
+//    PWMMotorTimes.M4 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M4 = PWMMotorTimes.M4;
+//  else
+//    PWMMotorTimes.M4 = MIN_ESC_VAL;
+// }
+
+/*
+ * @brief  Manual mode allocation - allocates raw RC input.
+ * @param  None
+ * @retval None
+ */
+//void ManualModeAllocation(void) {
+//#ifdef TODO Manual mode allocation should perhaps also be mapped to thrust and rotational moments, but controlled
+//				directly from RC rather than through control algorithm (is it really necessary?)
+//	PWMMotorTimes.M1 = 0.9
+//	* (PWMInputTimes.Throttle - 2 * (PWMInputTimes.Aileron - GetRCmid())
+//			- 2 * (PWMInputTimes.Elevator - GetRCmid())
+//			- 2 * (PWMInputTimes.Rudder - GetRCmid()));
+//	PWMMotorTimes.M2 = 0.9
+//	* (PWMInputTimes.Throttle + 2 * (PWMInputTimes.Aileron - GetRCmid())
+//			- 2 * (PWMInputTimes.Elevator - GetRCmid())
+//			+ 2 * (PWMInputTimes.Rudder - GetRCmid()));
+//	PWMMotorTimes.M3 = 0.9
+//	* (PWMInputTimes.Throttle + 2 * (PWMInputTimes.Aileron - GetRCmid())
+//			+ 2 * (PWMInputTimes.Elevator - GetRCmid())
+//			- 2 * (PWMInputTimes.Rudder - GetRCmid()));
+//	PWMMotorTimes.M4 = 0.9
+//	* (PWMInputTimes.Throttle - 2 * (PWMInputTimes.Aileron - GetRCmid())
+//			+ 2 * (PWMInputTimes.Elevator - GetRCmid())
+//			+ 2 * (PWMInputTimes.Rudder - GetRCmid()));
+//
+//  if (PWMMotorTimes.M1 > MAX_ESC_VAL)
+//    PWMMotorTimes.M1 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M1 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M1 = PWMMotorTimes.M1;
+//  else
+//    PWMMotorTimes.M1 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M2 > MAX_ESC_VAL)
+//    PWMMotorTimes.M2 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M2 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M2 = PWMMotorTimes.M2;
+//  else
+//    PWMMotorTimes.M2 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M3 > MAX_ESC_VAL)
+//    PWMMotorTimes.M3 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M3 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M3 = PWMMotorTimes.M3;
+//  else
+//    PWMMotorTimes.M3 = MIN_ESC_VAL;
+//
+//  if (PWMMotorTimes.M4 > MAX_ESC_VAL)
+//    PWMMotorTimes.M4 = MAX_ESC_VAL;
+//  else if (PWMMotorTimes.M4 >= MIN_ESC_VAL)
+//    PWMMotorTimes.M4 = PWMMotorTimes.M4;
+//  else
+//    PWMMotorTimes.M4 = MIN_ESC_VAL;
+//#endif
+//}
 
 /*
  * @brief  Creates a task to sample print motor signal values over USB

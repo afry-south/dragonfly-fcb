@@ -11,7 +11,7 @@
 #ifndef __MOTOR_CONTROL_H
 #define __MOTOR_CONTROL_H
 
-/* Includes */
+/* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
 /* Exported types ------------------------------------------------------------*/
@@ -50,16 +50,25 @@ typedef enum {
 #define ESC_MAX_OUTPUT                          48000 // 2.0 ms pulse
 #define ESC_MIN_OUTPUT                          24000 // 1.0 ms pulse
 
+/* Data fitting variables to map physical outputs to PWM widths
+ * Thrust T = AT*t_out + CT 		[Unit: N] [t_out unit in seconds]
+ * Draq torque Q = BQ*t_out + DQ	[Unit: Nm]
+ */
+#define AT 			15520.7
+#define CT 			-18.6312
+#define BQ 			478.966
+#define DQ 			-0.577590
+
 /* Exported functions ------------------------------------------------------- */
 void MotorControlConfig(void);
 void SetMotor1(uint16_t ctrlVal);
 void SetMotor2(uint16_t ctrlVal);
 void SetMotor3(uint16_t ctrlVal);
 void SetMotor4(uint16_t ctrlVal);
+void ShutdownMotors(void);
 
 MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 MotorControlErrorStatus StopMotorControlSamplingTask(void);
-
 void PrintMotorControlValues(void);
 
 #endif /* __MOTOR_CONTROL_H */

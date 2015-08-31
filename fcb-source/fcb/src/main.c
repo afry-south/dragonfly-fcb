@@ -13,7 +13,6 @@
 #include "common.h"
 #include "motor_control.h"
 #include "flight_control.h"
-#include "sensors.h"
 #include "receiver.h"
 #include "usbd_cdc_if.h"
 #include "usb_cdc_cli.h"
@@ -30,8 +29,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-
 /* Private macro -------------------------------------------------------------*/
+
 /* Private variables ---------------------------------------------------------*/
 volatile uint8_t UserButtonPressed;
 

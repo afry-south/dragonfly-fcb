@@ -1,42 +1,21 @@
 /****************************************************************************
- * @file    sensors.c
+ * @file    state_estimation.c
  * @author  Dragonfly
  * @version v. 0.0.1
  * @date    2014-09-26
- * @brief   Functions for reading and filtering the on-board MEMS sensor
- * 		   utilities.
+ * @brief   Module implements the Kalman state estimation algorithm
  *****************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include "sensors.h"
-#include "flight_control.h"
-#include <stdlib.h>
-#include <math.h>
+#include "state_estimation.h"
+
+#include "stm32f3xx.h"
 
 /* Private variables ---------------------------------------------------------*/
-
-/* Sensor */
-volatile float MagBuffer[3] = {0.0f}, AccBuffer[3] = {0.0f}, GyroBuffer[3] = {0.0f}, AccAttitudeBuffer[2] = {0.0f};
-
-uint16_t GyroCalSample = 0;
-double CalRollSum = 0.0, CalPitchSum = 0.0, CalYawSum = 0.0;
-volatile char GyroCalibrated = 1; // TODO RESET TO 0
-
-float AccOffsets[3] = {0.0f};
-uint16_t AccCalSample = 0;
-float CalAccXSum = 0.0, CalAccYSum = 0.0, CalAccZSum = 0.0;
-char AccXCalibrated = 0, AccYCalibrated = 0, AccZCalibrated = 0;
-volatile char AccCalibrated = 1; // TODO RESET TO 0
-
 float MagOffsets[3] = {0.0f};
 uint16_t MagCalSample = 0;
 float CalMagXMax = 1.0, CalMagXMin = -1.0, CalMagYMax = 1.0, CalMagYMin = -1.0, CalMagZMax = 1.0, CalMagZMin = -1.0;
 float MagXNorm = 1.0, MagYNorm = 1.0, MagZNorm = 1.0;
-volatile char MagCalibrated = 1; // TODO RESET TO 0
-
-float InitRollSum = 0.0, InitPitchSum = 0.0, InitYawSum = 0.0;
-uint16_t InitSample = 0;
-volatile char StatesInitialized = 0;
 
 StateVector_TypeDef States;
 
@@ -45,136 +24,7 @@ KalmanFilter_TypeDef PitchEstimator;
 KalmanFilter_TypeDef YawRateEstimator;
 KalmanFilter_TypeDef ZVelocityEstimator;
 
-/* Data acquisition variables */
-uint8_t ctrlx[2];
-char ctrlxIsRead = 0;
-
-uint8_t ctrlb = 0;
-char ctrlbIsRead = 0;
-
 /* Private functions -----------------------------------------------*/
-
-/* GyroConfig
- * @brief  Configures the MEMS to gyroscope application
- * @param  None
- * @retval None
- */
-void GyroConfig(void)
-{
-#ifdef TODO
-  L3GD20_InitTypeDef L3GD20_InitStructure;
-  L3GD20_FilterConfigTypeDef L3GD20_FilterStructure;
-
-  /* Configure MEMS L3GD20 (See datasheet for more info) */
-  L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
-  L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_1;
-  L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
-  L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_3;
-  L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;
-  L3GD20_InitStructure.Endianness = L3GD20_BLE_LSB;
-  L3GD20_InitStructure.Full_Scale = L3GD20_FULLSCALE_250;
-  L3GD20_Init(&L3GD20_InitStructure);
-
-  L3GD20_FilterStructure.HighPassFilter_Mode_Selection = L3GD20_HPM_NORMAL_MODE_RES;
-  L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency = L3GD20_HPFCF_0;
-  L3GD20_FilterConfig(&L3GD20_FilterStructure) ;
-
-  L3GD20_FilterCmd(L3GD20_HIGHPASSFILTER_ENABLE);
-#endif
-}
-
-/**
- * @brief  Calculate the angular Data rate Gyroscope.
- * @param  pfData : Data out pointer
- * @retval None
- */
-void GyroReadAngRate(volatile float* pfData)
-{
-#ifdef TODO
-  uint8_t tmpbuffer[6] ={0};
-  int16_t RawData[3] = {0};
-  uint8_t tmpreg = 0;
-  float sensitivity = 0;
-  int i = 0;
-
-  L3GD20_Read(&tmpreg,L3GD20_CTRL_REG4_ADDR,1);
-
-  L3GD20_Read(tmpbuffer,L3GD20_OUT_X_L_ADDR,6);
-
-  /* check in the control register 4 the data alignment (Big Endian or Little Endian)*/
-  if(!(tmpreg & 0x40))
-    {
-      for(i=0; i<3; i++)
-        {
-          RawData[i]=(int16_t)(((uint16_t)tmpbuffer[2*i+1] << 8) + tmpbuffer[2*i]);
-        }
-    }
-  else
-    {
-      for(i=0; i<3; i++)
-        {
-          RawData[i]=(int16_t)(((uint16_t)tmpbuffer[2*i] << 8) + tmpbuffer[2*i+1]);
-        }
-    }
-
-  /* Switch the sensitivity value set in the CRTL4 */
-  switch(tmpreg & 0x30)
-  {
-  case 0x00:
-    sensitivity = L3G_Sensitivity_250dps;
-    break;
-
-  case 0x10:
-    sensitivity = L3G_Sensitivity_500dps;
-    break;
-
-  case 0x20:
-    sensitivity = L3G_Sensitivity_2000dps;
-    break;
-  }
-
-  /* Divide by sensitivity */
-  pfData[0] = -(float)RawData[1]/sensitivity * PI/180;	// Output in radians/second
-  pfData[1] = (float)RawData[0]/sensitivity * PI/180;		// Raw data index inverted and minus sign introduced
-  pfData[2] = (float)RawData[2]/sensitivity * PI/180;		// to align gyroscope with board directions
-#endif
-}
-
-/** CalibrateGyro
- * @brief  Calculate the Gyroscope sensor offset
- * @param  None.
- * @retval None.
- */
-void CalibrateGyro(void)
-{
-#ifdef TODO
-  if(!GyroCalibrated)
-    {
-      CalRollSum += GyroBuffer[0];
-      CalPitchSum += GyroBuffer[1];
-      CalYawSum += GyroBuffer[2];
-      GyroCalSample++;
-
-      if(GyroCalSample >= GYRO_CALIBRATION_SAMPLES)
-        {
-          States.rollRateBias = CalRollSum/((float)GYRO_CALIBRATION_SAMPLES);
-          States.pitchRateBias = CalPitchSum/((float)GYRO_CALIBRATION_SAMPLES);
-          States.yawRateBias = CalYawSum/((float)GYRO_CALIBRATION_SAMPLES);
-          GyroCalibrated = 1;
-        }
-    }
-#endif
-}
-
-/** GetGyroCalibrated
- * @brief  Returns 1 if gyroscope has been calibrated
- * @param  None.
- * @retval None.
- */
-char GetGyroCalibrated(void)
-{
-  return GyroCalibrated;
-}
 
 /** CompassConfig
  * @brief  Configure the MEMS to compass application.
@@ -218,30 +68,6 @@ void CompassConfig(void)
 #endif
 }
 
-//void DMA1_Channel7_IRQHandler(void)
-//{
-//	if (DMA_GetFlagStatus(DMA1_FLAG_TC7))
-//	{
-//	/* Clear transmission complete flag */
-//	DMA_ClearFlag(DMA1_FLAG_TC7);
-
-//	I2C_DMACmd(MPU6050_I2C, DISABLE);
-//	/* Send I2C1 STOP Condition */
-//	I2C_GenerateSTOP(MPU6050_I2C, ENABLE);
-//	/* Disable DMA channel*/
-//	DMA_Cmd(MPU6050_DMA_Channel, DISABLE);
-
-//Read Accel data from byte 0 to byte 2
-//	for(i=0; i<3; i++)
-//	AccelGyro[i]=((s16)((u16)I2C_Rx_Buffer[2*i] << 8) + I2C_Rx_Buffer[2*i+1]);
-//	//Skip byte 3 of temperature data
-//	//Read Gyro data from byte 4 to byte 6
-//	for(i=4; i<7; i++)
-//	AccelGyro[i-1]=((s16)((u16)I2C_Rx_Buffer[2*i] << 8) + I2C_Rx_Buffer[2*i+1]);
-//
-//	}
-//}
-
 /** CompassReadAcc
  * @brief Read LSM303DLHC output register, and calculate the acceleration ACC=(1/SENSITIVITY)* (out_h*256+out_l)/16 (12 bit representation)
  * @param pnData: pointer to float buffer where to store data
@@ -249,6 +75,7 @@ void CompassConfig(void)
  */
 void CompassReadAcc(volatile float* pfData)
 {
+	(void) pfData; // Silence compiler warnings
 #ifdef TODO
   int16_t pnRawData[3];
   uint8_t buffer[6], cDivider;
@@ -324,6 +151,7 @@ void CompassReadAcc(volatile float* pfData)
  */
 void AccAttitude(volatile float* pfData)
 {
+	(void) pfData; // Silence compiler warnings
 #ifdef TODO
   float SinAccRoll = -AccBuffer[1];
   float CosAccRoll = sqrtf(1-SinAccRoll*SinAccRoll);
@@ -389,16 +217,6 @@ void CalibrateAcc(void)
 #endif
 }
 
-/** GetAccCalibrated
- * @brief  Returns 1 if accelerometer has been calibrated
- * @param  None.
- * @retval None.
- */
-char GetAccCalibrated(void)
-{
-  return AccCalibrated;
-}
-
 /** CompassReadMag
  * @brief  calculate the magnetic field Magn.
  * @param  pfData: pointer to the data out
@@ -406,6 +224,7 @@ char GetAccCalibrated(void)
  */
 void CompassReadMag(volatile float* pfData)
 {
+	(void) pfData; // Silence compiler warnings
 #ifdef TODO
   static uint8_t buffer[6] = {0};
   uint16_t Magn_Sensitivity_XY = 0, Magn_Sensitivity_Z = 0;
@@ -503,16 +322,6 @@ void CalibrateMag(void)
 #endif
 }
 
-/** GetMagCalibrated
- * @brief  Returns 1 if magnetometer has been calibrated
- * @param  None.
- * @retval None.
- */
-char GetMagCalibrated(void)
-{
-  return MagCalibrated;
-}
-
 /** InitializeStates
  * @brief  Initializes the attitude states
  * @param  None.
@@ -547,16 +356,6 @@ void InitializeStateEstimation(void)
 #endif
 }
 
-/** GetStatesInitialized
- * @brief  Returns 1 if accelerometer has been calibrated
- * @param  None.
- * @retval None.
- */
-char GetStatesInitialized(void)
-{
-  return StatesInitialized;
-}
-
 /* InitRollEstimator
  * @brief  Initializes the roll state Kalman estimator
  * @param  None
@@ -581,12 +380,12 @@ void InitRollEstimator(void)
  */
 void UpdateRollEstimate(void)
 {
+#ifdef TODO
   /* Get roll rate from sensors: RollRate = p + (q*sinRoll+r*cosRoll)*tanPitch */
   float rollRateGyro = GyroBuffer[0] + (GyroBuffer[1]*sinf(States.roll) + GyroBuffer[1]*cosf(States.roll))*tanf(States.pitch);
 
   /* Prediction */
   States.roll = States.roll + CONTROL_SAMPLE_PERTIOD*rollRateGyro - CONTROL_SAMPLE_PERTIOD*States.rollRateBias;
-  //States.rollRateBias = States.rollRateBias;
 
   RollEstimator.p11 = RollEstimator.p11-RollEstimator.p21*CONTROL_SAMPLE_PERTIOD - CONTROL_SAMPLE_PERTIOD*(RollEstimator.p12-RollEstimator.p22*CONTROL_SAMPLE_PERTIOD) + RollEstimator.q1;
   RollEstimator.p12 = RollEstimator.p12 - RollEstimator.p22*CONTROL_SAMPLE_PERTIOD;
@@ -604,6 +403,7 @@ void UpdateRollEstimate(void)
   RollEstimator.p12 = RollEstimator.p12*(1-RollEstimator.k1);
   RollEstimator.p21 = RollEstimator.p21 - RollEstimator.k2*RollEstimator.p11;
   RollEstimator.p22 = RollEstimator.p22 - RollEstimator.k2*RollEstimator.p12;
+#endif
 }
 
 /* InitPitchEstimator
@@ -630,12 +430,12 @@ void InitPitchEstimator(void)
  */
 void UpdatePitchEstimate(void)
 {
+#ifdef TODO
   /* Get pitch rate from sensors: PitchRate = q*cosRoll - r*sinRoll */
   float pitchRateGyro = GyroBuffer[1]*cosf(States.roll) - GyroBuffer[1]*sinf(States.roll);
 
   /* Prediction */
   States.pitch = States.pitch + CONTROL_SAMPLE_PERTIOD*pitchRateGyro - CONTROL_SAMPLE_PERTIOD*States.pitchRateBias;
-  //States.pitchRateBias = States.pitchRateBias;
 
   PitchEstimator.p11 = PitchEstimator.p11-PitchEstimator.p21*CONTROL_SAMPLE_PERTIOD - CONTROL_SAMPLE_PERTIOD*(PitchEstimator.p12-PitchEstimator.p22*CONTROL_SAMPLE_PERTIOD) + PitchEstimator.q1;
   PitchEstimator.p12 = PitchEstimator.p12 - PitchEstimator.p22*CONTROL_SAMPLE_PERTIOD;
@@ -653,6 +453,7 @@ void UpdatePitchEstimate(void)
   PitchEstimator.p12 = PitchEstimator.p12*(1-PitchEstimator.k1);
   PitchEstimator.p21 = PitchEstimator.p21 - PitchEstimator.k2*RollEstimator.p11;
   PitchEstimator.p22 = PitchEstimator.p22 - PitchEstimator.k2*PitchEstimator.p12;
+#endif
 }
 
 /* GetRoll
@@ -675,11 +476,6 @@ float GetPitch(void)
   return States.pitch;
 }
 
-void UpdateYawRateEstimate(void)
-{
-  States.yawRate = (GyroBuffer[1]*sinf(States.roll)+GyroBuffer[2]*cosf(States.roll))/cosf(States.pitch);
-}
-
 /* GetYawRate
  * @brief  Gets the yaw angular rate
  * @param  None
@@ -698,8 +494,10 @@ float GetYawRate(void)
  */
 void UpdateZVelocityEstimate(void)
 {
+#ifdef TODO
   float ZAcc = (-AccBuffer[0]*sinf(States.pitch)+AccBuffer[1]*sinf(States.roll)*cosf(States.pitch)+AccBuffer[2]*cosf(States.roll)*cosf(States.pitch))*G_ACC - G_ACC;
   States.ZVelocity += ZAcc*CONTROL_SAMPLE_PERTIOD;
+#endif
 }
 
 /* GetZVelocity
@@ -714,6 +512,7 @@ float GetZVelocity(void)
 
 float GetHeading(void)
 {
+#ifdef TODO
   float fTiltedX = MagBuffer[0]*cosf(States.pitch) + MagBuffer[1]*sinf(States.roll)*sinf(States.pitch) + MagBuffer[2]*cosf(States.roll)*sinf(States.pitch);
   float fTiltedY = MagBuffer[1]*cosf(States.roll) - MagBuffer[2]*sinf(States.roll);
 
@@ -725,19 +524,8 @@ float GetHeading(void)
     }
 
   return HeadingValue;
-}
-
-/* ReadSensors
- * @brief  Updates the sensor buffers with the latest sensor values
- * @param  None
- * @retval None
- */
-void ReadSensors(void)
-{
-  GyroReadAngRate(GyroBuffer);
-  CompassReadAcc(AccBuffer);
-  CompassReadMag(MagBuffer);
-  AccAttitude(AccAttitudeBuffer);
+#endif
+  return 0.0;
 }
 
 /* UpdateStates
@@ -754,21 +542,10 @@ void UpdateStates(void)
 }
 
 /**
- * @brief  Basic management of the L3GD20 timeout situation.
- * @param  None.
- * @retval None.
+ * @}
  */
-uint32_t L3GD20_TIMEOUT_UserCallback(void)
-{
-  return 0;
-}
 
 /**
- * @brief  Basic management of the LSM303DLHC timeout situation.
- * @param  None.
- * @retval None.
+ * @}
  */
-uint32_t LSM303DLHC_TIMEOUT_UserCallback(void)
-{
-  return 0;
-}
+/*****END OF FILE****/

@@ -96,3 +96,13 @@ void GetRegistersFromStack(uint32_t* pulFaultStackAddress) {
 
 	USBComSendString(hardFaultString);
 }
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/
+

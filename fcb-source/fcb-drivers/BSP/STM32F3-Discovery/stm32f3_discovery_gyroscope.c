@@ -144,10 +144,8 @@ uint8_t BSP_GYRO_Init(void)
     ctrlreg2 = (uint8_t) ((L3GD20_FilterStructure.HighPassFilter_Mode_Selection |\
                        L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency));		
 	
-    GyroscopeDrv->FilterConfig(ctrlreg2) ;
-  
+    GyroscopeDrv->FilterConfig(ctrlreg2);
     GyroscopeDrv->FilterCmd(L3GD20_HIGHPASSFILTER_DISABLE);
-
 
     ret = GYRO_OK;
   }
