@@ -15,14 +15,6 @@
 #include "receiver.h"
 
 /* Exported constants --------------------------------------------------------*/
-/* Exported types ------------------------------------------------------------*/
-
-typedef enum {
-	FLASH_ERROR = 0, FLASH_OK = !FLASH_ERROR
-} FlashErrorStatus;
-
-/* Exported macro ------------------------------------------------------------*/
-
 /* Flash definitions */
 #define FLASH_BASE_ADDR                 0x08000000              // Flash base address of STM32
 #define FLASH_PAGE_SIZE                 0x800                   // 2048 bytes (STM32F07x and STM32F09x)
@@ -47,6 +39,13 @@ typedef enum {
 #define FLASH_RECEIVER_CALIBRATION_PAGE         FLASH_SETTINGS_START_PAGE       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
 #define FLASH_RECEIVER_CALIBRATION_DATA_OFFSET  0                               // Storage byte offset from page base address (has to be word aligned)
 #define FLASH_RECEIVER_CALIBRATION_SIZE         sizeof(Receiver_CalibrationValues_TypeDef) + HAL_CRC_LENGTH_32B/4       // Added room for CRC
+
+/* Exported types ------------------------------------------------------------*/
+typedef enum {
+	FLASH_ERROR = 0, FLASH_OK = !FLASH_ERROR
+} FlashErrorStatus;
+
+/* Exported macro ------------------------------------------------------------*/
 
 /* Exported function prototypes --------------------------------------------- */
 FlashErrorStatus ReadCalibrationValuesFromFlash(

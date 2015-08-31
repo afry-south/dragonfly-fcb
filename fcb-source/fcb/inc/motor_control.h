@@ -15,6 +15,10 @@
 #include "stm32f3xx.h"
 
 /* Exported types ------------------------------------------------------------*/
+typedef enum {
+	MOTORCTRL_ERROR = 0, MOTORCTRL_OK = !MOTORCTRL_ERROR
+} MotorControlErrorStatus;
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 
@@ -52,6 +56,11 @@ void SetMotor1(uint16_t ctrlVal);
 void SetMotor2(uint16_t ctrlVal);
 void SetMotor3(uint16_t ctrlVal);
 void SetMotor4(uint16_t ctrlVal);
+
+MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
+MotorControlErrorStatus StopMotorControlSamplingTask(void);
+
+void PrintMotorControlValues(void);
 
 #endif /* __MOTOR_CONTROL_H */
 

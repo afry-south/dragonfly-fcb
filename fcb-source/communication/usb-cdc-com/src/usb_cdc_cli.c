@@ -11,7 +11,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usb_cdc_cli.h"
+
+#include "main.h"
 #include "receiver.h"
+#include "motor_control.h"
 #include "fifo_buffer.h"
 #include "common.h"
 #include "gyroscope.h"
@@ -36,156 +39,212 @@
 /*
  * Function implements the "echo" command.
  */
-static portBASE_TYPE CLIEchoCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t *pcCommandString);
+static portBASE_TYPE CLIEcho(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /*
  * Function implements the "echo-data" command.
  */
-static portBASE_TYPE CLIEchoDataCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t *pcCommandString);
+static portBASE_TYPE CLIEchoData(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /*
  * Function implements the "start-receiver-calibration" command.
  */
-static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
  * Function implements the "stop-receiver-calibration" command.
  */
-static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStopReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t *pcCommandString);
+
+/*
+ * Function implements the "reset-receiver-calibration" command.
+ */
+static portBASE_TYPE CLIResetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
  * Function implements the "get-receiver" command.
  */
-static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t *pcCommandString);
+static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /*
  * Function implements the "get-receiver-calibration" command.
  */
-static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIGetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
  * Function implements the "start-receiver-sampling" command.
  */
-static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartReceiverSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
  * Function implements the "stop-receiver-sampling" command.
  */
-static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStopReceiverSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
  * Function implements the "get-sensors" command.
  */
-static portBASE_TYPE CLIGetSensorsCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t *pcCommandString);
+static portBASE_TYPE CLIGetSensors(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
 /*
  * Function implements the "start-sensor-sampling" command.
  */
-static portBASE_TYPE CLIStartSensorSamplingCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartSensorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString);
 
 /*
  * Function implements the "stop-sensor-sampling" command.
  */
-static portBASE_TYPE CLIStopSensorSamplingCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t *pcCommandString);
+static portBASE_TYPE CLIStopSensorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "get-motors" command.
+ */
+static portBASE_TYPE CLIGetMotorValues(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "start-motor-sampling" command.
+ */
+static portBASE_TYPE CLIStartMotorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "stop-motor-sampling" command.
+ */
+static portBASE_TYPE CLIStopMotorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "about" command.
+ */
+static portBASE_TYPE CLIAbout(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "systime" command.
+ */
+static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 
 /* Private variables ---------------------------------------------------------*/
 
 /* Structure that defines the "echo" command line command. */
-static const CLI_Command_Definition_t echoCommand =
-		{ (const int8_t * const ) "echo",
-				(const int8_t * const ) "\r\necho <param>:\r\n Echoes one parameter\r\n",
-				CLIEchoCommandFunction, /* The function to run. */
-				1 /* Number of parameters expected */
-		};
+static const CLI_Command_Definition_t echoCommand = { (const int8_t * const ) "echo",
+		(const int8_t * const ) "\r\necho <param>:\r\n Echoes one parameter\r\n", CLIEcho, /* The function to run. */
+		1 /* Number of parameters expected */
+};
 
 /* Structure that defines the "echo-data" command line command. */
-static const CLI_Command_Definition_t echoDataCommand =
-		{ (const int8_t * const ) "echo-data",
-				(const int8_t * const ) "\r\necho-data <param:data size>:\r\n Echoes input data with size specified by command parameter\r\n",
-				CLIEchoDataCommandFunction, /* The function to run. */
-				1 /* Number of parameters expected */
-		};
+static const CLI_Command_Definition_t echoDataCommand = { (const int8_t * const ) "echo-data",
+		(const int8_t * const ) "\r\necho-data <param:data size>:\r\n Echoes input data with size specified by command parameter\r\n",
+		CLIEchoData, /* The function to run. */
+		1 /* Number of parameters expected */
+};
 
 /* Structure that defines the "start-receiver-calibration" command line command. */
-static const CLI_Command_Definition_t startReceiverCalibrationCommand =
-		{ (const int8_t * const ) "start-receiver-calibration",
-				(const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts the receiver calibration procedure\r\n",
-				CLIStartReceiverCalibrationCommandFunction, /* The function to run. */
-				0 /* Number of parameters expected */
-		};
+static const CLI_Command_Definition_t startReceiverCalibrationCommand = { (const int8_t * const ) "start-receiver-calibration",
+		(const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts receiver calibration procedure\r\n",
+		CLIStartReceiverCalibration, /* The function to run. */
+		0 /* Number of parameters expected */
+};
 
 /* Structure that defines the "stop-receiver-calibration" command line command. */
-static const CLI_Command_Definition_t stopReceiverCalibrationCommand =
-		{ (const int8_t * const ) "stop-receiver-calibration",
-				(const int8_t * const ) "\r\nstop-receiver-calibration:\r\n Stops the receiver calibration procedure\r\n",
-				CLIStopReceiverCalibrationCommandFunction, /* The function to run. */
-				0 /* Number of parameters expected */
-		};
+static const CLI_Command_Definition_t stopReceiverCalibrationCommand = { (const int8_t * const ) "stop-receiver-calibration",
+		(const int8_t * const ) "\r\nstop-receiver-calibration:\r\n Stops receiver calibration procedure\r\n",
+		CLIStopReceiverCalibration, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "reset-receiver-calibration" command line command. */
+static const CLI_Command_Definition_t resetReceiverCalibrationCommand = { (const int8_t * const ) "reset-receiver-calibration",
+		(const int8_t * const ) "\r\nreset-receiver-calibration:\r\n Resets receiver calibration to default values\r\n",
+		CLIResetReceiverCalibration, /* The function to run. */
+		0 /* Number of parameters expected */
+};
 
 /* Structure that defines the "get-receiver" command line command. */
-static const CLI_Command_Definition_t getReceiverCommand =
-		{ (const int8_t * const ) "get-receiver",
-				(const int8_t * const ) "\r\nget-receiver:\r\n Prints the current receiver value\r\n",
-				CLIGetReceiverCommandFunction, /* The function to run. */
-				0 /* Number of parameters expected */
-		};
+static const CLI_Command_Definition_t getReceiverCommand = { (const int8_t * const ) "get-receiver",
+		(const int8_t * const ) "\r\nget-receiver:\r\n Prints current receiver values\r\n",
+		CLIGetReceiver, /* The function to run. */
+		0 /* Number of parameters expected */
+};
 
 /* Structure that defines the "get-receiver-calibration" command line command. */
-static const CLI_Command_Definition_t getReceiverCalibrationCommand =
-		{ (const int8_t * const ) "get-receiver-calibration",
-				(const int8_t * const ) "\r\nget-receiver-calibration:\r\n Prints the current receiver calibration values\r\n",
-				CLIGetReceiverCalibrationCommandFunction, /* The function to run. */
-				0 /* Number of parameters expected */
-		};
+static const CLI_Command_Definition_t getReceiverCalibrationCommand = { (const int8_t * const ) "get-receiver-calibration",
+		(const int8_t * const ) "\r\nget-receiver-calibration:\r\n Prints current receiver calibration values\r\n",
+		CLIGetReceiverCalibration, /* The function to run. */
+		0 /* Number of parameters expected */
+};
 
 /* Structure that defines the "start-receiver-sampling" command line command. */
-static const CLI_Command_Definition_t startReceiverSamplingCommand = {
-		(const int8_t * const ) "start-receiver-sampling",
-				(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s\r\n",
-				CLIStartReceiverSamplingCommandFunction, /* The function to run. */
-				2 /* Number of parameters expected */
-		};
+static const CLI_Command_Definition_t startReceiverSamplingCommand = { (const int8_t * const ) "start-receiver-sampling",
+		(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s\r\n",
+		CLIStartReceiverSampling, /* The function to run. */
+		2 /* Number of parameters expected */
+};
 
 /* Structure that defines the "stop-receiver-sampling" command line command. */
-static const CLI_Command_Definition_t stopReceiverSamplingCommand = {
-		(const int8_t * const ) "stop-receiver-sampling",
-		(const int8_t * const ) "\r\nstop-receiver-sampling:\r\n Stops the printing of receiver sample values\r\n",
-		CLIStopReceiverSamplingCommandFunction, /* The function to run. */
+static const CLI_Command_Definition_t stopReceiverSamplingCommand = { (const int8_t * const ) "stop-receiver-sampling",
+		(const int8_t * const ) "\r\nstop-receiver-sampling:\r\n Stops printing of receiver sample values\r\n",
+		CLIStopReceiverSampling, /* The function to run. */
 		0 /* Number of parameters expected */
 };
 
 /* Structure that defines the "get-sensors" command line command. */
-static const CLI_Command_Definition_t getSensorsCommand = {
-		(const int8_t * const ) "get-sensors",
-		(const int8_t * const ) "\r\nget-sensors:\r\n Prints the last read sensor values\r\n",
-		CLIGetSensorsCommandFunction, /* The function to run. */
+static const CLI_Command_Definition_t getSensorsCommand = { (const int8_t * const ) "get-sensors",
+		(const int8_t * const ) "\r\nget-sensors:\r\n Prints last read sensor values\r\n",
+		CLIGetSensors, /* The function to run. */
 		0 /* Number of parameters expected */
 };
 
 /* Structure that defines the "start-sensor-sampling" command line command. */
-static const CLI_Command_Definition_t startSensorSamplingCommand = {
-		(const int8_t * const ) "start-sensor-sampling",
-				(const int8_t * const ) "\r\nstart-sensor-sampling <sampletime> <sampleduration>:\r\n Prints sensor values once every <sampletime> ms for <sampleduration> s\r\n",
-				CLIStartSensorSamplingCommandFunction, /* The function to run. */
-				2 /* Number of parameters expected */
-		};
+static const CLI_Command_Definition_t startSensorSamplingCommand = { (const int8_t * const ) "start-sensor-sampling",
+		(const int8_t * const ) "\r\nstart-sensor-sampling <sampletime> <sampleduration>:\r\n Prints sensor values once every <sampletime> ms for <sampleduration> s\r\n",
+		CLIStartSensorSampling, /* The function to run. */
+		2 /* Number of parameters expected */
+};
 
 /* Structure that defines the "stop-sensor-sampling" command line command. */
-static const CLI_Command_Definition_t stopSensorSamplingCommand = {
-		(const int8_t * const ) "stop-sensor-sampling",
-		(const int8_t * const ) "\r\nstop-sensor-sampling:\r\n Stops the printing of sensor sample values\r\n",
-		CLIStopSensorSamplingCommandFunction, /* The function to run. */
+static const CLI_Command_Definition_t stopSensorSamplingCommand = { (const int8_t * const ) "stop-sensor-sampling",
+		(const int8_t * const ) "\r\nstop-sensor-sampling:\r\n Stops printing of sensor sample values\r\n",
+		CLIStopSensorSampling, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "get-motors" command line command. */
+static const CLI_Command_Definition_t getMotorsCommand = { (const int8_t * const ) "get-motors",
+		(const int8_t * const ) "\r\nget-motors:\r\n Prints motor control values\r\n",
+		CLIGetMotorValues, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "start-motor-sampling" command line command. */
+static const CLI_Command_Definition_t startMotorSamplingCommand = { (const int8_t * const ) "start-motor-sampling",
+		(const int8_t * const ) "\r\nstart-motor-sampling <sampletime> <sampleduration>:\r\n Prints motor control values once every <sampletime> ms for <sampleduration> s\r\n",
+		CLIStartMotorSampling, /* The function to run. */
+		2 /* Number of parameters expected */
+};
+
+/* Structure that defines the "stop-motor-sampling" command line command. */
+static const CLI_Command_Definition_t stopMotorSamplingCommand = { (const int8_t * const ) "stop-motor-sampling",
+		(const int8_t * const ) "\r\nstop-motor-sampling:\r\n Stops printing of motor control sample values\r\n",
+		CLIStopMotorSampling, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "about" command line command. */
+static const CLI_Command_Definition_t aboutCommand = { (const int8_t * const ) "about",
+		(const int8_t * const ) "\r\nabout:\r\n Prints system info\r\n",
+		CLIAbout, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "systime" command line command. */
+static const CLI_Command_Definition_t systimeCommand = { (const int8_t * const ) "systime",
+		(const int8_t * const ) "\r\nsystime:\r\n Prints system time in ms\r\n",
+		CLISysTime, /* The function to run. */
 		0 /* Number of parameters expected */
 };
 
@@ -198,22 +257,37 @@ extern xSemaphoreHandle USBCOMRxDataSem;
  * @brief  Registers CLI commands
  * @param  None
  * @retval None
+ * @note   Too many CLI commands may cause problems with the "help" command if the UsbTxQueue is not large enough
  */
 void RegisterCLICommands(void) {
 	/* Register all the command line commands defined immediately above. */
+
+	/* Sample CLI commands */
 	FreeRTOS_CLIRegisterCommand(&echoCommand);
 	FreeRTOS_CLIRegisterCommand(&echoDataCommand);
 
+	/* RC receiver CLI commands*/
 	FreeRTOS_CLIRegisterCommand(&startReceiverCalibrationCommand);
 	FreeRTOS_CLIRegisterCommand(&stopReceiverCalibrationCommand);
+	FreeRTOS_CLIRegisterCommand(&resetReceiverCalibrationCommand);
 	FreeRTOS_CLIRegisterCommand(&getReceiverCommand);
 	FreeRTOS_CLIRegisterCommand(&getReceiverCalibrationCommand);
 	FreeRTOS_CLIRegisterCommand(&startReceiverSamplingCommand);
 	FreeRTOS_CLIRegisterCommand(&stopReceiverSamplingCommand);
 
+	/* Sensor CLI commands */
 	FreeRTOS_CLIRegisterCommand(&getSensorsCommand);
 	FreeRTOS_CLIRegisterCommand(&startSensorSamplingCommand);
 	FreeRTOS_CLIRegisterCommand(&stopSensorSamplingCommand);
+
+	/* Motors CLI commands */
+	FreeRTOS_CLIRegisterCommand(&getMotorsCommand);
+	FreeRTOS_CLIRegisterCommand(&startMotorSamplingCommand);
+	FreeRTOS_CLIRegisterCommand(&stopMotorSamplingCommand);
+
+	/* System info CLI commands */
+	FreeRTOS_CLIRegisterCommand(&aboutCommand);
+	FreeRTOS_CLIRegisterCommand(&systimeCommand);
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -225,8 +299,7 @@ void RegisterCLICommands(void) {
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t* pcCommandString) {
+static portBASE_TYPE CLIEcho(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
 	int8_t* pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
 	static portBASE_TYPE lParameterNumber = 0;
@@ -276,8 +349,7 @@ static portBASE_TYPE CLIEchoCommandFunction(int8_t* pcWriteBuffer, size_t xWrite
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t* pcCommandString) {
+static portBASE_TYPE CLIEchoData(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
 	int8_t *pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
 	static portBASE_TYPE lParameterNumber = 0;
@@ -368,10 +440,9 @@ static portBASE_TYPE CLIEchoDataCommandFunction(int8_t* pcWriteBuffer, size_t xW
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartReceiverCalibration(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
-	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL.   */
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL.   */
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
@@ -381,7 +452,7 @@ static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t* pcWriteB
 				"RC receiver calibration started. Please saturate all RC transmitter control sticks and toggle switches.\r\n",
 				xWriteBufferLen);
 	else
-		strncpy((char*) pcWriteBuffer, "RC receiver calibration already in progress.\r\n", xWriteBufferLen);
+		strncpy((char*) pcWriteBuffer, "RC receiver calibration could not be started.\r\n", xWriteBufferLen);
 
 	/* Return false to indicate command activity finished */
 	return pdFALSE;
@@ -394,23 +465,42 @@ static portBASE_TYPE CLIStartReceiverCalibrationCommandFunction(int8_t* pcWriteB
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(
-		int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStopReceiverCalibration(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
-	/* Remove compile time warnings about unused parameters, and check the
-	 write buffer is not NULL */
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
 	/* Stop the receiver calibration procedure */
 	ReceiverErrorStatus rcCalStatus = StopReceiverCalibration();
-	strncpy((char*) pcWriteBuffer, "RC receiver calibration stopped.\r\n", xWriteBufferLen);
+	strncpy((char*) pcWriteBuffer, "RC receiver calibration stopped\r\n", xWriteBufferLen);
 	if (rcCalStatus)
-		strncat((char*) pcWriteBuffer, "RC receiver calibration successful.\r\n",
+		strncat((char*) pcWriteBuffer, "RC receiver calibration successful\r\n",
 				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 	else
-		strncat((char*) pcWriteBuffer, "RC receiver calibration failed or has not been started.\r\n",
+		strncat((char*) pcWriteBuffer, "RC receiver calibration failed\r\n",
 				xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+	/* Return false to indicate command activity finished */
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements the CLI command to reset receiver calibration to default values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIResetReceiverCalibration(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+		const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	/* Resets calibration values to default */
+	ResetReceiverCalibrationValues();
+	strncpy((char*) pcWriteBuffer, "RC receiver calibration set to default values.\r\n", xWriteBufferLen);
 
 	/* Return false to indicate command activity finished */
 	return pdFALSE;
@@ -423,8 +513,7 @@ static portBASE_TYPE CLIStopReceiverCalibrationCommandFunction(
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t *pcCommandString) {
+static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString) {
 	/* Remove compile time warnings about unused parameters */
 	(void) pcCommandString;
 	(void) xWriteBufferLen;
@@ -445,7 +534,7 @@ static portBASE_TYPE CLIGetReceiverCommandFunction(int8_t *pcWriteBuffer, size_t
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIGetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t *pcCommandString) {
 
 	static uint8_t currentChannelPrint = 0;
@@ -464,54 +553,17 @@ static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(int8_t *pcWriteBuf
 				xWriteBufferLen);
 		break;
 	case 1:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Throttle Max: %u\r\n",
-				GetThrottleReceiverCalibrationMaxValue());
-		break;
-	case 2:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Throttle Min: %u\r\n",
-				GetThrottleReceiverCalibrationMinValue());
-		break;
-	case 3:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aileron Max: %u\r\n",
-				GetAileronReceiverCalibrationMaxValue());
-		break;
-	case 4:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aileron Min: %u\r\n",
-				GetAileronReceiverCalibrationMinValue());
-		break;
-	case 5:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Elevator Max: %u\r\n",
-				GetElevatorReceiverCalibrationMaxValue());
-		break;
-	case 6:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Elevator Min: %u\r\n",
-				GetElevatorReceiverCalibrationMinValue());
-		break;
-	case 7:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Rudder Max: %u\r\n",
-				GetRudderReceiverCalibrationMaxValue());
-		break;
-	case 8:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Rudder Min: %u\r\n",
-				GetRudderReceiverCalibrationMinValue());
-		break;
-	case 9:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Gear Max: %u\r\n",
-				GetGearReceiverCalibrationMaxValue());
-		break;
-	case 10:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Gear Min: %u\r\n",
-				GetGearReceiverCalibrationMinValue());
-		break;
-	case 11:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aux1 Max: %u\r\n",
-				GetAux1ReceiverCalibrationMaxValue());
-		break;
-	case 12:
-		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "Aux1 Min: %u\r\n",
-				GetAux1ReceiverCalibrationMinValue());
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+				"Throttle Max: %u\nThrottle Min: %u\nAileron Max: %u\nAileron Min: %u\nElevator Max: %u\nElevator Min: %u\nRudder Max: %u\nRudder Min: %u\nGear Max: %u\nGear Min: %u\nAux1 Max: %u\nAux1 Min: %u\n\r\n",
+				GetThrottleReceiverCalibrationMaxValue(), GetThrottleReceiverCalibrationMinValue(),
+				GetAileronReceiverCalibrationMaxValue(), GetAileronReceiverCalibrationMinValue(),
+				GetElevatorReceiverCalibrationMaxValue(), GetElevatorReceiverCalibrationMinValue(),
+				GetRudderReceiverCalibrationMaxValue(), GetRudderReceiverCalibrationMinValue(),
+				GetGearReceiverCalibrationMaxValue(), GetGearReceiverCalibrationMinValue(),
+				GetAux1ReceiverCalibrationMaxValue(), GetAux1ReceiverCalibrationMinValue());
 		break;
 	default:
+		// memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 		strncpy((char*) pcWriteBuffer, "\r\n", xWriteBufferLen);
 		/* Reset receiver print iteration number*/
 		currentChannelPrint = 0;
@@ -531,7 +583,7 @@ static portBASE_TYPE CLIGetReceiverCalibrationCommandFunction(int8_t *pcWriteBuf
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
 	int8_t* pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
@@ -542,7 +594,7 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuff
 
 	if (lParameterNumber == 0) {
 		/* The first time the function is called after the command has been entered just a header string is returned. */
-		strncpy((char*) pcWriteBuffer, "Starting print sampling of receiver values...\r\n", xWriteBufferLen);
+		strncpy((char*) pcWriteBuffer, "Starting print sampling of receiver values\r\n", xWriteBufferLen);
 	} else {
 		uint16_t receiverSampleTime;
 		uint16_t receiverSampleDuration;
@@ -590,6 +642,7 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuff
 
 		receiverSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
 
+		/* Start the receiver value sampling task */
 		StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
 	}
 
@@ -614,7 +667,7 @@ static portBASE_TYPE CLIStartReceiverSamplingCommandFunction(int8_t* pcWriteBuff
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStopReceiverSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the
 	 write buffer is not NULL */
@@ -630,14 +683,13 @@ static portBASE_TYPE CLIStopReceiverSamplingCommandFunction(int8_t* pcWriteBuffe
 }
 
 /**
- * @brief  Implements CLI command to prints the last sampled sensor values
+ * @brief  Implements CLI command to print the last sampled sensor values
  * @param  pcWriteBuffer : Reference to output buffer
  * @param  xWriteBufferLen : Size of output buffer
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIGetSensorsCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t* pcCommandString) {
+static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
 	(void) pcCommandString;
 	(void) xWriteBufferLen;
@@ -659,7 +711,7 @@ static portBASE_TYPE CLIGetSensorsCommandFunction(int8_t* pcWriteBuffer, size_t 
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStartSensorSamplingCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
+static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
 	int8_t* pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
@@ -718,6 +770,7 @@ static portBASE_TYPE CLIStartSensorSamplingCommandFunction(int8_t* pcWriteBuffer
 
 		sensorSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
 
+		/* Start the sensor sample printing task */
 		StartSensorSamplingTask(sensorSampleTime, sensorSampleDuration);
 	}
 
@@ -742,17 +795,177 @@ static portBASE_TYPE CLIStartSensorSamplingCommandFunction(int8_t* pcWriteBuffer
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIStopSensorSamplingCommandFunction(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
-		const int8_t* pcCommandString) {
+static portBASE_TYPE CLIStopSensorSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
-
 
 	strncpy((char*) pcWriteBuffer, "Stopping printing of sensor sample values...\r\n", xWriteBufferLen);
 
 	/* Stop the sensor sample printing task */
 	StopSensorSamplingTask();
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements CLI command to print the last control signal values sent to the motors
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetMotorValues(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	(void) xWriteBufferLen;
+
+	configASSERT(pcWriteBuffer);
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+
+	PrintMotorControlValues();
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Starts sensor sampling for a specified sample time and duration
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStartMotorSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength, xReturn;
+	static portBASE_TYPE lParameterNumber = 0;
+
+	/* Check the write buffer is not NULL */
+	configASSERT(pcWriteBuffer);
+
+	if (lParameterNumber == 0) {
+		/* The first time the function is called after the command has been entered just a header string is returned. */
+		strncpy((char*) pcWriteBuffer, "Starting print sampling of motor control signal values...\r\n", xWriteBufferLen);
+	} else {
+		uint16_t motorSampleTime;
+		uint16_t motorSampleDuration;
+
+		/* Obtain the parameter string */
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */
+		);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
+
+		size_t paramMaxSize; // TODO make function for this comparison?
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		motorSampleTime = atoi((char*) pcParameter);
+
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		strncat((char*) pcWriteBuffer, "Duration (s): ", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		motorSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
+
+		/* Start the motor control sampling task */
+		StartMotorControlSamplingTask(motorSampleTime, motorSampleDuration);
+	}
+
+	/* Update return value and parameter index */
+	if (lParameterNumber == startMotorSamplingCommand.cExpectedNumberOfParameters) {
+		/* If this is the last parameter then there are no more strings to return after this one. */
+		xReturn = pdFALSE;
+		lParameterNumber = 0;
+	} else {
+		/* There are more parameters to return after this one. */
+		xReturn = pdTRUE;
+		lParameterNumber++;
+	}
+
+	return xReturn;
+}
+
+/**
+ * @brief  Stops printing of motor control signal sample values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStopMotorSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer, "Stopping printing of sensor sample values...\r\n", xWriteBufferLen);
+
+	/* Stop the motor control sample printing task */
+	StopMotorControlSamplingTask();
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements "about" command, prints system information
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIAbout(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer,
+			"Dragonfly\nThe Dragonfly system is developed at AF Consult in Malmoe, Sweden. It is designed to control a quadrotor UAV.\n\nVersion:",
+			xWriteBufferLen);
+	strncat((char*) pcWriteBuffer, DF_FCB_VERSION, xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+	strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements "systime" command, prints system up time
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	snprintf((char*) pcWriteBuffer, xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1, "System time [ms]: %u\r\n",
+			(unsigned int) HAL_GetTick());
 
 	return pdFALSE;
 }

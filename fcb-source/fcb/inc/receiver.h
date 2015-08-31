@@ -137,10 +137,10 @@ typedef struct {
 ReceiverErrorStatus ReceiverInputConfig(void);
 ReceiverErrorStatus StartReceiverCalibration(void);
 ReceiverErrorStatus StopReceiverCalibration(void);
-ReceiverErrorStatus IsReceiverActive(void);
-
+void ResetReceiverCalibrationValues(void);
 ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 ReceiverErrorStatus StopReceiverSamplingTask(void);
+ReceiverErrorStatus IsReceiverActive(void);
 
 int16_t GetThrottleReceiverChannel(void);
 int16_t GetAileronReceiverChannel(void);
@@ -163,20 +163,6 @@ uint16_t GetGearReceiverCalibrationMaxValue(void);
 uint16_t GetGearReceiverCalibrationMinValue(void);
 uint16_t GetAux1ReceiverCalibrationMaxValue(void);
 uint16_t GetAux1ReceiverCalibrationMinValue(void);
-
-uint16_t GetThrottleReceiverChannelPulseMicros(void);
-uint16_t GetAileronReceiverChannelPulseMicros(void);
-uint16_t GetElevatorReceiverChannelPulseMicros(void);
-uint16_t GetRudderReceiverChannelPulseMicros(void);
-uint16_t GetGearReceiverChannelPulseMicros(void);
-uint16_t GetAux1ReceiverChannelPulseMicros(void);
-
-uint16_t GetThrottleReceiverChannelPeriodMicros(void);
-uint16_t GetAileronReceiverChannelPeriodMicros(void);
-uint16_t GetElevatorReceiverChannelPeriodMicros(void);
-uint16_t GetRudderReceiverChannelPeriodMicros(void);
-uint16_t GetGearReceiverChannelPeriodMicros(void);
-uint16_t GetAux1ReceiverChannelPeriodMicros(void);
 
 uint16_t GetThrottleReceiverChannelPulseTicks(void);
 uint16_t GetAileronReceiverChannelPulseTicks(void);

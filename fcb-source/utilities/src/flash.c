@@ -13,30 +13,29 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+
 /* Private macro -------------------------------------------------------------*/
+#define IS_VALID_FLASH_ADDR(ADDR)	(((ADDR) >= FLASH_BASE_ADDR) && ((ADDR) < (FLASH_BASE_ADDR + FLASH_TOTAL_SIZE)))
+
+#define IS_VALID_SETTINGS_PAGE(PAGE)	(((PAGE) >= FLASH_SETTINGS_START_PAGE) && ((PAGE) <= FLASH_SETTINGS_END_PAGE))
+
+#define IS_VALID_PAGE_OFFSET_SIZE(OFFSET,SIZE)	(((OFFSET) + (SIZE)) <= FLASH_PAGE_SIZE)
+
 /* Private variables ---------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
-static FlashErrorStatus WriteSettingsToFlash(const uint8_t* writeSettingsData,
-		const uint16_t writeSettingsDataSize, const uint8_t settingsPageNbr,
-		const uint16_t settingsPageOffset);
-static FlashErrorStatus ReadSettingsFromFlash(uint8_t* readSettingsData,
-		const uint16_t readSettingsDataSize, const uint8_t settingsPageNbr,
-		const uint16_t settingsPageOffset);
+static FlashErrorStatus WriteSettingsToFlash(const uint8_t* writeSettingsData, const uint16_t writeSettingsDataSize,
+		const uint8_t settingsPageNbr, const uint16_t settingsPageOffset);
+static FlashErrorStatus ReadSettingsFromFlash(uint8_t* readSettingsData, const uint16_t readSettingsDataSize,
+		const uint8_t settingsPageNbr, const uint16_t settingsPageOffset);
 
 static FlashErrorStatus WriteFlashPage(const uint32_t* writeData,
 		const uint8_t pageNbr);
 static FlashErrorStatus ReadFlashPage(uint8_t * readData, const uint8_t pageNbr);
 static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t wordNbr);
-static FlashErrorStatus ReadFlashBytes(uint8_t * readData,
-		const uint32_t startAddr, const uint32_t nbrOfBytes);
+static FlashErrorStatus ReadFlashBytes(uint8_t * readData, const uint32_t startAddr, const uint32_t nbrOfBytes);
 
-static uint32_t GetFlashPageOffsetAddress(const uint8_t pageNbr,
-		const uint16_t pageOffset);
-static FlashErrorStatus IsValidFlashAddress(const uint32_t address);
-static FlashErrorStatus IsValidSettingsPage(const uint8_t page);
-static FlashErrorStatus IsValidPageSize(const uint16_t settingsPageOffset,
-		const uint16_t size);
+static uint32_t GetFlashPageOffsetAddress(const uint8_t pageNbr, const uint16_t pageOffset);
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -82,8 +81,8 @@ static FlashErrorStatus WriteSettingsToFlash(const uint8_t* writeSettingsData, c
 		const uint8_t settingsPageNbr, const uint16_t settingsPageOffset) {
 	/* Check so that page is valid and that there is enough space on page to store the settings together with CRC*/
 	// TODO Make macro functions for valid checks
-	if (!IsValidSettingsPage(settingsPageNbr)
-			|| !IsValidPageSize(settingsPageOffset, writeSettingsDataSize + FLASH_WORD_BYTE_SIZE))
+	if (!IS_VALID_SETTINGS_PAGE(settingsPageNbr)
+			|| !IS_VALID_PAGE_OFFSET_SIZE(settingsPageOffset, writeSettingsDataSize + FLASH_WORD_BYTE_SIZE))
 		return FLASH_ERROR;
 
 	/* Read the whole page and store it in tmpPage - required since when writing a page, its entire contents must first be erased */
@@ -118,8 +117,8 @@ static FlashErrorStatus ReadSettingsFromFlash(uint8_t* readSettingsData, const u
 	uint32_t CRC_Calculated;
 
 	/* Check so that page is valid and that space after offset is large enough on page to store the settings together with CRC */
-	if (!IsValidSettingsPage(settingsPageNbr)
-			|| !IsValidPageSize(settingsPageOffset, readSettingsDataSize + FLASH_WORD_BYTE_SIZE))
+	if (!IS_VALID_SETTINGS_PAGE(settingsPageNbr)
+			|| !IS_VALID_PAGE_OFFSET_SIZE(settingsPageOffset, readSettingsDataSize + FLASH_WORD_BYTE_SIZE))
 		return FLASH_ERROR;
 
 	/* First, get the stored CRC, stored at first offset index */
@@ -165,7 +164,7 @@ static FlashErrorStatus WriteFlashPage(const uint32_t* writeData, const uint8_t 
 	uint32_t address = FLASH_BASE_ADDR + pageNbr * FLASH_PAGE_SIZE;
 	uint32_t i = 0;
 
-	while (i < FLASH_PAGE_SIZE / FLASH_WORD_BYTE_SIZE && HALStatus == HAL_OK && IsValidFlashAddress(address)) {
+	while (i < FLASH_PAGE_SIZE / FLASH_WORD_BYTE_SIZE && HALStatus == HAL_OK && IS_VALID_FLASH_ADDR(address)) {
 		if (writeData[i] != ReadFlashWord(pageNbr, i)) // To prevent unnecessary writing (if byte values should == 0xFF anyway)
 			HALStatus = HAL_FLASH_Program(TYPEPROGRAM_WORD, address, writeData[i]); // Word size is 32 bits/4 bytes => 1 page = 2048 bytes = 512 words
 
@@ -196,7 +195,7 @@ static FlashErrorStatus ReadFlashPage(uint8_t * readData, const uint8_t pageNbr)
 	uint32_t i = 0;
 	uint32_t address = FLASH_BASE_ADDR + pageNbr * FLASH_PAGE_SIZE;
 
-	if (!IsValidFlashAddress(address))
+	if (!IS_VALID_FLASH_ADDR(address))
 		return FLASH_ERROR;
 
 	while (i < FLASH_PAGE_SIZE) {
@@ -218,7 +217,7 @@ static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t wordNbr) {
 	uint32_t address = FLASH_BASE_ADDR + pageNbr * FLASH_PAGE_SIZE + FLASH_WORD_BYTE_SIZE * wordNbr;
 
 	/* Check flash address validity */
-	if (!IsValidFlashAddress(address))
+	if (!IS_VALID_FLASH_ADDR(address))
 		return 0xFFFFFFFF;
 
 	return *((uint32_t *) address);
@@ -231,12 +230,11 @@ static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t wordNbr) {
  * @param  nbrOfBytes : Number of bytes to be read
  * @retval FLASH_OK if flash operation successful, else FLASH_ERROR
  */
-static FlashErrorStatus ReadFlashBytes(uint8_t * readData,
-		const uint32_t startAddr, const uint32_t nbrOfBytes) {
+static FlashErrorStatus ReadFlashBytes(uint8_t * readData, const uint32_t startAddr, const uint32_t nbrOfBytes) {
 	uint32_t i = 0;
 	uint32_t address = startAddr;
 
-	while (i < nbrOfBytes && IsValidFlashAddress(address)) {
+	while (i < nbrOfBytes && IS_VALID_FLASH_ADDR(address)) {
 		readData[i] = *((uint8_t *) address);
 		address++;
 		i++;
@@ -256,38 +254,6 @@ static FlashErrorStatus ReadFlashBytes(uint8_t * readData,
  */
 static uint32_t GetFlashPageOffsetAddress(const uint8_t pageNbr, const uint16_t pageOffset) {
 	return FLASH_BASE_ADDR + pageNbr * FLASH_PAGE_SIZE + pageOffset;
-}
-
-/*
- * @brief  Indicates if an entered address is a valid flash address
- * @param  address : The flash address
- * @retval FLASH_OK if flash address is within valid flash address range, else FLASH_ERROR
- */
-static FlashErrorStatus IsValidFlashAddress(const uint32_t address) {
-	return (address >= FLASH_BASE_ADDR && address < FLASH_BASE_ADDR + FLASH_TOTAL_SIZE);
-}
-
-/*
- * @brief  Indicates if an entered page is within the settings flash section
- * @param  page : The flash page
- * @retval FLASH_OK if flash page is within valid settings page range, else FLASH_ERROR
- */
-static FlashErrorStatus IsValidSettingsPage(const uint8_t page) {
-	return (page >= FLASH_SETTINGS_START_PAGE && page <= FLASH_SETTINGS_END_PAGE);
-}
-
-/*
- * @brief  Checks if a page offset and size are within a page's limit
- * @param  settingsPageOffset : The flash page byte offset
- * @param  size : size from the offset
- * @retval FLASH_OK if the offset+size is within page range, else FLASH_ERROR
- */
-static FlashErrorStatus IsValidPageSize(const uint16_t settingsPageOffset, const uint16_t size) {
-	/* Size has to be larger than 0 */
-	if (size == 0)
-		return FLASH_ERROR;
-
-	return (settingsPageOffset + size - 1 < FLASH_PAGE_SIZE);
 }
 
 /**

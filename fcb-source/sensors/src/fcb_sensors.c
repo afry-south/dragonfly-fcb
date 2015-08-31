@@ -11,8 +11,8 @@
 #include "gyroscope.h"
 #include "fcb_error.h"
 #include "fcb_retval.h"
+
 #include "FreeRTOS.h"
-#include "FreeRTOSConfig.h"
 #include "task.h"
 #include "queue.h"
 
@@ -44,8 +44,6 @@ static volatile uint16_t sensorPrintSampleDuration;
 /* Private function prototypes -----------------------------------------------*/
 static void ProcessSensorValues(void*);
 static void SensorPrintSamplingTask(void const *argument);
-
-/* static fcn declarations */
 
 /* Exported functions --------------------------------------------------------*/
 /* global fcn definitions */
@@ -95,10 +93,10 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
 }
 
 /*
- * @brief  Creates a task to sample print receiver values over USB
- * @param  sampleTime : Sets how often a sample should be printed
+ * @brief  Creates a task to sample print sensor values over USB
+ * @param  sampleTime : Sets how often samples should be printed
  * @param  sampleDuration : Sets for how long sampling should be performed
- * @retval RECEIVER_OK if thread started, else RECEIVER_ERROR
+ * @retval SENSORS_OK if thread started, else SENSORS_ERROR
  */
 SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
 	sensorPrintSampleTime = sampleTime;
@@ -125,13 +123,17 @@ SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint
 }
 
 /*
- * @brief  Stops receiver print sampling by deleting the task
+ * @brief  Stops sensor print sampling by deleting the task
  * @param  None
- * @retval RECEIVER_OK if task deleted
+ * @retval SENSORS_OK if task deleted, SENSORS_ERROR if not
  */
 SensorsErrorStatus StopSensorSamplingTask(void) {
-	vTaskDelete(SensorPrintSamplingTaskHandle);
-	return SENSORS_OK;
+	if(SensorPrintSamplingTaskHandle != NULL) {
+		vTaskDelete(SensorPrintSamplingTaskHandle);
+		SensorPrintSamplingTaskHandle = NULL;
+		return SENSORS_OK;
+	}
+	return SENSORS_ERROR;
 }
 
 /* Private functions ---------------------------------------------------------*/
