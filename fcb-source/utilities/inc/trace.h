@@ -24,6 +24,11 @@ int trace_init(void);
  */
 int trace_post(const char * fmt, ...);
 
+/**
+ *
+ */
+int trace_printf(const char* format, ...);
+
 
 /**
  * This functions is as trace_post, except that it prints

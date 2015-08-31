@@ -12,6 +12,9 @@
 #include <stdarg.h>
 
 /* Private defines */
+#ifndef TRACE_PRINTF_TMP_ARRAY_SIZE
+#define TRACE_PRINTF_TMP_ARRAY_SIZE (128)
+#endif
 
 /* configuration & type declarations */
 enum { TRACE_SINK_MSG_SIZE = USB_FS_MAX_PACKET_SIZE /* 64 at time of writing */ };
@@ -40,6 +43,24 @@ int trace_post(const char * fmt, ...) {
     USBComSendData(trace_out_buf, len);
 
     return ret_val;
+}
+
+int trace_printf(const char* format, ...) {
+	int ret;
+	va_list argList;
+
+	va_start(argList, format);
+
+	static char buf[TRACE_PRINTF_TMP_ARRAY_SIZE];
+
+	ret = vsnprintf(buf, sizeof(buf), format, argList);
+	if (ret > 0)
+	{
+		ret = trace_write(buf, (size_t)ret);
+	}
+
+	va_end(argList);
+	return ret;
 }
 
 #if TODO
