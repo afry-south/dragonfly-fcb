@@ -31,7 +31,7 @@
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
-#define MOTOR_CONTROL_PRINT_SAMPLING_THREAD_PRIO		3
+#define MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO			1
 
 #define MOTOR_CONTROL_PRINT_MAX_STRING_SIZE				128
 
@@ -211,11 +211,11 @@ MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime,
 	 * Task name: MOTORCTRL_PRINT_SAMPL
 	 * Stack depth: configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
-	 * Priority: MOTOR_CONTROL_PRINT_SAMPLING_THREAD_PRIO ([0, inf] possible)
+	 * Priority: MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: MotorControlPrintSamplingTaskHandle
 	 * */
 	if (pdPASS != xTaskCreate((pdTASK_CODE )MotorControlPrintSamplingTask, (signed portCHAR*)"MOTORCTRL_PRINT_SAMPL",
-			configMINIMAL_STACK_SIZE, NULL, MOTOR_CONTROL_PRINT_SAMPLING_THREAD_PRIO, &MotorControlPrintSamplingTaskHandle)) {
+			configMINIMAL_STACK_SIZE, NULL, MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO, &MotorControlPrintSamplingTaskHandle)) {
 		ErrorHandler();
 		return MOTORCTRL_ERROR;
 	}

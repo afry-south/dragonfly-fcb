@@ -37,8 +37,8 @@ typedef struct {
 #define USB_COM_TX_BUFFER_SIZE          1024
 #define USB_COM_RX_BUFFER_SIZE          1024
 
-#define USB_COM_RX_THREAD_PRIO          1
-#define USB_COM_TX_THREAD_PRIO          1
+#define USB_COM_RX_TASK_PRIO          	1
+#define USB_COM_TX_TASK_PRIO          	1
 
 #define USB_COM_TX_QUEUE_ITEMS          16
 
@@ -429,12 +429,12 @@ void CreateUSBComTasks(void) {
 	 * Task name: USB_COM_RX
 	 * Stack depth: configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
-	 * Priority: USB_COM_RX_THREAD_PRIO ([0, inf] possible)
+	 * Priority: USB_COM_RX_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: USBComPortRxTaskHandle
 	 * */
 	if (pdPASS
 			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask, (signed portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE,
-					NULL, USB_COM_RX_THREAD_PRIO, &USBComPortRxTaskHandle)) {
+					NULL, USB_COM_RX_TASK_PRIO, &USBComPortRxTaskHandle)) {
 		ErrorHandler();
 	}
 
@@ -443,12 +443,12 @@ void CreateUSBComTasks(void) {
 	 * Task name: USB_COM_TX
 	 * Stack depth: configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
-	 * Priority: USB_COM_TX_THREAD_PRIO ([0, inf] possible)
+	 * Priority: USB_COM_TX_THREAD_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: USBComPortTxTaskHandle
 	 * */
 	if (pdPASS
 			!= xTaskCreate((pdTASK_CODE )USBComPortTXTask, (signed portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE,
-					NULL, USB_COM_TX_THREAD_PRIO, &USBComPortTxTaskHandle)) {
+					NULL, USB_COM_TX_TASK_PRIO, &USBComPortTxTaskHandle)) {
 		ErrorHandler();
 	}
 }

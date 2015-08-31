@@ -92,7 +92,7 @@ typedef struct {
 } Receiver_ChannelCalibrationSampling_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
-#define RECEIVER_PRINT_SAMPLING_THREAD_PRIO				3
+#define RECEIVER_PRINT_SAMPLING_TASK_PRIO				1
 
 #define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
 #define RECEIVER_CALRES_MAX_STRING_SIZE					256
@@ -229,11 +229,11 @@ ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const u
 	 * Task name: RC_PRINT_SAMPL
 	 * Stack depth: configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
-	 * Priority: RECEIVER_PRINT_SAMPLING_THREAD_PRIO ([0, inf] possible)
+	 * Priority: RECEIVER_PRINT_SAMPLING_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: ReceiverPrintSamplingTask
 	 * */
 	if (pdPASS != xTaskCreate((pdTASK_CODE )ReceiverPrintSamplingTask, (signed portCHAR*)"RC_PRINT_SAMPL",
-					configMINIMAL_STACK_SIZE, NULL, RECEIVER_PRINT_SAMPLING_THREAD_PRIO,
+					configMINIMAL_STACK_SIZE, NULL, RECEIVER_PRINT_SAMPLING_TASK_PRIO,
 					&ReceiverPrintSamplingTaskHandle)) {
 		ErrorHandler();
 		return RECEIVER_ERROR;

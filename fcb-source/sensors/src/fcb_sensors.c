@@ -21,7 +21,7 @@
 /* Private define ------------------------------------------------------------*/
 #define FCB_SENSORS_DEBUG /* todo delete */
 
-#define SENSOR_PRINT_SAMPLING_THREAD_PRIO		3
+#define SENSOR_PRINT_SAMPLING_TASK_PRIO		1
 
 #ifdef FCB_SENSORS_DEBUG
 static uint32_t cbk_gyro_counter = 0;
@@ -110,11 +110,11 @@ SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint
 	 * Task name: SENS_PRINT_SAMPL
 	 * Stack depth: configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
-	 * Priority: SENSOR_PRINT_SAMPLING_THREAD_PRIO ([0, inf] possible)
+	 * Priority: SENSOR_PRINT_SAMPLING_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: SensorPrintSamplingTaskHandle
 	 * */
 	if (pdPASS != xTaskCreate((pdTASK_CODE )SensorPrintSamplingTask, (signed portCHAR*)"SENS_PRINT_SAMPL",
-			configMINIMAL_STACK_SIZE, NULL, SENSOR_PRINT_SAMPLING_THREAD_PRIO, &SensorPrintSamplingTaskHandle)) {
+			configMINIMAL_STACK_SIZE, NULL, SENSOR_PRINT_SAMPLING_TASK_PRIO, &SensorPrintSamplingTaskHandle)) {
 		ErrorHandler();
 		return SENSORS_ERROR;
 	}

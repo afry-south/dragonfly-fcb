@@ -135,8 +135,7 @@ void FetchAngleDotFromGyroscope(void) {
 }
 
 #warning "TODO - implement get x, y, z separately. And perhaps use integer values to represent sensor values"
-void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot)
-{
+void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot) {
 	*xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
 	*yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
 	*zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
@@ -147,8 +146,7 @@ void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot)
  * @param  none
  * @retval none
  */
-void PrintGyroscopeValues(void)
-{
+void PrintGyroscopeValues(void) {
 	static char sampleString[GYRO_SAMPLING_MAX_STRING_SIZE];
 	float angRateXb, angRateYb, angRateZb;
 

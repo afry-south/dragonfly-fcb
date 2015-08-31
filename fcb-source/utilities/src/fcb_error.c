@@ -88,7 +88,7 @@ void GetRegistersFromStack(uint32_t* pulFaultStackAddress) {
 	/* Bus Fault Address Register */
 	_BFAR = (*((volatile unsigned int*)(0xE000ED38)));
 
-	USBComSendString("Hard Fault Exception!\n");
+	USBComSendString("Oh no, a Hard Fault Exception! Every byte for itself!\n");
 
 	snprintf(hardFaultString, STACK_REGISTERS_STRING_SIZE,
 			"SP_R0: 0x%x\nR1: 0x%x\nR2: 0x%x\nR3: 0x%x\nR12: 0x%x\nLR: 0x%x\nPC: 0x%x\nPSR: 0x%x\nCFSR: 0x%x\nHFSR: 0x%x\nDFSR: 0x%x\nAFSR: 0x%x\nMMAR: 0x%x\nBFAR: 0x%x\n\r\n",
