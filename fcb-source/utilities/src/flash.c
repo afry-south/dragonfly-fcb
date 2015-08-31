@@ -80,7 +80,7 @@ FlashErrorStatus WriteCalibrationValuesToFlash( const Receiver_CalibrationValues
 static FlashErrorStatus WriteSettingsToFlash(const uint8_t* writeSettingsData, const uint16_t writeSettingsDataSize,
 		const uint8_t settingsPageNbr, const uint16_t settingsPageOffset) {
 	/* Check so that page is valid and that there is enough space on page to store the settings together with CRC*/
-	// TODO Make macro functions for valid checks
+
 	if (!IS_VALID_SETTINGS_PAGE(settingsPageNbr)
 			|| !IS_VALID_PAGE_OFFSET_SIZE(settingsPageOffset, writeSettingsDataSize + FLASH_WORD_BYTE_SIZE))
 		return FLASH_ERROR;

@@ -161,13 +161,6 @@ static void InitSystem(void) {
 		ErrorHandler();
 	}
 
-#ifdef TODO
-	/* Setup sensors */
-	GyroConfig();
-	CompassConfig();
-	InitPIDControllers();
-#endif
-
 	/* Setup motor output timer */
 	MotorControlConfig();
 
