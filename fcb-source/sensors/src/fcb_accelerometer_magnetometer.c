@@ -12,7 +12,8 @@
 #include "FreeRTOS.h"
 
 #define FCB_ACCMAG_DEBUG
-#define FCB_USE_ACC_DRDY_INT1
+#define FCB_USE_ACC_DRDY1_INT1
+#define MAG_TODO
 
 int16_t sXYZDotDot[] = { 0, 0 , 0 };
 float sXYZMagVector[] = { 0, 0 , 0 };
@@ -33,7 +34,7 @@ uint8_t FcbInitialiseAccMagSensor(void) {
 	/* configure STM32 interrupts & GPIO */
 	ACCELERO_DRDY_GPIO_CLK_ENABLE(); /* GPIOE clock */
 
-#ifdef FCB_USE_ACC_DRDY_INT1
+#ifdef FCB_USE_ACC_DRDY1_INT1
 	/* STM32F3 doc UM1570 page 27/36. Accelerometer interrupt */
 	FcbSensorsInitGpioPinForInterrupt(GPIOE, GPIO_PIN_4);
 #ifdef MAG_TODO
@@ -57,23 +58,23 @@ uint8_t FcbInitialiseAccMagSensor(void) {
 
 #endif
 
-#ifdef FCB_USE_ACC_DRDY_INT1
+#ifdef FCB_USE_ACC_DRDY1_INT1
 	HAL_NVIC_SetPriority(EXTI4_IRQn,
 			configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
 	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
 #ifdef MAG_TODO
-	HAL_NVIC_SetPriority(EXTI2_TSC_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
+//	HAL_NVIC_SetPriority(EXTI2_TSC_IRQn,
+//	    configLIBRARY_LOWEST_INTERRUPT_PRIORITY, 0);
+    HAL_NVIC_SetPriority(EXTI2_TSC_IRQn,
+        configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1, 0);
 	HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
 #endif
-#else
-	HAL_NVIC_SetPriority(EXTI2_TSC_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
-	HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
 #endif
 	/* configure LSM303DHLC accelerometer */
 	BSP_ACCELERO_Reset();
 
-	if (0 != BSP_ACCELERO_Init()) {
+	if (ACCELERO_OK != BSP_ACCELERO_Init()) {
 		fcb_error();
 		retVal = FCB_ERR_INIT;
 		goto Exit;
@@ -110,12 +111,23 @@ void FetchDataFromAccelerometer(void) {
 #endif
 
 	BSP_ACCELERO_GetXYZ(sXYZDotDot);
+
 #ifdef FCB_ACCMAG_DEBUG
 	HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_9);
 #endif
 }
 
 void FetchDataFromMagnetometer(void) {
+#ifdef FCB_ACCMAG_DEBUG
+    static uint32_t call_counter = 0;
+
+    {
+        if ((call_counter % 50) == 0) {
+            BSP_LED_Toggle(LED6);
+        }
+        call_counter++;
+    }
+#endif
 	LSM303DLHC_MagReadXYZ(sXYZMagVector);
 }
 

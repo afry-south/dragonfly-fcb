@@ -16,7 +16,8 @@
 
 #include "fcb_error.h"
 
-#define FCB_USE_ACC_DRDY_INT1 // todo
+#define FCB_USE_ACC_DRDY1_INT1 // todo
+#define MAG_TODO
 
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
  * @{
@@ -216,16 +217,19 @@ void EXTI1_IRQHandler(void) {
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
 }
 
-#ifdef FCB_USE_ACC_DRDY_INT1
+#if defined(FCB_USE_ACC_DRDY1_INT1) || defined(FCB_USE_MAG_DRDY_INT1)
 void EXTI4_IRQHandler(void)
 {
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
 }
-#else
+
+#ifdef MAG_TODO
 void EXTI2_TS_IRQHandler(void)
 {
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
 }
+#endif
+
 #endif
 /**
  * @brief  This function handles PPP interrupt request.

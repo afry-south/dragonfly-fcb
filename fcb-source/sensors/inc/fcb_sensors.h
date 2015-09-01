@@ -22,7 +22,7 @@
  *
  * @todo tune size
  */
-enum { FCB_SENSORS_QUEUE_SIZE = 3 };
+enum { FCB_SENSORS_QUEUE_SIZE = 5 };
 
 /**
  * The messages are sent as uin8_t under the assumption that

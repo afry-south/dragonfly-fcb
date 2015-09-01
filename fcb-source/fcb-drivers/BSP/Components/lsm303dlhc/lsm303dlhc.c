@@ -38,7 +38,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "lsm303dlhc.h"
 
-#define  FCB_USE_ACC_DRDY_INT1
+#define  FCB_USE_ACC_DRDY1_INT1
+#define MAG_TODO
 // #define FCB_USE_MAG_DRDY_INT1
 
 
@@ -142,12 +143,15 @@ void LSM303DLHC_AccInit(uint16_t InitStruct)
   COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG1_A, ctrl);
 
   {
-#ifdef FCB_USE_ACC_DRDY_INT1
+    /* section 7.1.3 in LSM303DLHC data sheet doc DocID018771 Rev 2 /
+     * DRDY1 means acceleropmeter
+     */
+#ifdef FCB_USE_ACC_DRDY1_INT1
 	  uint8_t ctrlreg3 = 0x10;
-#elif defined(FCB_USE_MAG_DRDY_INT1)
-	  uint8_t ctrlreg3 = 0x08;
-#else
-	  uint8_t ctrlreg3 = 0x04; /* section 7.1.3 in LSM303DLHC data sheet doc DocID018771 Rev 2 */
+#ifdef MAG_TODO
+
+//	  ctrlreg3 =
+#endif /* MAG_TODO */
 #endif
   COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, ctrlreg3);
 
@@ -608,7 +612,7 @@ void LSM303DLHC_MagInit(void)
   magConfig.fullScale = LSM303DLHC_FS_1_3_GA; /* earth's magnetic field vector is .5 Gauss */
   magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
   magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
-  magConfig.dataRate = LSM303DLHC_ODR_0_75_HZ;
+  magConfig.dataRate = LSM303DLHC_ODR_75_HZ;
   magConfig.temperatureSensor = LSM303DLHC_TEMPSENSOR_DISABLE;
 
   /* Configure MEMS: temp and Data rate */
