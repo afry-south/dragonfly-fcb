@@ -269,6 +269,8 @@ static void USBComPortTXTask(void const *argument) {
 	(void) argument;
 
 	static UsbComPortTxQueueItem_TypeDef CompPortTxQueueItem;
+	uint8_t* txDataPtr;
+	uint16_t tmpSize;
 
 	for (;;) {
 		/* Wait forever for incoming data over USB by pending on the USB Tx queue */
@@ -286,10 +288,8 @@ static void USBComPortTXTask(void const *argument) {
 						break;
 					case FIFO_BUFFER:
 						// Tx buffer is a FIFO ring buffer that wraps around its zero index
-						uint8_t* txDataPtr;
-						uint16_t tmpSize = FIFOBufferGetData(
-								(volatile FIFOBuffer_TypeDef*) CompPortTxQueueItem.bufferPtr, &txDataPtr,
-								CompPortTxQueueItem.dataSize);
+						tmpSize = FIFOBufferGetData((volatile FIFOBuffer_TypeDef*) CompPortTxQueueItem.bufferPtr,
+								&txDataPtr, CompPortTxQueueItem.dataSize);
 						CDCTransmitFS(txDataPtr, tmpSize);
 
 						// If not all data received from buffer (due to FIFO wrap-around), get the rest
