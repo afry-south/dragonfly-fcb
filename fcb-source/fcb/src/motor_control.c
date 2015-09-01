@@ -47,11 +47,27 @@ typedef struct {
 	uint16_t Motor4;
 } MotorControlValues_TypeDef;
 
+typedef enum {
+	MOTOR_NEG_ROTATION = -1,
+	MOTOR_POS_ROTATION = 1
+} MotorMomentSign;
+
+typedef struct {
+	MotorMomentSign rollDir;		// Depends on the motor location relative to aircraft CoG
+	MotorMomentSign pitchDir;	// Depends on the motor location relative to aircraft CoG
+	MotorMomentSign yawDir;		// Depends on the motor rotational direction (CCW or CW)
+} MotorProperties_TypeDef;
+
 /* Motor control value struct declaration*/
-MotorControlValues_TypeDef MotorControlValues;
+static MotorControlValues_TypeDef MotorControlValues;
+
+static MotorProperties_TypeDef Motor1Properties;
+static MotorProperties_TypeDef Motor2Properties;
+static MotorProperties_TypeDef Motor3Properties;
+static MotorProperties_TypeDef Motor4Properties;
 
 /* Timer time base handler */
-TIM_HandleTypeDef MotorControlTimHandle;
+static TIM_HandleTypeDef MotorControlTimHandle;
 
 /* Task handle for printing of sensor values task */
 xTaskHandle MotorControlPrintSamplingTaskHandle = NULL;
@@ -59,10 +75,10 @@ static volatile uint16_t motorControlPrintSampleTime;
 static volatile uint16_t motorControlPrintSampleDuration;
 
 /* Private function prototypes -----------------------------------------------*/
-static void SetMotor1(uint16_t ctrlVal);
-static void SetMotor2(uint16_t ctrlVal);
-static void SetMotor3(uint16_t ctrlVal);
-static void SetMotor4(uint16_t ctrlVal);
+static void SetMotor1(const uint16_t ctrlVal);
+static void SetMotor2(const uint16_t ctrlVal);
+static void SetMotor3(const uint16_t ctrlVal);
+static void SetMotor4(const uint16_t ctrlVal);
 static void MotorControlPrintSamplingTask(void const *argument);
 
 /* Exported functions --------------------------------------------------------*/
@@ -73,6 +89,23 @@ static void MotorControlPrintSamplingTask(void const *argument);
  * @retval None.
  */
 void MotorControlConfig(void) {
+	/* Configure each of the motors' properties */
+	Motor1Properties.rollDir = MOTOR_NEG_ROTATION;
+	Motor1Properties.pitchDir = MOTOR_POS_ROTATION;
+	Motor1Properties.yawDir = MOTOR_POS_ROTATION;
+
+	Motor2Properties.rollDir = MOTOR_POS_ROTATION;
+	Motor2Properties.pitchDir = MOTOR_POS_ROTATION;
+	Motor2Properties.yawDir = MOTOR_NEG_ROTATION;
+
+	Motor3Properties.rollDir = MOTOR_POS_ROTATION;
+	Motor3Properties.pitchDir = MOTOR_NEG_ROTATION;
+	Motor3Properties.yawDir = MOTOR_POS_ROTATION;
+
+	Motor4Properties.rollDir = MOTOR_NEG_ROTATION;
+	Motor4Properties.pitchDir = MOTOR_NEG_ROTATION;
+	Motor4Properties.yawDir = MOTOR_NEG_ROTATION;
+
 	/*##-1- Configure the TIM peripheral #######################################*/
 
 	/* Timer Output Compare Configuration Structure declaration */
@@ -189,10 +222,10 @@ void MotorAllocationRaw(void) {
 
 		// Motor 2 and 4 CW, Motor 1 and 3 CCW
 		// TODO make define that specifies motor location on aircraft and rotational direction
-		m1 = u1 + u2 - u3 + MOTOR_CHANNEL1_ROTATION_DIRECTION*u4;
-		m2 = u1 - u2 - u3 + MOTOR_CHANNEL2_ROTATION_DIRECTION*u4;
-		m3 = u1 - u2 + u3 + MOTOR_CHANNEL3_ROTATION_DIRECTION*u4;
-		m4 = u1 + u2 + u3 + MOTOR_CHANNEL4_ROTATION_DIRECTION*u4;
+		m1 = u1 + Motor1Properties.rollDir*u2 + Motor1Properties.pitchDir*u3 + Motor4Properties.yawDir*u4;
+		m2 = u1 + Motor2Properties.rollDir*u2 + Motor2Properties.pitchDir*u3 + Motor4Properties.yawDir*u4;
+		m3 = u1 + Motor3Properties.rollDir*u2 + Motor3Properties.pitchDir*u3 + Motor4Properties.yawDir*u4;
+		m4 = u1 + Motor4Properties.rollDir*u2 + Motor4Properties.pitchDir*u3 + Motor4Properties.yawDir*u4;
 
 		/* Check unsigned 16-bit overflow */
 		if (!IS_NOT_GREATER_UINT16_MAX(m1))
@@ -427,7 +460,7 @@ static void MotorControlPrintSamplingTask(void const *argument) {
  * @param  ctrlVal: value [0,65535] indicating amount of motor thrust
  * @retval None.
  */
-static void SetMotor1(uint16_t ctrlVal) {
+static void SetMotor1(const uint16_t ctrlVal) {
 	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
 	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR1_CHANNEL, (uint16_t)ccrVal);
 	MotorControlValues.Motor1 = ctrlVal;
@@ -438,7 +471,7 @@ static void SetMotor1(uint16_t ctrlVal) {
  * @param  ctrlVal: value [0,65535] indicating amount of motor thrust
  * @retval None.
  */
-static void SetMotor2(uint16_t ctrlVal) {
+static void SetMotor2(const uint16_t ctrlVal) {
 	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
 	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR2_CHANNEL, (uint16_t)ccrVal);
 	MotorControlValues.Motor2 = ctrlVal;
@@ -449,7 +482,7 @@ static void SetMotor2(uint16_t ctrlVal) {
  * @param  ctrlVal: value [0,65535] indicating amount of motor thrust
  * @retval None.
  */
-static void SetMotor3(uint16_t ctrlVal) {
+static void SetMotor3(const uint16_t ctrlVal) {
 	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
 	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR3_CHANNEL, (uint16_t)ccrVal);
 	MotorControlValues.Motor3 = ctrlVal;
@@ -460,7 +493,7 @@ static void SetMotor3(uint16_t ctrlVal) {
  * @param  ctrlVal: value [0,65535] indicating amount of motor thrust
  * @retval None.
  */
-static void SetMotor4(uint16_t ctrlVal) {
+static void SetMotor4(const uint16_t ctrlVal) {
 	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
 	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR4_CHANNEL, (uint16_t)ccrVal);
 	MotorControlValues.Motor4 = ctrlVal;
