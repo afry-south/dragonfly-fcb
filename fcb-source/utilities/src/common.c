@@ -8,6 +8,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "common.h"
+#include "fcb_error.h"
 
 #include "stm32f3_discovery.h"
 
