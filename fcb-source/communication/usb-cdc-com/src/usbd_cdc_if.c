@@ -273,16 +273,18 @@ static void USBComPortTXTask(void const *argument) {
 	for (;;) {
 		/* Wait forever for incoming data over USB by pending on the USB Tx queue */
 		if (pdPASS == xQueueReceive(usbComTxQueue, &CompPortTxQueueItem, portMAX_DELAY)) {
-			if (xSemaphoreTake(USBTxMutex, USB_COM_MAX_DELAY) == pdPASS) // Pend on mutex while previous transmission is in progress
+			if (xSemaphoreTake(USBTxMutex, USB_COM_MAX_DELAY) == pdPASS) // Pend on USB mutex while previous transmission is in progress
 			{
 				/* Take the buffer mutex (if it has one) */
 				if ((*CompPortTxQueueItem.BufferMutex == NULL
 						|| xSemaphoreTake(*CompPortTxQueueItem.BufferMutex, portMAX_DELAY) == pdPASS)) {
 
-					if (CompPortTxQueueItem.bufferType == ARRAY_BUFFER) {
+					switch (CompPortTxQueueItem.bufferType) {
+					case ARRAY_BUFFER:
 						// Tx buffer is just a good ol' array of data
 						CDCTransmitFS((uint8_t*) CompPortTxQueueItem.bufferPtr, CompPortTxQueueItem.dataSize);
-					} else if (CompPortTxQueueItem.bufferType == FIFO_BUFFER) {
+						break;
+					case FIFO_BUFFER:
 						// Tx buffer is a FIFO ring buffer that wraps around its zero index
 						uint8_t* txDataPtr;
 						uint16_t tmpSize = FIFOBufferGetData(
@@ -296,12 +298,16 @@ static void USBComPortTXTask(void const *argument) {
 									&txDataPtr, CompPortTxQueueItem.dataSize - tmpSize);
 							CDCTransmitFS(txDataPtr, tmpSize);
 						}
+						break;
+					default:
+						/* Unspecified buffer type, indicate error */
+						ErrorHandler();
+						break;
 					}
-
-					xSemaphoreGive(*CompPortTxQueueItem.BufferMutex);
+					if (*CompPortTxQueueItem.BufferMutex != NULL)
+						xSemaphoreGive(*CompPortTxQueueItem.BufferMutex); // Give buffer mutex
 				}
-
-				xSemaphoreGive(USBTxMutex); // Give mutex when transmission completed
+				xSemaphoreGive(USBTxMutex); // Give USB mutex when transmission completed
 			}
 		}
 	}
