@@ -24,10 +24,18 @@ int trace_init(void);
  */
 int trace_post(const char * fmt, ...);
 
+/**
+ * This function enables debug printing in the console. The function works the same way as printf().
+ *
+ * @param format: printf format string and any number of non-string arguments
+ * @return ret: size of the string in byte
+ */
+int trace_printf(const char* format, ...);
+
 
 /**
  * This functions is as trace_post, except that it prints
  * directly.
  */
 int trace_sync(const char * fmt, ...);
-#endif /* TRACE_H */
+#endif /*TRACE_H*/

@@ -14,6 +14,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "trace.h"
+
 /* Private define ------------------------------------------------------------*/
 #define STACK_REGISTERS_STRING_SIZE		256
 
@@ -90,13 +92,13 @@ void GetRegistersFromStack(uint32_t* pulFaultStackAddress) {
 	/* Bus Fault Address Register */
 	_BFAR = (*((volatile unsigned int*)(0xE000ED38)));
 
-	USBComSendString("Oh no, a Hard Fault Exception! Every byte for itself!\n");
+	trace_printf("Hard Fault Exception!\n");
 
 	snprintf(hardFaultString, STACK_REGISTERS_STRING_SIZE,
 			"SP_R0: 0x%x\nR1: 0x%x\nR2: 0x%x\nR3: 0x%x\nR12: 0x%x\nLR: 0x%x\nPC: 0x%x\nPSR: 0x%x\nCFSR: 0x%x\nHFSR: 0x%x\nDFSR: 0x%x\nAFSR: 0x%x\nMMAR: 0x%x\nBFAR: 0x%x\n\r\n",
 			sp_r0, r1, r2, r3, r12, lr, pc, psr, _CFSR, _HFSR, _DFSR, _AFSR, _MMAR, _BFAR);
 
-	USBComSendString(hardFaultString);
+	trace_printf(hardFaultString);
 }
 
 /**
