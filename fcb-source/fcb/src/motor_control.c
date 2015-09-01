@@ -215,13 +215,13 @@ void MotorAllocationRaw(void) {
 	int32_t u1, u2, u3, u4, m1, m2, m3, m4;
 
 	if (IsReceiverActive()) {
+		/* Calculate raw control signals for throttle, roll, pitch, yaw */
 		u1 = (GetThrottleReceiverChannel()-INT16_MIN); // Re-scale to uint16
 		u2 = u1*GetAileronReceiverChannel()/INT16_MAX;
 		u3 = u1*GetElevatorReceiverChannel()/INT16_MAX;
 		u4 = u1*GetRudderReceiverChannel()/INT16_MAX;
 
-		// Motor 2 and 4 CW, Motor 1 and 3 CCW
-		// TODO make define that specifies motor location on aircraft and rotational direction
+		/* Map raw control signals to motor output */
 		m1 = u1 + Motor1Properties.rollDir*u2 + Motor1Properties.pitchDir*u3 + Motor1Properties.yawDir*u4;
 		m2 = u1 + Motor2Properties.rollDir*u2 + Motor2Properties.pitchDir*u3 + Motor2Properties.yawDir*u4;
 		m3 = u1 + Motor3Properties.rollDir*u2 + Motor3Properties.pitchDir*u3 + Motor3Properties.yawDir*u4;
