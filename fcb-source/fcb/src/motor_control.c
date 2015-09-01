@@ -21,6 +21,7 @@
 #include "usbd_cdc_if.h"
 #include "fcb_error.h"
 #include "receiver.h"
+#include "common.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -33,6 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 #define MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO			1
+#define MOTOR_CONTROL_PRINT_MINIMUM_SAMPLING_TIME		2	// Motor control updated every 2.5 ms
 #define MOTOR_CONTROL_PRINT_MAX_STRING_SIZE				128
 
 /* Private macro -------------------------------------------------------------*/
@@ -57,15 +59,18 @@ static volatile uint16_t motorControlPrintSampleTime;
 static volatile uint16_t motorControlPrintSampleDuration;
 
 /* Private function prototypes -----------------------------------------------*/
+static void SetMotor1(uint16_t ctrlVal);
+static void SetMotor2(uint16_t ctrlVal);
+static void SetMotor3(uint16_t ctrlVal);
+static void SetMotor4(uint16_t ctrlVal);
 static void MotorControlPrintSamplingTask(void const *argument);
 
 /* Exported functions --------------------------------------------------------*/
 
 /*
- * @brief	Initializes and configures the timer used to produce PWM output
- *              to control the ESC:s with.
- * @param	None.
- * @retval	None.
+ * @brief  Initializes and configures the timer used to produce PWM output to control the ESC:s with.
+ * @param  None.
+ * @retval None.
  */
 void MotorControlConfig(void) {
 	/*##-1- Configure the TIM peripheral #######################################*/
@@ -142,47 +147,15 @@ void MotorControlConfig(void) {
 }
 
 /*
- * @brief       Sets the motor control PWM (sent to ESC) for motor 1
- * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
- * @retval      None.
+ * @brief  Sets the motor control PWM (sent to ESC) for motors 1-4
+ * @param  ctrlValMotorX: value [0,65535] indicating amount of motor thrust. X == 1, 2, 3, 4
+ * @retval None.
  */
-void SetMotor1(uint16_t ctrlVal) {
-	MotorControlValues.Motor1 = ctrlVal;
-	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
-	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR1_CHANNEL, (uint16_t)ccrVal);
-}
-
-/*
- * @brief       Sets the motor control PWM (sent to ESC) for motor 2
- * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
- * @retval      None.
- */
-void SetMotor2(uint16_t ctrlVal) {
-	MotorControlValues.Motor2 = ctrlVal;
-	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
-	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR2_CHANNEL, (uint16_t)ccrVal);
-}
-
-/*
- * @brief       Sets the motor control PWM (sent to ESC) for motor 3
- * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
- * @retval      None.
- */
-void SetMotor3(uint16_t ctrlVal) {
-	MotorControlValues.Motor3 = ctrlVal;
-	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
-	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR3_CHANNEL, (uint16_t)ccrVal);
-}
-
-/*
- * @brief       Sets the motor control PWM (sent to ESC) for motor 4
- * @param       ctrlVal: value [0,65535] indicating amount of motor thrust
- * @retval      None.
- */
-void SetMotor4(uint16_t ctrlVal) {
-	MotorControlValues.Motor4 = ctrlVal;
-	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
-	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR4_CHANNEL, (uint16_t)ccrVal);
+void SetMotors(uint16_t ctrlValMotor1, uint16_t ctrlValMotor2, uint16_t ctrlValMotor3, uint16_t ctrlValMotor4) {
+	SetMotor1(ctrlValMotor1);
+	SetMotor2(ctrlValMotor2);
+	SetMotor3(ctrlValMotor3);
+	SetMotor4(ctrlValMotor4);
 }
 
 /*
@@ -190,8 +163,7 @@ void SetMotor4(uint16_t ctrlVal) {
  * @param  None.
  * @retval None.
  */
-void PrintMotorControlValues(void)
-{
+void PrintMotorControlValues(void) {
 	static char motorCtrlString[MOTOR_CONTROL_PRINT_MAX_STRING_SIZE];
 
 	snprintf((char*) motorCtrlString, MOTOR_CONTROL_PRINT_MAX_STRING_SIZE,
@@ -223,30 +195,27 @@ void MotorAllocationRaw(void) {
 		m4 = u1 + u2 + u3 + MOTOR_CHANNEL4_ROTATION_DIRECTION*u4;
 
 		/* Check unsigned 16-bit overflow */
-		if (m1 > UINT16_MAX)
+		if (!IS_NOT_GREATER_UINT16_MAX(m1))
 			m1 = UINT16_MAX;
-		if (m2 > UINT16_MAX)
+		if (!IS_NOT_GREATER_UINT16_MAX(m2))
 			m2 = UINT16_MAX;
-		if (m3 > UINT16_MAX)
+		if (!IS_NOT_GREATER_UINT16_MAX(m3))
 			m3 = UINT16_MAX;
-		if (m4 > UINT16_MAX)
+		if (!IS_NOT_GREATER_UINT16_MAX(m4))
 			m4 = UINT16_MAX;
 
-		/* Check unsigned 16-bit underflow */
-		if (m1 < 0)
+		/* Check unsigned 16-bit underflow (less than zero) */
+		if (!IS_POS(m1))
 			m1 = 0;
-		if (m2 < 0)
+		if (!IS_POS(m2))
 			m2 = 0;
-		if (m3 < 0)
+		if (!IS_POS(m3))
 			m3 = 0;
-		if (m4 < 0)
+		if (!IS_POS(m4))
 			m4 = 0;
 
 		/* Set the motor signal values */
-		SetMotor1(m1);
-		SetMotor2(m2);
-		SetMotor3(m3);
-		SetMotor4(m4);
+		SetMotors(m1, m2, m3, m4);
 	} else {
 		ShutdownMotors();
 	}
@@ -258,18 +227,24 @@ void MotorAllocationRaw(void) {
  * @retval None.
  */
 void ShutdownMotors(void) {
+	/* Set the output compare pulses to zero width */
 	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR1_CHANNEL, 0);
 	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR2_CHANNEL, 0);
 	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR3_CHANNEL, 0);
 	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR4_CHANNEL, 0);
+
+	/* Set the motor struct values to zero */
+	MotorControlValues.Motor1 = 0;
+	MotorControlValues.Motor2 = 0;
+	MotorControlValues.Motor3 = 0;
+	MotorControlValues.Motor4 = 0;
 }
 
 /*
- * @brief  Allocates the desired thrust force and moments to corresponding motor action.
- * 		   Data has been fitted to map thrust force [N] and roll/pitch/yaw moments [Nm] to
- * 		   motor output PWM widths [us] of each of the four motors.
- * @param  None
- * @retval None
+ * @brief  Allocates the desired thrust force and moments to corresponding motor action. Data has been fitted to map
+ * 		   thrust force [N] and roll/pitch/yaw moments [Nm] to motor output PWM widths [us] of each of the four motors.
+ * @param  None.
+ * @retval None.
  */
 // TODO below is old code, but we need motor control allocated with mapping to thrust force and rotational moments
 // void ControlAllocation(void) {
@@ -321,8 +296,8 @@ void ShutdownMotors(void) {
 
 /*
  * @brief  Manual mode allocation - allocates raw RC input.
- * @param  None
- * @retval None
+ * @param  None.
+ * @retval None.
  */
 //void ManualModeAllocation(void) {
 //#ifdef TODO Manual mode allocation should perhaps also be mapped to thrust and rotational moments, but controlled
@@ -375,13 +350,17 @@ void ShutdownMotors(void) {
 //}
 
 /*
- * @brief  Creates a task to sample print motor signal values over USB
- * @param  sampleTime : Sets how often a sample should be printed
- * @param  sampleDuration : Sets for how long sampling should be performed
- * @retval MOTORCTRL_OK if thread started, else MOTORCTRL_ERROR
+ * @brief  Creates a task to sample print motor signal values over USB.
+ * @param  sampleTime : Sets how often a sample should be printed.
+ * @param  sampleDuration : Sets for how long sampling should be performed.
+ * @retval MOTORCTRL_OK if thread started, else MOTORCTRL_ERROR.
  */
 MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
-	motorControlPrintSampleTime = sampleTime;
+	if(sampleTime < MOTOR_CONTROL_PRINT_MINIMUM_SAMPLING_TIME)
+		motorControlPrintSampleTime = MOTOR_CONTROL_PRINT_MINIMUM_SAMPLING_TIME;
+	else
+		motorControlPrintSampleTime = sampleTime;
+
 	motorControlPrintSampleDuration = sampleDuration;
 
 	/* Motor control signal value print sampling handler thread creation
@@ -402,9 +381,9 @@ MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime,
 }
 
 /*
- * @brief  Stops motor control print sampling by deleting the task
- * @param  None
- * @retval MOTORCTRL_OK if task deleted, MOTORCTRL_ERROR if not
+ * @brief  Stops motor control print sampling by deleting the task.
+ * @param  None.
+ * @retval MOTORCTRL_OK if task deleted, MOTORCTRL_ERROR if not.
  */
 MotorControlErrorStatus StopMotorControlSamplingTask(void) {
 	if(MotorControlPrintSamplingTaskHandle != NULL) {
@@ -443,7 +422,49 @@ static void MotorControlPrintSamplingTask(void const *argument) {
 	}
 }
 
-/* Private functions ---------------------------------------------------------*/
+/*
+ * @brief  Sets the motor control PWM (sent to ESC) for motor 1
+ * @param  ctrlVal: value [0,65535] indicating amount of motor thrust
+ * @retval None.
+ */
+static void SetMotor1(uint16_t ctrlVal) {
+	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR1_CHANNEL, (uint16_t)ccrVal);
+	MotorControlValues.Motor1 = ctrlVal;
+}
+
+/*
+ * @brief  Sets the motor control PWM (sent to ESC) for motor 2
+ * @param  ctrlVal: value [0,65535] indicating amount of motor thrust
+ * @retval None.
+ */
+static void SetMotor2(uint16_t ctrlVal) {
+	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR2_CHANNEL, (uint16_t)ccrVal);
+	MotorControlValues.Motor2 = ctrlVal;
+}
+
+/*
+ * @brief  Sets the motor control PWM (sent to ESC) for motor 3
+ * @param  ctrlVal: value [0,65535] indicating amount of motor thrust
+ * @retval None.
+ */
+static void SetMotor3(uint16_t ctrlVal) {
+	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR3_CHANNEL, (uint16_t)ccrVal);
+	MotorControlValues.Motor3 = ctrlVal;
+}
+
+/*
+ * @brief  Sets the motor control PWM (sent to ESC) for motor 4
+ * @param  ctrlVal: value [0,65535] indicating amount of motor thrust
+ * @retval None.
+ */
+static void SetMotor4(uint16_t ctrlVal) {
+	uint32_t ccrVal = ESC_MIN_OUTPUT + ctrlVal * (ESC_MAX_OUTPUT - ESC_MIN_OUTPUT) / UINT16_MAX;
+	__HAL_TIM_SetCompare(&MotorControlTimHandle, MOTOR4_CHANNEL, (uint16_t)ccrVal);
+	MotorControlValues.Motor4 = ctrlVal;
+}
 
 /**
  * @}

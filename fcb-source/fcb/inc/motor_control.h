@@ -67,11 +67,7 @@ typedef enum {
 
 /* Exported functions ------------------------------------------------------- */
 void MotorControlConfig(void);
-void SetMotor1(uint16_t ctrlVal);
-void SetMotor2(uint16_t ctrlVal);
-void SetMotor3(uint16_t ctrlVal);
-void SetMotor4(uint16_t ctrlVal);
-
+void SetMotors(uint16_t ctrlValMotor1, uint16_t ctrlValMotor2, uint16_t ctrlValMotor3, uint16_t ctrlValMotor4);
 void MotorAllocationRaw(void);
 void ShutdownMotors(void);
 

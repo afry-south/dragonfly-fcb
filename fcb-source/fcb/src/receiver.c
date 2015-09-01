@@ -92,6 +92,7 @@ typedef struct {
 
 /* Private define ------------------------------------------------------------*/
 #define RECEIVER_PRINT_SAMPLING_TASK_PRIO				1
+#define RECEIVER_PRINT_MINIMUM_SAMPLING_TIME			22	// Since the receiver pulses have this update frequency
 #define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
 #define RECEIVER_CALRES_MAX_STRING_SIZE					256
 #define RECEIVER_SWITCH_ON_MIN_VAL						INT16_MAX*8/10
@@ -220,7 +221,11 @@ ReceiverErrorStatus ReceiverInputConfig(void) {
  * @retval RECEIVER_OK if thread started, else RECEIVER_ERROR
  */
 ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
-	receiverPrintSampleTime = sampleTime;
+	if(sampleTime < RECEIVER_PRINT_MINIMUM_SAMPLING_TIME)
+		receiverPrintSampleTime = RECEIVER_PRINT_MINIMUM_SAMPLING_TIME;
+	else
+		receiverPrintSampleTime = sampleTime;
+
 	receiverPrintSampleDuration = sampleDuration;
 
 	/* Receiver value print sampling handler thread creation

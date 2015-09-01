@@ -21,7 +21,8 @@
 /* Private define ------------------------------------------------------------*/
 #define FCB_SENSORS_DEBUG /* todo delete */
 
-#define SENSOR_PRINT_SAMPLING_TASK_PRIO		1
+#define SENSOR_PRINT_SAMPLING_TASK_PRIO					1
+#define SENSOR_PRINT_MINIMUM_SAMPLING_TIME				10 // [ms]
 
 #ifdef FCB_SENSORS_DEBUG
 static uint32_t cbk_gyro_counter = 0;
@@ -99,7 +100,11 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
  * @retval SENSORS_OK if thread started, else SENSORS_ERROR
  */
 SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
-	sensorPrintSampleTime = sampleTime;
+	if(sampleTime < SENSOR_PRINT_MINIMUM_SAMPLING_TIME)
+		sensorPrintSampleTime = SENSOR_PRINT_MINIMUM_SAMPLING_TIME;
+	else
+		sensorPrintSampleTime = sampleTime;
+
 	sensorPrintSampleDuration = sampleDuration;
 //	bool printGyroSamples; // TODO booleans to set which sensors should be sampled
 //	bool printAccSamples;

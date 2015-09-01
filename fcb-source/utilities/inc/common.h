@@ -17,7 +17,10 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 
-#define IS_POS(X) ((X) >= 0)
+/* Macro function that determines if its parameter is positive */
+#define IS_POS(X) 						((X) >= 0)
+
+#define IS_NOT_GREATER_UINT16_MAX(X)	((X) <= UINT16_MAX)
 
 /* Exported function prototypes --------------------------------------------- */
 void InitCRC(void);
