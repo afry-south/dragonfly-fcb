@@ -1,4 +1,12 @@
+/*****************************************************************************
+ * @file    trace.c
+ * @author  Dragonfly
+ * @date    2015-09-01
+ * @brief   File contains function to enable printouts in console during debug.
+ ******************************************************************************/
+
 #include "trace.h"
+#include "trace_impl.h"
 #include "fcb_retval.h"
 
 #include "FreeRTOS.h"
@@ -23,7 +31,6 @@ enum { TRACE_ARGS_MAX = 6 };
 
 /* public function definitions */
 
-
 int trace_post(const char * fmt, ...) {
     int ret_val = FCB_OK;
     int len;
@@ -45,10 +52,16 @@ int trace_post(const char * fmt, ...) {
     return ret_val;
 }
 
+/**
+ * This function enables debug printing in the console. The function works the same way as printf().
+ * @param format: printf format string and any number of non-string arguments
+ * @return ret: size of the string in byte
+ */
 int trace_printf(const char* format, ...) {
 	int ret;
 	va_list argList;
 
+	// variable arguments list
 	va_start(argList, format);
 
 	static char buf[TRACE_PRINTF_TMP_ARRAY_SIZE];
@@ -60,8 +73,10 @@ int trace_printf(const char* format, ...) {
 	}
 
 	va_end(argList);
+
 	return ret;
 }
+
 
 #if TODO
 int trace_sync(const char * fmt, ...) {
