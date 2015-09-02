@@ -148,9 +148,6 @@ static void InitSystem(void) {
 	/* Initialize Command Line Interface for USB communication */
 	RegisterCLICommands();
 
-	/* Init USB communication */
-	InitUSBCom();
-
 	/* Init on-board LEDs */
 	InitLEDs();
 

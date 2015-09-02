@@ -88,6 +88,7 @@
  * The values below are based on observed values of the Spektrum AR610 */
 #define RECEIVER_PULSE_DEFAULT_MAX_COUNT                34560   // Corresponds to 1.92 ms with 18Mhz counter clock
 #define RECEIVER_PULSE_DEFAULT_MIN_COUNT                19440   // Corresponds to 1.08 ms with 18Mhz counter clock
+#define RECEIVER_PULSE_DEFAULT_MID_COUNT                (RECEIVER_PULSE_DEFAULT_MAX_COUNT+RECEIVER_PULSE_DEFAULT_MIN_COUNT)/2 // Corresponds to 1.50 ms with 18Mhz counter clock
 
 /* Used for sanity check of IC pulse count, +/-20% of default count considered valid */
 #define RECEIVER_MAX_VALID_IC_PULSE_COUNT               RECEIVER_PULSE_DEFAULT_MAX_COUNT*12/10
@@ -101,26 +102,27 @@
 #define RECEIVER_MAX_CALIBRATION_DURATION               1200000 // [ms] Max receiver calibration duration
 #define RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD		1000	// [ms] How often receiver sample is printed
 #define RECEIVER_CALIBRATION_MIN_PULSE_COUNT            1000    // Corresponds to ~22.0 s of calibration (assuming period is 22 ms)
+#define RECEIVER_CALIBRATION_MAX_MID_PULSE_COUNT        300    	// Corresponds to ~6.6 s of calibration (assuming period is 6 ms)
+#define RECEIVER_CALIBRATION_MIN_MID_PULSE_COUNT        200
 #define RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE        16
-#define RECEIVER_MAX_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MAX_COUNT*11/10
-#define RECEIVER_MAX_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10
-#define RECEIVER_MIN_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*11/10
-#define RECEIVER_MIN_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10
+#define RECEIVER_MAX_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MAX_COUNT*11/10  // Max +10% deviation
+#define RECEIVER_MAX_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10   // Max -10% deviation
+#define RECEIVER_MIN_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*11/10  // Max +10% deviation
+#define RECEIVER_MIN_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10   // Max -10% deviation
+#define RECEIVER_MAX_CALIBRATION_MID_DEVIATION			RECEIVER_PULSE_DEFAULT_MID_COUNT*11/10	// Max +10% deviation
+#define RECEIVER_MIN_CALIBRATION_MID_DEVIATION			RECEIVER_PULSE_DEFAULT_MID_COUNT*9/10	// Max -10% deviation
 #define RECEIVER_CALIBRATION_BUFFER_INIT_VALUE			(RECEIVER_PULSE_DEFAULT_MAX_COUNT-RECEIVER_PULSE_DEFAULT_MIN_COUNT)/2 + RECEIVER_PULSE_DEFAULT_MIN_COUNT
 
 #define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.092 s
 
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
-	PULSE_LOW = 0, PULSE_HIGH = !PULSE_LOW
-} Pulse_State;
-
-typedef enum {
 	RECEIVER_ERROR = 0, RECEIVER_OK = !RECEIVER_ERROR
 } ReceiverErrorStatus;
 
 typedef struct {
 	uint16_t ChannelMaxCount;
+	uint16_t ChannelMidCount;
 	uint16_t ChannelMinCount;
 } Receiver_IC_ChannelCalibrationValues_TypeDef;
 
