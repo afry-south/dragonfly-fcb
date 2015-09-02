@@ -15,6 +15,7 @@
 #include "main.h"
 #include "receiver.h"
 #include "motor_control.h"
+#include "flight_control.h"
 #include "fifo_buffer.h"
 #include "common.h"
 #include "gyroscope.h"
@@ -127,6 +128,11 @@ static portBASE_TYPE CLIAbout(int8_t *pcWriteBuffer, size_t xWriteBufferLen, con
  * Function implements the "systime" command.
  */
 static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+
+/*
+ * Function implements the "get-flight-mode" command.
+ */
+static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -248,6 +254,13 @@ static const CLI_Command_Definition_t systimeCommand = { (const int8_t * const )
 		0 /* Number of parameters expected */
 };
 
+/* Structure that defines the "get-flight-mode" command line command. */
+static const CLI_Command_Definition_t getFlightModeCommand = { (const int8_t * const ) "get-flight-mode",
+		(const int8_t * const ) "\r\nget-flight-mode:\r\n Prints the current flight mode\r\n",
+		CLIGetFlightMode, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
 extern volatile FIFOBuffer_TypeDef USBCOMRxFIFOBuffer;
 extern xSemaphoreHandle USBCOMRxDataSem;
 
@@ -288,6 +301,7 @@ void RegisterCLICommands(void) {
 	/* System info CLI commands */
 	FreeRTOS_CLIRegisterCommand(&aboutCommand);
 	FreeRTOS_CLIRegisterCommand(&systimeCommand);
+	FreeRTOS_CLIRegisterCommand(&getFlightModeCommand);
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -966,6 +980,40 @@ static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, c
 
 	snprintf((char*) pcWriteBuffer, xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1, "System time [ms]: %u\r\n",
 			(unsigned int) HAL_GetTick());
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements "get-flight-mode" command, prints current flight control mode
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer, "Flight mode: ", xWriteBufferLen);
+
+	switch(GetFlightControlMode()) {
+	case FLIGHT_CONTROL_IDLE:
+		strncat((char*) pcWriteBuffer, "IDLE", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		break;
+	case FLIGHT_CONTROL_RAW:
+		strncat((char*) pcWriteBuffer, "RAW", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		break;
+	case FLIGHT_CONTROL_PID:
+		strncat((char*) pcWriteBuffer, "PID", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		break;
+	default:
+		strncat((char*) pcWriteBuffer, "UNKNOWN", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		break;
+	}
+
+	strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 	return pdFALSE;
 }
