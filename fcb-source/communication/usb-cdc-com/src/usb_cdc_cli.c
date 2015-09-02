@@ -128,6 +128,11 @@ static portBASE_TYPE CLIAbout(int8_t *pcWriteBuffer, size_t xWriteBufferLen, con
  */
 static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 
+/*
+ * Function implements the "task-status" command.
+ */
+static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+
 /* Private variables ---------------------------------------------------------*/
 
 /* Structure that defines the "echo" command line command. */
@@ -248,6 +253,13 @@ static const CLI_Command_Definition_t systimeCommand = { (const int8_t * const )
 		0 /* Number of parameters expected */
 };
 
+/* Structure that defines the "systime" command line command. */
+static const CLI_Command_Definition_t taskStatusCommand = { (const int8_t * const ) "task-status",
+		(const int8_t * const ) "\r\nsystime:\r\n Prints task status\r\n",
+		CLITaskStatus, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
 extern volatile FIFOBuffer_TypeDef USBCOMRxFIFOBuffer;
 extern xSemaphoreHandle USBCOMRxDataSem;
 
@@ -288,6 +300,7 @@ void RegisterCLICommands(void) {
 	/* System info CLI commands */
 	FreeRTOS_CLIRegisterCommand(&aboutCommand);
 	FreeRTOS_CLIRegisterCommand(&systimeCommand);
+	FreeRTOS_CLIRegisterCommand(&taskStatusCommand);
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -969,6 +982,26 @@ static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, c
 
 	return pdFALSE;
 }
+
+/**
+ * @brief  Implements "task-status" command, prints task status
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer, "Testing Task Status: \r\n",
+			xWriteBufferLen);
+	/*
+	 * The "task-status" command will print the status of all tasks. Use vTaskList() and vTaskGetRunTimeStats() ??*/
+	return pdFALSE;
+}
+
 
 /**
  * @}
