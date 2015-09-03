@@ -14,6 +14,7 @@
 #include "motor_control.h"
 #include "flight_control.h"
 #include "receiver.h"
+#include "task_status.h"
 #include "usbd_cdc_if.h"
 #include "usb_cdc_cli.h"
 #include "fcb_error.h"
@@ -166,6 +167,9 @@ static void InitSystem(void) {
 
 	/* Setup receiver timers for receiver input */
 	ReceiverInputConfig();
+
+	/* Setup timer for task status command*/
+	InitMonitoring();
 }
 
 /**

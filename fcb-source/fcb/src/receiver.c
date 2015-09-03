@@ -53,6 +53,8 @@
 #include "semphr.h"
 
 #include "stm32f3xx_hal.h"
+#include "task_status.h"
+#include "trace.h"
 
 /* Private typedef -----------------------------------------------------------*/
 typedef enum {
@@ -664,6 +666,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		PrimaryReceiverTimerPeriodCount++;
 	} else if (htim->Instance == AUX_RECEIVER_TIM) {
 		AuxReceiverTimerPeriodCount++;
+	} else if (htim->Instance == TASK_STATUS_TIM){
+		IncreaseTaskStatusTimerPeriodCount();
+		/* Debug print */
+		//trace_printf("TASK STATUS TIM Ticking. Has been ticking for %d periods.\n", GetTaskStatusTimerPeriodCount());
+
 	}
 }
 

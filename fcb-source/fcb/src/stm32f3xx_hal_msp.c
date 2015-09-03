@@ -54,6 +54,8 @@
 #include "motor_control.h"
 #include "receiver.h"
 
+#include "task_status.h"
+
 /** @addtogroup STM32F3xx_HAL_Driver
  * @{
  */
@@ -163,6 +165,18 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
 
 		/* Enable the AUX_RECEIVER_TIM global Interrupt */
 		HAL_NVIC_EnableIRQ(AUX_RECEIVER_TIM_IRQn);
+	} else if (htim->Instance == TASK_STATUS_TIM){ //for task status
+
+		/*##-1- Enable peripherals and GPIO Clocks #################################*/
+		/*TIM6 Peripheral clock enable */
+		TASK_STATUS_TIM_CLK_ENABLE();
+
+		/*##-2- Configure the NVIC for AUX_RECEIVER_TIM ############################*/
+		HAL_NVIC_SetPriority(TASK_STATUS_TIM_IRQn, AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO, AUX_RECEIVER_TIM_IRQ_SUB_PRIO);
+
+		/* Enable the AUX_RECEIVER_TIM global Interrupt */
+		HAL_NVIC_EnableIRQ(TASK_STATUS_TIM_IRQn);
+
 	}
 }
 

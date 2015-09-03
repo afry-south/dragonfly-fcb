@@ -30,6 +30,7 @@
 #include "semphr.h"
 #include "FreeRTOS_CLI.h"
 
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #define MAX_DATA_TRANSFER_DELAY         2000 // [ms]
@@ -995,10 +996,13 @@ static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
-	strncpy((char*) pcWriteBuffer, "Testing Task Status: \r\n",
-			xWriteBufferLen);
+	vTaskGetRunTimeStats(pcWriteBuffer);
+
+
+	//strncpy((char*) pcWriteBuffer, "Testing Task Status: \r\n",
+		//	xWriteBufferLen);
 	/*
-	 * The "task-status" command will print the status of all tasks. Use vTaskList() and vTaskGetRunTimeStats() ??*/
+	 * The "task-status" command will print the status of all tasks. Use vTaskList() or vTaskGetRunTimeStats() ??*/
 	return pdFALSE;
 }
 

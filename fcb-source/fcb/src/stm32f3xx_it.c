@@ -15,6 +15,7 @@
 #include "stm32f3_discovery.h"
 
 #include "fcb_error.h"
+#include "task_status.h"
 
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
  * @{
@@ -170,6 +171,15 @@ void PRIMARY_RECEIVER_TIM_IRQHandler(void) {
  */
 void AUX_RECEIVER_TIM_IRQHandler(void) {
 	HAL_TIM_IRQHandler(&AuxReceiverTimHandle);
+}
+
+/**
+ * @brief  This function handles the AUX_RECEIVER_TIM timer interrupt request.
+ * @param  None
+ * @retval None
+ */
+void TASK_STATUS_TIM_IRQHandler(void) {
+	HAL_TIM_IRQHandler(&TaskStatusTimHandle);
 }
 
 /**
