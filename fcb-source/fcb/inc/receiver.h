@@ -109,9 +109,9 @@
 #define RECEIVER_MAX_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10   // Max -10% deviation
 #define RECEIVER_MIN_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*11/10  // Max +10% deviation
 #define RECEIVER_MIN_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10   // Max -10% deviation
-#define RECEIVER_MAX_CALIBRATION_MID_DEVIATION			RECEIVER_PULSE_DEFAULT_MID_COUNT*11/10	// Max +10% deviation
-#define RECEIVER_MIN_CALIBRATION_MID_DEVIATION			RECEIVER_PULSE_DEFAULT_MID_COUNT*9/10	// Max -10% deviation
-#define RECEIVER_CALIBRATION_BUFFER_INIT_VALUE			(RECEIVER_PULSE_DEFAULT_MAX_COUNT-RECEIVER_PULSE_DEFAULT_MIN_COUNT)/2 + RECEIVER_PULSE_DEFAULT_MIN_COUNT
+#define RECEIVER_MID_CALIBRATION_MAX_PULSE_COUNT		RECEIVER_PULSE_DEFAULT_MID_COUNT*11/10	// Max +10% deviation
+#define RECEIVER_MID_CALIBRATION_MIN_PULSE_COUNT		RECEIVER_PULSE_DEFAULT_MID_COUNT*9/10	// Max -10% deviation
+#define RECEIVER_CALIBRATION_BUFFER_INIT_VALUE			(RECEIVER_PULSE_DEFAULT_MAX_COUNT+RECEIVER_PULSE_DEFAULT_MIN_COUNT)/2
 
 #define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.092 s
 
@@ -156,16 +156,22 @@ int16_t GetAux1ReceiverChannel(void);
 void PrintReceiverValues(void);
 
 uint16_t GetThrottleReceiverCalibrationMaxValue(void);
+uint16_t GetThrottleReceiverCalibrationMidValue(void);
 uint16_t GetThrottleReceiverCalibrationMinValue(void);
 uint16_t GetAileronReceiverCalibrationMaxValue(void);
+uint16_t GetAileronReceiverCalibrationMidValue(void);
 uint16_t GetAileronReceiverCalibrationMinValue(void);
 uint16_t GetElevatorReceiverCalibrationMaxValue(void);
+uint16_t GetElevatorReceiverCalibrationMidValue(void);
 uint16_t GetElevatorReceiverCalibrationMinValue(void);
 uint16_t GetRudderReceiverCalibrationMaxValue(void);
+uint16_t GetRudderReceiverCalibrationMidValue(void);
 uint16_t GetRudderReceiverCalibrationMinValue(void);
 uint16_t GetGearReceiverCalibrationMaxValue(void);
+uint16_t GetGearReceiverCalibrationMidValue(void);
 uint16_t GetGearReceiverCalibrationMinValue(void);
 uint16_t GetAux1ReceiverCalibrationMaxValue(void);
+uint16_t GetAuxReceiverCalibrationMidValue(void);
 uint16_t GetAux1ReceiverCalibrationMinValue(void);
 
 uint16_t GetThrottleReceiverChannelPulseTicks(void);

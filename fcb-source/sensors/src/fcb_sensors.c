@@ -57,7 +57,6 @@ int FcbSensorsConfig(void) {
         goto Error;
     }
 
-
     if (pdPASS != (rtosRetVal = xTaskCreate((pdTASK_CODE)ProcessSensorValues,
                                 (signed portCHAR*)"tFcbSensors",
                                 4 * configMINIMAL_STACK_SIZE,
