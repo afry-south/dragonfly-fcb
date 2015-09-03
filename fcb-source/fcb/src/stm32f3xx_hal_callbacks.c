@@ -10,6 +10,7 @@
 #include "receiver.h"
 #include "fcb_sensors.h"
 #include "gyroscope.h"
+#include "fcb_accelerometer_magnetometer.h"
 #include "fcb_error.h"
 
 #include "stm32f3_discovery.h"
@@ -45,7 +46,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 			UserButtonPressed = 0x0;
 		}
 	} else if (GPIO_Pin == GPIO_GYRO_DRDY) {
-		FcbSendSensorMessageFromISR(FCB_SENSOR_GYRO_DATA_READY);
+	  FcbSendSensorMessageFromISR(FCB_SENSOR_GYRO_DATA_READY);
+	} else if (GPIO_Pin == GPIO_ACCELEROMETER_DRDY) {
+	  FcbSendSensorMessageFromISR(FCB_SENSOR_ACC_DATA_READY);
+	} else if (GPIO_Pin == GPIO_MAGNETOMETER_DRDY) {
+	  FcbSendSensorMessageFromISR(FCB_SENSOR_MAGNETO_DATA_READY);
 	}
 }
 

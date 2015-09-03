@@ -54,7 +54,7 @@ int FcbSensorsConfig(void) {
 
     if (0 == (qFcbSensors = xQueueCreate(FCB_SENSORS_QUEUE_SIZE,
                                          FCB_SENSORS_Q_MSG_SIZE))) {
-        fcb_error();
+        ErrorHandler();
         goto Error;
     }
 
@@ -66,7 +66,7 @@ int FcbSensorsConfig(void) {
                                NULL /* parameter */,
                                1 /* priority */,
                                &tFcbSensors))) {
-        fcb_error();
+        ErrorHandler();
         goto Error;
     }
 
@@ -89,7 +89,7 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
 #endif
 
     if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
-        fcb_error();
+        ErrorHandler();
     }
 
     portYIELD_FROM_ISR(higherPriorityTaskWoken);
@@ -122,7 +122,7 @@ SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint
 	 * */
 	if (pdPASS != xTaskCreate((pdTASK_CODE )SensorPrintSamplingTask, (signed portCHAR*)"SENS_PRINT_SAMPL",
 			configMINIMAL_STACK_SIZE, NULL, SENSOR_PRINT_SAMPLING_TASK_PRIO, &SensorPrintSamplingTaskHandle)) {
-		fcb_error);
+		ErrorHandler();
 		return SENSORS_ERROR;
 	}
 
@@ -153,12 +153,12 @@ static void ProcessSensorValues(void* val __attribute__ ((unused))) {
     uint8_t msg;
 
     if (FCB_OK != InitialiseGyroscope()) {
-    	fcb_error();
+    	ErrorHandler();
     }
 
 
     if (FCB_OK != FcbInitialiseAccMagSensor()) {
-    	fcb_error();
+    	ErrorHandler();
     }
 
     while (1) {
@@ -169,7 +169,7 @@ static void ProcessSensorValues(void* val __attribute__ ((unused))) {
              * if no message was received, no interrupts from the sensors
              * aren't arriving and this is a serious error.
              */
-            fcb_error();
+            ErrorHandler();
             goto Error;
         }
 

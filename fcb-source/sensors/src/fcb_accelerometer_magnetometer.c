@@ -63,7 +63,7 @@ uint8_t FcbInitialiseAccMagSensor(void) {
 	BSP_ACCELERO_Reset();
 
 	if (ACCELERO_OK != BSP_ACCELERO_Init()) {
-		fcb_error();
+		ErrorHandler();
 		retVal = FCB_ERR_INIT;
 		goto Exit;
 	}
