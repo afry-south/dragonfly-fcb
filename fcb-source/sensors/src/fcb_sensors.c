@@ -145,7 +145,7 @@ SensorsErrorStatus StopSensorSamplingTask(void) {
 
 /* Private functions ---------------------------------------------------------*/
 
-static void ProcessSensorValues(void* val) {
+static void ProcessSensorValues(void* val __attribute__ ((unused))) {
 	/*
 	 * configures the sensors to start giving Data Ready interrupts
 	 * and then polls the queue in an infinite loop

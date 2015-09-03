@@ -1,7 +1,7 @@
 #ifndef FCB_ACCELEROMETER_H
 #define FCB_ACCELEROMETER_H
 /**
- * @file fcb_accelerometer.h
+ * @file fcb_accelerometer_magnetometer.h
  *
  * Implements an interface to the accelerometer part of the LSM303DLHC
  * combined magnetometer & accelerometer.
@@ -13,12 +13,20 @@
 #include "stm32f3_discovery.h"
 
 /**
- * The Data Ready input from the gyro sensor.
+ * The Data Ready input from the magnetometer.
  *
  * This definition is intended to be used in the
  * HAL_GPIO_EXTI_Callback function.
  */
-#define GPIO_ACCELEROMETER_DRDY GPIO_PIN_2
+#define GPIO_MAGNETOMETER_DRDY GPIO_PIN_2
+
+/**
+ * The Data Ready input from the magnetometer.
+ *
+ * This definition is intended to be used in the
+ * HAL_GPIO_EXTI_Callback function.
+ */
+#define GPIO_ACCELEROMETER_DRDY GPIO_PIN_4
 
 
 /**

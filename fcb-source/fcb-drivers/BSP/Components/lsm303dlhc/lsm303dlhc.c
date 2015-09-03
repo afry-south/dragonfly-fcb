@@ -38,10 +38,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "lsm303dlhc.h"
 
-#define  FCB_USE_ACC_DRDY1_INT1
-// #define FCB_USE_MAG_DRDY_INT1
-
-
 /** @addtogroup BSP
   * @{
   */
@@ -149,10 +145,9 @@ void LSM303DLHC_AccInit(uint16_t InitStruct)
     /* section 7.1.3 in LSM303DLHC data sheet doc DocID018771 Rev 2 /
      * DRDY1 means acceleropmeter
      */
-#ifdef FCB_USE_ACC_DRDY1_INT1
 	  uint8_t ctrlreg3 = 0x10;
-#endif
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, ctrlreg3);
+
+	  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, ctrlreg3);
 
   }
   /* Write value to ACC MEMS CTRL_REG4 register */
@@ -245,7 +240,7 @@ void LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState)
 void LSM303DLHC_AccReadXYZ(int16_t* pData)
 {
   int16_t pnRawData[3];
-  int8_t buffer[6];
+  uint8_t buffer[6];
   uint8_t i = 0;
   uint8_t sensitivity = LSM303DLHC_ACC_SENSITIVITY_2G;
 
@@ -261,13 +256,13 @@ void LSM303DLHC_AccReadXYZ(int16_t* pData)
    *
    * We use LSM303DLHC_BLE_LSB convention.
    */
-  for(i=0; i<3; i++)
+  for (i=0; i<3; i++)
   {
-    pnRawData[i]=((int16_t)((uint16_t)buffer[2*i+1] << 8) + buffer[2*i]);
+    pnRawData[i]=(int16_t)((int16_t)(buffer[2*i + 1] << 8) + buffer[2*i]);
   }
 
   /* Obtain the mg value for the three axis */
-  for(i=0; i<3; i++)
+  for (i=0; i<3; i++)
   {
     pData[i]=(pnRawData[i] / sensitivity);
   }
