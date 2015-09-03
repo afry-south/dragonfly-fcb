@@ -15,7 +15,7 @@
 #include "flight_control.h"
 #include "receiver.h"
 #include "usbd_cdc_if.h"
-#include "usb_cdc_cli.h"
+#include "usb_com_cli.h"
 #include "fcb_error.h"
 #include "fcb_retval.h"
 #include "fcb_sensors.h"

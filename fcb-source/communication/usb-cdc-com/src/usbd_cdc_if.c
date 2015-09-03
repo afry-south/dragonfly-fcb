@@ -12,7 +12,7 @@
 #include "usbd_cdc_if.h"
 #include "main.h"
 #include "fifo_buffer.h"
-#include "usb_cdc_cli.h"
+#include "usb_com_cli.h"
 #include "usbd_cdc.h"
 #include "fcb_error.h"
 
