@@ -49,7 +49,7 @@ uint8_t FcbInitialiseAccMagSensor(void) {
 #ifdef FCB_ACCMAG_DEBUG
 	{
 		GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-		GPIO_InitStruct.Pin = GPIO_PIN_9;
+		GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_11;
 		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 		GPIO_InitStruct.Pull = GPIO_PULLUP;
 		GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
@@ -127,8 +127,14 @@ void FetchDataFromMagnetometer(void) {
         }
         call_counter++;
     }
+    /* measure duration with oscilloscope on pin PD11 */
+    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
+
 #endif
 	LSM303DLHC_MagReadXYZ(sXYZMagVector);
+#ifdef FCB_ACCMAG_DEBUG
+    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
+#endif
 }
 
 void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot) {
