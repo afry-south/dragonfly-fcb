@@ -146,6 +146,9 @@ ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const u
 ReceiverErrorStatus StopReceiverSamplingTask(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
+void PrimaryReceiverTimerPeriodCountIncrement(void);
+void AuxReceiverTimerPeriodCountIncrement(void);
+
 int16_t GetThrottleReceiverChannel(void);
 int16_t GetAileronReceiverChannel(void);
 int16_t GetElevatorReceiverChannel(void);
@@ -187,6 +190,13 @@ uint32_t GetElevatorReceiverChannelPeriodTicks(void);
 uint32_t GetRudderReceiverChannelPeriodTicks(void);
 uint32_t GetGearReceiverChannelPeriodTicks(void);
 uint32_t GetAux1ReceiverChannelPeriodTicks(void);
+
+ReceiverErrorStatus UpdateReceiverThrottleChannel(void);
+ReceiverErrorStatus UpdateReceiverAileronChannel(void);
+ReceiverErrorStatus UpdateReceiverElevatorChannel(void);
+ReceiverErrorStatus UpdateReceiverRudderChannel(void);
+ReceiverErrorStatus UpdateReceiverGearChannel(void);
+ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 
 bool GetReceiverRawFlightSet(void);
 

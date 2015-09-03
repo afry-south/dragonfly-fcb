@@ -183,12 +183,6 @@ static ReceiverErrorStatus UpdateReceiverChannel(TIM_HandleTypeDef* TimHandle, T
 static ReceiverErrorStatus UpdateChannelCalibrationSamples(
 		volatile Receiver_ChannelCalibrationSampling_TypeDef* channelCalibrationSampling,
 		const uint16_t channelPulseTimerCount);
-static ReceiverErrorStatus UpdateReceiverThrottleChannel(void);
-static ReceiverErrorStatus UpdateReceiverAileronChannel(void);
-static ReceiverErrorStatus UpdateReceiverElevatorChannel(void);
-static ReceiverErrorStatus UpdateReceiverRudderChannel(void);
-static ReceiverErrorStatus UpdateReceiverGearChannel(void);
-static ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 
 static int16_t GetSignedReceiverChannel(volatile const Receiver_IC_Values_TypeDef* ChannelICValues,
 		volatile const Receiver_IC_ChannelCalibrationValues_TypeDef* ChannelCalibrationValues);
@@ -672,42 +666,6 @@ ReceiverErrorStatus IsReceiverActive(void) {
 }
 
 /**
- * @brief  Input Capture callback in non blocking mode
- * @param  htim : TIM IC handle
- * @retval None
- */
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
-	if (htim->Instance == PRIMARY_RECEIVER_TIM) {
-		if (htim->Channel == PRIMARY_RECEIVER_THROTTLE_ACTIVE_CHANNEL)
-			UpdateReceiverThrottleChannel();
-		else if (htim->Channel == PRIMARY_RECEIVER_AILERON_ACTIVE_CHANNEL)
-			UpdateReceiverAileronChannel();
-		else if (htim->Channel == PRIMARY_RECEIVER_ELEVATOR_ACTIVE_CHANNEL)
-			UpdateReceiverElevatorChannel();
-		else if (htim->Channel == PRIMARY_RECEIVER_RUDDER_ACTIVE_CHANNEL)
-			UpdateReceiverRudderChannel();
-	} else if (htim->Instance == AUX_RECEIVER_TIM) {
-		if (htim->Channel == AUX_RECEIVER_GEAR_ACTIVE_CHANNEL)
-			UpdateReceiverGearChannel();
-		else if (htim->Channel == AUX_RECEIVER_AUX1_ACTIVE_CHANNEL)
-			UpdateReceiverAux1Channel();
-	}
-}
-
-/**
- * @brief  Period elapsed callback in non blocking mode
- * @param  htim : TIM handle
- * @retval None
- */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if (htim->Instance == PRIMARY_RECEIVER_TIM) {
-		PrimaryReceiverTimerPeriodCount++;
-	} else if (htim->Instance == AUX_RECEIVER_TIM) {
-		AuxReceiverTimerPeriodCount++;
-	}
-}
-
-/**
  * @brief  Gets current throttle calibration max value
  * @param  None
  * @retval Calibrated value
@@ -867,6 +825,88 @@ uint16_t GetAux1ReceiverCalibrationMidValue(void) {
  */
 uint16_t GetAux1ReceiverCalibrationMinValue(void) {
 	return CalibrationValues.Aux1Channel.ChannelMinCount;
+}
+
+/*
+ * @brief  Handles the receiver input pulse measurements from the throttle channel and updates pulse and frequency values.
+ * @param  None.
+ * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
+ */
+ReceiverErrorStatus UpdateReceiverThrottleChannel(void) {
+	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &ThrottleChannelICConfig,
+			&ReceiverPulseStates.ThrottleInputState, &ThrottleICValues, PRIMARY_RECEIVER_THROTTLE_CHANNEL,
+			PrimaryReceiverTimerPeriodCount, &ThrottleCalibrationSampling);
+}
+
+/*
+ * @brief  Handles the receiver input pulse measurements from the aileron channel and updates pulse and frequency values.
+ * @param  None.
+ * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
+ */
+ReceiverErrorStatus UpdateReceiverAileronChannel(void) {
+	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &AileronChannelICConfig,
+			&ReceiverPulseStates.AileronInputState, &AileronICValues, PRIMARY_RECEIVER_AILERON_CHANNEL,
+			PrimaryReceiverTimerPeriodCount, &AileronCalibrationSampling);
+}
+
+/*
+ * @brief  Handles the receiver input pulse measurements from the elevator channel and updates pulse and frequency values.
+ * @param  None.
+ * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
+ */
+ReceiverErrorStatus UpdateReceiverElevatorChannel(void) {
+	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &ElevatorChannelICConfig,
+			&ReceiverPulseStates.ElevatorInputState, &ElevatorICValues, PRIMARY_RECEIVER_ELEVATOR_CHANNEL,
+			PrimaryReceiverTimerPeriodCount, &ElevatorCalibrationSampling);
+}
+
+/*
+ * @brief  Handles the receiver input pulse measurements from the rudder channel and updates pulse and frequency values.
+ * @param  None.
+ * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
+ */
+ReceiverErrorStatus UpdateReceiverRudderChannel(void) {
+	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &RudderChannelICConfig,
+			&ReceiverPulseStates.RudderInputState, &RudderICValues, PRIMARY_RECEIVER_RUDDER_CHANNEL,
+			PrimaryReceiverTimerPeriodCount, &RudderCalibrationSampling);
+}
+
+/*
+ * @brief  Handles the receiver input pulse measurements from the gear channel and updates pulse and frequency values.
+ * @param  None.
+ * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
+ */
+ReceiverErrorStatus UpdateReceiverGearChannel(void) {
+	return UpdateReceiverChannel(&AuxReceiverTimHandle, &GearChannelICConfig, &ReceiverPulseStates.GearInputState,
+			&GearICValues, AUX_RECEIVER_GEAR_CHANNEL, AuxReceiverTimerPeriodCount, &GearCalibrationSampling);
+}
+
+/*
+ * @brief  Handles the receiver input pulse measurements from the aux1 channel and updates pulse and frequency values.
+ * @param  None.
+ * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
+ */
+ReceiverErrorStatus UpdateReceiverAux1Channel(void) {
+	return UpdateReceiverChannel(&AuxReceiverTimHandle, &Aux1ChannelICConfig, &ReceiverPulseStates.Aux1InputState,
+			&Aux1ICValues, AUX_RECEIVER_AUX1_CHANNEL, AuxReceiverTimerPeriodCount, &Aux1CalibrationSampling);
+}
+
+/*
+ * @brief  Increments the primary timer's period counter
+ * @param  None.
+ * @retval None.
+ */
+void PrimaryReceiverTimerPeriodCountIncrement(void) {
+	PrimaryReceiverTimerPeriodCount++;
+}
+
+/*
+ * @brief  Increments the auxiliary timer's period counter
+ * @param  None.
+ * @retval None.
+ */
+void AuxReceiverTimerPeriodCountIncrement(void) {
+	AuxReceiverTimerPeriodCount++;
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -1296,70 +1336,6 @@ static ReceiverErrorStatus UpdateChannelCalibrationSamples(
 	channelCalibrationSampling->channelCalibrationPulseSamples++;
 
 	return RECEIVER_OK;
-}
-
-/*
- * @brief  Handles the receiver input pulse measurements from the throttle channel and updates pulse and frequency values.
- * @param  None.
- * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
- */
-static ReceiverErrorStatus UpdateReceiverThrottleChannel(void) {
-	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &ThrottleChannelICConfig,
-			&ReceiverPulseStates.ThrottleInputState, &ThrottleICValues, PRIMARY_RECEIVER_THROTTLE_CHANNEL,
-			PrimaryReceiverTimerPeriodCount, &ThrottleCalibrationSampling);
-}
-
-/*
- * @brief  Handles the receiver input pulse measurements from the aileron channel and updates pulse and frequency values.
- * @param  None.
- * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
- */
-static ReceiverErrorStatus UpdateReceiverAileronChannel(void) {
-	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &AileronChannelICConfig,
-			&ReceiverPulseStates.AileronInputState, &AileronICValues, PRIMARY_RECEIVER_AILERON_CHANNEL,
-			PrimaryReceiverTimerPeriodCount, &AileronCalibrationSampling);
-}
-
-/*
- * @brief  Handles the receiver input pulse measurements from the elevator channel and updates pulse and frequency values.
- * @param  None.
- * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
- */
-static ReceiverErrorStatus UpdateReceiverElevatorChannel(void) {
-	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &ElevatorChannelICConfig,
-			&ReceiverPulseStates.ElevatorInputState, &ElevatorICValues, PRIMARY_RECEIVER_ELEVATOR_CHANNEL,
-			PrimaryReceiverTimerPeriodCount, &ElevatorCalibrationSampling);
-}
-
-/*
- * @brief  Handles the receiver input pulse measurements from the rudder channel and updates pulse and frequency values.
- * @param  None.
- * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
- */
-static ReceiverErrorStatus UpdateReceiverRudderChannel(void) {
-	return UpdateReceiverChannel(&PrimaryReceiverTimHandle, &RudderChannelICConfig,
-			&ReceiverPulseStates.RudderInputState, &RudderICValues, PRIMARY_RECEIVER_RUDDER_CHANNEL,
-			PrimaryReceiverTimerPeriodCount, &RudderCalibrationSampling);
-}
-
-/*
- * @brief  Handles the receiver input pulse measurements from the gear channel and updates pulse and frequency values.
- * @param  None.
- * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
- */
-static ReceiverErrorStatus UpdateReceiverGearChannel(void) {
-	return UpdateReceiverChannel(&AuxReceiverTimHandle, &GearChannelICConfig, &ReceiverPulseStates.GearInputState,
-			&GearICValues, AUX_RECEIVER_GEAR_CHANNEL, AuxReceiverTimerPeriodCount, &GearCalibrationSampling);
-}
-
-/*
- * @brief  Handles the receiver input pulse measurements from the aux1 channel and updates pulse and frequency values.
- * @param  None.
- * @retval RECEIVER_OK if updated correctly, else RECEIVER_ERROR
- */
-static ReceiverErrorStatus UpdateReceiverAux1Channel(void) {
-	return UpdateReceiverChannel(&AuxReceiverTimHandle, &Aux1ChannelICConfig, &ReceiverPulseStates.Aux1InputState,
-			&Aux1ICValues, AUX_RECEIVER_AUX1_CHANNEL, AuxReceiverTimerPeriodCount, &Aux1CalibrationSampling);
 }
 
 /*
