@@ -996,13 +996,13 @@ static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
-	vTaskGetRunTimeStats(pcWriteBuffer);
+	strncpy((char*) pcWriteBuffer,
+				"**********************************************************\nTask\t\t\t Abs Time\t % Time\n**********************************************************\n",
+				xWriteBufferLen);
+	vTaskGetRunTimeStats(pcWriteBuffer + strlen((char*) pcWriteBuffer));
+	strncat((char*) pcWriteBuffer, "**********************************************************\n",
+				xWriteBufferLen - strlen((char*) pcWriteBuffer) -1);
 
-
-	//strncpy((char*) pcWriteBuffer, "Testing Task Status: \r\n",
-		//	xWriteBufferLen);
-	/*
-	 * The "task-status" command will print the status of all tasks. Use vTaskList() or vTaskGetRunTimeStats() ??*/
 	return pdFALSE;
 }
 
