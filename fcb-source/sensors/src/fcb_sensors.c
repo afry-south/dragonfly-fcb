@@ -8,7 +8,7 @@
 
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_sensors.h"
-#include "gyroscope.h"
+#include "fcb_gyroscope.h"
 #include "fcb_error.h"
 #include "fcb_retval.h"
 
@@ -76,7 +76,6 @@ Error:
 	/* clean up */
 	retVal = FCB_ERR_INIT;
 	goto Exit;
-
 }
 
 void FcbSendSensorMessageFromISR(uint8_t msg) {

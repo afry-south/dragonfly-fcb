@@ -19,7 +19,7 @@
 #include "fcb_error.h"
 #include "fcb_retval.h"
 #include "fcb_sensors.h"
-#include "gyroscope.h"
+#include "fcb_gyroscope.h"
 
 #include <string.h>
 
