@@ -6,6 +6,9 @@
  * @brief   Module implements the Kalman state estimation algorithm
  *****************************************************************************/
 
+// TODO NOTE: Alot of code below is from the old project. It may be used as reference for further development.
+// Eventually, it should be (re)moved and/or replaced or reimplemented.
+
 /* Includes ------------------------------------------------------------------*/
 #include "state_estimation.h"
 

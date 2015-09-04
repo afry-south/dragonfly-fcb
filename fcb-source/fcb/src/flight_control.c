@@ -121,6 +121,9 @@ static void SetFlightMode(void) {
 		flightControlMode = FLIGHT_CONTROL_IDLE;
 	} else if (GetReceiverRawFlightSet()) {
 		flightControlMode = FLIGHT_CONTROL_RAW;
+//	else if(GetReceiverPIDFlightSet()) { // TODO
+//		flightControlMode = FLIGHT_CONTROL_PID;
+//	}
 	} else {
 		flightControlMode = FLIGHT_CONTROL_IDLE;
 	}
@@ -132,37 +135,10 @@ static void SetFlightMode(void) {
  * @retval None
  */
 static void SetReferenceSignals(void) {
-#ifdef TODO
-	"reimplement this for new receiver code"
-
-	// Set velocity reference limits
-	if (PWMInputTimes.Throttle >= GetRCmin() && PWMInputTimes.Throttle <= GetRCmax())
-		RefSignals.ZVelocity = 2 * MAX_Z_VELOCITY * 1000 * (PWMInputTimes.Throttle - GetRCmid());
-	else
-		RefSignals.ZVelocity = -MAX_Z_VELOCITY;
-
-	// Set roll reference limits
-	if (PWMInputTimes.Aileron >= GetRCmin() && PWMInputTimes.Aileron <= GetRCmax())
-	RefSignals.RollAngle = 2 * MAX_ROLLPITCH_ANGLE * 1000
-	* (PWMInputTimes.Aileron - GetRCmid());
-	else
-	RefSignals.RollAngle = GetRCmid();
-
-	// Set pitch reference limits
-	if (PWMInputTimes.Elevator >= GetRCmin()
-			&& PWMInputTimes.Elevator <= GetRCmax())
-	RefSignals.PitchAngle = 2 * MAX_ROLLPITCH_ANGLE * 1000
-	* (PWMInputTimes.Elevator - GetRCmid());
-	else
-	RefSignals.PitchAngle = GetRCmid();
-
-	// Set yaw rate reference limits
-	if (PWMInputTimes.Rudder >= GetRCmin() && PWMInputTimes.Rudder <= GetRCmax())
-	RefSignals.YawRate = 2 * MAX_YAW_RATE * 1000
-	* (PWMInputTimes.Rudder - GetRCmid());
-	else
-	RefSignals.YawRate = GetRCmid();
-#endif
+	RefSignals.ZVelocity = MAX_Z_VELOCITY*GetThrottleReceiverChannel()/INT16_MAX;
+	RefSignals.RollAngle = MAX_ROLLPITCH_ANGLE*GetAileronReceiverChannel()/INT16_MAX;
+	RefSignals.PitchAngle = MAX_ROLLPITCH_ANGLE*GetElevatorReceiverChannel()/INT16_MAX;
+	RefSignals.YawAngleRate = MAX_YAW_RATE*GetRudderReceiverChannel()/INT16_MAX;
 }
 
 /**
@@ -174,6 +150,7 @@ static void FlightControlTask(void const *argument) {
 	(void) argument;
 
 	portTickType xLastWakeTime;
+	uint32_t ledFlashCounter = 0;
 
 	/* Initialise the xLastWakeTime variable with the current time */
 	xLastWakeTime = xTaskGetTickCount();
@@ -183,6 +160,14 @@ static void FlightControlTask(void const *argument) {
 
 		/* Update the flight control state and perform flight control activities */
 		UpdateFlightControl();
+
+		/* Blink with LED to indicate thread is alive */
+		if(ledFlashCounter % 100 == 0)
+			BSP_LED_On(LED6);
+		else if(ledFlashCounter % 20 == 0)
+			BSP_LED_Off(LED6);
+
+		ledFlashCounter++;
 	}
 }
 

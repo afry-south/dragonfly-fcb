@@ -1,8 +1,5 @@
 /******************************************************************************
  * @file    receiver.c
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-05-28
  * @brief   File contains functionality for signal reading from the Dragonfly
  *          RC receiver. The receiver model is Spektrum AR610, which uses DSMX
  *          frequency modulation technology. It outputs 6 channels: throttle,
@@ -932,28 +929,28 @@ static ReceiverErrorStatus InitReceiverCalibrationValues(void) {
  */
 static void SetDefaultReceiverCalibrationValues(volatile Receiver_CalibrationValues_TypeDef* calibrationValues) {
 	calibrationValues->ThrottleChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->ThrottleChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->ThrottleChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->ThrottleChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->AileronChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->AileronChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->AileronChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->AileronChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->ElevatorChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->ElevatorChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->ElevatorChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->ElevatorChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->RudderChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->RudderChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->RudderChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->RudderChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->GearChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->GearChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->GearChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->GearChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->Aux1Channel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->Aux1Channel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->Aux1Channel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->Aux1Channel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 }
 
 /*

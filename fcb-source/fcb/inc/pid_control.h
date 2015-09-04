@@ -18,7 +18,6 @@
 #define TD_VZ				0.5
 #define BETA_VZ				1.0			// Proportional set-point weighting
 #define N_VZ				15.0		// Max derivative gain (often 10-20)
-#define MAX_Z_VELOCITY		2.0			// Max vertical velocity (+/-) [m/s]
 #define MAX_THRUST			49.60		// Maximal upward thrust from all four motors combined [N]
 
 /* Roll/pitch control parameters */
@@ -27,7 +26,6 @@
 #define TD_RP				0.875
 #define BETA_RP				1.0			// Proportional set-point weighting
 #define N_RP				15.0		// Max derivative gain (often 10-20)
-#define MAX_ROLLPITCH_ANGLE 10*PI/180	// Max roll/pitch angle (+/-) [rad] (NOTE! Not in deg!)
 #define MAX_ROLLPITCH_MOM	MAX_THRUST*1.4142*LENGTH_ARM
 
 /* Yaw control parameters */
@@ -36,7 +34,6 @@
 #define TD_YR				0.5
 #define BETA_YR				1.0			// Proportional set-point weighting
 #define N_YR				15.0		// Max derivative gain (often 10-20)
-#define MAX_YAW_RATE		10*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct

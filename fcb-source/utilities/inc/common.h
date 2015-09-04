@@ -29,7 +29,6 @@ uint16_t UInt16Mean(const uint16_t* buffer, const uint16_t length);
 
 void InitLEDs(void);
 void LEDsOff(void);
-void ToggleLEDs(void);
 
 #endif /* __COMMON_H */
 

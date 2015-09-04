@@ -1,8 +1,5 @@
 /******************************************************************************
  * @file    receiver.h
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-04-16
  * @brief   Flight Control program for the Dragonfly quadcopter
  *          Header file for reading signals from the RC receiver
  ******************************************************************************/

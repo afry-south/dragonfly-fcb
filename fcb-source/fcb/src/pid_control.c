@@ -6,6 +6,9 @@
  * @brief   File contains PID control algorithm implementation
  ******************************************************************************/
 
+// TODO NOTE: Alot of code below is from the old project. It may be used as reference for further development.
+// Eventually, it should be (re)moved and/or replaced or reimplemented. See real-time system implementation of PID.
+
 /* Includes ------------------------------------------------------------------*/
 #include "pid_control.h"
 

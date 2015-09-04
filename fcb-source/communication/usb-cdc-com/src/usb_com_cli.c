@@ -569,19 +569,16 @@ static portBASE_TYPE CLIGetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWr
 	case 1:
 		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
 				"Throttle Max: %u\nThrottle Mid: %u\nThrottle Min: %u\nAileron Max: %u\nAileron Mid: %u\nAileron Min: %u\nElevator Max: %u\nElevator Mid: %u\nElevator Min: %u\nRudder Max: %u\nRudder Mid: %u\nRudder Min: %u\n",
-				GetThrottleReceiverCalibrationMaxValue(), GetThrottleReceiverCalibrationMidValue(),
-				GetThrottleReceiverCalibrationMinValue(), GetAileronReceiverCalibrationMaxValue(),
-				GetAileronReceiverCalibrationMidValue(), GetAileronReceiverCalibrationMinValue(),
-				GetElevatorReceiverCalibrationMaxValue(), GetElevatorReceiverCalibrationMidValue(),
-				GetElevatorReceiverCalibrationMinValue(), GetRudderReceiverCalibrationMaxValue(),
-				GetRudderReceiverCalibrationMidValue(), GetRudderReceiverCalibrationMinValue());
+				GetThrottleReceiverCalibrationMaxValue(), GetThrottleReceiverCalibrationMidValue(), GetThrottleReceiverCalibrationMinValue(),
+				GetAileronReceiverCalibrationMaxValue(), GetAileronReceiverCalibrationMidValue(), GetAileronReceiverCalibrationMinValue(),
+				GetElevatorReceiverCalibrationMaxValue(), GetElevatorReceiverCalibrationMidValue(), GetElevatorReceiverCalibrationMinValue(),
+				GetRudderReceiverCalibrationMaxValue(), GetRudderReceiverCalibrationMidValue(), GetRudderReceiverCalibrationMinValue());
 		break;
 	case 2:
 		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
 				"Gear Max: %u\nGear Mid: %u\nGear Min: %u\nAux1 Max: %u\nAux1 Mid: %u\nAux1 Min: %u\n\r\n",
-				GetGearReceiverCalibrationMaxValue(), GetGearReceiverCalibrationMidValue(),
-				GetGearReceiverCalibrationMinValue(), GetAux1ReceiverCalibrationMaxValue(),
-				GetAux1ReceiverCalibrationMidValue(), GetAux1ReceiverCalibrationMinValue());
+				GetGearReceiverCalibrationMaxValue(), GetGearReceiverCalibrationMidValue(), GetGearReceiverCalibrationMinValue(),
+				GetAux1ReceiverCalibrationMaxValue(), GetAux1ReceiverCalibrationMidValue(), GetAux1ReceiverCalibrationMinValue());
 		break;
 	default:
 		// memset(pcWriteBuffer, 0x00, xWriteBufferLen);
