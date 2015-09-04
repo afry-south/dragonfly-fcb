@@ -1,12 +1,12 @@
 /******************************************************************************
- * @file    usb_cdc_cli.c
+ * @file    fcb_sensors.c
  * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-07-24
  * @brief   Implementation of interface publicised in fcb_sensors.h
  ******************************************************************************/
 
-/* Includes ------------------------------------------------------------------*/
+#include "fcb_accelerometer_magnetometer.h"
 #include "fcb_sensors.h"
 #include "gyroscope.h"
 #include "fcb_error.h"
@@ -52,18 +52,21 @@ int FcbSensorsConfig(void) {
     portBASE_TYPE rtosRetVal;
     int retVal = FCB_OK;
 
-    if (pdFAIL == (qFcbSensors = xQueueCreate(FCB_SENSORS_QUEUE_SIZE, FCB_SENSORS_Q_MSG_SIZE))) {
-    	ErrorHandler();
+    if (0 == (qFcbSensors = xQueueCreate(FCB_SENSORS_QUEUE_SIZE,
+                                         FCB_SENSORS_Q_MSG_SIZE))) {
+        ErrorHandler();
         goto Error;
     }
 
-    if (pdPASS != (rtosRetVal = xTaskCreate((pdTASK_CODE)ProcessSensorValues,
-                                (signed portCHAR*)"tFcbSensors",
-                                4 * configMINIMAL_STACK_SIZE,
-                                NULL /* parameter */,
-                                1 /* priority */,
-                                &tFcbSensors))) {
-    	ErrorHandler();
+
+    if (pdPASS != (rtosRetVal =
+                   xTaskCreate((pdTASK_CODE)ProcessSensorValues,
+                               (signed portCHAR*)"tFcbSensors",
+                               4 * configMINIMAL_STACK_SIZE,
+                               NULL /* parameter */,
+                               1 /* priority */,
+                               &tFcbSensors))) {
+        ErrorHandler();
         goto Error;
     }
 
@@ -86,7 +89,7 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
 #endif
 
     if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
-    	ErrorHandler();
+        ErrorHandler();
     }
 
     portYIELD_FROM_ISR(higherPriorityTaskWoken);
@@ -142,7 +145,7 @@ SensorsErrorStatus StopSensorSamplingTask(void) {
 
 /* Private functions ---------------------------------------------------------*/
 
-static void ProcessSensorValues(void* val) {
+static void ProcessSensorValues(void* val __attribute__ ((unused))) {
 	/*
 	 * configures the sensors to start giving Data Ready interrupts
 	 * and then polls the queue in an infinite loop
@@ -150,6 +153,11 @@ static void ProcessSensorValues(void* val) {
     uint8_t msg;
 
     if (FCB_OK != InitialiseGyroscope()) {
+    	ErrorHandler();
+    }
+
+
+    if (FCB_OK != FcbInitialiseAccMagSensor()) {
     	ErrorHandler();
     }
 
@@ -161,7 +169,7 @@ static void ProcessSensorValues(void* val) {
              * if no message was received, no interrupts from the sensors
              * aren't arriving and this is a serious error.
              */
-        	ErrorHandler();
+            ErrorHandler();
             goto Error;
         }
 
@@ -171,14 +179,21 @@ static void ProcessSensorValues(void* val) {
                  * As settings are in BSP_GYRO_Init, the callback is called with a frequency
                  * of 94.5 Hz according to oscilloscope.
                  */
-                FetchAngleDotFromGyroscope();
+                FetchDataFromGyroscope();
                 break;
             case FCB_SENSOR_GYRO_CALIBRATE:
                 break;
-            case FCB_SENSOR_MAGNETO_ACC_DATA_READY:
+            case FCB_SENSOR_ACC_DATA_READY:
+            	FetchDataFromAccelerometer();
                 break;
-            case FCB_SENSOR_MAGNETO_ACC_CALIBRATE:
+            case FCB_SENSOR_ACC_CALIBRATE:
                 break;
+            case FCB_SENSOR_MAGNETO_DATA_READY:
+            	FetchDataFromMagnetometer();
+                break;
+            case FCB_SENSOR_MAGNETO_CALIBRATE:
+                break;
+
         }
 
         /* todo: call the state correction part of the Kalman Filter every time
@@ -192,6 +207,16 @@ Exit:
 Error:
     goto Exit;
 }
+
+void FcbSensorsInitGpioPinForInterrupt(GPIO_TypeDef  *GPIOx, uint32_t pin) {
+	GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitStructure.Pin = pin;
+	GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStructure.Pull = GPIO_NOPULL;
+	GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+	HAL_GPIO_Init(GPIOx, &GPIO_InitStructure);
+}
+
 
 /**
  * @brief  Task code handles sensor print sampling

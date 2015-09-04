@@ -22,7 +22,7 @@
  *
  * @todo tune size
  */
-enum { FCB_SENSORS_QUEUE_SIZE = 3 };
+enum { FCB_SENSORS_QUEUE_SIZE = 5 };
 
 /**
  * The messages are sent as uin8_t under the assumption that
@@ -34,8 +34,10 @@ enum { FCB_SENSORS_Q_MSG_SIZE = 1 };
 enum FcbSensorMessage {
     FCB_SENSOR_GYRO_DATA_READY = 0x0A,
     FCB_SENSOR_GYRO_CALIBRATE = 0x0B,
-    FCB_SENSOR_MAGNETO_ACC_DATA_READY = 0x1A,
-    FCB_SENSOR_MAGNETO_ACC_CALIBRATE = 0x1B,
+    FCB_SENSOR_ACC_DATA_READY = 0x1A,
+    FCB_SENSOR_ACC_CALIBRATE = 0x1B,
+    FCB_SENSOR_MAGNETO_DATA_READY = 0x2A,
+    FCB_SENSOR_MAGNETO_CALIBRATE = 0x2B,
 };
 
 typedef enum {
@@ -62,5 +64,16 @@ void FcbSendSensorMessageFromISR(uint8_t msg);
 
 SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 SensorsErrorStatus StopSensorSamplingTask(void);
+
+/**
+ * Wrapper fcn for enabling GPIO pin with default settings for receiving
+ * interrupts by calling HAL_GPIO_Init.
+ *
+ * @param  GPIOx: where x can be (A..F) to select the GPIO peripheral
+ * @param pin the pin to enable.
+ *
+ * @todo
+ */
+void FcbSensorsInitGpioPinForInterrupt(GPIO_TypeDef  *GPIOx, uint32_t pin);
 
 #endif /* FCB_SENSORS_H */

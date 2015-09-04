@@ -66,7 +66,6 @@ uint8_t InitialiseGyroscope(void) {
     uint8_t retVal = FCB_OK;
 
     GPIO_InitTypeDef GPIO_InitStructure;
-    BSP_LED_On(LED4);
 
     /* configure GYRO DRDY (data ready) interrupt */
     GYRO_CS_GPIO_CLK_ENABLE(); /* happens to be GPIOE */
@@ -89,12 +88,12 @@ uint8_t InitialiseGyroscope(void) {
     	ErrorHandler();
     }
 
-    FetchAngleDotFromGyroscope(); /* necessary so a fresh DRDY can be triggered */
+    FetchDataFromGyroscope(); /* necessary so a fresh DRDY can be triggered */
     return retVal;
 }
 
 
-void FetchAngleDotFromGyroscope(void) {
+void FetchDataFromGyroscope(void) {
 #ifdef FCB_GYRO_DEBUG
     static uint32_t call_counter = 0;
 #else

@@ -21,30 +21,21 @@
 /**
  * Initialises gyroscope.
  *
- * @retval DF_OK, error otherwise
+ * @retval FCB_OK, error otherwise
  */
 uint8_t InitialiseGyroscope(void);
-
-
-/**
- * This method is intended to be called from the EXTI1 ISR.
- *
- * It won't get called until InitialiseGyroscope has returned
- * success.
- */
-void GyroHandleDataReady(void);
 
 
 /**
  * Fetches data (rotation speed, or angle dot) from gyroscope
  * sensor.
  */
-void FetchAngleDotFromGyroscope(void);
+void FetchDataFromGyroscope(void);
 
 /*
  * get the current reading from the gyroscope.
  *
- * It is at a rate every 94.5Hz (configurable).
+ * It is updated at a rate of 94.5Hz (configurable).
  */
 void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot);
 

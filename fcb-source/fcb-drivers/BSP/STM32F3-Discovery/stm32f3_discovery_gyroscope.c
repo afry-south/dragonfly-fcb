@@ -37,6 +37,7 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3_discovery_gyroscope.h"
+#include "stm32f3xx_hal_def.h"
 
 /** @addtogroup Utilities
   * @{
