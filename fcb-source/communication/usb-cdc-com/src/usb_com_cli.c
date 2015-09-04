@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    usb_cdc_cli.c
+ * @file    usb_com_cli.c
  * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-07-24
@@ -10,14 +10,15 @@
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include "usb_cdc_cli.h"
+#include "usb_com_cli.h"
 
 #include "main.h"
 #include "receiver.h"
 #include "motor_control.h"
+#include "flight_control.h"
 #include "fifo_buffer.h"
 #include "common.h"
-#include "gyroscope.h"
+#include "fcb_gyroscope.h"
 #include "fcb_sensors.h"
 
 #include <stdlib.h>
@@ -29,7 +30,6 @@
 #include "task.h"
 #include "semphr.h"
 #include "FreeRTOS_CLI.h"
-
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -128,6 +128,11 @@ static portBASE_TYPE CLIAbout(int8_t *pcWriteBuffer, size_t xWriteBufferLen, con
  * Function implements the "systime" command.
  */
 static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+
+/*
+ * Function implements the "get-flight-mode" command.
+ */
+static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 
 /*
  * Function implements the "task-status" command.
@@ -254,7 +259,14 @@ static const CLI_Command_Definition_t systimeCommand = { (const int8_t * const )
 		0 /* Number of parameters expected */
 };
 
-/* Structure that defines the "systime" command line command. */
+/* Structure that defines the "get-flight-mode" command line command. */
+static const CLI_Command_Definition_t getFlightModeCommand = { (const int8_t * const ) "get-flight-mode",
+		(const int8_t * const ) "\r\nget-flight-mode:\r\n Prints the current flight mode\r\n",
+		CLIGetFlightMode, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "task-status" command line command. */
 static const CLI_Command_Definition_t taskStatusCommand = { (const int8_t * const ) "task-status",
 		(const int8_t * const ) "\r\nsystime:\r\n Prints task status\r\n",
 		CLITaskStatus, /* The function to run. */
@@ -301,6 +313,7 @@ void RegisterCLICommands(void) {
 	/* System info CLI commands */
 	FreeRTOS_CLIRegisterCommand(&aboutCommand);
 	FreeRTOS_CLIRegisterCommand(&systimeCommand);
+	FreeRTOS_CLIRegisterCommand(&getFlightModeCommand);
 	FreeRTOS_CLIRegisterCommand(&taskStatusCommand);
 }
 
@@ -568,13 +581,20 @@ static portBASE_TYPE CLIGetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWr
 		break;
 	case 1:
 		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-				"Throttle Max: %u\nThrottle Min: %u\nAileron Max: %u\nAileron Min: %u\nElevator Max: %u\nElevator Min: %u\nRudder Max: %u\nRudder Min: %u\nGear Max: %u\nGear Min: %u\nAux1 Max: %u\nAux1 Min: %u\n\r\n",
-				GetThrottleReceiverCalibrationMaxValue(), GetThrottleReceiverCalibrationMinValue(),
-				GetAileronReceiverCalibrationMaxValue(), GetAileronReceiverCalibrationMinValue(),
-				GetElevatorReceiverCalibrationMaxValue(), GetElevatorReceiverCalibrationMinValue(),
-				GetRudderReceiverCalibrationMaxValue(), GetRudderReceiverCalibrationMinValue(),
-				GetGearReceiverCalibrationMaxValue(), GetGearReceiverCalibrationMinValue(),
-				GetAux1ReceiverCalibrationMaxValue(), GetAux1ReceiverCalibrationMinValue());
+				"Throttle Max: %u\nThrottle Mid: %u\nThrottle Min: %u\nAileron Max: %u\nAileron Mid: %u\nAileron Min: %u\nElevator Max: %u\nElevator Mid: %u\nElevator Min: %u\nRudder Max: %u\nRudder Mid: %u\nRudder Min: %u\n",
+				GetThrottleReceiverCalibrationMaxValue(), GetThrottleReceiverCalibrationMidValue(),
+				GetThrottleReceiverCalibrationMinValue(), GetAileronReceiverCalibrationMaxValue(),
+				GetAileronReceiverCalibrationMidValue(), GetAileronReceiverCalibrationMinValue(),
+				GetElevatorReceiverCalibrationMaxValue(), GetElevatorReceiverCalibrationMidValue(),
+				GetElevatorReceiverCalibrationMinValue(), GetRudderReceiverCalibrationMaxValue(),
+				GetRudderReceiverCalibrationMidValue(), GetRudderReceiverCalibrationMinValue());
+		break;
+	case 2:
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+				"Gear Max: %u\nGear Mid: %u\nGear Min: %u\nAux1 Max: %u\nAux1 Mid: %u\nAux1 Min: %u\n\r\n",
+				GetGearReceiverCalibrationMaxValue(), GetGearReceiverCalibrationMidValue(),
+				GetGearReceiverCalibrationMinValue(), GetAux1ReceiverCalibrationMaxValue(),
+				GetAux1ReceiverCalibrationMidValue(), GetAux1ReceiverCalibrationMinValue());
 		break;
 	default:
 		// memset(pcWriteBuffer, 0x00, xWriteBufferLen);
@@ -985,6 +1005,40 @@ static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, c
 }
 
 /**
+ * @brief  Implements "get-flight-mode" command, prints current flight control mode
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer, "Flight mode: ", xWriteBufferLen);
+
+	switch(GetFlightControlMode()) {
+	case FLIGHT_CONTROL_IDLE:
+		strncat((char*) pcWriteBuffer, "IDLE", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		break;
+	case FLIGHT_CONTROL_RAW:
+		strncat((char*) pcWriteBuffer, "RAW", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		break;
+	case FLIGHT_CONTROL_PID:
+		strncat((char*) pcWriteBuffer, "PID", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		break;
+	default:
+		strncat((char*) pcWriteBuffer, "UNKNOWN", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		break;
+	}
+
+	strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+	return pdFALSE;
+}
+
+/**
  * @brief  Implements "task-status" command, prints task status
  * @param  pcWriteBuffer : Reference to output buffer
  * @param  xWriteBufferLen : Size of output buffer
@@ -1005,7 +1059,6 @@ static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen
 
 	return pdFALSE;
 }
-
 
 /**
  * @}

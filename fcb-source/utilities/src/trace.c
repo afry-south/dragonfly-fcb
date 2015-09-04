@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <string.h>
 
 /* Private defines */
 #ifndef TRACE_PRINTF_TMP_ARRAY_SIZE

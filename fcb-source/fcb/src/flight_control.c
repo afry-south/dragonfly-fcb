@@ -67,6 +67,15 @@ void CreateFlightControlTask(void) {
 	}
 }
 
+/**
+ * @brief  Returns the current flight control mode.
+ * @param  None.
+ * @retval Flight control mode enum
+ */
+enum FlightControlMode GetFlightControlMode(void) {
+	return flightControlMode;
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /*

@@ -37,6 +37,7 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3_discovery_gyroscope.h"
+#include "stm32f3xx_hal_def.h"
 
 /** @addtogroup Utilities
   * @{
@@ -138,7 +139,7 @@ uint8_t BSP_GYRO_Init(void)
     /* L3gd20 Init */	 
     GyroscopeDrv->Init(ctrlreg1, ctrlreg3, ctrlreg4);
   
-    L3GD20_FilterStructure.HighPassFilter_Mode_Selection =L3GD20_HPM_NORMAL_MODE_RES;
+    L3GD20_FilterStructure.HighPassFilter_Mode_Selection = L3GD20_HPM_NORMAL_MODE_RES;
     L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency = L3GD20_HPFCF_9;
 	
     ctrlreg2 = (uint8_t) ((L3GD20_FilterStructure.HighPassFilter_Mode_Selection |\

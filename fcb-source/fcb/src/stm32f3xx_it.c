@@ -1,14 +1,14 @@
 /**
- ******************************************************************************
- * @file    stm32f3xx_it.c
- * @author  �F Embedded Systems Syd
- * @version V1.0.0
- * @date    24-May-2015
- * @brief   Main Interrupt Service Routines.
- *          This file provides all exceptions handler and
- *          peripherals interrupt service routine.
- ******************************************************************************
- **/
+  ******************************************************************************
+  * @file    stm32f3xx_it.c
+  * @author  �F Embedded Systems Syd
+  * @version V1.0.0
+  * @date    24-May-2015
+  * @brief   Main Interrupt Service Routines.
+  *          This file provides all exceptions handler and
+  *          peripherals interrupt service routine.
+  ******************************************************************************
+**/
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx_it.h"
@@ -220,9 +220,21 @@ void EXTI0_IRQHandler(void) {
 }
 
 void EXTI1_IRQHandler(void) {
+  /* gyroscope data ready */
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
 }
 
+void EXTI4_IRQHandler(void)
+{
+  /* accelerometer data ready */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
+}
+
+void EXTI2_TS_IRQHandler(void)
+{
+  /* magnetometer data ready */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+}
 /**
  * @brief  This function handles PPP interrupt request.
  * @param  None

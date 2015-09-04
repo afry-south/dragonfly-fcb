@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file    usb_cdc_cli.h
+ * @file    usb_com_cli.h
  * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-07-24
@@ -8,8 +8,8 @@
  ******************************************************************************/
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USB_CDC_CLI_H
-#define __USB_CDC_CLI_H
+#ifndef __USB_COM_CLI_H
+#define __USB_COM_CLI_H
 
 /* Includes ------------------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
@@ -23,7 +23,7 @@
 /* Exported functions ------------------------------------------------------- */
 void RegisterCLICommands(void);
 
-#endif /* __USB_CDC_CLI_H */
+#endif /* __USB_COM_CLI_H */
 
 /**
  * @}

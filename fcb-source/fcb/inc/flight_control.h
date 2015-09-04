@@ -46,6 +46,7 @@ typedef struct
 
 /* Exported function prototypes --------------------------------------------- */
 void CreateFlightControlTask(void);
+enum FlightControlMode GetFlightControlMode(void);
 
 #endif /* __FLIGHT_CONTROL_H */
 

@@ -12,7 +12,7 @@
 #include "usbd_cdc_if.h"
 #include "main.h"
 #include "fifo_buffer.h"
-#include "usb_cdc_cli.h"
+#include "usb_com_cli.h"
 #include "usbd_cdc.h"
 #include "fcb_error.h"
 
@@ -43,6 +43,7 @@ typedef struct {
 #define USB_COM_TX_QUEUE_ITEMS          16
 
 /* Private function prototypes -----------------------------------------------*/
+static void InitUSBCom(void);
 static int8_t CDCItfInit(void);
 static int8_t CDCItfDeInit(void);
 static int8_t CDCItfControl(uint8_t cmd, uint8_t* pbuf, uint16_t length);
@@ -85,6 +86,31 @@ xSemaphoreHandle USBCOMTxBufferMutex;
 xSemaphoreHandle USBTxMutex;
 
 /* Private functions ---------------------------------------------------------*/
+
+/**
+ * @brief  Initializes the USB peripheral for CDC communication (COM port)
+ * @param  None.
+ * @retval None.
+ */
+static void InitUSBCom(void) {
+	/* Create CDC RX FIFO Buffer */
+	FIFOBufferInit(&USBCOMRxFIFOBuffer, USBCOMRxBufferArray, sizeof(USBCOMRxBufferArray));
+
+	/* Create CDC TX FIFO Buffer */
+	FIFOBufferInit(&USBCOMTxFIFOBuffer, USBCOMTxBufferArray, sizeof(USBCOMTxBufferArray));
+
+	/* Init Device Library */
+	USBD_Init(&hUSBDDevice, &VCP_Desc, 0);
+
+	/* Add Supported Class */
+	USBD_RegisterClass(&hUSBDDevice, &USBD_CDC);
+
+	/* Add CDC Interface Class */
+	USBD_CDC_RegisterInterface(&hUSBDDevice, &USBD_CDC_fops);
+
+	/* Start Device Process */
+	USBD_Start(&hUSBDDevice);
+}
 
 /**
  * @brief  CDCItfInit callback
@@ -219,6 +245,9 @@ static void USBComPortRXTask(void const *argument) {
 	static uint8_t cliInBuffer[MAX_CLI_COMMAND_SIZE];
 	static uint8_t cliOutBuffer[MAX_CLI_OUTPUT_SIZE];
 
+	/* Init USB communication */
+	InitUSBCom();
+
 	for (;;) {
 		bufferStatus = SUCCESS;
 		/* Wait forever for incoming data over USB by pending on the USB Rx queue */
@@ -315,29 +344,8 @@ static void USBComPortTXTask(void const *argument) {
 
 /* Exported functions --------------------------------------------------------*/
 
-void InitUSBCom(void) {
-	/* Create CDC RX FIFO Buffer */
-	FIFOBufferInit(&USBCOMRxFIFOBuffer, USBCOMRxBufferArray, sizeof(USBCOMRxBufferArray));
-
-	/* Create CDC TX FIFO Buffer */
-	FIFOBufferInit(&USBCOMTxFIFOBuffer, USBCOMTxBufferArray, sizeof(USBCOMTxBufferArray));
-
-	/* Init Device Library */
-	USBD_Init(&hUSBDDevice, &VCP_Desc, 0);
-
-	/* Add Supported Class */
-	USBD_RegisterClass(&hUSBDDevice, &USBD_CDC);
-
-	/* Add CDC Interface Class */
-	USBD_CDC_RegisterInterface(&hUSBDDevice, &USBD_CDC_fops);
-
-	/* Start Device Process */
-	USBD_Start(&hUSBDDevice);
-}
-
 /**
- * @brief  Data transmit over USB IN endpoint sent over CDC interface
- *         through this function.
+ * @brief  Data transmit over USB IN endpoint sent over CDC interface through this function.
  * @param  Buf: Buffer of data
  * @param  Len: Number of data received (in bytes)
  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL

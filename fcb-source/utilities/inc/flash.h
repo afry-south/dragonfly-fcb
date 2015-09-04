@@ -48,10 +48,8 @@ typedef enum {
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported function prototypes --------------------------------------------- */
-FlashErrorStatus ReadCalibrationValuesFromFlash(
-		volatile Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
-FlashErrorStatus WriteCalibrationValuesToFlash(
-		const Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
+FlashErrorStatus ReadCalibrationValuesFromFlash(volatile Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
+FlashErrorStatus WriteCalibrationValuesToFlash(const Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
 
 #endif /* __FLASH_H */
 
