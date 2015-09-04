@@ -1,9 +1,11 @@
 /******************************************************************************
- * @file    main.c
+ * @file    stm32f3xx_hal_callbacks.c
  * @author  Dragonfly
  * @version v. 1.0.0
  * @date    2015-08-12
- * @brief   Flight Control program for the Dragonfly quadcopter
+ * @brief   This module should implement various callback functions (such as
+ * 			those triggered by different interrupts) from the STM32F3xx HAL
+ * 			Driver library.
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
