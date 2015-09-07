@@ -103,11 +103,14 @@ static void UpdateFlightControl(void) {
 		// TODO Check that motors are armed
 		SetReferenceSignals();
 		// Do PID control
+		// PIDControl(&RefSignals);
 		// Set motors
 		return;
+
 	default:
 		ShutdownMotors();
 		return;
+
 	}
 }
 

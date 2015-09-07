@@ -11,7 +11,7 @@
 #define __PID_CONTROL_H_
 
 /* Includes ------------------------------------------------------------------*/
-#include "flight_control.h"
+#include "motor_control.h"
 
 #include "arm_math.h"
 
