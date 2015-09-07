@@ -15,7 +15,7 @@
 #include "stm32f3xx.h"
 
 #include "flight_control.h"
-#include "math.h"
+#include "arm_math.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
@@ -61,7 +61,7 @@ typedef enum {
 #define AT 			0.0002370
 #define BT 			-3.112
 #define AQ			R_PROP*0.00000258
-#define BQ			R_PROP*0.0296
+// #define BQ			R_PROP*0.0296
 
 /* Physical control allocation constants */
 #define THRUST_ALLOC_COEFF		1/(4*AT)

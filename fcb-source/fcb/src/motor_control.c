@@ -261,7 +261,10 @@ void ShutdownMotors(void) {
 /*
  * @brief  Allocates the desired thrust force and moments to corresponding motor action. Data has been fitted to map
  * 		   thrust force [N] and roll/pitch/yaw moments [Nm] to motor output signal values of each of the four motors.
- * @param  None.
+ * @param  u1 : thrust force [N]
+ * @param  u2 : roll moment [Nm]
+ * @param  u3 : pitch moment [Nm]
+ * @param  u4 : yaw moment [Nm]
  * @retval None.
  */
 void MotorAllocationPhysical(const float u1, const float u2, const float u3, const float u4) {
