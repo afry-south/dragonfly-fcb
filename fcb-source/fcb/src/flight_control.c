@@ -22,15 +22,31 @@
 #include "queue.h"
 
 /* Private typedef -----------------------------------------------------------*/
+typedef struct
+{
+  float ZVelocity;		// [m/s]
+  float RollAngle;		// [rad]
+  float PitchAngle;		// [rad]
+  float YawAngleRate;	// [rad/s]
+} RefSignals_TypeDef;
+
+typedef struct
+{
+  float Thrust;			// [N]
+  float RollMoment;		// [Nm]
+  float PitchMoment;	// [Nm]
+  float YawMoment;		// [Nm]
+} CtrlSignals_TypeDef;
+
 
 /* Private define ------------------------------------------------------------*/
 #define FLIGHT_CONTROL_TASK_PRIO		configMAX_PRIORITIES-1
-#define FLIGHT_CONTROL_TASK_PERIOD		10 // [ms]
 
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
 static RefSignals_TypeDef RefSignals; // Control reference signals
+static CtrlSignals_TypeDef CtrlSignals; // Physical control signals
 
 /* Flight mode */
 static enum FlightControlMode flightControlMode = FLIGHT_CONTROL_IDLE;
@@ -99,7 +115,7 @@ float GetRollAngleReferenceSignal(void) {
  * @param  None
  * @retval Pitch angle reference signal value
  */
-float GetPitchReferenceSignal(void) {
+float GetPitchAngleReferenceSignal(void) {
 	return RefSignals.PitchAngle;
 }
 
@@ -128,6 +144,7 @@ static void UpdateFlightControl(void) {
 
 	case FLIGHT_CONTROL_IDLE:
 		ShutdownMotors();
+		InitPIDControllers();	// Set PID control variables to initial values
 		return;
 
 	case FLIGHT_CONTROL_RAW:
@@ -137,10 +154,16 @@ static void UpdateFlightControl(void) {
 
 	case FLIGHT_CONTROL_PID:
 		// TODO Check that motors are armed
+
+		/* Set the control reference signals*/
 		SetReferenceSignals();
-		// Do PID control
-		// PIDControl(&RefSignals);
-		// Set motors
+
+		/* Update PID control output */
+		CtrlSignals.Thrust = AltitudeControl();
+		CtrlSignals.RollMoment = RollControl();
+		CtrlSignals.PitchMoment = PitchControl();
+		CtrlSignals.YawMoment = YawControl();
+		MotorAllocationPhysical(CtrlSignals.Thrust, CtrlSignals.RollMoment, CtrlSignals.PitchMoment, CtrlSignals.YawMoment);
 		return;
 
 	default:
@@ -168,11 +191,14 @@ static void SetFlightMode(void) {
 
 /*
  * @brief  Sets the reference values based on RC receiver input
+ *
+ * This sets the limits for maximum pilot input.
+ *
  * @param  None
  * @retval None
  */
 static void SetReferenceSignals(void) {
-	RefSignals.ZVelocity = MAX_Z_VELOCITY*GetThrottleReceiverChannel()/INT16_MAX;
+	RefSignals.ZVelocity = -MAX_Z_VELOCITY*GetThrottleReceiverChannel()/INT16_MAX; // Negative sign because Z points downwards
 	RefSignals.RollAngle = MAX_ROLLPITCH_ANGLE*GetAileronReceiverChannel()/INT16_MAX;
 	RefSignals.PitchAngle = MAX_ROLLPITCH_ANGLE*GetElevatorReceiverChannel()/INT16_MAX;
 	RefSignals.YawAngleRate = MAX_YAW_RATE*GetRudderReceiverChannel()/INT16_MAX;

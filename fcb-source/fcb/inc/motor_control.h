@@ -60,7 +60,7 @@ typedef enum {
 #define R_PROP		0.1397		// Propeller radius [m]
 #define AT 			0.0002370
 #define BT 			-3.112
-#define AQ			R_PROP*0.00000258
+#define AQ			0.00000258 // R_PROP*0.00000258 TODO Better estimate of this?
 // #define BQ			R_PROP*0.0296
 
 /* Physical control allocation constants */

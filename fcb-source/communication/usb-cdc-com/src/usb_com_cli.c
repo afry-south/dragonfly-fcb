@@ -1053,7 +1053,7 @@ static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBuffer
 
 	snprintf((char*) pcWriteBuffer, xWriteBufferLen,
 			"Reference signals:\nZ velocity: %1.2f m/s\nRoll angle: %1.2f rad\nPitch angle: %1.2f rad\nYaw angular rate: %1.2f rad/s\n",
-			GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchReferenceSignal(), GetYawAngularRateReferenceSignal());
+			GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchAngleReferenceSignal(), GetYawAngularRateReferenceSignal());
 
 	return pdFALSE;
 }
