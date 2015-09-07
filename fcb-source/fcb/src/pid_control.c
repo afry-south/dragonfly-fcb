@@ -19,10 +19,10 @@
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-PIDController_TypeDef AltCtrl;
-PIDController_TypeDef RollCtrl;
-PIDController_TypeDef PitchCtrl;
-PIDController_TypeDef YawCtrl;
+static PIDController_TypeDef AltCtrl;
+static PIDController_TypeDef RollCtrl;
+static PIDController_TypeDef PitchCtrl;
+static PIDController_TypeDef YawCtrl;
 
 /* Private function prototypes -----------------------------------------------*/
 

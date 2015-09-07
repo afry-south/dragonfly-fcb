@@ -30,12 +30,12 @@
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-RefSignals_TypeDef RefSignals; // Control reference signals
+static RefSignals_TypeDef RefSignals; // Control reference signals
 
 /* Flight mode */
-enum FlightControlMode flightControlMode = FLIGHT_CONTROL_IDLE;
+static enum FlightControlMode flightControlMode = FLIGHT_CONTROL_IDLE;
 
-xTaskHandle FlightControlTaskHandle;
+xTaskHandle FlightControlTaskHandle; // Task handle for flight control task
 
 /* Private function prototypes -----------------------------------------------*/
 static void UpdateFlightControl(void);

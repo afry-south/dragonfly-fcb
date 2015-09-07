@@ -14,6 +14,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
+#include "flight_control.h"
+#include "math.h"
+
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
 	MOTORCTRL_ERROR = 0, MOTORCTRL_OK = !MOTORCTRL_ERROR
@@ -50,19 +53,27 @@ typedef enum {
 #define ESC_MAX_OUTPUT                          48000 // 2.0 ms pulse
 #define ESC_MIN_OUTPUT                          24000 // 1.0 ms pulse
 
-/* Data fitting variables to map physical outputs to PWM widths
- * Thrust T = AT*t_out + CT 		[Unit: N] [t_out unit in seconds]
- * Draq torque Q = BQ*t_out + DQ	[Unit: Nm]
+/* Data fitting variables to map physical outputs to motor control values
+ * Thrust T(m) = AT*m + BT 		[Unit: N] [t_out unit in seconds]
+ * Draq torque Q(m) = AQ*m + BQ	[Unit: Nm]
  */
-#define AT 			15520.7
-#define CT 			-18.6312
-#define BQ 			478.966
-#define DQ 			-0.577590
+#define R_PROP		0.1397		// Propeller radius [m]
+#define AT 			0.0002370
+#define BT 			-3.112
+#define AQ			R_PROP*0.00000258
+#define BQ			R_PROP*0.0296
+
+/* Physical control allocation constants */
+#define THRUST_ALLOC_COEFF		1/(4*AT)
+#define THRUST_ALLOC_OFFSET		-BT/AT
+#define ROLLPITCH_ALLOC_COEFF	1*M_SQRT2/(4*AT*LENGTH_ARM)
+#define	YAW_ALLOC_COEFF			1/(4*AQ)
 
 /* Exported functions ------------------------------------------------------- */
 void MotorControlConfig(void);
 void SetMotors(uint16_t ctrlValMotor1, uint16_t ctrlValMotor2, uint16_t ctrlValMotor3, uint16_t ctrlValMotor4);
 void MotorAllocationRaw(void);
+void MotorAllocationPhysical(const float u1, const float u2, const float u3, const float u4);
 void ShutdownMotors(void);
 
 MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
