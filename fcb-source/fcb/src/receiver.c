@@ -100,6 +100,7 @@ typedef struct {
 #define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
 #define RECEIVER_CALRES_MAX_STRING_SIZE					256
 #define RECEIVER_SWITCH_ON_MIN_VAL						INT16_MAX*8/10
+#define RECEIVER_SWITCH_OFF_MAX_VAL						INT16_MIN*8/10
 
 /* Private macro -------------------------------------------------------------*/
 #define IS_RECEIVER_PULSE_VALID(PULSE_TIM_CNT, CURR_PERIOD_CNT, PRE_PERIOD_CNT)	(((PULSE_TIM_CNT) <= RECEIVER_MAX_VALID_IC_PULSE_COUNT) \
@@ -429,6 +430,18 @@ uint32_t GetAux1ReceiverChannelPeriodTicks(void) {
  */
 bool GetReceiverRawFlightSet(void) {
 	if(GetGearReceiverChannel() >= RECEIVER_SWITCH_ON_MIN_VAL && GetAux1ReceiverChannel() >= RECEIVER_SWITCH_ON_MIN_VAL)
+		return true;
+	else
+		return false;
+}
+
+/*
+ * @brief  Return boolean indicating if PID flight mode should be used (gear set to 0, aux1 set to 1)
+ * @param  None
+ * @retval bool indicating if raw flight mode set from receiver
+ */
+bool GetReceiverPIDFlightSet(void) {
+	if(GetGearReceiverChannel() <= RECEIVER_SWITCH_OFF_MAX_VAL && GetAux1ReceiverChannel() >= RECEIVER_SWITCH_ON_MIN_VAL)
 		return true;
 	else
 		return false;

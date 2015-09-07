@@ -11,6 +11,7 @@
 #define __SENSORS_H
 
 /* Includes ------------------------------------------------------------------*/
+#include "arm_math.h"
 
 /* Exported types ------------------------------------------------------------*/
 
@@ -46,7 +47,7 @@ typedef struct
 
 #define G_ACC				(float)	   	9.815					/* Gravitational acceleration constant approx. 9.815 m/s^2 in
 																 * Smygehuk, Sweden (according to Lantm�teriet) */
-// #define COMPASS_DECLINATION		   (float)		3.226*PI/180.0	/* For Malmoe, Sweden the compass declination is about 3.226 deg East
+#define COMPASS_DECLINATION		   (float)		3.226*PI/180.0	/* For Malmoe, Sweden the compass declination is about 3.226 deg East
  	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 /* The total field strength is 50552 nT (505.52 mGauss) */
 
 /* Exported macro ------------------------------------------------------------*/

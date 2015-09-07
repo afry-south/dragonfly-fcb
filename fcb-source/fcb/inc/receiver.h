@@ -195,6 +195,7 @@ ReceiverErrorStatus UpdateReceiverGearChannel(void);
 ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 
 bool GetReceiverRawFlightSet(void);
+bool GetReceiverPIDFlightSet(void);
 
 #endif /* __RECEIVER_H */
 

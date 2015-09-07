@@ -117,16 +117,14 @@ static void UpdateFlightControl(void) {
  * @retval None.
  */
 static void SetFlightMode(void) {
-	if (!IsReceiverActive()) {
+	if (!IsReceiverActive())
 		flightControlMode = FLIGHT_CONTROL_IDLE;
-	} else if (GetReceiverRawFlightSet()) {
+	else if (GetReceiverRawFlightSet())
 		flightControlMode = FLIGHT_CONTROL_RAW;
-//	else if(GetReceiverPIDFlightSet()) { // TODO
-//		flightControlMode = FLIGHT_CONTROL_PID;
-//	}
-	} else {
+	else if (GetReceiverPIDFlightSet())
+		flightControlMode = FLIGHT_CONTROL_PID;
+	else
 		flightControlMode = FLIGHT_CONTROL_IDLE;
-	}
 }
 
 /*

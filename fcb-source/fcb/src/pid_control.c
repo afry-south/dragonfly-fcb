@@ -12,6 +12,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "pid_control.h"
 
+#include "flight_control.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -31,7 +33,7 @@ PIDController_TypeDef YawCtrl;
  * @param	None.
  * @retval	None.
  */
-void InitPIDControllers() {
+void InitPIDControllers(void) {
 #ifdef TODO
 	/* Initialize Altitude Controller */
 	AltCtrl.K = K_VZ;
