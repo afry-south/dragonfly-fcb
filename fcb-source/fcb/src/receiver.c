@@ -1324,7 +1324,7 @@ static ReceiverErrorStatus UpdateChannelCalibrationSamples(
 	/* Check if stick is in its mid position and during the first seconds of calibration sampling */
 	if (channelPulseTimerCount > RECEIVER_MID_CALIBRATION_MIN_PULSE_COUNT
 			&& channelPulseTimerCount <= RECEIVER_MID_CALIBRATION_MAX_PULSE_COUNT
-			&& channelCalibrationSampling->channelCalibrationPulseSamples <= RECEIVER_CALIBRATION_MAX_MID_PULSE_COUNT) {
+			&& channelCalibrationSampling->channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_MID_PULSE_COUNT) {
 		channelCalibrationSampling->midSamplesPulseSum += channelPulseTimerCount;
 		channelCalibrationSampling->midPulseSamplesCount++;
 	}

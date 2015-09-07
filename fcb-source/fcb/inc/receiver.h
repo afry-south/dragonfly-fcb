@@ -99,8 +99,7 @@
 #define RECEIVER_MAX_CALIBRATION_DURATION               1200000 // [ms] Max receiver calibration duration
 #define RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD		1000	// [ms] How often receiver sample is printed
 #define RECEIVER_CALIBRATION_MIN_PULSE_COUNT            1000    // Corresponds to ~22.0 s of calibration (assuming period is 22 ms)
-#define RECEIVER_CALIBRATION_MAX_MID_PULSE_COUNT        300    	// Corresponds to ~6.6 s of calibration (assuming period is 6 ms)
-#define RECEIVER_CALIBRATION_MIN_MID_PULSE_COUNT        200
+#define RECEIVER_CALIBRATION_MIN_MID_PULSE_COUNT        500		// Corresponds to ~11.0 s of calibration (assuming period is 6 ms)
 #define RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE        16
 #define RECEIVER_MAX_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MAX_COUNT*11/10  // Max +10% deviation
 #define RECEIVER_MAX_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10   // Max -10% deviation
