@@ -54,6 +54,10 @@ typedef struct
 /* Exported function prototypes --------------------------------------------- */
 void CreateFlightControlTask(void);
 enum FlightControlMode GetFlightControlMode(void);
+float GetZVelocityReferenceSignal(void);
+float GetRollAngleReferenceSignal(void);
+float GetPitchReferenceSignal(void);
+float GetYawAngularRateReferenceSignal(void);
 
 #endif /* __FLIGHT_CONTROL_H */
 

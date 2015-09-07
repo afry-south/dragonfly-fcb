@@ -76,6 +76,42 @@ enum FlightControlMode GetFlightControlMode(void) {
 	return flightControlMode;
 }
 
+/*
+ * @brief  Get Z velocity reference
+ * @param  None
+ * @retval Z velocity reference signal value
+ */
+float GetZVelocityReferenceSignal(void) {
+	return RefSignals.ZVelocity;
+}
+
+/*
+ * @brief  Get roll angle reference
+ * @param  None
+ * @retval Roll angle reference signal value
+ */
+float GetRollAngleReferenceSignal(void) {
+	return RefSignals.RollAngle;
+}
+
+/*
+ * @brief  Get pitch angle reference
+ * @param  None
+ * @retval Pitch angle reference signal value
+ */
+float GetPitchReferenceSignal(void) {
+	return RefSignals.PitchAngle;
+}
+
+/*
+ * @brief  Get yaw angular velocity reference
+ * @param  None
+ * @retval Yaw angular velocity reference signal value
+ */
+float GetYawAngularRateReferenceSignal(void) {
+	return RefSignals.YawAngleRate;
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /*

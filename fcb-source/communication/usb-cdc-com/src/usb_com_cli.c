@@ -134,6 +134,11 @@ static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, c
  */
 static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 
+/*
+ * Function implements the "get-ref-signals" command.
+ */
+static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+
 /* Private variables ---------------------------------------------------------*/
 
 /* Structure that defines the "echo" command line command. */
@@ -261,6 +266,13 @@ static const CLI_Command_Definition_t getFlightModeCommand = { (const int8_t * c
 		0 /* Number of parameters expected */
 };
 
+/* Structure that defines the "get-ref-signals" command line command. */
+static const CLI_Command_Definition_t getRefSignalsCommand = { (const int8_t * const ) "get-ref-signals",
+		(const int8_t * const ) "\r\nget-ref-signals:\r\n Prints the current reference signal\r\n",
+		CLIGetRefSignals, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
 extern volatile FIFOBuffer_TypeDef USBCOMRxFIFOBuffer;
 extern xSemaphoreHandle USBCOMRxDataSem;
 
@@ -301,7 +313,10 @@ void RegisterCLICommands(void) {
 	/* System info CLI commands */
 	FreeRTOS_CLIRegisterCommand(&aboutCommand);
 	FreeRTOS_CLIRegisterCommand(&systimeCommand);
+
+	/* Flight control CLI commands */
 	FreeRTOS_CLIRegisterCommand(&getFlightModeCommand);
+	FreeRTOS_CLIRegisterCommand(&getRefSignalsCommand);
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -1018,6 +1033,27 @@ static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBuffer
 	}
 
 	strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements "get-ref-signals" command, prints current reference signals
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer, "Re: ", xWriteBufferLen);
+
+	snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+			"Reference signals:\nZ velocity: %1.2f m/s\nRoll angle: %1.2f rad\nPitch angle: %1.2f rad\nYaw angular rate: %1.2f rad/s\n",
+			GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchReferenceSignal(), GetYawAngularRateReferenceSignal());
 
 	return pdFALSE;
 }

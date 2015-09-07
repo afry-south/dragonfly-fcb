@@ -436,12 +436,12 @@ bool GetReceiverRawFlightSet(void) {
 }
 
 /*
- * @brief  Return boolean indicating if PID flight mode should be used (gear set to 0, aux1 set to 1)
+ * @brief  Return boolean indicating if PID flight mode should be used (gear set to 1, aux1 set to 0)
  * @param  None
  * @retval bool indicating if raw flight mode set from receiver
  */
 bool GetReceiverPIDFlightSet(void) {
-	if(GetGearReceiverChannel() <= RECEIVER_SWITCH_OFF_MAX_VAL && GetAux1ReceiverChannel() >= RECEIVER_SWITCH_ON_MIN_VAL)
+	if(GetGearReceiverChannel() >= RECEIVER_SWITCH_ON_MIN_VAL && GetAux1ReceiverChannel() <= RECEIVER_SWITCH_OFF_MAX_VAL)
 		return true;
 	else
 		return false;
