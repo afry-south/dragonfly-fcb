@@ -1,8 +1,5 @@
 /****************************************************************************
 * @file    state_estimation.h
-* @author  Dragonfly
-* @version v. 1.0.0
-* @date    2014-09-26
 * @brief   Header file for state_estimation.c
 *****************************************************************************/
 
@@ -48,15 +45,6 @@ typedef struct
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported functions ------------------------------------------------------- */
-void CompassConfig(void);
-void CompassReadMag(volatile float* pfData);
-void CompassReadAcc(volatile float* pfData);
-
-void CalibrateGyro(void);
-void CalibrateAcc(void);
-void CalibrateMag(void);
-void InitStateEstimation(void);
-
 float GetRoll(void);
 float GetPitch(void);
 float GetYawRate(void);

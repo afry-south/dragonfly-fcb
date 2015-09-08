@@ -1,8 +1,5 @@
 /*****************************************************************************
  * @file    motor_control.h
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-05-07
  * @brief   Flight Control program for the �F Dragonfly quadcopter
  *          Header file for motor PWM output
  ******************************************************************************/

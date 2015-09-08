@@ -1,9 +1,6 @@
 /**
  ******************************************************************************
  * @file    usbd_cdc_if.h
- * @author  Dragonfly
- * @version v. 0.1.0
- * @date    2015-07-16
  * @brief   USB CDC Interface header file
  ******************************************************************************
  */
@@ -23,7 +20,8 @@
 
 /* Exported constants --------------------------------------------------------*/
 typedef enum {
-	ARRAY_BUFFER, FIFO_BUFFER
+	ARRAY_BUFFER,
+	FIFO_BUFFER
 } BufferType_TypeDef;
 
 extern USBD_CDC_ItfTypeDef USBD_CDC_fops;

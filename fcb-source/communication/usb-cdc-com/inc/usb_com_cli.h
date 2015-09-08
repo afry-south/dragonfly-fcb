@@ -1,8 +1,5 @@
 /******************************************************************************
  * @file    usb_com_cli.h
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-07-24
  * @brief   Header file USB CDC class with Command Line Interface (CLI)
  *          functions.
  ******************************************************************************/

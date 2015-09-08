@@ -74,7 +74,7 @@ Sample reference to \cite{stenberg}.
 
 \section{Hardware}
 
-\subsection{STM32F3Discovery}
+\subsection{STM32F3Discovery Board}
 The STM32F3Discovery is an evaluation board provided by STMicroelectronics. It features an STM32F303VCT6 microprocessor based on the ARM Cortex-M4 core. For evaluation purposes, the board has been fitted with accelerometer, magnetometer and gyroscope sensors, an on-board ST-Link/V2 debugger/programmer, various LED:s, extension headers for all I/O pins and more.
 
 \begin{itemize}
@@ -89,6 +89,22 @@ The STM32F3Discovery is an evaluation board provided by STMicroelectronics. It f
   \item 10 LEDs
   \item Two pushbuttons (User and Reset)
   \item USB USER Mini-B connector
+\end{itemize}
+
+\subsection{Motors}
+The motors of choice for the Dragonfly are of the type \emph{T-motor U3}, which are sensorless (no built-in Hall sensor) brushless motors, designed to deliver high performance and reliability. They are resistant to dirt and water. There are several benefits of using brushless motors instead of traditional DC motors. These include longer life-time (due to no brushes that become worn out), less noisy operation and more efficient cooling.
+
+\begin{itemize}
+  \item Motor velocity constant ($K_V$): $700$ $rpm/V$
+  \item Configuration: 12N-14P (12 stator poles, 14 magnet poles) 
+  \item Motor dimensions (d x l): $41.8$ × $30.75$ $mm
+  \item Weight: $97$ $g$
+  \item ldle current at $10$ $V$: $0.5$ $A$
+  \item No. of cells (LiPo): 3-4S
+  \item Max continuous current ($180$ $s$): $25$ $A$
+  \item Max continuous power ($180$ $s$): $400$ $W$
+  \item Max efficiency current: $4-10$ $A$ $>$ $82$ \%
+  \item Internal resistance: $50$ $m\Ohm$
 \end{itemize}
 
 \section{Software}

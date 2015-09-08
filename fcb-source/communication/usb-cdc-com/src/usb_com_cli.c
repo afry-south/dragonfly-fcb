@@ -1,8 +1,5 @@
 /******************************************************************************
  * @file    usb_com_cli.c
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-07-24
  * @brief   File contains functionality to use the USB CDC class with a
  *          Command Line Interface (CLI). Each command is associated with
  *          number of command parameters and a function which executes command

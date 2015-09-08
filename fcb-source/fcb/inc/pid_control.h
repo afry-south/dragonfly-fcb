@@ -19,16 +19,16 @@
 /* Vertical control parameters */
 #define K_VZ 				2.0
 #define TI_VZ				0.0
-#define TD_VZ				1.0
+#define TD_VZ				0.5
 #define BETA_VZ				1.0			// Proportional set-point weighting
 #define GAMMA_VZ			1.0
 #define N_VZ				15.0		// Max derivative gain (often 10-20)
 #define MAX_THRUST			4*AT*UINT16_MAX + 4*BT	// Maximal upward thrust from all four motors combined [N]
 
 /* Roll/pitch control parameters */
-#define K_RP				8.0			// Roll/pitch angle controller parameters
+#define K_RP				2.0			// Roll/pitch angle controller parameters
 #define TI_RP				0.0
-#define TD_RP				0.875
+#define TD_RP				0.5
 #define BETA_RP				1.0			// Proportional set-point weighting
 #define GAMMA_RP			1.0
 #define N_RP				15.0		// Max derivative gain (often 10-20)

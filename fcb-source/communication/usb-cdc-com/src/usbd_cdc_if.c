@@ -1,9 +1,6 @@
 /**
  ******************************************************************************
  * @file    usbd_cdc_if.c
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-07-16
  * @brief   USB CDC Interface functions for the Dragonfly quadrotor UAV
  ******************************************************************************
  */

@@ -1,8 +1,5 @@
 /*****************************************************************************
  * @file    motor_control.c
- * @author  Dragonfly
- * @version v. 0.0.1
- * @date    2014-09-29
  * @brief   File contains PWM output configuration and handling functions. PWM
  *          pulses of ~1-2 ms are used to control the ESC:s, which in turn control
  *          Dragonfly's motors.
