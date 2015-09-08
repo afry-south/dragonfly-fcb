@@ -58,10 +58,10 @@ typedef enum {
  * Draq torque Q(m) = AQ*m + BQ	[Unit: Nm]
  */
 #define R_PROP		0.1397		// Propeller radius [m]
-#define AT 			0.0002370
-#define BT 			-3.112
-#define AQ			0.00000258 // R_PROP*0.00000258 TODO Better estimate of this?
-// #define BQ			R_PROP*0.0296
+#define AT 			0.0001768
+#define BT 			0.0
+#define AQ			0.000001748	// This was calculated based on aerodynamic rotor equations
+// #define BQ			0.0
 
 /* Physical control allocation constants */
 #define THRUST_ALLOC_COEFF		1/(4*AT)
