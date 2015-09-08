@@ -50,18 +50,29 @@ message FlightStates {
 
 // Sets the PID control parameters used by the Flight Control Board control algorithms
 message PIDControlParams {
-	optional float K_vz = 1;
-	optional float Ti_vz = 2;
-	optional float Td_vz = 3;
-	optional float K_vx = 4;
-	optional float Ti_vx = 5;
-	optional float Td_vx = 6;
+	optional float K_vxy = 1;
+	optional float Ti_vxy = 2;
+	optional float Td_vxy = 3;
+	optional float K_vz = 4;
+	optional float Ti_vz = 5;
+	optional float Td_vz = 6;
 	optional float K_rollpitch = 7;
 	optional float Ti_rollpitch = 8;
 	optional float Td_rollpitch = 9;
 	optional float K_yawrate = 10;
 	optional float Ti_yawrate = 11;
 	optional float Td_yawrate = 12;
+}
+
+// Contains current control reference signal values
+message PIDControlParams {
+	optional float refVx = 1;
+	optional float refVy = 2;
+	optional float refVz = 3;
+	optional float refRoll = 4;
+	optional float refPitch = 5;
+	optional float refYaw = 6;
+	optional float refYawRate = 7;
 }
 
 // Simulated states supposed to be sent from simulator to Flight Control Board and used to drive the control algorithms

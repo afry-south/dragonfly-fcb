@@ -28,7 +28,7 @@
 #define G_ACC				(float)	   	9.815					/* Gravitational acceleration constant approx. 9.815 m/s^2 in
 																 * Smygehuk, Sweden (according to Lantm�teriet) */
 #define COMPASS_DECLINATION		   (float)		3.226*PI/180.0	/* For Malmoe, Sweden the compass declination is about 3.226 deg East
- 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 /* The total field strength is 50552 nT (505.52 mGauss) */
+ 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 * The total field strength is 50552 nT (505.52 mGauss) */
 /* Reference signal ranges */
 #define MAX_Z_VELOCITY			2.0			// Max vertical velocity (+/-) [m/s] // TODO use int values m/s, mrad, mrad/s
 #define MAX_ROLLPITCH_ANGLE 	15*PI/180	// Max roll/pitch angle (+/-) [rad] (NOTE! Not in deg!)

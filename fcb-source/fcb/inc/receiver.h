@@ -11,6 +11,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
+#include "usbd_cdc_if.h"
+
 #include <stdbool.h>
 
 /* Exported constants --------------------------------------------------------*/
@@ -138,7 +140,8 @@ ReceiverErrorStatus ReceiverInputConfig(void);
 ReceiverErrorStatus StartReceiverCalibration(void);
 ReceiverErrorStatus StopReceiverCalibration(void);
 void ResetReceiverCalibrationValues(void);
-ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
+ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration,
+		const SerializationType_TypeDef serializationType);
 ReceiverErrorStatus StopReceiverSamplingTask(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
@@ -152,7 +155,7 @@ int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
 
-void PrintReceiverValues(void);
+void PrintReceiverValues(SerializationType_TypeDef serializationType);
 
 uint16_t GetThrottleReceiverCalibrationMaxValue(void);
 uint16_t GetThrottleReceiverCalibrationMidValue(void);

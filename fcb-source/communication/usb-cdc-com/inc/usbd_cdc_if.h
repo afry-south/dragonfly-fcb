@@ -24,6 +24,11 @@ typedef enum {
 	FIFO_BUFFER
 } BufferType_TypeDef;
 
+typedef enum {
+	NO_SERIALIZATION,
+	PROTOBUFFER_SERIALIZATION
+} SerializationType_TypeDef;
+
 extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
 
 #define USB_COM_MAX_DELAY			1000

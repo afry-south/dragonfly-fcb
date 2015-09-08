@@ -38,10 +38,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "receiver.h"
-#include "usbd_cdc_if.h"
+
 #include "flash.h"
 #include "common.h"
 #include "fcb_error.h"
+#include "dragonfly_fcb_cli.pb.h"
+#include "pb_encode.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -165,6 +167,7 @@ static volatile uint16_t AuxReceiverTimerPeriodCount;
 xTaskHandle ReceiverPrintSamplingTaskHandle = NULL;
 static volatile uint16_t receiverPrintSampleTime;
 static volatile uint16_t receiverPrintSampleDuration;
+static SerializationType_TypeDef receiverPrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static ReceiverErrorStatus InitReceiverCalibrationValues(void);
@@ -221,13 +224,16 @@ ReceiverErrorStatus ReceiverInputConfig(void) {
  * @param  sampleDuration : Sets for how long sampling should be performed
  * @retval RECEIVER_OK if thread started, else RECEIVER_ERROR
  */
-ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
+ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration,
+		const SerializationType_TypeDef serializationType) {
+
 	if(sampleTime < RECEIVER_PRINT_MINIMUM_SAMPLING_TIME)
 		receiverPrintSampleTime = RECEIVER_PRINT_MINIMUM_SAMPLING_TIME;
 	else
 		receiverPrintSampleTime = sampleTime;
 
 	receiverPrintSampleDuration = sampleDuration;
+	receiverPrintSerializationType = serializationType;
 
 	/* Receiver value print sampling handler thread creation
 	 * Task function pointer: ReceiverPrintSamplingTask
@@ -447,26 +453,61 @@ bool GetReceiverPIDFlightSet(void) {
 		return false;
 }
 
-void PrintReceiverValues(void)
+/*
+ * @brief  Return boolean indicating if PID flight mode should be used (gear set to 1, aux1 set to 0)
+ * @param  serialization type enum
+ * @retval None.
+ */
+void PrintReceiverValues(SerializationType_TypeDef serializationType)
 {
-	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE];
+	static uint8_t sampleBuffer[RECEIVER_SAMPLING_MAX_STRING_SIZE];
 
-	strncpy(sampleString, "Receiver channel values (Value / Ticks):\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
-	if (IsReceiverActive())
-		strncat(sampleString, "ACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	else
-		strncat((char*) sampleString, "INACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	if(serializationType == NO_SERIALIZATION) {
+		strncpy((char*) sampleBuffer, "Receiver channel values (Value / Ticks):\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		if (IsReceiverActive())
+			strncat((char*) sampleBuffer, "ACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen((char*) sampleBuffer) - 1);
+		else
+			strncat((char*) sampleBuffer, "INACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen((char*) sampleBuffer) - 1);
 
-	USBComSendString(sampleString);
+		USBComSendString((char*) sampleBuffer);
 
-	snprintf((char*) sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE,
-			"Throttle: %d / %u\nAileron: %d / %u\nElevator: %d / %u\nRudder: %d / %u\nGear: %d / %u\nAux1: %d / %u\n\r\n",
-			GetThrottleReceiverChannel(), GetThrottleReceiverChannelPulseTicks(), GetAileronReceiverChannel(),
-			GetAileronReceiverChannelPulseTicks(), GetElevatorReceiverChannel(), GetElevatorReceiverChannelPulseTicks(),
-			GetRudderReceiverChannel(), GetRudderReceiverChannelPulseTicks(), GetGearReceiverChannel(),
-			GetGearReceiverChannelPulseTicks(), GetAux1ReceiverChannel(), GetAux1ReceiverChannelPulseTicks());
+		snprintf((char*) sampleBuffer, RECEIVER_SAMPLING_MAX_STRING_SIZE,
+				"Throttle: %d / %u\nAileron: %d / %u\nElevator: %d / %u\nRudder: %d / %u\nGear: %d / %u\nAux1: %d / %u\n\r\n",
+				GetThrottleReceiverChannel(), GetThrottleReceiverChannelPulseTicks(), GetAileronReceiverChannel(),
+				GetAileronReceiverChannelPulseTicks(), GetElevatorReceiverChannel(), GetElevatorReceiverChannelPulseTicks(),
+				GetRudderReceiverChannel(), GetRudderReceiverChannelPulseTicks(), GetGearReceiverChannel(),
+				GetGearReceiverChannelPulseTicks(), GetAux1ReceiverChannel(), GetAux1ReceiverChannelPulseTicks());
+		USBComSendString((char*) sampleBuffer); // Send string over USB
+	}
+	else if(serializationType == PROTOBUFFER_SERIALIZATION)
+	{
+		bool protoStatus;
+		ReceiverSignalValues receiverSignalsProto;
+		receiverSignalsProto.has_throttle = true;
+		receiverSignalsProto.has_aileron = true;
+		receiverSignalsProto.has_elevator = true;
+		receiverSignalsProto.has_rudder = true;
+		receiverSignalsProto.has_gear = true;
+		receiverSignalsProto.has_aux1 = true;
+		receiverSignalsProto.throttle = GetThrottleReceiverChannel();
+		receiverSignalsProto.aileron = GetAileronReceiverChannel();
+		receiverSignalsProto.elevator = GetElevatorReceiverChannel();
+		receiverSignalsProto.rudder = GetRudderReceiverChannel();
+		receiverSignalsProto.gear = GetGearReceiverChannel();
+		receiverSignalsProto.aux1 = GetAux1ReceiverChannel();
 
-	USBComSendString(sampleString);
+		/* Since this is not a string, we need to make sure no clutter exists */
+		memset(sampleBuffer, '\0', RECEIVER_SAMPLING_MAX_STRING_SIZE);
+
+		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
+		pb_ostream_t protoStream = pb_ostream_from_buffer(sampleBuffer, RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		protoStatus = pb_encode(&protoStream, ReceiverSignalValues_fields, &receiverSignalsProto);
+
+		if(protoStatus)
+			USBComSendData(sampleBuffer, protoStream.bytes_written);
+		else
+			ErrorHandler();
+	}
 }
 
 /*
@@ -501,7 +542,7 @@ ReceiverErrorStatus StartReceiverCalibration(void) {
 		receiverCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
 
 		/* Start printing calibration samples */
-		StartReceiverSamplingTask(RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD, RECEIVER_MAX_CALIBRATION_DURATION/configTICK_RATE_HZ);
+		StartReceiverSamplingTask(RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD, RECEIVER_MAX_CALIBRATION_DURATION/configTICK_RATE_HZ, NO_SERIALIZATION);
 
 		return RECEIVER_OK;
 	}
@@ -1581,7 +1622,7 @@ static void ReceiverPrintSamplingTask(void const *argument) {
 			receiverCalibrationStartSaturatingMessageSent = true;
 		}
 
-		PrintReceiverValues();
+		PrintReceiverValues(receiverPrintSerializationType);
 
 		/* If sampling duration exceeded, delete task to stop sampling */
 		if (xTaskGetTickCount() >= xSampleStartTime + receiverPrintSampleDuration * configTICK_RATE_HZ)

@@ -10,6 +10,7 @@
 #include "usb_com_cli.h"
 
 #include "main.h"
+#include "dragonfly_fcb_cli.pb.h"
 #include "receiver.h"
 #include "motor_control.h"
 #include "flight_control.h"
@@ -174,9 +175,9 @@ static const CLI_Command_Definition_t resetReceiverCalibrationCommand = { (const
 
 /* Structure that defines the "get-receiver" command line command. */
 static const CLI_Command_Definition_t getReceiverCommand = { (const int8_t * const ) "get-receiver",
-		(const int8_t * const ) "\r\nget-receiver:\r\n Prints current receiver values\r\n",
+		(const int8_t * const ) "\r\nget-receiver <encoding>:\r\n Returns current receiver values with <encoding> (n=none, p=protobuf)\r\n",
 		CLIGetReceiver, /* The function to run. */
-		0 /* Number of parameters expected */
+		1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "get-receiver-calibration" command line command. */
@@ -188,9 +189,9 @@ static const CLI_Command_Definition_t getReceiverCalibrationCommand = { (const i
 
 /* Structure that defines the "start-receiver-sampling" command line command. */
 static const CLI_Command_Definition_t startReceiverSamplingCommand = { (const int8_t * const ) "start-receiver-sampling",
-		(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s\r\n",
+		(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=protobuf)\r\n",
 		CLIStartReceiverSampling, /* The function to run. */
-		2 /* Number of parameters expected */
+		3 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-receiver-sampling" command line command. */
@@ -533,21 +534,34 @@ static portBASE_TYPE CLIResetReceiverCalibration(int8_t* pcWriteBuffer, size_t x
 }
 
 /**
- * @brief  Implements the CLI command to print receiver values
+ * @brief  Implements the CLI command to print receiver values with or without serialization
  * @param  pcWriteBuffer : Reference to output buffer
  * @param  xWriteBufferLen : Size of output buffer
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
 static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString) {
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength;
+	portBASE_TYPE lParameterNumber = 0;
+
 	/* Remove compile time warnings about unused parameters */
-	(void) pcCommandString;
 	(void) xWriteBufferLen;
 
-	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	/* Obtain the parameter string. */
+	pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+			lParameterNumber, /* Return the next parameter. */
+			&xParameterStringLength /* Store the parameter string length. */
+	);
+
+	/* Sanity check something was returned. */
+	configASSERT(pcParameter);
 
 	/* Get the current receiver values */
-	PrintReceiverValues();
+	if(pcParameter[0] == 'n')
+		PrintReceiverValues(NO_SERIALIZATION);
+	else if(pcParameter[0] == 'p')
+		PrintReceiverValues(PROTOBUFFER_SERIALIZATION);
 
 	/* Return false to indicate command activity finished */
 	return pdFALSE;
@@ -672,8 +686,20 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 
 		receiverSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
 
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+				lParameterNumber, /* Return the next parameter. */
+				&xParameterStringLength /* Store the parameter string length. */);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
 		/* Start the receiver value sampling task */
-		StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
+		if(pcParameter[0] == 'n')
+			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration, NO_SERIALIZATION);
+		else if(pcParameter[0] == 'p')
+			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration, PROTOBUFFER_SERIALIZATION);
 	}
 
 	/* Update return value and parameter index */
