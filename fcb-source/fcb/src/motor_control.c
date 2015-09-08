@@ -218,9 +218,9 @@ void MotorAllocationRaw(void) {
 
 	/* Calculate raw control signals for throttle, roll, pitch, yaw */
 	u1 = (GetThrottleReceiverChannel()-INT16_MIN); // Re-scale to uint16
-	u2 = u1*GetAileronReceiverChannel()/INT16_MAX;
-	u3 = u1*GetElevatorReceiverChannel()/INT16_MAX;
-	u4 = u1*GetRudderReceiverChannel()/INT16_MAX;
+	u2 = -u1*GetAileronReceiverChannel()/INT16_MAX;
+	u3 = -u1*GetElevatorReceiverChannel()/INT16_MAX;
+	u4 = -u1*GetRudderReceiverChannel()/INT16_MAX;
 
 	/* Map raw control signals to motor output */
 	m1 = u1 + Motor1Properties.rollDir*u2 + Motor1Properties.pitchDir*u3 + Motor1Properties.yawDir*u4;

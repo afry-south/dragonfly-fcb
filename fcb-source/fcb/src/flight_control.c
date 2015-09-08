@@ -190,18 +190,39 @@ static void SetFlightMode(void) {
 }
 
 /*
- * @brief  Sets the reference values based on RC receiver input
- *
- * This sets the limits for maximum pilot input.
- *
+ * @brief  Sets the reference values based on RC receiver input. This sets the limits for maximum pilot input.
  * @param  None
  * @retval None
  */
 static void SetReferenceSignals(void) {
-	RefSignals.ZVelocity = -MAX_Z_VELOCITY*GetThrottleReceiverChannel()/INT16_MAX; // Negative sign because Z points downwards
-	RefSignals.RollAngle = MAX_ROLLPITCH_ANGLE*GetAileronReceiverChannel()/INT16_MAX;
-	RefSignals.PitchAngle = MAX_ROLLPITCH_ANGLE*GetElevatorReceiverChannel()/INT16_MAX;
-	RefSignals.YawAngleRate = MAX_YAW_RATE*GetRudderReceiverChannel()/INT16_MAX;
+
+	if(GetThrottleReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetThrottleReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.ZVelocity = 0.0;
+	else if(GetThrottleReceiverChannel() >= 0)
+		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(GetThrottleReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+	else
+		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(GetThrottleReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+
+	if(GetAileronReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetAileronReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.RollAngle = 0.0;
+	else if(GetAileronReceiverChannel() >= 0)
+		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(GetAileronReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	else
+		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(GetAileronReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING);
+
+	if(GetElevatorReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetElevatorReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.PitchAngle = 0.0;
+	else if(GetElevatorReceiverChannel() >= 0)
+		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(GetElevatorReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	else
+		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(GetElevatorReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING);
+
+	if(GetRudderReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetRudderReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.YawAngleRate = 0.0;
+	else if(GetRudderReceiverChannel() >= 0)
+		RefSignals.YawAngleRate = -MAX_YAW_RATE*(GetRudderReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	else
+		RefSignals.YawAngleRate = -MAX_YAW_RATE*(GetRudderReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING);
 }
 
 /**

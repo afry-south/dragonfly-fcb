@@ -34,6 +34,8 @@
 #define MAX_ROLLPITCH_ANGLE 	15*PI/180	// Max roll/pitch angle (+/-) [rad] (NOTE! Not in deg!)
 #define MAX_YAW_RATE			30*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
+#define RECEIVER_TO_REFERENCE_ZERO_PADDING	1800	// Sets how large an area around 0 receiver value the reference signal should be set to zero
+
 enum FlightControlMode {
 	FLIGHT_CONTROL_IDLE,
 	FLIGHT_CONTROL_RAW,
