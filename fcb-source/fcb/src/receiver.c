@@ -43,6 +43,7 @@
 #include "common.h"
 #include "fcb_error.h"
 #include "dragonfly_fcb_cli.pb.h"
+#include "usb_com_cli.h"
 #include "pb_encode.h"
 
 #include <string.h>
@@ -506,15 +507,14 @@ void PrintReceiverValues(SerializationType_TypeDef serializationType)
 		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedReceiverData, RECEIVER_SAMPLING_MAX_STRING_SIZE);
 		protoStatus = pb_encode(&protoStream, ReceiverSignalValues_fields, &receiverSignalsProto);
 
-		/* Insert header "rc-vals-proto [datasize] " to the sample string, then copy the data after that */
-		// TODO rc-vals-proto to enum // TODO size encoded as byte?
-		snprintf(sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE, "rc-vals-proto %u ", protoStream.bytes_written);
+		/* Insert header to the sample string, then copy the data after that */
+		snprintf(sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE, "%c %c ", RC_VALUES_MSG_ENUM, protoStream.bytes_written);
 		strLen = strlen(sampleString);
 		memcpy(&sampleString[strLen], serializedReceiverData, protoStream.bytes_written);
 		memcpy(&sampleString[strLen+protoStream.bytes_written], "\r\n", protoStream.bytes_written);
 
 		if(protoStatus)
-			USBComSendData(sampleString, strLen+protoStream.bytes_written+2);
+			USBComSendData((uint8_t*)sampleString, strLen+protoStream.bytes_written+2);
 		else
 			ErrorHandler();
 	}

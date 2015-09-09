@@ -15,6 +15,16 @@
 #define MAX_CLI_COMMAND_SIZE    256
 #define MAX_CLI_OUTPUT_SIZE     256
 
+enum ProtoMessageTypeEnum {
+	RC_VALUES_MSG_ENUM = 1,
+	MOTOR_VALUES_MSG_ENUM,
+	SENSOR_SAMPLES_MSG_ENUM,
+	FLIGHT_STATE_MSG_ENUM,
+	PID_CTRLPARAMS_MSG_ENUM,
+	CTRL_REFSIGNALS_MSG_ENUM,
+	SIMULATED_STATES_ENUM
+};
+
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported functions ------------------------------------------------------- */
