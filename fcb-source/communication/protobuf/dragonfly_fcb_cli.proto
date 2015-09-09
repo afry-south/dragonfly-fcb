@@ -65,7 +65,7 @@ message PIDControlParams {
 }
 
 // Contains current control reference signal values
-message PIDControlParams {
+message ControlReferenceSignals {
 	optional float refVx = 1;
 	optional float refVy = 2;
 	optional float refVz = 3;

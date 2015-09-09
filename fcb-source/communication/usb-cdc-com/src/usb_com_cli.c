@@ -545,8 +545,10 @@ static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLe
 	portBASE_TYPE xParameterStringLength;
 	portBASE_TYPE lParameterNumber = 0;
 
-	/* Remove compile time warnings about unused parameters */
-	(void) xWriteBufferLen;
+	/* Empty pcWriteBuffer so no strange output is sent as command response */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+
+	lParameterNumber++;
 
 	/* Obtain the parameter string. */
 	pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
