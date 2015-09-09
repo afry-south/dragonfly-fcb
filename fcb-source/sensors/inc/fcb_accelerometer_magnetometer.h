@@ -75,5 +75,17 @@ void FetchDataFromMagnetometer(void);
  */
 void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot);
 
+/**
+ * Print accelerometer values to USB, intended to be used from the
+ * sensor sampling task.
+ */
+void PrintAccelerometerValues(void);
+
+/**
+ * ditto magnetometer
+ * @see PrintAccelerometerValues
+ */
+void PrintMagnetometerValues(void);
+
 
 #endif /* FCB_ACCELEROMETER_H */

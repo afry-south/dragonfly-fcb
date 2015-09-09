@@ -72,6 +72,7 @@ int FcbSensorsConfig(void) {
 
 Exit:
     return retVal;
+
 Error:
 	/* clean up */
 	retVal = FCB_ERR_INIT;
@@ -236,8 +237,8 @@ static void SensorPrintSamplingTask(void const *argument) {
 		vTaskDelayUntil(&xLastWakeTime, sensorPrintSampleTime);
 
 		PrintGyroscopeValues();
-		// TODO PrintAccelerometerValues();
-		// TODO PrintMagnetometerValues();
+		PrintAccelerometerValues();
+		PrintMagnetometerValues();
 
 		/* If sampling duration exceeded, delete task to stop sampling */
 		if (xTaskGetTickCount() >= xSampleStartTime + sensorPrintSampleDuration * configTICK_RATE_HZ)
