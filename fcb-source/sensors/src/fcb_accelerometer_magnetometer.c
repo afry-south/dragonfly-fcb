@@ -93,7 +93,7 @@ static void FcbInitialiseAccelerometer(void) {
       uint8_t ctrlReg3 = 0x00 | LSM303DLHC_IT1_DRY1 ;
 
       uint8_t ctrlReg4 = 0x00 |
-          LSM303DLHC_FULLSCALE_2G |
+          LSM303DLHC_FULLSCALE_8G |
           LSM303DLHC_BlockUpdate_Single |
           LSM303DLHC_BLE_LSB |
           LSM303DLHC_HR_ENABLE ;

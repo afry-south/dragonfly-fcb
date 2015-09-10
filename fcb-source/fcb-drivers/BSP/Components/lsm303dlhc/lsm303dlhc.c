@@ -229,10 +229,14 @@ void LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState)
   */
 void LSM303DLHC_AccReadXYZ(float * pData)
 {
-  int16_t pnRawData[3];
+
   uint8_t buffer[6];
   uint8_t i = 0;
-  uint8_t sensitivity = LSM303DLHC_ACC_SENSITIVITY_2G;
+
+  /* todo let sensitivity be set by the accelerometer intialisation method
+   * so they never can get out of sync.
+   */
+  uint8_t sensitivity = LSM303DLHC_ACC_SENSITIVITY_8G;
 
   /* Read output register X, Y & Z acceleration */
   buffer[0] = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A);
@@ -248,16 +252,10 @@ void LSM303DLHC_AccReadXYZ(float * pData)
    */
   for (i=0; i<3; i++)
   {
-    pnRawData[i]=(int16_t)((int16_t)(buffer[2*i + 1] << 8) + buffer[2*i]);
-  }
-
-  /* Obtain the mg value for the three axis */
-  for (i=0; i<3; i++)
-  {
-    pData[i] = ((float) /* convert to float */
-        (pnRawData[i] / sensitivity) /* scale with sensitivity */
-        * 9.82 /* convert from milli-G to mm/(s * s) */
-        / 1000) /* convert from mm/(s * s) to m / (s * s) */;
+    int16_t rawData = (int16_t)((int16_t)(buffer[2*i + 1] << 8) + buffer[2*i]); /* convert to int16_t */
+    float asFloat = (float)rawData;     /* convert to float (int16_t & float are two's complement) */
+    asFloat = asFloat * 9.82 / 1000;    /* convert from milli-G to m/(s * s)       */
+    pData[i] = asFloat / sensitivity;   /* apply sensitivity & store output      */
   }
 }
 
