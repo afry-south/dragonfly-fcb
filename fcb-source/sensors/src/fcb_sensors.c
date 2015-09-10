@@ -8,7 +8,7 @@
 
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_sensors.h"
-#include "gyroscope.h"
+#include "fcb_gyroscope.h"
 #include "fcb_error.h"
 #include "fcb_retval.h"
 
@@ -72,11 +72,11 @@ int FcbSensorsConfig(void) {
 
 Exit:
     return retVal;
+
 Error:
 	/* clean up */
 	retVal = FCB_ERR_INIT;
 	goto Exit;
-
 }
 
 void FcbSendSensorMessageFromISR(uint8_t msg) {
@@ -234,8 +234,8 @@ static void SensorPrintSamplingTask(void const *argument) {
 		vTaskDelayUntil(&xLastWakeTime, sensorPrintSampleTime);
 
 		PrintGyroscopeValues();
-		// TODO PrintAccelerometerValues();
-		// TODO PrintMagnetometerValues();
+		PrintAccelerometerValues();
+		PrintMagnetometerValues();
 
 		/* If sampling duration exceeded, delete task to stop sampling */
 		if (xTaskGetTickCount() >= xSampleStartTime + sensorPrintSampleDuration * configTICK_RATE_HZ)

@@ -8,7 +8,7 @@
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include "gyroscope.h"
+#include "fcb_gyroscope.h"
 
 #include "stm32f3_discovery_gyroscope.h"
 
@@ -34,17 +34,7 @@ enum { XDOT_IDX = 0 }; /* index of sGyroXYZAngleDot & ditto Offset */
 enum { YDOT_IDX = 1 }; /* as above */
 enum { ZDOT_IDX = 2 }; /* as above */
 
-/**
- * @todo in the ideal world we shouldn't read the gyro data
- * in the ISR itself, but in a dedicated thread.
- *
- * At the time of writing, giving a semaphore from GyroHandleDataReady
- * (which is called from an ISR) doesn't work, FreeRTOS hangs.
- *
- * So this is an interim solution.
- */
-#define READ_GYRO_FROM_ISR
-#define GYRO_SAMPLING_MAX_STRING_SIZE			128
+enum { GYRO_SAMPLING_MAX_STRING_SIZE = 128 };
 
 /**
  * Angular velocities, in degrees.
@@ -145,13 +135,13 @@ void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot) {
  * @retval none
  */
 void PrintGyroscopeValues(void) {
-	static char sampleString[GYRO_SAMPLING_MAX_STRING_SIZE];
-	float angRateXb, angRateYb, angRateZb;
+    static char sampleString[GYRO_SAMPLING_MAX_STRING_SIZE];
+    float angRateXb, angRateYb, angRateZb;
 
-	GetAngleDot(&angRateXb, &angRateYb, &angRateZb);
-	snprintf((char*) sampleString, GYRO_SAMPLING_MAX_STRING_SIZE,
-			"Gyroscope readings [rad/s]:\nAngRateXb: %1.6f\nAngRateYb: %1.6f\nAngRateZb: %1.6f\n\r\n", angRateXb,
-			angRateYb, angRateZb);
+    GetAngleDot(&angRateXb, &angRateYb, &angRateZb);
+    snprintf((char*) sampleString, GYRO_SAMPLING_MAX_STRING_SIZE,
+            "Gyroscope readings [rad/s]:\nAngRateXb: %1.6f\nAngRateYb: %1.6f\nAngRateZb: %1.6f\n\r\n", angRateXb,
+            angRateYb, angRateZb);
 
-	USBComSendString(sampleString);
+    USBComSendString(sampleString);
 }

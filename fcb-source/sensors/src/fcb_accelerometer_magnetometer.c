@@ -1,7 +1,8 @@
 /**
  * @file fcb_accelerometer.c
  *
- * Implements fcb_accelerometer.h API
+ * Implements fcb_accelerometer_magnetometer.h API
+ *
  *
  * @see fcb_accelerometer.h
  */
@@ -9,9 +10,12 @@
 #include "fcb_sensors.h"
 #include "fcb_error.h"
 #include "stm32f3_discovery_accelerometer.h"
+#include "usbd_cdc_if.h"
 #include "trace.h"
 
 #include "FreeRTOS.h"
+
+#include <stdio.h>
 
 // #define FCB_ACCMAG_DEBUG
 
@@ -22,6 +26,8 @@ float sXYZMagVector[] = { 0, 0 , 0 };
 enum { X_IDX = 0 }; /* index into sGyroXYZDotDot & ditto Offset sXYZMagVectors */
 enum { Y_IDX = 1 }; /* as above */
 enum { Z_IDX = 2 }; /* as above */
+
+enum { ACCMAG_SAMPLING_MAX_STRING_SIZE = 128 };
 
 /* static fcn declarations */
 
@@ -123,7 +129,12 @@ void FetchDataFromMagnetometer(void) {
     HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
 
 #endif
+    /* TODO possibly read the values into a temporary copy here ...
+     * (contd below)
+     */
 	LSM303DLHC_MagReadXYZ(sXYZMagVector);
+
+	/* TODO ... and then copy them into a mutex-protected sXYZMagVector here */
 #ifdef FCB_ACCMAG_DEBUG
 	trace_post("sXYZMagVector[%f,%f,%f]");
     HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
@@ -140,4 +151,29 @@ void GetMagVector(int16_t * x, int16_t * y, int16_t * z) {
 	*x = sXYZMagVector[X_IDX];
 	*y = sXYZMagVector[Y_IDX];
 	*z = sXYZMagVector[Z_IDX];
+}
+
+
+void PrintAccelerometerValues(void) {
+    static char sampleString[ACCMAG_SAMPLING_MAX_STRING_SIZE];
+
+    snprintf((char*) sampleString, ACCMAG_SAMPLING_MAX_STRING_SIZE,
+            "Accelerometer readings [m/(s * s)]:\nAccX: %i\nAccY: %i\nAccZ: %i\n\r\n",
+            sXYZDotDot[X_IDX],
+            sXYZDotDot[Y_IDX],
+            sXYZDotDot[Z_IDX]);
+
+    USBComSendString(sampleString);
+}
+
+void PrintMagnetometerValues(void) {
+    static char sampleString[ACCMAG_SAMPLING_MAX_STRING_SIZE];
+
+    snprintf((char*) sampleString, ACCMAG_SAMPLING_MAX_STRING_SIZE,
+            "Magnetometer readings [Gauss]:\nMagX: %1.6f\nMagY: %1.6f\nMagZ: %1.6f\n\r\n",
+            sXYZMagVector[X_IDX],
+            sXYZMagVector[Y_IDX],
+            sXYZMagVector[Z_IDX]);
+
+    USBComSendString(sampleString);
 }

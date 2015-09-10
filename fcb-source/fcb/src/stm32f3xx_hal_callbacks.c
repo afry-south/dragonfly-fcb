@@ -11,7 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "receiver.h"
 #include "fcb_sensors.h"
-#include "gyroscope.h"
+#include "fcb_gyroscope.h"
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_error.h"
 
@@ -20,6 +20,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
+#include "task_status.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -97,6 +98,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		PrimaryReceiverTimerPeriodCountIncrement();
 	} else if (htim->Instance == AUX_RECEIVER_TIM) {
 		AuxReceiverTimerPeriodCountIncrement();
+	} else if (htim->Instance == TASK_STATUS_TIM){
+		IncreaseTaskStatusTimerPeriodCount();
 	}
 }
 

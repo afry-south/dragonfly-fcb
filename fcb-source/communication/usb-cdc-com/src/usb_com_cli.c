@@ -16,7 +16,7 @@
 #include "flight_control.h"
 #include "fifo_buffer.h"
 #include "common.h"
-#include "gyroscope.h"
+#include "fcb_gyroscope.h"
 #include "fcb_sensors.h"
 
 #include <stdlib.h>

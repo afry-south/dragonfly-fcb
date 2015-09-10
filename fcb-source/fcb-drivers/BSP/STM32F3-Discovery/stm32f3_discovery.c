@@ -683,34 +683,6 @@ void GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
   */
 void COMPASSACCELERO_IO_Init(void)
 {
-#ifdef TODO_DELETE_MAG
-  GPIO_InitTypeDef GPIO_InitStructure;
-
-  /* Enable DRDY clock */
-  ACCELERO_DRDY_GPIO_CLK_ENABLE();
-
-  /* Enable INT1 & INT2 GPIO clock */
-  ACCELERO_INT_GPIO_CLK_ENABLE();
-
-  /* Mems DRDY pin configuration */
-  GPIO_InitStructure.Pin = ACCELERO_DRDY_PIN;
-  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStructure.Pull  = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-  HAL_GPIO_Init(ACCELERO_DRDY_GPIO_PORT, &GPIO_InitStructure);
-
-  /* Enable and set Button EXTI Interrupt to the lowest priority */
-  HAL_NVIC_SetPriority(ACCELERO_DRDY_EXTI_IRQn, 0x00, 0x00);
-  HAL_NVIC_EnableIRQ(ACCELERO_DRDY_EXTI_IRQn);
-
-  /* Configure GPIO PINs to detect Interrupts */
-  GPIO_InitStructure.Pin = ACCELERO_INT1_PIN | ACCELERO_INT2_PIN;
-  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-  GPIO_InitStructure.Pull  = GPIO_NOPULL;
-  HAL_GPIO_Init(ACCELERO_INT_GPIO_PORT, &GPIO_InitStructure);
-#endif
-
   I2Cx_Init();
 }
 

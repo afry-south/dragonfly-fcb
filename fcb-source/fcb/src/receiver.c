@@ -54,6 +54,8 @@
 #include "semphr.h"
 
 #include "stm32f3xx_hal.h"
+#include "task_status.h"
+#include "trace.h"
 
 /* Private typedef -----------------------------------------------------------*/
 typedef enum {
@@ -741,7 +743,7 @@ uint16_t GetThrottleReceiverCalibrationMaxValue(void) {
 }
 
 /**
- * @brief  Gets current throttle calibration mid value
+ * @brief  Gets current throttle calibration max value
  * @param  None
  * @retval Calibrated value
  */
