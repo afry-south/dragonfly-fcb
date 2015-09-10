@@ -10,6 +10,7 @@
 #include "common.h"
 #include "motor_control.h"
 #include "flight_control.h"
+#include "pid_control.h"
 #include "receiver.h"
 #include "usbd_cdc_if.h"
 #include "usb_com_cli.h"
@@ -102,6 +103,9 @@ static void InitSystem(void) {
 	if (FCB_OK != FcbSensorsConfig()) {
 		ErrorHandler();
 	}
+
+	/* Initialize PID control variables */
+	InitPIDControllers();
 
 	/* Setup motor output timer */
 	MotorControlConfig();

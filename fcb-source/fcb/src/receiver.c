@@ -499,10 +499,6 @@ void PrintReceiverValues(SerializationType_TypeDef serializationType)
 		receiverSignalsProto.gear = GetGearReceiverChannel();
 		receiverSignalsProto.aux1 = GetAux1ReceiverChannel();
 
-		/* Since this is not a string, we need to make sure no clutter exists */
-		memset(serializedReceiverData, '\0', ReceiverSignalValues_size);
-		memset(sampleString, '\0', RECEIVER_SAMPLING_MAX_STRING_SIZE);
-
 		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
 		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedReceiverData, RECEIVER_SAMPLING_MAX_STRING_SIZE);
 		protoStatus = pb_encode(&protoStream, ReceiverSignalValues_fields, &receiverSignalsProto);
@@ -510,11 +506,13 @@ void PrintReceiverValues(SerializationType_TypeDef serializationType)
 		/* Insert header to the sample string, then copy the data after that */
 		snprintf(sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE, "%c %c ", RC_VALUES_MSG_ENUM, protoStream.bytes_written);
 		strLen = strlen(sampleString);
-		memcpy(&sampleString[strLen], serializedReceiverData, protoStream.bytes_written);
-		memcpy(&sampleString[strLen+protoStream.bytes_written], "\r\n", protoStream.bytes_written);
+		if(strLen + protoStream.bytes_written + strlen("\r\n") < RECEIVER_SAMPLING_MAX_STRING_SIZE) {
+			memcpy(&sampleString[strLen], serializedReceiverData, protoStream.bytes_written);
+			memcpy(&sampleString[strLen+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+		}
 
 		if(protoStatus)
-			USBComSendData((uint8_t*)sampleString, strLen+protoStream.bytes_written+2);
+			USBComSendData((uint8_t*)sampleString, strLen+protoStream.bytes_written+strlen("\r\n"));
 		else
 			ErrorHandler();
 	}
