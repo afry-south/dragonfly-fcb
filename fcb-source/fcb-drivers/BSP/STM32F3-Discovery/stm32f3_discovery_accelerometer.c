@@ -1,3 +1,4 @@
+
 /**
  ******************************************************************************
  * @file    stm32f3_discovery_accelerometer.c
@@ -147,13 +148,10 @@ uint8_t BSP_ACCELERO_Init(void) {
 
 		/* Configure MEMS: mode, cutoff frquency, Filter status, Click, AOI1 and AOI2 */
 		ctrl =
-				(uint8_t) (LSM303DLHC_FilterStructure.HighPassFilter_Mode_Selection
-						|\
- LSM303DLHC_FilterStructure.HighPassFilter_CutOff_Frequency
-						|\
- LSM303DLHC_FilterStructure.HighPassFilter_AOI1
-						|\
- LSM303DLHC_FilterStructure.HighPassFilter_AOI2);
+				(uint8_t) (LSM303DLHC_FilterStructure.HighPassFilter_Mode_Selection	|\
+				    LSM303DLHC_FilterStructure.HighPassFilter_CutOff_Frequency |\
+				    LSM303DLHC_FilterStructure.HighPassFilter_AOI1 |\
+				    LSM303DLHC_FilterStructure.HighPassFilter_AOI2);
 
 		/* Configure the accelerometer LPF main parameters */
 		AccelerometerDrv->FilterConfig(ctrl);
@@ -183,7 +181,7 @@ void BSP_ACCELERO_Reset(void) {
  *                 pDataXYZ[0] = X axis, pDataXYZ[1] = Y axis, pDataXYZ[2] = Z axis
  * @retval None
  */
-void BSP_ACCELERO_GetXYZ(int16_t *pDataXYZ) {
+void BSP_ACCELERO_GetXYZ(float *pDataXYZ) {
 	if (AccelerometerDrv->GetXYZ != NULL) {
 		AccelerometerDrv->GetXYZ(pDataXYZ);
 	}

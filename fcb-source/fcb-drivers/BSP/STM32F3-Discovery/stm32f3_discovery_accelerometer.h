@@ -48,7 +48,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3_discovery.h"
 /* Include Gyroscope component driver */
-#include "..\Components\lsm303dlhc\lsm303dlhc.h"
+#include "lsm303dlhc.h"
    
 /** @addtogroup BSP
   * @{
@@ -91,7 +91,7 @@ ACCELERO_StatusTypeDef;
 /* Acc functions */  
 uint8_t   BSP_ACCELERO_Init(void);
 void      BSP_ACCELERO_Reset(void);
-void      BSP_ACCELERO_GetXYZ(int16_t *pDataXYZ);
+void      BSP_ACCELERO_GetXYZ(float *pDataXYZ);
 
 /**
   * @}

@@ -19,7 +19,7 @@
 
 // #define FCB_ACCMAG_DEBUG
 
-int16_t sXYZDotDot[] = { 0, 0 , 0 };
+float sXYZDotDot[] = { 0, 0 , 0 };
 float sXYZMagVector[] = { 0, 0 , 0 };
 
 

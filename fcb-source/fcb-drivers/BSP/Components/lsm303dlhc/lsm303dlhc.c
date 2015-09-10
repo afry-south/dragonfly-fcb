@@ -237,7 +237,7 @@ void LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState)
 * @param  pfData : Data out pointer
   * @retval None
   */
-void LSM303DLHC_AccReadXYZ(int16_t* pData)
+void LSM303DLHC_AccReadXYZ(float * pData)
 {
   int16_t pnRawData[3];
   uint8_t buffer[6];
@@ -264,7 +264,8 @@ void LSM303DLHC_AccReadXYZ(int16_t* pData)
   /* Obtain the mg value for the three axis */
   for (i=0; i<3; i++)
   {
-    pData[i]=(pnRawData[i] / sensitivity);
+    /* convert to float and from milli-g to g */
+    pData[i] = ((float)(pnRawData[i] / sensitivity) / 1000);
   }
 }
 

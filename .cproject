@@ -99,6 +99,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/fcb-drivers/BSP/STM32F3-Discovery}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/fcb-drivers/BSP/Components/Common}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/fcb-drivers/BSP/Components/l3gd20}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/fcb-drivers/BSP/Components/lsm303dlhc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/FreeRTOS-Plus/Source/FreeRTOS-Plus-CLI}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/nanopb-0.3.3-windows-x86}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/sensors/inc}&quot;"/>

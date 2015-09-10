@@ -445,7 +445,7 @@ uint8_t   LSM303DLHC_AccReadID(void);
 void      LSM303DLHC_AccRebootCmd(void);
 void      LSM303DLHC_AccFilterConfig(uint8_t FilterStruct);
 void      LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState);
-void      LSM303DLHC_AccReadXYZ(int16_t* pData);
+void      LSM303DLHC_AccReadXYZ(float* pData);
 void      LSM303DLHC_AccFilterClickCmd(uint8_t HighPassFilterClickState);
 void      LSM303DLHC_AccIT1Enable(uint8_t LSM303DLHC_IT);
 void      LSM303DLHC_AccIT1Disable(uint8_t LSM303DLHC_IT);
