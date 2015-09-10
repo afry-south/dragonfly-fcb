@@ -122,58 +122,6 @@ void LEDsOff(void) {
 	BSP_LED_Off(LED10);
 }
 
-/**
- * @brief Toggles the LEDs based on User Button presses
- * @param None
- * @retval None
- */
-void ToggleLEDs(void) {
-	switch (UserButtonPressed) {
-	case 0:
-		LEDsOff();
-		BSP_LED_On(LED3);
-		break;
-
-	case 1:
-		LEDsOff();
-		BSP_LED_On(LED4);
-		break;
-
-	case 2:
-		LEDsOff();
-		BSP_LED_On(LED5);
-		break;
-
-	case 3:
-		LEDsOff();
-		BSP_LED_On(LED6);
-		break;
-
-	case 4:
-		LEDsOff();
-		BSP_LED_On(LED7);
-		break;
-
-	case 5:
-		LEDsOff();
-		BSP_LED_On(LED8);
-		break;
-
-	case 6:
-		LEDsOff();
-		BSP_LED_On(LED9);
-		break;
-
-	case 7:
-		LEDsOff();
-		BSP_LED_On(LED10);
-		break;
-
-	default:
-		break;
-	}
-}
-
 /* Private functions ---------------------------------------------------------*/
 
 /**

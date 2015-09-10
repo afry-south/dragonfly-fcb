@@ -1,8 +1,5 @@
 /******************************************************************************
  * @file    main.c
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-08-12
  * @brief   Flight Control program for the Dragonfly quadcopter
  ******************************************************************************/
 
@@ -13,6 +10,7 @@
 #include "common.h"
 #include "motor_control.h"
 #include "flight_control.h"
+#include "pid_control.h"
 #include "receiver.h"
 #include "task_status.h"
 #include "usbd_cdc_if.h"
@@ -106,6 +104,9 @@ static void InitSystem(void) {
 	if (FCB_OK != FcbSensorsConfig()) {
 		ErrorHandler();
 	}
+
+	/* Initialize PID control variables */
+	InitPIDControllers();
 
 	/* Setup motor output timer */
 	MotorControlConfig();

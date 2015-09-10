@@ -6,18 +6,27 @@
  * @brief   File contains PID control algorithm implementation
  ******************************************************************************/
 
+// TODO NOTE: Alot of code below is from the old project. It may be used as reference for further development.
+// Eventually, it should be (re)moved and/or replaced or reimplemented. See real-time system implementation of PID.
+
 /* Includes ------------------------------------------------------------------*/
 #include "pid_control.h"
 
+#include "flight_control.h"
+#include "motor_control.h"
+
 /* Private typedef -----------------------------------------------------------*/
+
 /* Private define ------------------------------------------------------------*/
+#define CONTROL_PERIOD	(float) FLIGHT_CONTROL_TASK_PERIOD/1000.0
+
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-PIDController_TypeDef AltCtrl;
-PIDController_TypeDef RollCtrl;
-PIDController_TypeDef PitchCtrl;
-PIDController_TypeDef YawCtrl;
+static PIDController_TypeDef AltCtrl;
+static PIDController_TypeDef RollCtrl;
+static PIDController_TypeDef PitchCtrl;
+static PIDController_TypeDef YawCtrl;
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -28,52 +37,50 @@ PIDController_TypeDef YawCtrl;
  * @param	None.
  * @retval	None.
  */
-void InitPIDControllers() {
-#ifdef TODO
+void InitPIDControllers(void) {
 	/* Initialize Altitude Controller */
 	AltCtrl.K = K_VZ;
 	AltCtrl.Ti = TI_VZ;
 	AltCtrl.Td = TD_VZ;
-	AltCtrl.B = BETA_VZ;
+	AltCtrl.Beta = BETA_VZ;
+	AltCtrl.Gamma = GAMMA_VZ;
 	AltCtrl.N = N_VZ;
 	AltCtrl.P = 0.0;
 	AltCtrl.I = 0.0;
 	AltCtrl.D = 0.0;
-	AltCtrl.PreState = 0.0;
 
 	/* Initialize Roll Controller */
 	RollCtrl.K = K_RP;
 	RollCtrl.Ti = TI_RP;
 	RollCtrl.Td = TD_RP;
-	RollCtrl.B = BETA_RP;
+	RollCtrl.Beta = BETA_RP;
+	RollCtrl.Gamma = GAMMA_RP;
 	RollCtrl.N = N_RP;
 	RollCtrl.P = 0.0;
 	RollCtrl.I = 0.0;
 	RollCtrl.D = 0.0;
-	RollCtrl.PreState = 0.0; // TODO Set initial estimate
 
 	/* Initialize Pitch Controller */
 	PitchCtrl.K = K_RP;
 	PitchCtrl.Ti = TI_RP;
 	PitchCtrl.Td = TD_RP;
-	PitchCtrl.B = BETA_RP;
+	PitchCtrl.Beta = BETA_RP;
+	PitchCtrl.Gamma = GAMMA_RP;
 	PitchCtrl.N = N_RP;
 	PitchCtrl.P = 0.0;
 	PitchCtrl.I = 0.0;
 	PitchCtrl.D = 0.0;
-	PitchCtrl.PreState = 0.0; // TODO Set initial estimate
 
 	/* Initialize Yaw Controller */
 	YawCtrl.K = K_YR;
 	YawCtrl.Ti = TI_YR;
 	YawCtrl.Td = TD_YR;
-	YawCtrl.B = BETA_YR;
+	YawCtrl.Beta = BETA_YR;
+	YawCtrl.Gamma = GAMMA_YR;
 	YawCtrl.N = N_YR;
 	YawCtrl.P = 0.0;
 	YawCtrl.I = 0.0;
 	YawCtrl.D = 0.0;
-	YawCtrl.PreState = 0.0; // TODO Set initial estimate
-#endif
 }
 
 /*
@@ -81,35 +88,41 @@ void InitPIDControllers() {
  * @param	None.
  * @retval	None.
  */
-void AltitudeControl(void) {
-#ifdef TODO
-	float ZVelocity = GetZVelocity();
+float AltitudeControl(void) {
+	static float PreZVelocityRef = 0.0;
+	static float PreZVelocity = 0.0;
 
-	AltCtrl.P = AltCtrl.K * (AltCtrl.B * RefSignals.ZVelocity - ZVelocity);
+	float AltitudeVelocityControlSignal;
+	// float ZVelocity = GetZVelocity(); // TODO Get estimate from Kalman filter
+	float ZVelocity = 0.0;
+	float ZVelocityRef = GetZVelocityReferenceSignal();
 
-	// Backward difference, derivative part with zero set-point weighting
-	AltCtrl.D = AltCtrl.Td / (AltCtrl.Td + AltCtrl.N * CONTROL_SAMPLE_PERTIOD)
-			* AltCtrl.D
-			- AltCtrl.K * AltCtrl.Td * AltCtrl.N
-					/ (AltCtrl.Td + AltCtrl.N * CONTROL_SAMPLE_PERTIOD)
-					* (ZVelocity - AltCtrl.PreState);
+	/* Calculate Proportional control part */
+	AltCtrl.P = AltCtrl.K*(AltCtrl.Beta*ZVelocityRef - ZVelocity);
 
-	CtrlSignals.Thrust = (AltCtrl.P + AltCtrl.I + AltCtrl.D + G_ACC ) * MASS;
+	/* Calculate Integral control part */
+	if(AltCtrl.Ti > 0.001)
+		AltCtrl.I = AltCtrl.I + AltCtrl.K*CONTROL_PERIOD/AltCtrl.Ti*(ZVelocityRef - ZVelocity);
 
-	// Saturate controller output
-	if (CtrlSignals.Thrust < 0)
-		CtrlSignals.Thrust = 0;
-	else if (CtrlSignals.Thrust > MAX_THRUST)
-		CtrlSignals.Thrust = MAX_THRUST;
+	/* Calculate Derivative control part */
+	AltCtrl.D = AltCtrl.Td / (AltCtrl.Td + AltCtrl.N * CONTROL_PERIOD)*AltCtrl.D
+			+ AltCtrl.K * AltCtrl.Td * AltCtrl.N / (AltCtrl.Td + AltCtrl.N * CONTROL_PERIOD )
+			* (AltCtrl.Gamma * (ZVelocityRef - PreZVelocityRef) - (ZVelocity - PreZVelocity));
 
-	// Forward difference, so updated after control
-	if (AltCtrl.Ti != 0.0)
-		AltCtrl.I = AltCtrl.I
-				+ AltCtrl.K * CONTROL_SAMPLE_PERTIOD / AltCtrl.Ti
-						* (RefSignals.ZVelocity - ZVelocity);
+	/* Calculate sum of P-I-D parts to obtain the control signal. Offset with gravitational acceleration and multiply
+	 * with mass to obtain thrust force. Remember that z points downward so control signal should be negative */
+	AltitudeVelocityControlSignal = (AltCtrl.P + AltCtrl.I + AltCtrl.D - G_ACC ) * MASS;
 
-	AltCtrl.PreState = ZVelocity;
-#endif
+	/* Saturate controller output */
+	if (AltitudeVelocityControlSignal > 0.0)
+		AltitudeVelocityControlSignal = 0.0;
+	else if (AltitudeVelocityControlSignal < -MAX_THRUST)
+		AltitudeVelocityControlSignal = -MAX_THRUST;
+
+	PreZVelocityRef = ZVelocityRef;
+	PreZVelocity = ZVelocity;
+
+	return AltitudeVelocityControlSignal;
 }
 
 /*
@@ -117,35 +130,40 @@ void AltitudeControl(void) {
  * @param	None.
  * @retval	None.
  */
-void RollControl(void) {
-#ifdef TODO
-	float RollAngle = GetRoll();
+float RollControl(void) {
+	static float PreRollAngleRef = 0.0;
+	static float PreRollAngle = 0.0;
 
-	RollCtrl.P = RollCtrl.K * (RollCtrl.B * RefSignals.RollAngle - RollAngle);
+	float RollAngleControlSignal;
+	// float RollAngle = GetRollAngle(); // TODO Get estimate from Kalman filter
+	float RollAngle = 0.0;
+	float RollAngleRef = GetRollAngleReferenceSignal();
 
-	// Backward difference, derivative part with zero set-point weighting
-	RollCtrl.D = RollCtrl.Td
-			/ (RollCtrl.Td + RollCtrl.N * CONTROL_SAMPLE_PERTIOD) * RollCtrl.D
-			- RollCtrl.K * RollCtrl.Td * RollCtrl.N
-					/ (RollCtrl.Td + RollCtrl.N * CONTROL_SAMPLE_PERTIOD)
-					* (RollAngle - RollCtrl.PreState);
+	/* Calculate Proportional control part */
+	RollCtrl.P = RollCtrl.K*(RollCtrl.Beta*RollAngleRef - RollAngle);
 
-	CtrlSignals.Roll = (RollCtrl.P + RollCtrl.I + RollCtrl.D) * IXX;
+	/* Calculate Integral control part */
+	if(RollCtrl.Ti > 0.001)
+		RollCtrl.I = RollCtrl.I + RollCtrl.K*CONTROL_PERIOD/RollCtrl.Ti*(RollAngleRef - RollAngle);
 
-	// Saturate controller output
-	if (CtrlSignals.Roll < -MAX_ROLLPITCH_MOM)
-		CtrlSignals.Roll = -MAX_ROLLPITCH_MOM;
-	else if (CtrlSignals.Roll > MAX_ROLLPITCH_MOM)
-		CtrlSignals.Roll = MAX_ROLLPITCH_MOM;
+	/* Calculate Derivative control part */
+	RollCtrl.D = RollCtrl.Td / (RollCtrl.Td + RollCtrl.N * CONTROL_PERIOD)*RollCtrl.D
+			+ RollCtrl.K * RollCtrl.Td * RollCtrl.N / (RollCtrl.Td + RollCtrl.N * CONTROL_PERIOD )
+			* (RollCtrl.Gamma * (RollAngleRef - PreRollAngleRef) - (RollAngle - PreRollAngle));
 
-	// Forward difference, so updated after control
-	if (RollCtrl.Ti != 0.0)
-		RollCtrl.I = RollCtrl.I
-				+ RollCtrl.K * CONTROL_SAMPLE_PERTIOD / RollCtrl.Ti
-						* (RefSignals.RollAngle - RollAngle);
+	/* Calculate sum of P-I-D parts to obtain the control signal. Multiply with IXX moment of inertia to obtain roll moment. */
+	RollAngleControlSignal = (RollCtrl.P + RollCtrl.I + RollCtrl.D) * IXX;
 
-	RollCtrl.PreState = RollAngle;
-#endif
+	/* Saturate controller output */
+	if (RollAngleControlSignal < -MAX_ROLLPITCH_MOM)
+		RollAngleControlSignal = -MAX_ROLLPITCH_MOM;
+	else if (RollAngleControlSignal > MAX_ROLLPITCH_MOM)
+		RollAngleControlSignal = MAX_ROLLPITCH_MOM;
+
+	PreRollAngleRef = RollAngleRef;
+	PreRollAngle = RollAngle;
+
+	return RollAngleControlSignal;
 }
 
 /*
@@ -153,37 +171,40 @@ void RollControl(void) {
  * @param	None.
  * @retval	None.
  */
-void PitchControl(void) {
-#ifdef TODO
-	float PitchAngle = GetPitch();
+float PitchControl(void) {
+	static float PrePitchAngleRef = 0.0;
+	static float PrePitchAngle = 0.0;
 
-	PitchCtrl.P = PitchCtrl.K
-			* (PitchCtrl.B * RefSignals.PitchAngle - PitchAngle);
+	float PitchAngleControlSignal;
+	// float PitchAngle = GetPitchAngle(); // TODO Get estimate from Kalman filter
+	float PitchAngle = 0.0;
+	float PitchAngleRef = GetPitchAngleReferenceSignal();
 
-	// Backward difference, derivative part with zero set-point weighting
-	PitchCtrl.D = PitchCtrl.Td
-			/ (PitchCtrl.Td + PitchCtrl.N * CONTROL_SAMPLE_PERTIOD)
-			* PitchCtrl.D
-			- PitchCtrl.K * PitchCtrl.Td * PitchCtrl.N
-					/ (PitchCtrl.Td + PitchCtrl.N * CONTROL_SAMPLE_PERTIOD)
-					* (PitchAngle - PitchCtrl.PreState);
+	/* Calculate Proportional control part */
+	PitchCtrl.P = PitchCtrl.K*(PitchCtrl.Beta*PitchAngleRef - PitchAngle);
 
-	CtrlSignals.Pitch = (PitchCtrl.P + PitchCtrl.I + PitchCtrl.D) * IYY;
+	/* Calculate Integral control part */
+	if(PitchCtrl.Ti > 0.001)
+		PitchCtrl.I = PitchCtrl.I + PitchCtrl.K*CONTROL_PERIOD/PitchCtrl.Ti*(PitchAngleRef - PitchAngle);
 
-	// Saturate controller output
-	if (CtrlSignals.Pitch < -MAX_ROLLPITCH_MOM)
-		CtrlSignals.Pitch = -MAX_ROLLPITCH_MOM;
-	else if (CtrlSignals.Pitch > MAX_ROLLPITCH_MOM)
-		CtrlSignals.Pitch = MAX_ROLLPITCH_MOM;
+	/* Calculate Derivative control part */
+	PitchCtrl.D = PitchCtrl.Td / (PitchCtrl.Td + PitchCtrl.N * CONTROL_PERIOD)*PitchCtrl.D
+			+ PitchCtrl.K * PitchCtrl.Td * PitchCtrl.N / (PitchCtrl.Td + PitchCtrl.N * CONTROL_PERIOD )
+			* (PitchCtrl.Gamma * (PitchAngleRef - PrePitchAngleRef) - (PitchAngle - PrePitchAngle));
 
-	// Forward difference, so updated after control
-	if (PitchCtrl.Ti != 0.0)
-		PitchCtrl.I = PitchCtrl.I
-				+ PitchCtrl.K * CONTROL_SAMPLE_PERTIOD / PitchCtrl.Ti
-						* (RefSignals.PitchAngle - PitchAngle);
+	/* Calculate sum of P-I-D parts to obtain the control signal. Multiply with IYY moment of inertia to obtain pitch moment. */
+	PitchAngleControlSignal = (PitchCtrl.P + PitchCtrl.I + PitchCtrl.D) * IYY;
 
-	PitchCtrl.PreState = PitchAngle;
-#endif
+	/* Saturate controller output */
+	if (PitchAngleControlSignal < -MAX_ROLLPITCH_MOM)
+		PitchAngleControlSignal = -MAX_ROLLPITCH_MOM;
+	else if (PitchAngleControlSignal > MAX_ROLLPITCH_MOM)
+		PitchAngleControlSignal = MAX_ROLLPITCH_MOM;
+
+	PrePitchAngleRef = PitchAngleRef;
+	PrePitchAngle = PitchAngle;
+
+	return PitchAngleControlSignal;
 }
 
 /*
@@ -191,35 +212,40 @@ void PitchControl(void) {
  * @param	None.
  * @retval	None.
  */
-void YawControl(void) {
-#ifdef TODO
-	float YawRate = GetYawRate();
+float YawControl(void) {
+	static float PreYawRateRef = 0.0;
+	static float PreYawRate = 0.0;
 
-	YawCtrl.P = YawCtrl.K * (YawCtrl.B * RefSignals.YawRate - YawRate);
+	float YawRateControlSignal;
+	// float YawRate = GetYawRate(); // TODO Get estimate from Kalman filter
+	float YawRate = 0.0;
+	float YawRateRef = GetYawAngularRateReferenceSignal();
 
-	// Backward difference
-	YawCtrl.D = YawCtrl.Td / (YawCtrl.Td + YawCtrl.N * CONTROL_SAMPLE_PERTIOD)
-			* YawCtrl.D
-			- YawCtrl.K * YawCtrl.Td * YawCtrl.N
-					/ (YawCtrl.Td + YawCtrl.N * CONTROL_SAMPLE_PERTIOD)
-					* (YawRate - YawCtrl.PreState);
+	/* Calculate Proportional control part */
+	YawCtrl.P = YawCtrl.K*(YawCtrl.Beta*YawRateRef - YawRate);
 
-	CtrlSignals.Yaw = (YawCtrl.P + YawCtrl.I + YawCtrl.D) * IZZ;
+	/* Calculate Integral control part */
+	if(YawCtrl.Ti > 0.001)
+		YawCtrl.I = YawCtrl.I + YawCtrl.K*CONTROL_PERIOD/YawCtrl.Ti*(YawRateRef - YawRate);
 
-	// Saturate controller output
-	if (CtrlSignals.Yaw < -MAX_YAW_RATE)
-		CtrlSignals.Yaw = -MAX_YAW_RATE;
-	else if (CtrlSignals.Yaw > MAX_YAW_RATE)
-		CtrlSignals.Yaw = MAX_YAW_RATE;
+	/* Calculate Derivative control part */
+	YawCtrl.D = YawCtrl.Td / (YawCtrl.Td + YawCtrl.N * CONTROL_PERIOD)*YawCtrl.D
+			+ YawCtrl.K * YawCtrl.Td * YawCtrl.N / (YawCtrl.Td + YawCtrl.N * CONTROL_PERIOD )
+			* (YawCtrl.Gamma * (YawRateRef - PreYawRateRef) - (YawRate - PreYawRate));
 
-	// Forward difference, so updated after control
-	if (YawCtrl.Ti != 0.0)
-		YawCtrl.I = YawCtrl.I
-				+ YawCtrl.K * CONTROL_SAMPLE_PERTIOD / YawCtrl.Ti
-						* (RefSignals.YawRate - YawRate);
+	/* Calculate sum of P-I-D parts to obtain the control signal. Multiply with IYY moment of inertia to obtain pitch moment. */
+	YawRateControlSignal = (YawCtrl.P + YawCtrl.I + YawCtrl.D) * IZZ;
 
-	YawCtrl.PreState = YawRate;
-#endif
+	/* Saturate controller output */
+	if (YawRateControlSignal < -MAX_YAW_MOM)
+		YawRateControlSignal = -MAX_YAW_MOM;
+	else if (YawRateControlSignal > MAX_YAW_MOM)
+		YawRateControlSignal = MAX_YAW_MOM;
+
+	PreYawRateRef = YawRateRef;
+	PreYawRate = YawRate;
+
+	return YawRateControlSignal;
 }
 
 /* Private functions ---------------------------------------------------------*/

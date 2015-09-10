@@ -22,20 +22,36 @@
 #include "queue.h"
 
 /* Private typedef -----------------------------------------------------------*/
+typedef struct
+{
+  float ZVelocity;		// [m/s]
+  float RollAngle;		// [rad]
+  float PitchAngle;		// [rad]
+  float YawAngleRate;	// [rad/s]
+} RefSignals_TypeDef;
+
+typedef struct
+{
+  float Thrust;			// [N]
+  float RollMoment;		// [Nm]
+  float PitchMoment;	// [Nm]
+  float YawMoment;		// [Nm]
+} CtrlSignals_TypeDef;
+
 
 /* Private define ------------------------------------------------------------*/
 #define FLIGHT_CONTROL_TASK_PRIO		configMAX_PRIORITIES-1
-#define FLIGHT_CONTROL_TASK_PERIOD		10 // [ms]
 
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-RefSignals_TypeDef RefSignals; // Control reference signals
+static RefSignals_TypeDef RefSignals; // Control reference signals
+static CtrlSignals_TypeDef CtrlSignals; // Physical control signals
 
 /* Flight mode */
-enum FlightControlMode flightControlMode = FLIGHT_CONTROL_IDLE;
+static enum FlightControlMode flightControlMode = FLIGHT_CONTROL_IDLE;
 
-xTaskHandle FlightControlTaskHandle;
+xTaskHandle FlightControlTaskHandle; // Task handle for flight control task
 
 /* Private function prototypes -----------------------------------------------*/
 static void UpdateFlightControl(void);
@@ -76,6 +92,42 @@ enum FlightControlMode GetFlightControlMode(void) {
 	return flightControlMode;
 }
 
+/*
+ * @brief  Get Z velocity reference
+ * @param  None
+ * @retval Z velocity reference signal value
+ */
+float GetZVelocityReferenceSignal(void) {
+	return RefSignals.ZVelocity;
+}
+
+/*
+ * @brief  Get roll angle reference
+ * @param  None
+ * @retval Roll angle reference signal value
+ */
+float GetRollAngleReferenceSignal(void) {
+	return RefSignals.RollAngle;
+}
+
+/*
+ * @brief  Get pitch angle reference
+ * @param  None
+ * @retval Pitch angle reference signal value
+ */
+float GetPitchAngleReferenceSignal(void) {
+	return RefSignals.PitchAngle;
+}
+
+/*
+ * @brief  Get yaw angular velocity reference
+ * @param  None
+ * @retval Yaw angular velocity reference signal value
+ */
+float GetYawAngularRateReferenceSignal(void) {
+	return RefSignals.YawAngleRate;
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /*
@@ -92,6 +144,7 @@ static void UpdateFlightControl(void) {
 
 	case FLIGHT_CONTROL_IDLE:
 		ShutdownMotors();
+		InitPIDControllers();	// Set PID control variables to initial values
 		return;
 
 	case FLIGHT_CONTROL_RAW:
@@ -101,13 +154,22 @@ static void UpdateFlightControl(void) {
 
 	case FLIGHT_CONTROL_PID:
 		// TODO Check that motors are armed
+
+		/* Set the control reference signals*/
 		SetReferenceSignals();
-		// Do PID control
-		// Set motors
+
+		/* Update PID control output */
+		CtrlSignals.Thrust = AltitudeControl();
+		CtrlSignals.RollMoment = RollControl();
+		CtrlSignals.PitchMoment = PitchControl();
+		CtrlSignals.YawMoment = YawControl();
+		MotorAllocationPhysical(CtrlSignals.Thrust, CtrlSignals.RollMoment, CtrlSignals.PitchMoment, CtrlSignals.YawMoment);
 		return;
+
 	default:
 		ShutdownMotors();
 		return;
+
 	}
 }
 
@@ -117,52 +179,50 @@ static void UpdateFlightControl(void) {
  * @retval None.
  */
 static void SetFlightMode(void) {
-	if (!IsReceiverActive()) {
+	if (!IsReceiverActive())
 		flightControlMode = FLIGHT_CONTROL_IDLE;
-	} else if (GetReceiverRawFlightSet()) {
+	else if (GetReceiverRawFlightSet())
 		flightControlMode = FLIGHT_CONTROL_RAW;
-	} else {
+	else if (GetReceiverPIDFlightSet())
+		flightControlMode = FLIGHT_CONTROL_PID;
+	else
 		flightControlMode = FLIGHT_CONTROL_IDLE;
-	}
 }
 
 /*
- * @brief  Sets the reference values based on RC receiver input
+ * @brief  Sets the reference values based on RC receiver input. This sets the limits for maximum pilot input.
  * @param  None
  * @retval None
  */
 static void SetReferenceSignals(void) {
-#ifdef TODO
-	"reimplement this for new receiver code"
 
-	// Set velocity reference limits
-	if (PWMInputTimes.Throttle >= GetRCmin() && PWMInputTimes.Throttle <= GetRCmax())
-		RefSignals.ZVelocity = 2 * MAX_Z_VELOCITY * 1000 * (PWMInputTimes.Throttle - GetRCmid());
+	if(GetThrottleReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetThrottleReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.ZVelocity = 0.0;
+	else if(GetThrottleReceiverChannel() >= 0)
+		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(GetThrottleReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
 	else
-		RefSignals.ZVelocity = -MAX_Z_VELOCITY;
+		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(GetThrottleReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
 
-	// Set roll reference limits
-	if (PWMInputTimes.Aileron >= GetRCmin() && PWMInputTimes.Aileron <= GetRCmax())
-	RefSignals.RollAngle = 2 * MAX_ROLLPITCH_ANGLE * 1000
-	* (PWMInputTimes.Aileron - GetRCmid());
+	if(GetAileronReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetAileronReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.RollAngle = 0.0;
+	else if(GetAileronReceiverChannel() >= 0)
+		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(GetAileronReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	else
-	RefSignals.RollAngle = GetRCmid();
+		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(GetAileronReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING);
 
-	// Set pitch reference limits
-	if (PWMInputTimes.Elevator >= GetRCmin()
-			&& PWMInputTimes.Elevator <= GetRCmax())
-	RefSignals.PitchAngle = 2 * MAX_ROLLPITCH_ANGLE * 1000
-	* (PWMInputTimes.Elevator - GetRCmid());
+	if(GetElevatorReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetElevatorReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.PitchAngle = 0.0;
+	else if(GetElevatorReceiverChannel() >= 0)
+		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(GetElevatorReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	else
-	RefSignals.PitchAngle = GetRCmid();
+		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(GetElevatorReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING);
 
-	// Set yaw rate reference limits
-	if (PWMInputTimes.Rudder >= GetRCmin() && PWMInputTimes.Rudder <= GetRCmax())
-	RefSignals.YawRate = 2 * MAX_YAW_RATE * 1000
-	* (PWMInputTimes.Rudder - GetRCmid());
+	if(GetRudderReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetRudderReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.YawAngleRate = 0.0;
+	else if(GetRudderReceiverChannel() >= 0)
+		RefSignals.YawAngleRate = -MAX_YAW_RATE*(GetRudderReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	else
-	RefSignals.YawRate = GetRCmid();
-#endif
+		RefSignals.YawAngleRate = -MAX_YAW_RATE*(GetRudderReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING);
 }
 
 /**
@@ -174,6 +234,7 @@ static void FlightControlTask(void const *argument) {
 	(void) argument;
 
 	portTickType xLastWakeTime;
+	uint32_t ledFlashCounter = 0;
 
 	/* Initialise the xLastWakeTime variable with the current time */
 	xLastWakeTime = xTaskGetTickCount();
@@ -183,6 +244,14 @@ static void FlightControlTask(void const *argument) {
 
 		/* Update the flight control state and perform flight control activities */
 		UpdateFlightControl();
+
+		/* Blink with LED to indicate thread is alive */
+		if(ledFlashCounter % 100 == 0)
+			BSP_LED_On(LED6);
+		else if(ledFlashCounter % 20 == 0)
+			BSP_LED_Off(LED6);
+
+		ledFlashCounter++;
 	}
 }
 

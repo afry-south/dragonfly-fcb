@@ -1,8 +1,5 @@
 /******************************************************************************
  * @file    usb_com_cli.h
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-07-24
  * @brief   Header file USB CDC class with Command Line Interface (CLI)
  *          functions.
  ******************************************************************************/
@@ -17,6 +14,16 @@
 /* Exported constants --------------------------------------------------------*/
 #define MAX_CLI_COMMAND_SIZE    256
 #define MAX_CLI_OUTPUT_SIZE     256
+
+enum ProtoMessageTypeEnum {
+	RC_VALUES_MSG_ENUM = 1,
+	MOTOR_VALUES_MSG_ENUM,
+	SENSOR_SAMPLES_MSG_ENUM,
+	FLIGHT_STATE_MSG_ENUM,
+	PID_CTRLPARAMS_MSG_ENUM,
+	CTRL_REFSIGNALS_MSG_ENUM,
+	SIMULATED_STATES_ENUM
+};
 
 /* Exported macro ------------------------------------------------------------*/
 

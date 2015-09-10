@@ -1,8 +1,5 @@
 /******************************************************************************
  * @file    receiver.c
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-05-28
  * @brief   File contains functionality for signal reading from the Dragonfly
  *          RC receiver. The receiver model is Spektrum AR610, which uses DSMX
  *          frequency modulation technology. It outputs 6 channels: throttle,
@@ -41,10 +38,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "receiver.h"
-#include "usbd_cdc_if.h"
+
 #include "flash.h"
 #include "common.h"
 #include "fcb_error.h"
+#include "dragonfly_fcb_cli.pb.h"
+#include "usb_com_cli.h"
+#include "pb_encode.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -105,6 +105,7 @@ typedef struct {
 #define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
 #define RECEIVER_CALRES_MAX_STRING_SIZE					256
 #define RECEIVER_SWITCH_ON_MIN_VAL						INT16_MAX*8/10
+#define RECEIVER_SWITCH_OFF_MAX_VAL						INT16_MIN*8/10
 
 /* Private macro -------------------------------------------------------------*/
 #define IS_RECEIVER_PULSE_VALID(PULSE_TIM_CNT, CURR_PERIOD_CNT, PRE_PERIOD_CNT)	(((PULSE_TIM_CNT) <= RECEIVER_MAX_VALID_IC_PULSE_COUNT) \
@@ -167,8 +168,10 @@ static volatile uint16_t AuxReceiverTimerPeriodCount;
 
 /* Task handle for printing of receiver values task */
 xTaskHandle ReceiverPrintSamplingTaskHandle = NULL;
+
 static volatile uint16_t receiverPrintSampleTime;
 static volatile uint16_t receiverPrintSampleDuration;
+static SerializationType_TypeDef receiverPrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static ReceiverErrorStatus InitReceiverCalibrationValues(void);
@@ -249,6 +252,15 @@ ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const u
 	}
 
 	return RECEIVER_OK;
+}
+
+/*
+ * @brief  Sets the serialization type of printed receiver values
+ * @param  serializationType : receiver data serialization enum
+ * @retval None.
+ */
+void SetReceiverPrintSamplingSerialization(SerializationType_TypeDef serializationType) {
+	receiverPrintSerializationType = serializationType;
 }
 
 /*
@@ -439,26 +451,80 @@ bool GetReceiverRawFlightSet(void) {
 		return false;
 }
 
-void PrintReceiverValues(void)
+/*
+ * @brief  Return boolean indicating if PID flight mode should be used (gear set to 1, aux1 set to 0)
+ * @param  None
+ * @retval bool indicating if raw flight mode set from receiver
+ */
+bool GetReceiverPIDFlightSet(void) {
+	if(GetGearReceiverChannel() >= RECEIVER_SWITCH_ON_MIN_VAL && GetAux1ReceiverChannel() <= RECEIVER_SWITCH_OFF_MAX_VAL)
+		return true;
+	else
+		return false;
+}
+
+/*
+ * @brief  Return boolean indicating if PID flight mode should be used (gear set to 1, aux1 set to 0)
+ * @param  serialization type enum
+ * @retval None.
+ */
+void PrintReceiverValues(SerializationType_TypeDef serializationType)
 {
 	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE];
 
-	strncpy(sampleString, "Receiver channel values (Value / Ticks):\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
-	if (IsReceiverActive())
-		strncat(sampleString, "ACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
-	else
-		strncat((char*) sampleString, "INACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+	if(serializationType == NO_SERIALIZATION) {
+		strncpy(sampleString, "Receiver channel values (Value / Ticks):\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		if (IsReceiverActive())
+			strncat(sampleString, "ACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
+		else
+			strncat((char*) sampleString, "INACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
-	USBComSendString(sampleString);
+		USBComSendString(sampleString);
 
-	snprintf((char*) sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE,
-			"Throttle: %d / %u\nAileron: %d / %u\nElevator: %d / %u\nRudder: %d / %u\nGear: %d / %u\nAux1: %d / %u\n\r\n",
-			GetThrottleReceiverChannel(), GetThrottleReceiverChannelPulseTicks(), GetAileronReceiverChannel(),
-			GetAileronReceiverChannelPulseTicks(), GetElevatorReceiverChannel(), GetElevatorReceiverChannelPulseTicks(),
-			GetRudderReceiverChannel(), GetRudderReceiverChannelPulseTicks(), GetGearReceiverChannel(),
-			GetGearReceiverChannelPulseTicks(), GetAux1ReceiverChannel(), GetAux1ReceiverChannelPulseTicks());
+		snprintf(sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE,
+				"Throttle: %d / %u\nAileron: %d / %u\nElevator: %d / %u\nRudder: %d / %u\nGear: %d / %u\nAux1: %d / %u\n\r\n",
+				GetThrottleReceiverChannel(), GetThrottleReceiverChannelPulseTicks(), GetAileronReceiverChannel(),
+				GetAileronReceiverChannelPulseTicks(), GetElevatorReceiverChannel(), GetElevatorReceiverChannelPulseTicks(),
+				GetRudderReceiverChannel(), GetRudderReceiverChannelPulseTicks(), GetGearReceiverChannel(),
+				GetGearReceiverChannelPulseTicks(), GetAux1ReceiverChannel(), GetAux1ReceiverChannelPulseTicks());
+		USBComSendString(sampleString); // Send string over USB
+	}
+	else if(serializationType == PROTOBUFFER_SERIALIZATION)
+	{
+		bool protoStatus;
+		uint8_t serializedReceiverData[ReceiverSignalValues_size];
+		ReceiverSignalValues receiverSignalsProto;
+		uint32_t strLen;
+		receiverSignalsProto.has_throttle = true;
+		receiverSignalsProto.has_aileron = true;
+		receiverSignalsProto.has_elevator = true;
+		receiverSignalsProto.has_rudder = true;
+		receiverSignalsProto.has_gear = true;
+		receiverSignalsProto.has_aux1 = true;
+		receiverSignalsProto.throttle = GetThrottleReceiverChannel();
+		receiverSignalsProto.aileron = GetAileronReceiverChannel();
+		receiverSignalsProto.elevator = GetElevatorReceiverChannel();
+		receiverSignalsProto.rudder = GetRudderReceiverChannel();
+		receiverSignalsProto.gear = GetGearReceiverChannel();
+		receiverSignalsProto.aux1 = GetAux1ReceiverChannel();
 
-	USBComSendString(sampleString);
+		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
+		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedReceiverData, RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		protoStatus = pb_encode(&protoStream, ReceiverSignalValues_fields, &receiverSignalsProto);
+
+		/* Insert header to the sample string, then copy the data after that */
+		snprintf(sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE, "%c %c ", RC_VALUES_MSG_ENUM, protoStream.bytes_written);
+		strLen = strlen(sampleString);
+		if(strLen + protoStream.bytes_written + strlen("\r\n") < RECEIVER_SAMPLING_MAX_STRING_SIZE) {
+			memcpy(&sampleString[strLen], serializedReceiverData, protoStream.bytes_written);
+			memcpy(&sampleString[strLen+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+		}
+
+		if(protoStatus)
+			USBComSendData((uint8_t*)sampleString, strLen+protoStream.bytes_written+strlen("\r\n"));
+		else
+			ErrorHandler();
+	}
 }
 
 /*
@@ -493,7 +559,7 @@ ReceiverErrorStatus StartReceiverCalibration(void) {
 		receiverCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
 
 		/* Start printing calibration samples */
-		StartReceiverSamplingTask(RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD, RECEIVER_MAX_CALIBRATION_DURATION/configTICK_RATE_HZ);
+		StartReceiverSamplingTask(RECEIVER_PRINT_MINIMUM_SAMPLING_TIME, RECEIVER_MAX_CALIBRATION_DURATION/configTICK_RATE_HZ);
 
 		return RECEIVER_OK;
 	}
@@ -934,28 +1000,28 @@ static ReceiverErrorStatus InitReceiverCalibrationValues(void) {
  */
 static void SetDefaultReceiverCalibrationValues(volatile Receiver_CalibrationValues_TypeDef* calibrationValues) {
 	calibrationValues->ThrottleChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->ThrottleChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->ThrottleChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->ThrottleChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->AileronChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->AileronChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->AileronChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->AileronChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->ElevatorChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->ElevatorChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->ElevatorChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->ElevatorChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->RudderChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->RudderChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->RudderChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->RudderChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->GearChannel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->GearChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->GearChannel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->GearChannel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 
 	calibrationValues->Aux1Channel.ChannelMaxCount = RECEIVER_PULSE_DEFAULT_MAX_COUNT;
-	calibrationValues->Aux1Channel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 	calibrationValues->Aux1Channel.ChannelMidCount = RECEIVER_PULSE_DEFAULT_MID_COUNT;
+	calibrationValues->Aux1Channel.ChannelMinCount = RECEIVER_PULSE_DEFAULT_MIN_COUNT;
 }
 
 /*
@@ -1329,7 +1395,7 @@ static ReceiverErrorStatus UpdateChannelCalibrationSamples(
 	/* Check if stick is in its mid position and during the first seconds of calibration sampling */
 	if (channelPulseTimerCount > RECEIVER_MID_CALIBRATION_MIN_PULSE_COUNT
 			&& channelPulseTimerCount <= RECEIVER_MID_CALIBRATION_MAX_PULSE_COUNT
-			&& channelCalibrationSampling->channelCalibrationPulseSamples <= RECEIVER_CALIBRATION_MAX_MID_PULSE_COUNT) {
+			&& channelCalibrationSampling->channelCalibrationPulseSamples < RECEIVER_CALIBRATION_MIN_MID_PULSE_COUNT) {
 		channelCalibrationSampling->midSamplesPulseSum += channelPulseTimerCount;
 		channelCalibrationSampling->midPulseSamplesCount++;
 	}
@@ -1573,7 +1639,7 @@ static void ReceiverPrintSamplingTask(void const *argument) {
 			receiverCalibrationStartSaturatingMessageSent = true;
 		}
 
-		PrintReceiverValues();
+		PrintReceiverValues(receiverPrintSerializationType);
 
 		/* If sampling duration exceeded, delete task to stop sampling */
 		if (xTaskGetTickCount() >= xSampleStartTime + receiverPrintSampleDuration * configTICK_RATE_HZ)

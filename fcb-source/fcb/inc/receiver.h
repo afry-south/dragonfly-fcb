@@ -1,8 +1,5 @@
 /******************************************************************************
  * @file    receiver.h
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-04-16
  * @brief   Flight Control program for the Dragonfly quadcopter
  *          Header file for reading signals from the RC receiver
  ******************************************************************************/
@@ -13,6 +10,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
+
+#include "usbd_cdc_if.h"
 
 #include <stdbool.h>
 
@@ -100,10 +99,8 @@
 
 /* Receiver calibration definitions - must at least be withing valid pulse range */
 #define RECEIVER_MAX_CALIBRATION_DURATION               1200000 // [ms] Max receiver calibration duration
-#define RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD		1000	// [ms] How often receiver sample is printed
 #define RECEIVER_CALIBRATION_MIN_PULSE_COUNT            1000    // Corresponds to ~22.0 s of calibration (assuming period is 22 ms)
-#define RECEIVER_CALIBRATION_MAX_MID_PULSE_COUNT        300    	// Corresponds to ~6.6 s of calibration (assuming period is 6 ms)
-#define RECEIVER_CALIBRATION_MIN_MID_PULSE_COUNT        200
+#define RECEIVER_CALIBRATION_MIN_MID_PULSE_COUNT        500		// Corresponds to ~11.0 s of calibration (assuming period is 6 ms)
 #define RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE        16
 #define RECEIVER_MAX_CALIBRATION_MAX_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MAX_COUNT*11/10  // Max +10% deviation
 #define RECEIVER_MAX_CALIBRATION_MIN_PULSE_COUNT        RECEIVER_PULSE_DEFAULT_MIN_COUNT*9/10   // Max -10% deviation
@@ -156,7 +153,8 @@ int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
 
-void PrintReceiverValues(void);
+void SetReceiverPrintSamplingSerialization(SerializationType_TypeDef serializationType);
+void PrintReceiverValues(SerializationType_TypeDef serializationType);
 
 uint16_t GetThrottleReceiverCalibrationMaxValue(void);
 uint16_t GetThrottleReceiverCalibrationMidValue(void);
@@ -199,6 +197,7 @@ ReceiverErrorStatus UpdateReceiverGearChannel(void);
 ReceiverErrorStatus UpdateReceiverAux1Channel(void);
 
 bool GetReceiverRawFlightSet(void);
+bool GetReceiverPIDFlightSet(void);
 
 #endif /* __RECEIVER_H */
 

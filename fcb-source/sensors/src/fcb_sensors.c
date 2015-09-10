@@ -108,9 +108,6 @@ SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint
 		sensorPrintSampleTime = sampleTime;
 
 	sensorPrintSampleDuration = sampleDuration;
-//	bool printGyroSamples; // TODO booleans to set which sensors should be sampled
-//	bool printAccSamples;
-//	bool printMagnSamples;
 
 	/* Sensor value print sampling handler thread creation
 	 * Task function pointer: SensorPrintSamplingTask

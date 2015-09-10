@@ -1,8 +1,5 @@
 /******************************************************************************
  * @file    usb_com_cli.c
- * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-07-24
  * @brief   File contains functionality to use the USB CDC class with a
  *          Command Line Interface (CLI). Each command is associated with
  *          number of command parameters and a function which executes command
@@ -13,6 +10,7 @@
 #include "usb_com_cli.h"
 
 #include "main.h"
+#include "dragonfly_fcb_cli.pb.h"
 #include "receiver.h"
 #include "motor_control.h"
 #include "flight_control.h"
@@ -135,9 +133,9 @@ static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, c
 static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 
 /*
- * Function implements the "task-status" command.
+ * Function implements the "get-ref-signals" command.
  */
-static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -156,9 +154,9 @@ static const CLI_Command_Definition_t echoDataCommand = { (const int8_t * const 
 
 /* Structure that defines the "start-receiver-calibration" command line command. */
 static const CLI_Command_Definition_t startReceiverCalibrationCommand = { (const int8_t * const ) "start-receiver-calibration",
-		(const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts receiver calibration procedure\r\n",
+		(const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts receiver calibration procedure with values printing with <encoding>  (n=none, p=protobuf)\r\n",
 		CLIStartReceiverCalibration, /* The function to run. */
-		0 /* Number of parameters expected */
+		1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-receiver-calibration" command line command. */
@@ -177,9 +175,9 @@ static const CLI_Command_Definition_t resetReceiverCalibrationCommand = { (const
 
 /* Structure that defines the "get-receiver" command line command. */
 static const CLI_Command_Definition_t getReceiverCommand = { (const int8_t * const ) "get-receiver",
-		(const int8_t * const ) "\r\nget-receiver:\r\n Prints current receiver values\r\n",
+		(const int8_t * const ) "\r\nget-receiver <encoding>:\r\n Returns current receiver values with <encoding> (n=none, p=protobuf)\r\n",
 		CLIGetReceiver, /* The function to run. */
-		0 /* Number of parameters expected */
+		1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "get-receiver-calibration" command line command. */
@@ -191,9 +189,9 @@ static const CLI_Command_Definition_t getReceiverCalibrationCommand = { (const i
 
 /* Structure that defines the "start-receiver-sampling" command line command. */
 static const CLI_Command_Definition_t startReceiverSamplingCommand = { (const int8_t * const ) "start-receiver-sampling",
-		(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s\r\n",
+		(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=protobuf)\r\n",
 		CLIStartReceiverSampling, /* The function to run. */
-		2 /* Number of parameters expected */
+		3 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-receiver-sampling" command line command. */
@@ -266,10 +264,10 @@ static const CLI_Command_Definition_t getFlightModeCommand = { (const int8_t * c
 		0 /* Number of parameters expected */
 };
 
-/* Structure that defines the "task-status" command line command. */
-static const CLI_Command_Definition_t taskStatusCommand = { (const int8_t * const ) "task-status",
-		(const int8_t * const ) "\r\nsystime:\r\n Prints task status\r\n",
-		CLITaskStatus, /* The function to run. */
+/* Structure that defines the "get-ref-signals" command line command. */
+static const CLI_Command_Definition_t getRefSignalsCommand = { (const int8_t * const ) "get-ref-signals",
+		(const int8_t * const ) "\r\nget-ref-signals:\r\n Prints the current reference signal\r\n",
+		CLIGetRefSignals, /* The function to run. */
 		0 /* Number of parameters expected */
 };
 
@@ -313,8 +311,10 @@ void RegisterCLICommands(void) {
 	/* System info CLI commands */
 	FreeRTOS_CLIRegisterCommand(&aboutCommand);
 	FreeRTOS_CLIRegisterCommand(&systimeCommand);
+
+	/* Flight control CLI commands */
 	FreeRTOS_CLIRegisterCommand(&getFlightModeCommand);
-	FreeRTOS_CLIRegisterCommand(&taskStatusCommand);
+	FreeRTOS_CLIRegisterCommand(&getRefSignalsCommand);
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -469,9 +469,29 @@ static portBASE_TYPE CLIEchoData(int8_t* pcWriteBuffer, size_t xWriteBufferLen, 
  */
 static portBASE_TYPE CLIStartReceiverCalibration(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
-	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL.   */
-	(void) pcCommandString;
-	configASSERT(pcWriteBuffer);
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength;
+	portBASE_TYPE lParameterNumber = 0;
+
+	/* Empty pcWriteBuffer so no strange output is sent as command response */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+
+	lParameterNumber++;
+
+	/* Obtain the parameter string. */
+	pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+			lParameterNumber, /* Return the next parameter. */
+			&xParameterStringLength /* Store the parameter string length. */
+	);
+
+	/* Sanity check something was returned. */
+	configASSERT(pcParameter);
+
+	/* Get the current receiver values */
+	if(pcParameter[0] == 'n')
+		SetReceiverPrintSamplingSerialization(NO_SERIALIZATION);
+	else if(pcParameter[0] == 'p')
+		SetReceiverPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
 
 	/* Start the receiver calibration procedure */
 	if (StartReceiverCalibration())
@@ -534,21 +554,36 @@ static portBASE_TYPE CLIResetReceiverCalibration(int8_t* pcWriteBuffer, size_t x
 }
 
 /**
- * @brief  Implements the CLI command to print receiver values
+ * @brief  Implements the CLI command to print receiver values with or without serialization
  * @param  pcWriteBuffer : Reference to output buffer
  * @param  xWriteBufferLen : Size of output buffer
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
 static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString) {
-	/* Remove compile time warnings about unused parameters */
-	(void) pcCommandString;
-	(void) xWriteBufferLen;
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength;
+	portBASE_TYPE lParameterNumber = 0;
 
+	/* Empty pcWriteBuffer so no strange output is sent as command response */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 
+	lParameterNumber++;
+
+	/* Obtain the parameter string. */
+	pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+			lParameterNumber, /* Return the next parameter. */
+			&xParameterStringLength /* Store the parameter string length. */
+	);
+
+	/* Sanity check something was returned. */
+	configASSERT(pcParameter);
+
 	/* Get the current receiver values */
-	PrintReceiverValues();
+	if(pcParameter[0] == 'n')
+		PrintReceiverValues(NO_SERIALIZATION);
+	else if(pcParameter[0] == 'p')
+		PrintReceiverValues(PROTOBUFFER_SERIALIZATION);
 
 	/* Return false to indicate command activity finished */
 	return pdFALSE;
@@ -582,19 +617,16 @@ static portBASE_TYPE CLIGetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWr
 	case 1:
 		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
 				"Throttle Max: %u\nThrottle Mid: %u\nThrottle Min: %u\nAileron Max: %u\nAileron Mid: %u\nAileron Min: %u\nElevator Max: %u\nElevator Mid: %u\nElevator Min: %u\nRudder Max: %u\nRudder Mid: %u\nRudder Min: %u\n",
-				GetThrottleReceiverCalibrationMaxValue(), GetThrottleReceiverCalibrationMidValue(),
-				GetThrottleReceiverCalibrationMinValue(), GetAileronReceiverCalibrationMaxValue(),
-				GetAileronReceiverCalibrationMidValue(), GetAileronReceiverCalibrationMinValue(),
-				GetElevatorReceiverCalibrationMaxValue(), GetElevatorReceiverCalibrationMidValue(),
-				GetElevatorReceiverCalibrationMinValue(), GetRudderReceiverCalibrationMaxValue(),
-				GetRudderReceiverCalibrationMidValue(), GetRudderReceiverCalibrationMinValue());
+				GetThrottleReceiverCalibrationMaxValue(), GetThrottleReceiverCalibrationMidValue(), GetThrottleReceiverCalibrationMinValue(),
+				GetAileronReceiverCalibrationMaxValue(), GetAileronReceiverCalibrationMidValue(), GetAileronReceiverCalibrationMinValue(),
+				GetElevatorReceiverCalibrationMaxValue(), GetElevatorReceiverCalibrationMidValue(), GetElevatorReceiverCalibrationMinValue(),
+				GetRudderReceiverCalibrationMaxValue(), GetRudderReceiverCalibrationMidValue(), GetRudderReceiverCalibrationMinValue());
 		break;
 	case 2:
 		snprintf((char*) pcWriteBuffer, xWriteBufferLen,
 				"Gear Max: %u\nGear Mid: %u\nGear Min: %u\nAux1 Max: %u\nAux1 Mid: %u\nAux1 Min: %u\n\r\n",
-				GetGearReceiverCalibrationMaxValue(), GetGearReceiverCalibrationMidValue(),
-				GetGearReceiverCalibrationMinValue(), GetAux1ReceiverCalibrationMaxValue(),
-				GetAux1ReceiverCalibrationMidValue(), GetAux1ReceiverCalibrationMinValue());
+				GetGearReceiverCalibrationMaxValue(), GetGearReceiverCalibrationMidValue(), GetGearReceiverCalibrationMinValue(),
+				GetAux1ReceiverCalibrationMaxValue(), GetAux1ReceiverCalibrationMidValue(), GetAux1ReceiverCalibrationMinValue());
 		break;
 	default:
 		// memset(pcWriteBuffer, 0x00, xWriteBufferLen);
@@ -676,8 +708,23 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 
 		receiverSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
 
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+				lParameterNumber, /* Return the next parameter. */
+				&xParameterStringLength /* Store the parameter string length. */);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
 		/* Start the receiver value sampling task */
-		StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
+		if (pcParameter[0] == 'n') {
+			SetReceiverPrintSamplingSerialization(NO_SERIALIZATION);
+			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
+		} else if (pcParameter[0] == 'p') {
+			SetReceiverPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
+			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
+		}
 	}
 
 	/* Update return value and parameter index */
@@ -1039,23 +1086,22 @@ static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBuffer
 }
 
 /**
- * @brief  Implements "task-status" command, prints task status
+ * @brief  Implements "get-ref-signals" command, prints current reference signals
  * @param  pcWriteBuffer : Reference to output buffer
  * @param  xWriteBufferLen : Size of output buffer
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
-	strncpy((char*) pcWriteBuffer,
-				"**********************************************************\nTask\t\t\t Abs Time\t % Time\n**********************************************************\n",
-				xWriteBufferLen);
-	vTaskGetRunTimeStats(pcWriteBuffer + strlen((char*) pcWriteBuffer));
-	strncat((char*) pcWriteBuffer, "**********************************************************\n",
-				xWriteBufferLen - strlen((char*) pcWriteBuffer) -1);
+	strncpy((char*) pcWriteBuffer, "Re: ", xWriteBufferLen);
+
+	snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+			"Reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angular rate: %1.4f rad/s\n",
+			GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchAngleReferenceSignal(), GetYawAngularRateReferenceSignal());
 
 	return pdFALSE;
 }
