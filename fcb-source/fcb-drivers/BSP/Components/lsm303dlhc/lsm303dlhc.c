@@ -126,33 +126,23 @@ uint8_t tmpregcfgA = 0x00;
   */
 
 /**
-  * @brief    Set LSM303DLHC Initialization.
-  * @param  InitStruct: init parameters
-  * @retval   None
-  */
-void LSM303DLHC_AccInit(uint16_t InitStruct)
+ * section 7.1.3 in LSM303DLHC data sheet doc DocID018771 Rev 2
+ *
+ * @brief    Set LSM303DLHC Initialization.
+ * @param  ctrlReg1 sets power mode, output data rate and enable xyz axes
+ * @param  ctrlReg3 sets DRDY to INT1 interrupt
+ * @param  ctrlReg4 full scale, block update mode, MSB/LSB, high resolution mode.
+ *
+ * @retval   None
+ */
+void LSM303DLHC_AccInit(uint8_t ctrlReg1, uint8_t ctrlReg3, uint8_t ctrlReg4)
 {
-  uint8_t ctrl = 0x00;
-
   /*  Low level init */
   COMPASSACCELERO_IO_Init();
 
-  /* Write value to ACC MEMS CTRL_REG1 register */
-  ctrl = (uint8_t) InitStruct;
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG1_A, ctrl);
-
-  {
-    /* section 7.1.3 in LSM303DLHC data sheet doc DocID018771 Rev 2 /
-     * DRDY1 means acceleropmeter
-     */
-	  uint8_t ctrlreg3 = 0x10;
-
-	  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, ctrlreg3);
-
-  }
-  /* Write value to ACC MEMS CTRL_REG4 register */
-  ctrl = (uint8_t) (InitStruct << 8);
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrl);
+  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG1_A, ctrlReg1);
+  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, ctrlReg3);
+  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlReg4);
 }
 
 /**
@@ -264,8 +254,10 @@ void LSM303DLHC_AccReadXYZ(float * pData)
   /* Obtain the mg value for the three axis */
   for (i=0; i<3; i++)
   {
-    /* convert to float and from milli-g to g */
-    pData[i] = ((float)(pnRawData[i] / sensitivity) / 1000);
+    pData[i] = ((float) /* convert to float */
+        (pnRawData[i] / sensitivity) /* scale with sensitivity */
+        * 9.82 /* convert from milli-G to mm/(s * s) */
+        / 1000) /* convert from mm/(s * s) to m / (s * s) */;
   }
 }
 
