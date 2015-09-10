@@ -11,7 +11,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
+#include "usbd_cdc_if.h"
 #include "flight_control.h"
+
 #include "arm_math.h"
 
 /* Exported types ------------------------------------------------------------*/
@@ -75,7 +77,8 @@ void ShutdownMotors(void);
 
 MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 MotorControlErrorStatus StopMotorControlSamplingTask(void);
-void PrintMotorControlValues(void);
+void SetMotorPrintSamplingSerialization(const SerializationType_TypeDef serializationType);
+void PrintMotorControlValues(const SerializationType_TypeDef serializationType);
 
 #endif /* __MOTOR_CONTROL_H */
 

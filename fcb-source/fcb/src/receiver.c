@@ -256,10 +256,10 @@ ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const u
 
 /*
  * @brief  Sets the serialization type of printed receiver values
- * @param  serializationType : receiver data serialization enum
+ * @param  serializationType : Data serialization type enum
  * @retval None.
  */
-void SetReceiverPrintSamplingSerialization(SerializationType_TypeDef serializationType) {
+void SetReceiverPrintSamplingSerialization(const SerializationType_TypeDef serializationType) {
 	receiverPrintSerializationType = serializationType;
 }
 
@@ -468,25 +468,21 @@ bool GetReceiverPIDFlightSet(void) {
  * @param  serialization type enum
  * @retval None.
  */
-void PrintReceiverValues(SerializationType_TypeDef serializationType)
+void PrintReceiverValues(const SerializationType_TypeDef serializationType)
 {
 	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE];
 
 	if(serializationType == NO_SERIALIZATION) {
-		strncpy(sampleString, "Receiver channel values (Value / Ticks):\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		strncpy(sampleString, "Receiver channel values:\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);
 		if (IsReceiverActive())
 			strncat(sampleString, "ACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 		else
 			strncat((char*) sampleString, "INACTIVE\r\n", RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1);
 
-		USBComSendString(sampleString);
-
-		snprintf(sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE,
-				"Throttle: %d / %u\nAileron: %d / %u\nElevator: %d / %u\nRudder: %d / %u\nGear: %d / %u\nAux1: %d / %u\n\r\n",
-				GetThrottleReceiverChannel(), GetThrottleReceiverChannelPulseTicks(), GetAileronReceiverChannel(),
-				GetAileronReceiverChannelPulseTicks(), GetElevatorReceiverChannel(), GetElevatorReceiverChannelPulseTicks(),
-				GetRudderReceiverChannel(), GetRudderReceiverChannelPulseTicks(), GetGearReceiverChannel(),
-				GetGearReceiverChannelPulseTicks(), GetAux1ReceiverChannel(), GetAux1ReceiverChannelPulseTicks());
+		snprintf(&sampleString[strlen(sampleString)], RECEIVER_SAMPLING_MAX_STRING_SIZE - strlen(sampleString) - 1,
+				"Throttle: %d\nAileron: %d\nElevator: %d\nRudder: %d\nGear: %d\nAux1: %d\n\r\n",
+				GetThrottleReceiverChannel(), GetAileronReceiverChannel(), GetElevatorReceiverChannel(),
+				GetRudderReceiverChannel(), GetGearReceiverChannel(), GetAux1ReceiverChannel());
 		USBComSendString(sampleString); // Send string over USB
 	}
 	else if(serializationType == PROTOBUFFER_SERIALIZATION)
@@ -509,7 +505,7 @@ void PrintReceiverValues(SerializationType_TypeDef serializationType)
 		receiverSignalsProto.aux1 = GetAux1ReceiverChannel();
 
 		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
-		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedReceiverData, RECEIVER_SAMPLING_MAX_STRING_SIZE);
+		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedReceiverData, ReceiverSignalValues_size);
 		protoStatus = pb_encode(&protoStream, ReceiverSignalValues_fields, &receiverSignalsProto);
 
 		/* Insert header to the sample string, then copy the data after that */

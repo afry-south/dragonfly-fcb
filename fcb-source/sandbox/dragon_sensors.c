@@ -77,7 +77,7 @@ enum { TIMER_INTERVAL_MS = 50 };
 enum { DRAGON_TIMER_ID = 242 };
 
 static volatile uint32_t cbk_gyro_counter = 0;
-static volatile uint32_t cbk_counter = 0;
+// static volatile uint32_t cbk_counter = 0;
 static volatile float gyro_xyz_dot_buf[3] = { 0.0, 0.0, 0.0 };
 static volatile uint8_t sens_init_done = 0;
 

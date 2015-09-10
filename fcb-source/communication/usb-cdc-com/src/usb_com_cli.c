@@ -17,6 +17,7 @@
 #include "fifo_buffer.h"
 #include "common.h"
 #include "fcb_gyroscope.h"
+#include "fcb_accelerometer_magnetometer.h"
 #include "fcb_sensors.h"
 
 #include <stdlib.h>
@@ -154,7 +155,7 @@ static const CLI_Command_Definition_t echoDataCommand = { (const int8_t * const 
 
 /* Structure that defines the "start-receiver-calibration" command line command. */
 static const CLI_Command_Definition_t startReceiverCalibrationCommand = { (const int8_t * const ) "start-receiver-calibration",
-		(const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts receiver calibration procedure with values printing with <encoding>  (n=none, p=protobuf)\r\n",
+		(const int8_t * const ) "\r\nstart-receiver-calibration <encoding>:\r\n Starts receiver calibration procedure with values printing with <encoding>  (n=none, p=proto)\r\n",
 		CLIStartReceiverCalibration, /* The function to run. */
 		1 /* Number of parameters expected */
 };
@@ -175,7 +176,7 @@ static const CLI_Command_Definition_t resetReceiverCalibrationCommand = { (const
 
 /* Structure that defines the "get-receiver" command line command. */
 static const CLI_Command_Definition_t getReceiverCommand = { (const int8_t * const ) "get-receiver",
-		(const int8_t * const ) "\r\nget-receiver <encoding>:\r\n Returns current receiver values with <encoding> (n=none, p=protobuf)\r\n",
+		(const int8_t * const ) "\r\nget-receiver <encoding>:\r\n Returns current receiver values with <encoding> (n=none, p=proto)\r\n",
 		CLIGetReceiver, /* The function to run. */
 		1 /* Number of parameters expected */
 };
@@ -189,7 +190,7 @@ static const CLI_Command_Definition_t getReceiverCalibrationCommand = { (const i
 
 /* Structure that defines the "start-receiver-sampling" command line command. */
 static const CLI_Command_Definition_t startReceiverSamplingCommand = { (const int8_t * const ) "start-receiver-sampling",
-		(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=protobuf)\r\n",
+		(const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
 		CLIStartReceiverSampling, /* The function to run. */
 		3 /* Number of parameters expected */
 };
@@ -224,16 +225,16 @@ static const CLI_Command_Definition_t stopSensorSamplingCommand = { (const int8_
 
 /* Structure that defines the "get-motors" command line command. */
 static const CLI_Command_Definition_t getMotorsCommand = { (const int8_t * const ) "get-motors",
-		(const int8_t * const ) "\r\nget-motors:\r\n Prints motor control values\r\n",
+		(const int8_t * const ) "\r\nget-motors <encoding>:\r\n Prints motor control values with <encoding> (n=none, p=proto)\r\n",
 		CLIGetMotorValues, /* The function to run. */
-		0 /* Number of parameters expected */
+		1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "start-motor-sampling" command line command. */
 static const CLI_Command_Definition_t startMotorSamplingCommand = { (const int8_t * const ) "start-motor-sampling",
-		(const int8_t * const ) "\r\nstart-motor-sampling <sampletime> <sampleduration>:\r\n Prints motor control values once every <sampletime> ms for <sampleduration> s\r\n",
+		(const int8_t * const ) "\r\nstart-motor-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints motor control values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
 		CLIStartMotorSampling, /* The function to run. */
-		2 /* Number of parameters expected */
+		3 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-motor-sampling" command line command. */
@@ -676,7 +677,7 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 
 		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
 
-		size_t paramMaxSize; // TODO make function for this comparison?
+		size_t paramMaxSize;
 		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
 			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
 		else
@@ -706,7 +707,7 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
 		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
-		receiverSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
+		receiverSampleDuration = atoi((char*) pcParameter);
 
 		lParameterNumber++;
 
@@ -717,14 +718,13 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 		/* Sanity check something was returned. */
 		configASSERT(pcParameter);
 
-		/* Start the receiver value sampling task */
+		/* Set serialization and start the receiver value sampling task */
 		if (pcParameter[0] == 'n') {
 			SetReceiverPrintSamplingSerialization(NO_SERIALIZATION);
-			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
 		} else if (pcParameter[0] == 'p') {
 			SetReceiverPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
-			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
 		}
+		StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
 	}
 
 	/* Update return value and parameter index */
@@ -779,8 +779,8 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 
 	PrintGyroscopeValues();
-	// TODO PrintAccelerometerValues();
-	// TODO PrintMagnetometerValues();
+	PrintAccelerometerValues();
+	PrintMagnetometerValues();
 
 	return pdFALSE;
 }
@@ -819,7 +819,7 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
 
 		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
 
-		size_t paramMaxSize; // TODO make function for this comparison?
+		size_t paramMaxSize;
 		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
 			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
 		else
@@ -849,7 +849,7 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
 		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
 		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
-		sensorSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
+		sensorSampleDuration = atoi((char*) pcParameter);
 
 		/* Start the sensor sample printing task */
 		StartSensorSamplingTask(sensorSampleTime, sensorSampleDuration);
@@ -897,14 +897,31 @@ static portBASE_TYPE CLIStopSensorSampling(int8_t* pcWriteBuffer, size_t xWriteB
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
 static portBASE_TYPE CLIGetMotorValues(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
-	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
-	(void) pcCommandString;
-	(void) xWriteBufferLen;
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength;
+	portBASE_TYPE lParameterNumber = 0;
 
 	configASSERT(pcWriteBuffer);
+
+	/* Empty pcWriteBuffer so no strange output is sent as command response */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 
-	PrintMotorControlValues();
+	lParameterNumber++;
+
+	/* Obtain the parameter string. */
+	pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+			lParameterNumber, /* Return the next parameter. */
+			&xParameterStringLength /* Store the parameter string length. */
+	);
+
+	/* Sanity check something was returned. */
+	configASSERT(pcParameter);
+
+	/* Get the current receiver values */
+	if(pcParameter[0] == 'n')
+		PrintMotorControlValues(NO_SERIALIZATION);
+	else if(pcParameter[0] == 'p')
+		PrintMotorControlValues(PROTOBUFFER_SERIALIZATION);
 
 	return pdFALSE;
 }
@@ -942,7 +959,7 @@ static portBASE_TYPE CLIStartMotorSampling(int8_t* pcWriteBuffer, size_t xWriteB
 
 		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
 
-		size_t paramMaxSize; // TODO make function for this comparison?
+		size_t paramMaxSize;
 		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
 			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
 		else
@@ -972,9 +989,24 @@ static portBASE_TYPE CLIStartMotorSampling(int8_t* pcWriteBuffer, size_t xWriteB
 		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
 		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
-		motorSampleDuration = atoi((char*) pcParameter); // TODO sanity check?
+		motorSampleDuration = atoi((char*) pcParameter);
 
-		/* Start the motor control sampling task */
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		/* Set serialization and start the motor control sampling task */
+		if (pcParameter[0] == 'n') {
+			SetMotorPrintSamplingSerialization(NO_SERIALIZATION);
+		} else if (pcParameter[0] == 'p') {
+			SetMotorPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
+		}
+
 		StartMotorControlSamplingTask(motorSampleTime, motorSampleDuration);
 	}
 

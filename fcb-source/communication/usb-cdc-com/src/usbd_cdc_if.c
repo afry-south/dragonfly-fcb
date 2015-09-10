@@ -35,7 +35,7 @@ typedef struct {
 #define USB_COM_RX_BUFFER_SIZE          1024
 
 #define USB_COM_RX_TASK_PRIO          	1
-#define USB_COM_TX_TASK_PRIO          	1
+#define USB_COM_TX_TASK_PRIO          	2 // Prioritize sending over receiving so that buffers are emptied faster
 
 #define USB_COM_TX_QUEUE_ITEMS          16
 
