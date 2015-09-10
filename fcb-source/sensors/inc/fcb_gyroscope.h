@@ -39,6 +39,10 @@ void FetchDataFromGyroscope(void);
  */
 void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot);
 
+/**
+ * Print gyroscope values to USB, intended to be used from the
+ * sensor sampling task.
+ */
 void PrintGyroscopeValues(void);
 
 #endif /* GYROSCOPE_H */
