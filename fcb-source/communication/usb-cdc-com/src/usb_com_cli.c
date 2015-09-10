@@ -154,9 +154,9 @@ static const CLI_Command_Definition_t echoDataCommand = { (const int8_t * const 
 
 /* Structure that defines the "start-receiver-calibration" command line command. */
 static const CLI_Command_Definition_t startReceiverCalibrationCommand = { (const int8_t * const ) "start-receiver-calibration",
-		(const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts receiver calibration procedure\r\n",
+		(const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts receiver calibration procedure with values printing with <encoding>  (n=none, p=protobuf)\r\n",
 		CLIStartReceiverCalibration, /* The function to run. */
-		0 /* Number of parameters expected */
+		1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-receiver-calibration" command line command. */
@@ -469,9 +469,29 @@ static portBASE_TYPE CLIEchoData(int8_t* pcWriteBuffer, size_t xWriteBufferLen, 
  */
 static portBASE_TYPE CLIStartReceiverCalibration(int8_t* pcWriteBuffer, size_t xWriteBufferLen,
 		const int8_t* pcCommandString) {
-	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL.   */
-	(void) pcCommandString;
-	configASSERT(pcWriteBuffer);
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength;
+	portBASE_TYPE lParameterNumber = 0;
+
+	/* Empty pcWriteBuffer so no strange output is sent as command response */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+
+	lParameterNumber++;
+
+	/* Obtain the parameter string. */
+	pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+			lParameterNumber, /* Return the next parameter. */
+			&xParameterStringLength /* Store the parameter string length. */
+	);
+
+	/* Sanity check something was returned. */
+	configASSERT(pcParameter);
+
+	/* Get the current receiver values */
+	if(pcParameter[0] == 'n')
+		SetReceiverPrintSamplingSerialization(NO_SERIALIZATION);
+	else if(pcParameter[0] == 'p')
+		SetReceiverPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
 
 	/* Start the receiver calibration procedure */
 	if (StartReceiverCalibration())
@@ -698,10 +718,13 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 		configASSERT(pcParameter);
 
 		/* Start the receiver value sampling task */
-		if(pcParameter[0] == 'n')
-			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration, NO_SERIALIZATION);
-		else if(pcParameter[0] == 'p')
-			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration, PROTOBUFFER_SERIALIZATION);
+		if (pcParameter[0] == 'n') {
+			SetReceiverPrintSamplingSerialization(NO_SERIALIZATION);
+			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
+		} else if (pcParameter[0] == 'p') {
+			SetReceiverPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
+			StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
+		}
 	}
 
 	/* Update return value and parameter index */

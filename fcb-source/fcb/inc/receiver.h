@@ -99,7 +99,6 @@
 
 /* Receiver calibration definitions - must at least be withing valid pulse range */
 #define RECEIVER_MAX_CALIBRATION_DURATION               1200000 // [ms] Max receiver calibration duration
-#define RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD		1000	// [ms] How often receiver sample is printed
 #define RECEIVER_CALIBRATION_MIN_PULSE_COUNT            1000    // Corresponds to ~22.0 s of calibration (assuming period is 22 ms)
 #define RECEIVER_CALIBRATION_MIN_MID_PULSE_COUNT        500		// Corresponds to ~11.0 s of calibration (assuming period is 6 ms)
 #define RECEIVER_CALIBRATION_SAMPLES_BUFFER_SIZE        16
@@ -140,8 +139,7 @@ ReceiverErrorStatus ReceiverInputConfig(void);
 ReceiverErrorStatus StartReceiverCalibration(void);
 ReceiverErrorStatus StopReceiverCalibration(void);
 void ResetReceiverCalibrationValues(void);
-ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration,
-		const SerializationType_TypeDef serializationType);
+ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 ReceiverErrorStatus StopReceiverSamplingTask(void);
 ReceiverErrorStatus IsReceiverActive(void);
 
@@ -155,6 +153,7 @@ int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
 
+void SetReceiverPrintSamplingSerialization(SerializationType_TypeDef serializationType);
 void PrintReceiverValues(SerializationType_TypeDef serializationType);
 
 uint16_t GetThrottleReceiverCalibrationMaxValue(void);

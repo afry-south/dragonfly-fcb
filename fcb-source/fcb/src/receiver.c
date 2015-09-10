@@ -166,6 +166,7 @@ static volatile uint16_t AuxReceiverTimerPeriodCount;
 
 /* Task handle for printing of receiver values task */
 xTaskHandle ReceiverPrintSamplingTaskHandle = NULL;
+
 static volatile uint16_t receiverPrintSampleTime;
 static volatile uint16_t receiverPrintSampleDuration;
 static SerializationType_TypeDef receiverPrintSerializationType;
@@ -225,16 +226,13 @@ ReceiverErrorStatus ReceiverInputConfig(void) {
  * @param  sampleDuration : Sets for how long sampling should be performed
  * @retval RECEIVER_OK if thread started, else RECEIVER_ERROR
  */
-ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration,
-		const SerializationType_TypeDef serializationType) {
-
+ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
 	if(sampleTime < RECEIVER_PRINT_MINIMUM_SAMPLING_TIME)
 		receiverPrintSampleTime = RECEIVER_PRINT_MINIMUM_SAMPLING_TIME;
 	else
 		receiverPrintSampleTime = sampleTime;
 
 	receiverPrintSampleDuration = sampleDuration;
-	receiverPrintSerializationType = serializationType;
 
 	/* Receiver value print sampling handler thread creation
 	 * Task function pointer: ReceiverPrintSamplingTask
@@ -252,6 +250,15 @@ ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const u
 	}
 
 	return RECEIVER_OK;
+}
+
+/*
+ * @brief  Sets the serialization type of printed receiver values
+ * @param  serializationType : receiver data serialization enum
+ * @retval None.
+ */
+void SetReceiverPrintSamplingSerialization(SerializationType_TypeDef serializationType) {
+	receiverPrintSerializationType = serializationType;
 }
 
 /*
@@ -550,7 +557,7 @@ ReceiverErrorStatus StartReceiverCalibration(void) {
 		receiverCalibrationState = RECEIVER_CALIBRATION_IN_PROGRESS;
 
 		/* Start printing calibration samples */
-		StartReceiverSamplingTask(RECEIVER_CALIBRATION_PRINT_SAMPLE_PERIOD, RECEIVER_MAX_CALIBRATION_DURATION/configTICK_RATE_HZ, NO_SERIALIZATION);
+		StartReceiverSamplingTask(RECEIVER_PRINT_MINIMUM_SAMPLING_TIME, RECEIVER_MAX_CALIBRATION_DURATION/configTICK_RATE_HZ);
 
 		return RECEIVER_OK;
 	}
