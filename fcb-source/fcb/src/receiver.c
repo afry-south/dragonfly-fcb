@@ -42,7 +42,7 @@
 #include "flash.h"
 #include "common.h"
 #include "fcb_error.h"
-#include "dragonfly_fcb_cli.pb.h"
+#include "dragonfly_fcb.pb.h"
 #include "usb_com_cli.h"
 #include "pb_encode.h"
 
@@ -488,8 +488,8 @@ void PrintReceiverValues(const SerializationType_TypeDef serializationType)
 	else if(serializationType == PROTOBUFFER_SERIALIZATION)
 	{
 		bool protoStatus;
-		uint8_t serializedReceiverData[ReceiverSignalValues_size];
-		ReceiverSignalValues receiverSignalsProto;
+		uint8_t serializedReceiverData[ReceiverSignalValuesProto_size];
+		ReceiverSignalValuesProto receiverSignalsProto;
 		uint32_t strLen;
 		receiverSignalsProto.has_throttle = true;
 		receiverSignalsProto.has_aileron = true;
@@ -505,8 +505,8 @@ void PrintReceiverValues(const SerializationType_TypeDef serializationType)
 		receiverSignalsProto.aux1 = GetAux1ReceiverChannel();
 
 		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
-		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedReceiverData, ReceiverSignalValues_size);
-		protoStatus = pb_encode(&protoStream, ReceiverSignalValues_fields, &receiverSignalsProto);
+		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedReceiverData, ReceiverSignalValuesProto_size);
+		protoStatus = pb_encode(&protoStream, ReceiverSignalValuesProto_fields, &receiverSignalsProto);
 
 		/* Insert header to the sample string, then copy the data after that */
 		snprintf(sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE, "%c %c ", RC_VALUES_MSG_ENUM, protoStream.bytes_written);

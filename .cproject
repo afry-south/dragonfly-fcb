@@ -115,7 +115,6 @@
 									<listOptionValue builtIn="false" value="STM32F303VC"/>
 									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 									<listOptionValue builtIn="false" value="STM32F303xC"/>
-									<listOptionValue builtIn="false" value="__FPU_USED"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="USE_USB_INTERRUPT_REMAPPED"/>
 								</option>
@@ -152,7 +151,6 @@
 									<listOptionValue builtIn="false" value="STM32F303VC"/>
 									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 									<listOptionValue builtIn="false" value="STM32F303xC"/>
-									<listOptionValue builtIn="false" value="__FPU_USED"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="USE_USB_INTERRUPT_REMAPPED"/>
 								</option>

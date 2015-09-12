@@ -10,7 +10,7 @@
 #include "usb_com_cli.h"
 
 #include "main.h"
-#include "dragonfly_fcb_cli.pb.h"
+#include "dragonfly_fcb.pb.h"
 #include "receiver.h"
 #include "motor_control.h"
 #include "flight_control.h"

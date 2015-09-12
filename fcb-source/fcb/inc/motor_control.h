@@ -56,7 +56,7 @@ typedef enum {
  * Thrust T(m) = AT*m + BT 		[Unit: N] [t_out unit in seconds]
  * Draq torque Q(m) = AQ*m + BQ	[Unit: Nm]
  */
-#define R_PROP		0.1397		// Propeller radius [m]
+#define R_PROP			0.1397		// Propeller radius [m]
 #define AT 			0.0001768
 #define BT 			0.0
 #define AQ			0.000001748	// This was calculated based on aerodynamic rotor equations
@@ -65,7 +65,7 @@ typedef enum {
 /* Physical control allocation constants */
 #define THRUST_ALLOC_COEFF		1/(4*AT)
 #define THRUST_ALLOC_OFFSET		-BT/AT
-#define ROLLPITCH_ALLOC_COEFF	1*M_SQRT2/(4*AT*LENGTH_ARM)
+#define ROLLPITCH_ALLOC_COEFF		1*M_SQRT2/(4*AT*LENGTH_ARM)
 #define	YAW_ALLOC_COEFF			1/(4*AQ)
 
 /* Exported functions ------------------------------------------------------- */

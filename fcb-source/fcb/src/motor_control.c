@@ -19,7 +19,7 @@
 #include "fcb_error.h"
 #include "receiver.h"
 #include "common.h"
-#include "dragonfly_fcb_cli.pb.h"
+#include "dragonfly_fcb.pb.h"
 #include "usb_com_cli.h"
 #include "pb_encode.h"
 
@@ -219,8 +219,8 @@ void PrintMotorControlValues(const SerializationType_TypeDef serializationType) 
 	}
 	else if(serializationType == PROTOBUFFER_SERIALIZATION) {
 		bool protoStatus;
-		uint8_t serializedMotorData[MotorSignalValues_size];
-		MotorSignalValues motorSignalValuesProto;
+		uint8_t serializedMotorData[MotorSignalValuesProto_size];
+		MotorSignalValuesProto motorSignalValuesProto;
 		uint32_t strLen;
 
 		motorSignalValuesProto.has_M1 = true;
@@ -233,8 +233,8 @@ void PrintMotorControlValues(const SerializationType_TypeDef serializationType) 
 		motorSignalValuesProto.M4 = MotorControlValues.Motor4;
 
 		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
-		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedMotorData, MotorSignalValues_size);
-		protoStatus = pb_encode(&protoStream, MotorSignalValues_fields, &motorSignalValuesProto);
+		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedMotorData, MotorSignalValuesProto_size);
+		protoStatus = pb_encode(&protoStream, MotorSignalValuesProto_fields, &motorSignalValuesProto);
 
 		/* Insert header to the sample string, then copy the data after that */
 		snprintf(motorCtrlString, MOTOR_CONTROL_PRINT_MAX_STRING_SIZE, "%c %c ", MOTOR_VALUES_MSG_ENUM, protoStream.bytes_written);
