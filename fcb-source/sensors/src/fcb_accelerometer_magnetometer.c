@@ -9,6 +9,9 @@
  * The lsm303dlhc.c file does most of the configuration of the acc/magneto-meter
  * itself.
  *
+ * This file also handles coordinate transform to translate magnetometer &
+ * accelerometer data to the quadcopter x y z axes.
+ *
  * @see fcb_accelerometer.h
  */
 #include "fcb_accelerometer_magnetometer.h"
@@ -85,6 +88,7 @@ uint8_t FcbInitialiseAccMagSensor(void) {
 }
 
 void FetchDataFromAccelerometer(void) {
+  float acceleroMeterData[3] = { 0.0f, 0.0f, 0.0f };
 #ifdef FCB_ACCMAG_DEBUG
 	static uint32_t call_counter = 0;
 
@@ -99,7 +103,16 @@ void FetchDataFromAccelerometer(void) {
 	HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_9);
 #endif
 
-	LSM303DLHC_AccReadXYZ(sXYZDotDot);
+	LSM303DLHC_AccReadXYZ(acceleroMeterData);
+
+    /* TODO apply calibration */
+
+	/* from accelerometer to quadcopter coordinate axes
+	 * see "Sensors" page in Wiki.
+	 */
+	sXYZDotDot[X_IDX] = acceleroMeterData[Y_IDX];
+    sXYZDotDot[Y_IDX] = -acceleroMeterData[X_IDX];
+    sXYZDotDot[Z_IDX] = -acceleroMeterData[Z_IDX];
 
 #ifdef FCB_ACCMAG_DEBUG
 	{
@@ -112,6 +125,7 @@ void FetchDataFromAccelerometer(void) {
 }
 
 void FetchDataFromMagnetometer(void) {
+  float magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
 #ifdef FCB_ACCMAG_DEBUG
     static uint32_t call_counter = 0;
 
@@ -128,7 +142,10 @@ void FetchDataFromMagnetometer(void) {
     /* TODO possibly read the values into a temporary copy here ...
      * (contd below)
      */
-	LSM303DLHC_MagReadXYZ(sXYZMagVector);
+	LSM303DLHC_MagReadXYZ(magnetoMeterData);
+	sXYZMagVector[X_IDX] = magnetoMeterData[X_IDX];
+	sXYZMagVector[Y_IDX] = - magnetoMeterData[Y_IDX];
+	sXYZMagVector[Z_IDX] = - magnetoMeterData[Z_IDX];
 
 	/* TODO ... and then copy them into a mutex-protected sXYZMagVector here */
 #ifdef FCB_ACCMAG_DEBUG

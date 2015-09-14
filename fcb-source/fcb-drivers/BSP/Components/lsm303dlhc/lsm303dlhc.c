@@ -68,12 +68,6 @@
  */
 
 struct MagnetometerConfig {
-  float xNorm;
-  float yNorm;
-  float zNorm;
-  float xOffset;
-  float yOffset;
-  float zOffset;
   int16_t xySensitivity;
   int16_t zSensitivity;
   uint8_t fullScale;
@@ -82,7 +76,7 @@ struct MagnetometerConfig {
 };
 
 struct AccelerometerConfig {
-  int16_t sensitivity;
+  int16_t sensitivity; /* all three axes */
 };
 
 /**
@@ -586,7 +580,6 @@ void LSM303DLHC_AccZClickITConfig(void)
 
   /* Enable simple click IT on Z axis, */
   LSM303DLHC_AccClickITEnable(LSM303DLHC_Z_SINGLE_CLICK);
-
 }
 
 #define MAGNET
@@ -601,13 +594,6 @@ void LSM303DLHC_AccZClickITConfig(void)
 void LSM303DLHC_MagInit(void)
 {
   uint8_t mr_regm = 0x00, cra_regm = 0x00, crb_regm = 0x00;
-  magConfig.xNorm = 1;
-  magConfig.yNorm = 1;
-  magConfig.zNorm = 1;
-
-  magConfig.xOffset = 0;
-  magConfig.yOffset = 0;
-  magConfig.zOffset = 0;
   magConfig.fullScale = LSM303DLHC_FS_1_3_GA; /* earth's magnetic field vector is .5 Gauss */
   magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
   magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
@@ -677,12 +663,10 @@ void LSM303DLHC_MagReadXYZ(float* pfData)
     pnRawData[i]=(float)((int16_t)(buffer[2*i+1] << 8) + (int16_t)buffer[2*i]);
   }
 
-
   /* Obtain the Gauss value for the three axis */
-
-  pfData[0] = (float) ((pnRawData[0])/magConfig.xySensitivity - magConfig.xOffset) / magConfig.xNorm;
-  pfData[1] = (float) ((pnRawData[1])/magConfig.xySensitivity - magConfig.yOffset) /magConfig.yNorm;
-  pfData[2] = (float) ((pnRawData[2])/magConfig.zSensitivity - magConfig.zOffset) /magConfig.zNorm;
+  pfData[0] = (float) pnRawData[0]/magConfig.xySensitivity;
+  pfData[1] = (float) pnRawData[1]/magConfig.xySensitivity;
+  pfData[2] = (float) pnRawData[2]/magConfig.zSensitivity;
 }
 #endif
 /**

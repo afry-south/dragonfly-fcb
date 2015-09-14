@@ -84,13 +84,21 @@ uint8_t InitialiseGyroscope(void) {
 
 
 void FetchDataFromGyroscope(void) {
+  float gyroscopeValuesXYZ[3] = { 0.0f, 0.0f, 0.0f };
+
 #ifdef FCB_GYRO_DEBUG
     static uint32_t call_counter = 0;
 #else
     static uint16_t call_counter = 0;
 #endif
     /* returns rad/s */
-    BSP_GYRO_GetXYZ((float*)sGyroXYZAngleDot);
+    BSP_GYRO_GetXYZ(gyroscopeValuesXYZ);
+
+    /* TODO apply calibration */
+
+    sGyroXYZAngleDot[XDOT_IDX] = - gyroscopeValuesXYZ[YDOT_IDX];
+    sGyroXYZAngleDot[YDOT_IDX] = - gyroscopeValuesXYZ[XDOT_IDX];
+    sGyroXYZAngleDot[ZDOT_IDX] = - gyroscopeValuesXYZ[ZDOT_IDX];
 
     if (GYROSCOPE_OFFSET_SAMPLES > call_counter) {
     	sGyroXYZAngleDotOffset[XDOT_IDX] += sGyroXYZAngleDot[XDOT_IDX];
