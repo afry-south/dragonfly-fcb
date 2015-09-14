@@ -3,6 +3,11 @@
  *
  * Implements fcb_accelerometer_magnetometer.h API
  *
+ * This file does most of the GPIO & NVIC setup to receive the interrupts
+ * from LSM303DLHC.
+ *
+ * The lsm303dlhc.c file does most of the configuration of the acc/magneto-meter
+ * itself.
  *
  * @see fcb_accelerometer.h
  */
@@ -30,9 +35,6 @@ enum { Z_IDX = 2 }; /* as above */
 enum { ACCMAG_SAMPLING_MAX_STRING_SIZE = 128 };
 
 /* static fcn declarations */
-
-static void FcbInitialiseAccelerometer(void); /* configures LSM303DHLC accelerometer */
-
 
 /* public fcn definitions */
 
@@ -68,7 +70,7 @@ uint8_t FcbInitialiseAccMagSensor(void) {
         configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
 	HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
 
-	FcbInitialiseAccelerometer();
+	LSM303DLHC_AccConfig();
 	LSM303DLHC_MagInit();
 
     /* do a pre-read to get the DRDY interrupts going. Since we trig on
@@ -80,36 +82,6 @@ uint8_t FcbInitialiseAccMagSensor(void) {
 	LSM303DLHC_MagReadXYZ(sXYZMagVector);
 
 	return retVal;
-}
-
-static void FcbInitialiseAccelerometer(void) {
-  {
-      /* set up accelerometer */
-      uint8_t ctrlReg1 = 0x00 |
-          LSM303DLHC_NORMAL_MODE |
-          LSM303DLHC_ODR_50_HZ |
-          LSM303DLHC_AXES_ENABLE /* reg1 */;
-
-      uint8_t ctrlReg3 = 0x00 | LSM303DLHC_IT1_DRY1 ;
-
-      uint8_t ctrlReg4 = 0x00 |
-          LSM303DLHC_FULLSCALE_2G |
-          LSM303DLHC_BlockUpdate_Single |
-          LSM303DLHC_BLE_LSB |
-          LSM303DLHC_HR_ENABLE ;
-
-      if (I_AM_LMS303DLHC != LSM303DLHC_AccReadID()) {
-        ErrorHandler();
-      }
-
-      LSM303DLHC_AccRebootCmd();
-      LSM303DLHC_AccInit(ctrlReg1, ctrlReg3, ctrlReg4);
-
-      LSM303DLHC_AccFilterConfig(LSM303DLHC_HPM_NORMAL_MODE |
-          LSM303DLHC_HPFCF_16 |
-          LSM303DLHC_HPF_AOI1_DISABLE |
-          LSM303DLHC_HPF_AOI2_DISABLE);
-    }
 }
 
 void FetchDataFromAccelerometer(void) {

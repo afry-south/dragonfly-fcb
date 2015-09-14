@@ -440,6 +440,7 @@
   * @{
   */
 /* Acc functions */
+void      LSM303DLHC_AccConfig(void);
 void      LSM303DLHC_AccInit(uint8_t, uint8_t, uint8_t);
 uint8_t   LSM303DLHC_AccReadID(void); /* initialises IO and reads ID of sensor */
 void      LSM303DLHC_AccRebootCmd(void);
