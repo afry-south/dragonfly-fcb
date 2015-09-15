@@ -35,7 +35,7 @@
 /* Private define ------------------------------------------------------------*/
 #define MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO			1
 #define MOTOR_CONTROL_PRINT_MINIMUM_SAMPLING_TIME		2	// Motor control updated every 2.5 ms
-#define MOTOR_CONTROL_PRINT_MAX_STRING_SIZE				128
+#define MOTOR_CONTROL_PRINT_MAX_STRING_SIZE			128
 
 /* Private macro -------------------------------------------------------------*/
 
