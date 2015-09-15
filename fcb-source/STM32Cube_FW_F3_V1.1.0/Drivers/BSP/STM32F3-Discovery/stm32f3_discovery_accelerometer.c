@@ -117,8 +117,7 @@ uint8_t BSP_ACCELERO_Init(void) {
 		LSM303DLHC_InitStructure.AccOutput_DataRate = LSM303DLHC_ODR_50_HZ;
 		LSM303DLHC_InitStructure.Axes_Enable = LSM303DLHC_AXES_ENABLE;
 		LSM303DLHC_InitStructure.AccFull_Scale = LSM303DLHC_FULLSCALE_2G;
-		LSM303DLHC_InitStructure.BlockData_Update =
-		LSM303DLHC_BlockUpdate_Continous;
+		LSM303DLHC_InitStructure.BlockData_Update = LSM303DLHC_BlockUpdate_Continous;
 		LSM303DLHC_InitStructure.Endianness = LSM303DLHC_BLE_LSB;
 		LSM303DLHC_InitStructure.High_Resolution = LSM303DLHC_HR_ENABLE;
 
