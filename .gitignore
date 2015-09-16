@@ -18,17 +18,8 @@ local.properties
 *.launch
 
 
-logs
-fcb/fcb/Debug
-report/dragonfly-fcb-report.aux
-report/dragonfly-fcb-report.bbl
-report/dragonfly-fcb-report.blg
-report/dragonfly-fcb-report.pdf
-report/dragonfly-fcb-report.synctex.gz
-report/dragonfly-fcb-report.toc
-doc_latex/dragonfly-fcb-report.aux
-doc_latex/dragonfly-fcb-report.pdf
-doc_latex/dragonfly-fcb-report.synctex.gz
-doc_latex/dragonfly-fcb-report.toc
-doc_latex/foo.aux
+doc-latex/*.aux
+doc-latex/*.pdf
+doc-latex/*.dragonfly-fcb-report.synctex.gz
+doc-latex/*.dragonfly-fcb-report.toc
 Debug/
