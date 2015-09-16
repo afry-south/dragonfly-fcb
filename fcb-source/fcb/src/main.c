@@ -20,8 +20,6 @@
 #include "fcb_sensors.h"
 #include "fcb_gyroscope.h"
 
-#include <string.h>
-
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
@@ -36,7 +34,6 @@
 static void InitSystem(void);
 static void InitRTOS(void);
 static void ConfigSystemClock(void);
-static void ConfigPVD(void);
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -141,32 +138,6 @@ static void InitRTOS(void) {
 	 * is started according to ST UM1722 manual section 1.6.
 	 */
 	vTaskStartScheduler();
-}
-
-/**
- * @brief  Configures the Programmable Voltage Detection (PVD) resources.
- * @param  None
- * @retval None
- */
-static void ConfigPVD(void) {
-	PWR_PVDTypeDef sConfigPVD;
-
-	/*##-1- Enable Power Clock #################################################*/
-	__PWR_CLK_ENABLE();
-
-	/*##-2- Configure the NVIC for PVD #########################################*/
-	HAL_NVIC_SetPriority(PVD_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(PVD_IRQn);
-
-	/* Configure the PVD level to and generate an interrupt on falling
-	 edges (Detection level set to 2.47V, refer to the electrical characteristics
-	 of the device datasheet for more details) */
-	sConfigPVD.PVDLevel = PWR_PVDLEVEL_5;
-	sConfigPVD.Mode = PWR_PVD_MODE_IT_FALLING;
-	HAL_PWR_PVDConfig(&sConfigPVD);
-
-	/* Enable the PVD Output */
-	HAL_PWR_EnablePVD();
 }
 
 /**

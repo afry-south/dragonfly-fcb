@@ -71,6 +71,32 @@ uint32_t CalculateCRC(const uint8_t* dataBuffer, const uint32_t dataBufferSize) 
 	return crcVal;
 }
 
+/**
+ * @brief  Configures the Programmable Voltage Detection (PVD) resources.
+ * @param  None
+ * @retval None
+ */
+void ConfigPVD(void) {
+	PWR_PVDTypeDef sConfigPVD;
+
+	/*##-1- Enable Power Clock #################################################*/
+	__PWR_CLK_ENABLE();
+
+	/*##-2- Configure the NVIC for PVD #########################################*/
+	HAL_NVIC_SetPriority(PVD_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(PVD_IRQn);
+
+	/* Configure the PVD level to and generate an interrupt on falling
+	 edges (Detection level set to 2.47V, refer to the electrical characteristics
+	 of the device datasheet for more details) */
+	sConfigPVD.PVDLevel = PWR_PVDLEVEL_5;
+	sConfigPVD.Mode = PWR_PVD_MODE_IT_FALLING;
+	HAL_PWR_PVDConfig(&sConfigPVD);
+
+	/* Enable the PVD Output */
+	HAL_PWR_EnablePVD();
+}
+
 /*
  * @brief  Calculates the mean of the elements in an uint16_t buffer
  * @param  buffer : Pointer to uint16_t buffer
