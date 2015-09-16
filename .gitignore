@@ -1,15 +1,10 @@
-*.pydevproject
-.metadata
-.gradle
-bin/
-tmp/
 *.tmp
 *.bak
 *.swp
 *~.nib
-local.properties
+
+# Eclipse settings folder
 .settings/
-.loadpath
 
 # External tool builders
 .externalToolBuilders/
@@ -17,9 +12,6 @@ local.properties
 # Locally stored "Eclipse launch configurations"
 *.launch
 
-
-doc-latex/*.aux
-doc-latex/*.pdf
-doc-latex/*.dragonfly-fcb-report.synctex.gz
-doc-latex/*.dragonfly-fcb-report.toc
+# Binary folders
 Debug/
+Release/
