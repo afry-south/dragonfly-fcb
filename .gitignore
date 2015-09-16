@@ -12,6 +12,12 @@
 # Locally stored "Eclipse launch configurations"
 *.launch
 
+# LaTeX
+doc-latex/**/*.aux
+doc-latex/**/*.pdf
+doc-latex/**/*.gz
+doc-latex/**/*.toc
+
 # Binary folders
 Debug/
 Release/
