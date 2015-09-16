@@ -17,6 +17,7 @@ doc-latex/**/*.aux
 doc-latex/**/*.pdf
 doc-latex/**/*.gz
 doc-latex/**/*.toc
+doc-latex/**/*.log
 
 # Binary folders
 Debug/
