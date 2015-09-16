@@ -53,7 +53,7 @@ typedef enum {
 } MotorMomentSign;
 
 typedef struct {
-	MotorMomentSign rollDir;		// Depends on the motor location relative to aircraft CoG
+	MotorMomentSign rollDir;	// Depends on the motor location relative to aircraft CoG
 	MotorMomentSign pitchDir;	// Depends on the motor location relative to aircraft CoG
 	MotorMomentSign yawDir;		// Depends on the motor rotational direction (CCW or CW)
 } MotorProperties_TypeDef;
