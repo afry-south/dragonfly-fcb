@@ -179,10 +179,10 @@
 /** @defgroup Acc_Full_Scale_Selection
   * @{
   */
-#define LSM303DLHC_FULLSCALE_2G            ((uint8_t)0x00)  /*!< ±2 g */
-#define LSM303DLHC_FULLSCALE_4G            ((uint8_t)0x10)  /*!< ±4 g */
-#define LSM303DLHC_FULLSCALE_8G            ((uint8_t)0x20)  /*!< ±8 g */
-#define LSM303DLHC_FULLSCALE_16G           ((uint8_t)0x30)  /*!< ±16 g */
+#define LSM303DLHC_FULLSCALE_2G            ((uint8_t)0x00)  /*!< ï¿½2 g */
+#define LSM303DLHC_FULLSCALE_4G            ((uint8_t)0x10)  /*!< ï¿½4 g */
+#define LSM303DLHC_FULLSCALE_8G            ((uint8_t)0x20)  /*!< ï¿½8 g */
+#define LSM303DLHC_FULLSCALE_16G           ((uint8_t)0x30)  /*!< ï¿½16 g */
 /**
   * @}
   */
@@ -383,13 +383,13 @@
 /** @defgroup Mag_Full_Scale
   * @{
   */
-#define  LSM303DLHC_FS_1_3_GA               ((uint8_t) 0x20)  /*!< Full scale = ±1.3 Gauss */
-#define  LSM303DLHC_FS_1_9_GA               ((uint8_t) 0x40)  /*!< Full scale = ±1.9 Gauss */
-#define  LSM303DLHC_FS_2_5_GA               ((uint8_t) 0x60)  /*!< Full scale = ±2.5 Gauss */
-#define  LSM303DLHC_FS_4_0_GA               ((uint8_t) 0x80)  /*!< Full scale = ±4.0 Gauss */
-#define  LSM303DLHC_FS_4_7_GA               ((uint8_t) 0xA0)  /*!< Full scale = ±4.7 Gauss */
-#define  LSM303DLHC_FS_5_6_GA               ((uint8_t) 0xC0)  /*!< Full scale = ±5.6 Gauss */
-#define  LSM303DLHC_FS_8_1_GA               ((uint8_t) 0xE0)  /*!< Full scale = ±8.1 Gauss */
+#define  LSM303DLHC_FS_1_3_GA               ((uint8_t) 0x20)  /*!< Full scale = ï¿½1.3 Gauss */
+#define  LSM303DLHC_FS_1_9_GA               ((uint8_t) 0x40)  /*!< Full scale = ï¿½1.9 Gauss */
+#define  LSM303DLHC_FS_2_5_GA               ((uint8_t) 0x60)  /*!< Full scale = ï¿½2.5 Gauss */
+#define  LSM303DLHC_FS_4_0_GA               ((uint8_t) 0x80)  /*!< Full scale = ï¿½4.0 Gauss */
+#define  LSM303DLHC_FS_4_7_GA               ((uint8_t) 0xA0)  /*!< Full scale = ï¿½4.7 Gauss */
+#define  LSM303DLHC_FS_5_6_GA               ((uint8_t) 0xC0)  /*!< Full scale = ï¿½5.6 Gauss */
+#define  LSM303DLHC_FS_8_1_GA               ((uint8_t) 0xE0)  /*!< Full scale = ï¿½8.1 Gauss */
 /**
   * @}
   */
@@ -440,12 +440,13 @@
   * @{
   */
 /* Acc functions */
-void      LSM303DLHC_AccInit(uint16_t InitStruct);
-uint8_t   LSM303DLHC_AccReadID(void);
+void      LSM303DLHC_AccConfig(void);
+void      LSM303DLHC_AccInit(uint8_t, uint8_t, uint8_t);
+uint8_t   LSM303DLHC_AccReadID(void); /* initialises IO and reads ID of sensor */
 void      LSM303DLHC_AccRebootCmd(void);
 void      LSM303DLHC_AccFilterConfig(uint8_t FilterStruct);
 void      LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState);
-void      LSM303DLHC_AccReadXYZ(int16_t* pData);
+void      LSM303DLHC_AccReadXYZ(float* pData);
 void      LSM303DLHC_AccFilterClickCmd(uint8_t HighPassFilterClickState);
 void      LSM303DLHC_AccIT1Enable(uint8_t LSM303DLHC_IT);
 void      LSM303DLHC_AccIT1Disable(uint8_t LSM303DLHC_IT);

@@ -3,13 +3,21 @@
  *
  * Implements fcb_accelerometer_magnetometer.h API
  *
+ * This file does most of the GPIO & NVIC setup to receive the interrupts
+ * from LSM303DLHC.
+ *
+ * The lsm303dlhc.c file does most of the configuration of the acc/magneto-meter
+ * itself.
+ *
+ * This file also handles coordinate transform to translate magnetometer &
+ * accelerometer data to the quadcopter x y z axes.
  *
  * @see fcb_accelerometer.h
  */
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_sensors.h"
 #include "fcb_error.h"
-#include "stm32f3_discovery_accelerometer.h"
+#include "lsm303dlhc.h"
 #include "usbd_cdc_if.h"
 #include "trace.h"
 
@@ -19,7 +27,7 @@
 
 // #define FCB_ACCMAG_DEBUG
 
-int16_t sXYZDotDot[] = { 0, 0 , 0 };
+float sXYZDotDot[] = { 0, 0 , 0 };
 float sXYZMagVector[] = { 0, 0 , 0 };
 
 
@@ -65,16 +73,7 @@ uint8_t FcbInitialiseAccMagSensor(void) {
         configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
 	HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
 
-	/* configure LSM303DHLC accelerometer */
-	BSP_ACCELERO_Reset();
-
-	if (ACCELERO_OK != BSP_ACCELERO_Init()) {
-		ErrorHandler();
-		retVal = FCB_ERR_INIT;
-		goto Exit;
-	}
-
-
+	LSM303DLHC_AccConfig();
 	LSM303DLHC_MagInit();
 
     /* do a pre-read to get the DRDY interrupts going. Since we trig on
@@ -82,13 +81,14 @@ uint8_t FcbInitialiseAccMagSensor(void) {
      * here the interrupt is already high. Reading the data trigs the
      * sensor to load a new set of values into its registers.
      */
-	BSP_ACCELERO_GetXYZ(sXYZDotDot);
+	LSM303DLHC_AccReadXYZ(sXYZDotDot);
 	LSM303DLHC_MagReadXYZ(sXYZMagVector);
-Exit:
+
 	return retVal;
 }
 
 void FetchDataFromAccelerometer(void) {
+  float acceleroMeterData[3] = { 0.0f, 0.0f, 0.0f };
 #ifdef FCB_ACCMAG_DEBUG
 	static uint32_t call_counter = 0;
 
@@ -103,7 +103,16 @@ void FetchDataFromAccelerometer(void) {
 	HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_9);
 #endif
 
-	BSP_ACCELERO_GetXYZ(sXYZDotDot);
+	LSM303DLHC_AccReadXYZ(acceleroMeterData);
+
+    /* TODO apply calibration */
+
+	/* from accelerometer to quadcopter coordinate axes
+	 * see "Sensors" page in Wiki.
+	 */
+	sXYZDotDot[X_IDX] = acceleroMeterData[Y_IDX];
+    sXYZDotDot[Y_IDX] = -acceleroMeterData[X_IDX];
+    sXYZDotDot[Z_IDX] = -acceleroMeterData[Z_IDX];
 
 #ifdef FCB_ACCMAG_DEBUG
 	{
@@ -116,6 +125,7 @@ void FetchDataFromAccelerometer(void) {
 }
 
 void FetchDataFromMagnetometer(void) {
+  float magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
 #ifdef FCB_ACCMAG_DEBUG
     static uint32_t call_counter = 0;
 
@@ -132,7 +142,10 @@ void FetchDataFromMagnetometer(void) {
     /* TODO possibly read the values into a temporary copy here ...
      * (contd below)
      */
-	LSM303DLHC_MagReadXYZ(sXYZMagVector);
+	LSM303DLHC_MagReadXYZ(magnetoMeterData);
+	sXYZMagVector[X_IDX] = magnetoMeterData[X_IDX];
+	sXYZMagVector[Y_IDX] = - magnetoMeterData[Y_IDX];
+	sXYZMagVector[Z_IDX] = - magnetoMeterData[Z_IDX];
 
 	/* TODO ... and then copy them into a mutex-protected sXYZMagVector here */
 #ifdef FCB_ACCMAG_DEBUG
@@ -158,7 +171,7 @@ void PrintAccelerometerValues(void) {
     static char sampleString[ACCMAG_SAMPLING_MAX_STRING_SIZE];
 
     snprintf((char*) sampleString, ACCMAG_SAMPLING_MAX_STRING_SIZE,
-            "Accelerometer readings [m/(s * s)]:\nAccX: %i\nAccY: %i\nAccZ: %i\n\r\n",
+            "Accelerometer readings [m/(s * s)]:\nAccX: %f\nAccY: %f\nAccZ: %f\n\r\n",
             sXYZDotDot[X_IDX],
             sXYZDotDot[Y_IDX],
             sXYZDotDot[Z_IDX]);
