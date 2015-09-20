@@ -52,17 +52,6 @@ void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot);
 
 
 /**
- * This method is intended to be called from the EXTI1 ISR.
- *
- * It won't get called until InitialiseAccMag has returned
- * success.
- *
- * It reads the accelerometer values.
- */
-void MagnetometerHandleDataReady(void);
-
-
-/**
  * Fetches data (rotation speed, or angle dot) from accelerometer
  * sensor.
  */
