@@ -19,23 +19,26 @@
 #include "fcb_error.h"
 #include "lsm303dlhc.h"
 #include "usbd_cdc_if.h"
+#include "arm_math.h"
 #include "trace.h"
 
 #include "FreeRTOS.h"
 
+#include <stdint.h>
 #include <stdio.h>
 
 // #define FCB_ACCMAG_DEBUG
 
-float sXYZDotDot[] = { 0, 0 , 0 };
-float sXYZMagVector[] = { 0, 0 , 0 };
-
+static float32_t sXYZDotDot[] = { 0, 0 , 0 };
+static float32_t sXYZMagVector[] = { 0, 0 , 0 };
 
 enum { X_IDX = 0 }; /* index into sGyroXYZDotDot & ditto Offset sXYZMagVectors */
 enum { Y_IDX = 1 }; /* as above */
 enum { Z_IDX = 2 }; /* as above */
 
 enum { ACCMAG_SAMPLING_MAX_STRING_SIZE = 128 };
+enum { ACCMAG_CALIBRATION_SAMPLES_N = 6 }; /* TODO increase */
+
 
 /* static fcn declarations */
 
@@ -124,6 +127,10 @@ void FetchDataFromAccelerometer(void) {
 #endif
 }
 
+void BeginMagnetometerCalibration(void) {
+
+}
+
 void FetchDataFromMagnetometer(void) {
   float magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
 #ifdef FCB_ACCMAG_DEBUG
@@ -160,7 +167,7 @@ void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot) {
 	*zDotDot = sXYZDotDot[Z_IDX];
 }
 
-void GetMagVector(int16_t * x, int16_t * y, int16_t * z) {
+void GetMagVector(float32_t * x, float32_t * y, float32_t * z) {
 	*x = sXYZMagVector[X_IDX];
 	*y = sXYZMagVector[Y_IDX];
 	*z = sXYZMagVector[Z_IDX];
