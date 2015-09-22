@@ -43,19 +43,16 @@
 #define N_YR				15.0		// Max derivative gain (often 10-20)
 #define MAX_YAW_MOM			AQ*2*UINT16_MAX		// Two motors with same rot dir full thrust, other two motors no thrust [Nm]
 
+#define MIN_TI_VAL			0.001		// Integral PID constant needs to be at least this for it to be used
+
 /* Exported types ------------------------------------------------------------*/
 typedef struct
 {
-  float K;		// PID gain parameter
-  float Ti;		// PID integration time parameter
-  float Td;		// PID derivative time parameter
-  float Beta;	// Set-point weighting 0-1
-  float Gamma;	// Derivative set-point weighting 0-1
-  float N;		// Derivative action filter constant
-  float P;		// Proportional control part
-  float I;		// Integration control part
-  float D;		// Derivative control part
-}PIDController_TypeDef;
+  float Thrust;			// [N]
+  float RollMoment;		// [Nm]
+  float PitchMoment;	// [Nm]
+  float YawMoment;		// [Nm]
+} CtrlSignals_TypeDef;
 
 /* Exported macro ------------------------------------------------------------*/
 
