@@ -11,8 +11,6 @@
 #define __PID_CONTROL_H_
 
 /* Includes ------------------------------------------------------------------*/
-#include "motor_control.h"
-
 #include "arm_math.h"
 
 /* Exported constants --------------------------------------------------------*/
@@ -58,10 +56,7 @@ typedef struct
 
 /* Exported function prototypes --------------------------------------------- */
 void InitPIDControllers(void);
-float AltitudeControl(void);
-float RollControl(void);
-float PitchControl(void);
-float YawControl(void);
+void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals);
 
 #endif /* __PID_CONTROL_H_ */
 

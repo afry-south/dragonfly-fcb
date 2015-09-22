@@ -12,6 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "pid_control.h"
 
+#include "state_estimation.h"
 #include "flight_control.h"
 #include "motor_control.h"
 
@@ -132,11 +133,10 @@ void InitPIDControllers(void) {
  * @retval	None.
  */
 void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
-	// TODO enter current estimated states instead of 0.0
-	ctrlSignals->Thrust = UpdatePIDControl(&AltCtrl, 0.0, GetZVelocityReferenceSignal());
-	ctrlSignals->RollMoment = UpdatePIDControl(&RollCtrl, 0.0, GetRollAngleReferenceSignal());
-	ctrlSignals->PitchMoment = UpdatePIDControl(&PitchCtrl, 0.0, GetPitchAngleReferenceSignal());
-	ctrlSignals->YawMoment = UpdatePIDControl(&YawCtrl, 0.0, GetYawAngularRateReferenceSignal());
+	// ctrlSignals->Thrust = UpdatePIDControl(&AltCtrl, GetZVelocity(), GetZVelocityReferenceSignal()); // TODO control altitude later
+	ctrlSignals->RollMoment = UpdatePIDControl(&RollCtrl, GetRollAngle(), GetRollAngleReferenceSignal());
+	ctrlSignals->PitchMoment = UpdatePIDControl(&PitchCtrl, GetPitchAngle(), GetPitchAngleReferenceSignal());
+	ctrlSignals->YawMoment = UpdatePIDControl(&YawCtrl, GetYawAngle(), GetYawAngularRateReferenceSignal()); // TODO should be GetYawRate()
 }
 
 /* Private functions ---------------------------------------------------------*/
