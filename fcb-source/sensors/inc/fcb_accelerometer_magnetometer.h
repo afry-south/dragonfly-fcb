@@ -12,6 +12,9 @@
 #include "fcb_retval.h"
 #include "stm32f3_discovery.h"
 
+#include "arm_math.h"
+#include <stdint.h>
+
 /**
  * The Data Ready input from the magnetometer.
  *
@@ -28,6 +31,21 @@
  */
 #define GPIO_ACCELEROMETER_DRDY GPIO_PIN_4
 
+/**
+ *
+ */
+enum FcbMagnetometerMode {
+  MAGMTR_UNINITIALISED = 0,
+  MAGMTR_FETCHING = 1, /** fetching data from sensor */
+  MAGMTR_CALIBRATION_FETCH = 2, /** fetching calibration samples */
+};
+
+enum FcbAccelerometerMode {
+  ACCMTR_UNINITIALISED = 0,
+  ACCMTR_FETCHING = 1, /* simply fetching data */
+  ACCMTR_CALIBRATION_FETCH = 2, /* fetching data & storing in calibration samples */
+};
+
 
 /**
  * Initialises
@@ -43,23 +61,23 @@ uint8_t FcbInitialiseAccMagSensor(void);
  */
 void FetchDataFromAccelerometer(void);
 
+/**
+ * Begins calibration of magnetometer.
+ *
+ * This is an asynchronous operation.
+ *
+ * @todo design/describe asynchronicity.
+ */
+void BeginMagnetometerCalibration(void);
+
 /*
  * get the current reading from the accelerometer.
  *
- * It is updated at a rate of 50 Hz (configurable).
+ * It is updated at a rate of 50 Hz (configurable in lsm303dlhc.c).
+ *
+ * The caller allocates memory for input variables.
  */
 void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot);
-
-
-/**
- * This method is intended to be called from the EXTI1 ISR.
- *
- * It won't get called until InitialiseAccMag has returned
- * success.
- *
- * It reads the accelerometer values.
- */
-void MagnetometerHandleDataReady(void);
 
 
 /**
@@ -68,12 +86,18 @@ void MagnetometerHandleDataReady(void);
  */
 void FetchDataFromMagnetometer(void);
 
+
 /*
- * get the current reading from the accelerometer.
+ * get the current reading from the magnetometer.
  *
- * It is updated at a rate of 50 Hz (configurable).
+ * The magnetometer values are updated at a rate
+ * of 75 Hz (configurable in lsm303dlhc.c).
+ *
+ * The caller allocates memory for input variables.
+ *
+ * @see lsm303dlhc.c
  */
-void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot);
+void GetMagVector(float32_t * x, float32_t * y, float32_t * z);
 
 /**
  * Print accelerometer values to USB, intended to be used from the
