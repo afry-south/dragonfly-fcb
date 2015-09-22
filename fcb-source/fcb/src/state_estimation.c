@@ -42,19 +42,23 @@ void InitStatesXYZ(void)
  */
 static void StateInit(KalmanFilter_TypeDef * Estimator)
 {
+  /* P matrix init is the Identity matrix*/
   Estimator->p11 = 1.0;
   Estimator->p12 = 0.0;
   Estimator->p21 = 0.0;
   Estimator->p22 = 1.0;
 
-  Estimator->q1 = 0.5;
-  Estimator->q2 = 0.05;
-  Estimator->r1 = 1.5;
+  /* q1 = sqrt(var(rate))*CONTROL_SAMPLE_PERIOD^2
+   * q2 = sqrt(var(rateBias))
+   * r1 = sqrt(var(angle)) */
+  Estimator->q1 = Q1_CAL;
+  Estimator->q2 = Q2_CAL;
+  Estimator->r1 = R1_CAL;
 }
 
 /* PredictStatesXYZ
- * @brief  Updates the state estimates
- * @param  None
+ * @brief  Updates the state estimates for X, Y, Z (roll, pitch, yaw)
+ * @param  newRatesXYZ: Pointer to measured gyroscope rates, X,Y,Z
  * @retval None
  */
 void PredictStatesXYZ(float newRatesXYZ[])
@@ -76,6 +80,8 @@ static void StatePrediction(float* newRate, KalmanFilter_TypeDef * Estimator, fl
 {
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
+
+	/* WARNING: CONTROL_SAMPLE_PERIOD is set to 0 right now!! WARNING */
 	*stateAngle += CONTROL_SAMPLE_PERIOD * (*newRate) - CONTROL_SAMPLE_PERIOD * (*stateRateBias);
 
 	/* Step 2: Calculate a priori error covariance matrix P*/

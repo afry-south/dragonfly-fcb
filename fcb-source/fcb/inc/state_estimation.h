@@ -40,6 +40,9 @@ typedef struct
 #define MAG_CALIBRATION_SAMPLES    	(int)		2000
 #define INIT_SAMPLES			(int)		1000
 #define	CONTROL_SAMPLE_PERIOD (float)		0
+#define Q1_CAL (float)						0.5
+#define	Q2_CAL (float)						0.05
+#define	R1_CAL (float)						1.5
 
 /* Exported macro ------------------------------------------------------------*/
 
