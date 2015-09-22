@@ -11,7 +11,6 @@
 #include "arm_math.h"
 
 /* Exported types ------------------------------------------------------------*/
-
 typedef struct
 {
 	float q1;	// Process noise covariance matrix components
@@ -27,37 +26,32 @@ typedef struct
 
 typedef struct
 {
-	float ZVelocity;
 	float roll;
 	float rollRateBias;
 	float pitch;
 	float pitchRateBias;
 	float yaw;
-	float yawRate;
 	float yawRateBias;
 }StateVector_TypeDef;
+
 
 /* Exported constants --------------------------------------------------------*/
 #define ACC_CALIBRATION_SAMPLES		(int)		100
 #define MAG_CALIBRATION_SAMPLES    	(int)		2000
 #define INIT_SAMPLES			(int)		1000
+#define	CONTROL_SAMPLE_PERIOD (float)		0
 
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported functions ------------------------------------------------------- */
-float GetRoll(void);
-float GetPitch(void);
-float GetYawRate(void);
-float GetZVelocity(void);
+float GetRollAngle(void);
+float GetPitchAngle(void);
+float GetYawAngle(void);
 float GetHeading(void);
 
-void UpdateStates(void);
-void InitRollEstimator(void);
-void UpdateRollEstimate(void);
-void InitPitchEstimator(void);
-void UpdatePitchEstimate(void);
-void UpdateZVelocityEstimate(void);
-void UpdateYawRateEstimate(void);
+void InitStatesXYZ(void);
+void PredictStatesXYZ(float newRatesXYZ[]);
+void CorrectStatesXYZ(float newAnglesXYZ[]);
 
 #endif /* __SENSORS_H */
 
