@@ -93,7 +93,7 @@
 #define configUSE_COUNTING_SEMAPHORES     1
 
  /* Task Status Feature*/
-#define TASK_STATUS
+/* TASK STATUS is defined in project properties */
 #ifdef TASK_STATUS
 	#define configGENERATE_RUN_TIME_STATS			1
 	#define portGET_RUN_TIME_COUNTER_VALUE			getRunTimeCounterValue
