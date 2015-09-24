@@ -30,15 +30,6 @@ typedef struct
   float YawAngleRate;	// [rad/s]
 } RefSignals_TypeDef;
 
-typedef struct
-{
-  float Thrust;			// [N]
-  float RollMoment;		// [Nm]
-  float PitchMoment;	// [Nm]
-  float YawMoment;		// [Nm]
-} CtrlSignals_TypeDef;
-
-
 /* Private define ------------------------------------------------------------*/
 #define FLIGHT_CONTROL_TASK_PRIO		configMAX_PRIORITIES-1
 
@@ -159,10 +150,9 @@ static void UpdateFlightControl(void) {
 		SetReferenceSignals();
 
 		/* Update PID control output */
-		CtrlSignals.Thrust = AltitudeControl();
-		CtrlSignals.RollMoment = RollControl();
-		CtrlSignals.PitchMoment = PitchControl();
-		CtrlSignals.YawMoment = YawControl();
+		UpdatePIDControlSignals(&CtrlSignals);
+
+		/* Allocate control signal action to motors */
 		MotorAllocationPhysical(CtrlSignals.Thrust, CtrlSignals.RollMoment, CtrlSignals.PitchMoment, CtrlSignals.YawMoment);
 		return;
 

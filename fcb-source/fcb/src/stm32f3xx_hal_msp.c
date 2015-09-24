@@ -122,6 +122,8 @@ void HAL_PPP_MspDeInit(void) {
  * @retval None
  */
 void HAL_CRC_MspInit(CRC_HandleTypeDef *hcrc) {
+	(void) hcrc; // Avoid compile warning
+
 	/* CRC Peripheral clock enable */
 	__CRC_CLK_ENABLE();
 }
@@ -132,6 +134,8 @@ void HAL_CRC_MspInit(CRC_HandleTypeDef *hcrc) {
  * @retval None
  */
 void HAL_CRC_MspDeInit(CRC_HandleTypeDef *hcrc) {
+	(void) hcrc; // Avoid compile warning
+
 	/* CRC Peripheral clock disable */
 	__CRC_CLK_DISABLE();
 }

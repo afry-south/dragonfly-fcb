@@ -109,7 +109,7 @@ Figure \ref{fig:controloverview} shows an overview of the control problem.
 PID controller equation presented in (\ref{PID_classic}), where $u(t)$ is the control signal and $e(t) = y_{ref}(t) - y(t)$ is the control error.
 
 \begin{equation}
-u(t) = K_p \bigg( e(t) + \dfrac{1}{T_i} \int_{0}^{\infty}  e(t) dt + K_d \dfrac{d}{dt} e(t) \bigg)
+u(t) = K \bigg( e(t) + \dfrac{1}{T_i} \int_{0}^{\infty}  e(t) dt + T_d \dfrac{d}{dt} e(t) \bigg)
 \label{PID_classic}
 \end{equation}
 
