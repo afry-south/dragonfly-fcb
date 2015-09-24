@@ -35,7 +35,7 @@ void InitRotationMatrix(void)
 }
 
 /*
- * @brief  Updates the Direction Cosine Matrix that transforms FROM the inertial frame TO the body frame
+ * @brief  Updates the Direction Cosine Matrix
  * @param  roll : roll angle in radians
  * @param  pitch : pitch angle in radians
  * @param  yaw : yaw angle in radians
@@ -51,10 +51,14 @@ void UpdateRotationMatrix(float32_t roll, float32_t pitch, float32_t yaw)
 			arm_sin_f32(roll)*arm_sin_f32(yaw)+arm_cos_f32(roll)*arm_sin_f32(pitch)*arm_cos_f32(yaw),     -arm_sin_f32(roll)*arm_cos_f32(yaw)+arm_cos_f32(roll)*arm_sin_f32(pitch)*arm_sin_f32(yaw),     arm_cos_f32(roll)*arm_cos_f32(pitch),
 	};
 
-	/* (Re-)init arm_matrix_instance_f32 type */
+	// TODO Do normalization on columns, sum of each column should be = 1
+	// TODO also do something to achieve orthogonality?
+
+	/* Init the DCM that transforms FROM the inertial frame TO the body frame */
 	arm_mat_init_f32(&DCM, 3, 3, DCMUpdate);
 
-	/* Calculate the DCM inverse, which is the same as matrix transpose since DCM is an orthonormal matrix */
+	/* Calculate the DCM inverse, which is the same as matrix transpose since DCM is an orthonormal matrix. The inverse
+	 * transforms FROM the body frame TO the inertial frame*/
 	arm_mat_trans_f32(&DCM, &DCMInv);
 }
 

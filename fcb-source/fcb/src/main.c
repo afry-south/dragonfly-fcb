@@ -102,6 +102,9 @@ static void InitSystem(void) {
 		ErrorHandler();
 	}
 
+	/* Init the rotation matrix */
+	InitRotationMatrix();
+
 	/* Initialize PID control variables */
 	InitPIDControllers();
 
