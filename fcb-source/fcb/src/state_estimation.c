@@ -17,8 +17,8 @@
 
 /* Private define ------------------------------------------------------------*/
 #define STATE_PRINT_SAMPLING_TASK_PRIO			1
-#define STATE_PRINT_MINIMUM_SAMPLING_TIME		2	// Motor control updated every 2.5 ms
-#define STATE_PRINT_MAX_STRING_SIZE				128
+#define STATE_PRINT_MINIMUM_SAMPLING_TIME		2	// updated every 2.5 ms
+#define STATE_PRINT_MAX_STRING_SIZE				256
 
 /* Private variables ---------------------------------------------------------*/
 StateVector_TypeDef States;
@@ -37,7 +37,7 @@ static void StateInit(KalmanFilter_TypeDef * Estimator);
 static void StatePrediction(float* newRate, KalmanFilter_TypeDef * Estimator, float* stateAngle, float* stateRateBias);
 static void StateCorrection(float* newAngle, KalmanFilter_TypeDef * Estimator, float* stateAngle, float* stateRateBias);
 static void StatePrintSamplingTask(void const *argument);
-static void PrintStateValues(const SerializationType_TypeDef serializationType);
+
 
 
 /* Exported functions --------------------------------------------------------*/
@@ -172,6 +172,26 @@ void SetStateSamplingSerialization(const SerializationType_TypeDef serialization
 	statePrintSerializationType = serializationType;
 }
 
+/*
+ * @brief Prints the state values
+ * @param serializationType: Data serialization type enum
+ * @retval None
+ */
+void PrintStateValues(const SerializationType_TypeDef serializationType) {
+	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
+
+	if(serializationType == NO_SERIALIZATION) {
+		snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
+				"States (float32_t):\nrollAngle: %1.4f\nrollRateBias: %1.4f\npitchAngle: %1.4f\npitchRateBias: %1.4f\nyawAngle: %1.4f\nyawRateBias: %1.4f\n\r\n",
+				States.roll, States.rollRateBias, States.pitch, States.pitchRateBias, States.yaw, States.yawRateBias);
+
+		USBComSendString(stateString);
+	}
+	else if(serializationType == PROTOBUFFER_SERIALIZATION) {
+		//TODO
+	}
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /* InitEstimator
@@ -283,20 +303,6 @@ static void StatePrintSamplingTask(void const *argument) {
 	}
 }
 
-static void PrintStateValues(const SerializationType_TypeDef serializationType) {
-	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
-
-	if(serializationType == NO_SERIALIZATION) {
-		snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-				"States (float32_t):\nrollAngle: %f\nrollRateBias: %f\npitchAngle: %f\npitchRateBias: %f\nyawAngle: %f\nyawRateBias: %f\n\r\n",
-				States.roll, States.rollRateBias, States.pitch, States.pitchRateBias, States.yaw, States.yawRateBias);
-
-		USBComSendString(stateString);
-	}
-	else if(serializationType == PROTOBUFFER_SERIALIZATION) {
-		//TODO
-	}
-}
 
 
 

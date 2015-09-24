@@ -63,6 +63,7 @@ void CorrectStatesXYZ(float32_t newAnglesXYZ[]);
 StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 StateErrorStatus StopStateSamplingTask(void);
 void SetStateSamplingSerialization(const SerializationType_TypeDef serializationType);
+void PrintStateValues(const SerializationType_TypeDef serializationType);
 
 #endif /* __SENSORS_H */
 
