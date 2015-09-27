@@ -123,7 +123,7 @@ void FcbSensorsInitGpioPinForInterrupt(GPIO_TypeDef  *GPIOx, uint32_t pin) {
  * @param  sampleDuration : Sets for how long sampling should be performed
  * @retval SENSORS_OK if thread started, else SENSORS_ERROR
  */
-SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
+SensorsReturnCode StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
 	if(sampleTime < SENSOR_PRINT_MINIMUM_SAMPLING_TIME)
 		sensorPrintSampleTime = SENSOR_PRINT_MINIMUM_SAMPLING_TIME;
 	else
@@ -153,7 +153,7 @@ SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint
  * @param  None
  * @retval SENSORS_OK if task deleted, SENSORS_ERROR if not
  */
-SensorsErrorStatus StopSensorSamplingTask(void) {
+SensorsReturnCode StopSensorSamplingTask(void) {
 	if(SensorPrintSamplingTaskHandle != NULL) {
 		vTaskDelete(SensorPrintSamplingTaskHandle);
 		SensorPrintSamplingTaskHandle = NULL;
@@ -288,7 +288,6 @@ static void ProcessSensorValues(void* val __attribute__ ((unused))) {
                 break;
             case FCB_SENSOR_MAGNETO_CALIBRATE:
                 break;
-
         }
 
         /* todo: call the state correction part of the Kalman Filter every time
