@@ -104,6 +104,10 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t *pcWriteBuffer, size_t xWrite
  */
 static portBASE_TYPE CLIStopSensorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 
+
+/* Fcn implements "start-mag-calibration" CLI command. */
+static portBASE_TYPE CLIStartMagnetometerCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
 /*
  * Function implements the "get-motors" command.
  */
@@ -244,6 +248,13 @@ static const CLI_Command_Definition_t stopSensorSamplingCommand = { (const int8_
 		0 /* Number of parameters expected */
 };
 
+static const CLI_Command_Definition_t startMagnetometerCalibration = { (const int8_t * const ) "start-mag-calibration",
+  (const int8_t * const) "\r\n start-mag-calibration:\r\n Starts collection of 6 magmtr values via 6 USER btn presses\r\n"
+                         "NOTE: use with SciLab Gauss-Newton scripts (todo Issue2)\r\n",
+  CLIStartMagnetometerCalibration, /* the fcn to run */
+  0 /* nbr of expected parameters */
+};
+
 /* Structure that defines the "get-motors" command line command. */
 static const CLI_Command_Definition_t getMotorsCommand = { (const int8_t * const ) "get-motors",
 		(const int8_t * const ) "\r\nget-motors <encoding>:\r\n Prints motor control values with <encoding> (n=none, p=proto)\r\n",
@@ -352,6 +363,7 @@ void RegisterCLICommands(void) {
 	FreeRTOS_CLIRegisterCommand(&getSensorsCommand);
 	FreeRTOS_CLIRegisterCommand(&startSensorSamplingCommand);
 	FreeRTOS_CLIRegisterCommand(&stopSensorSamplingCommand);
+	FreeRTOS_CLIRegisterCommand(&startMagnetometerCalibration);
 
 	/* Motors CLI commands */
 	FreeRTOS_CLIRegisterCommand(&getMotorsCommand);
@@ -968,6 +980,19 @@ static portBASE_TYPE CLIStopSensorSampling(int8_t* pcWriteBuffer, size_t xWriteB
 	StopSensorSamplingTask();
 
 	return pdFALSE;
+}
+
+/**
+ * Starts magnetometer calibration procedure.
+ */
+static portBASE_TYPE CLIStartMagnetometerCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString) {
+  (void) pcCommandString;
+  configASSERT(pcWriteBuffer);
+
+  strncpy((char*) pcWriteBuffer, "Starting Magnetometer calibration, press USER btn 6 times ...\r\n", xWriteBufferLen);
+
+  BeginMagnetometerCalibration(ACCMAG_CALIBRATION_SAMPLES_N);
+  return pdFALSE; /* false indicates CLI activity completed */
 }
 
 /**
