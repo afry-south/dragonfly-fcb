@@ -1204,11 +1204,13 @@ static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen
 	configASSERT(pcWriteBuffer);
 
 	strncpy((char*) pcWriteBuffer,
-				"**********************************************************\nTask\t\t\t Abs Time\t % Time\n**********************************************************\n",
+				"\nTask\t\t\t Abs Time\t % Time\n\n",
 				xWriteBufferLen);
-	vTaskGetRunTimeStats(pcWriteBuffer + strlen((char*) pcWriteBuffer));
-	strncat((char*) pcWriteBuffer, "**********************************************************\n",
-				xWriteBufferLen - strlen((char*) pcWriteBuffer) -1);
+	size_t len = strlen((char*) pcWriteBuffer);
+	vTaskGetRunTimeStats(pcWriteBuffer + len, xWriteBufferLen-len);
+	len = strlen((char*)pcWriteBuffer);
+	strncat((char*) pcWriteBuffer, "\n",
+				xWriteBufferLen - len -1);
 
 	return pdFALSE;
 }
