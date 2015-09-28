@@ -2877,6 +2877,7 @@ tskTCB *pxNewTCB;
 	xTaskStatusType *pxTaskStatusArray;
 	volatile unsigned portBASE_TYPE uxArraySize, x;
 	unsigned long ulTotalTime, ulStatsAsPercentage;
+	size_t usedLen = 0;
 
 		/*
 		 * PLEASE NOTE:
@@ -2937,7 +2938,7 @@ tskTCB *pxNewTCB;
 
 						#ifdef portLU_PRINTF_SPECIFIER_REQUIRED
 						{
-							snprintf( ( char * ) pcWriteBuffer, xWriteBufferLen,( char * ) "%s\t\t%lu\t\t%lu%%\r\n",
+						    snprintf( ( char * ) pcWriteBuffer, xWriteBufferLen,( char * ) "%s\t\t%lu\t\t%lu%%\r\n",
 							    pxTaskStatusArray[ x ].pcTaskName,
 							    pxTaskStatusArray[ x ].ulRunTimeCounter,
 							    ulStatsAsPercentage );
@@ -2946,7 +2947,7 @@ tskTCB *pxNewTCB;
 						{
 							/* sizeof( int ) == sizeof( long ) so a smaller
 							printf() library can be used. ISSUE33 HERE */
-							snprintf( ( char * ) pcWriteBuffer, xWriteBufferLen,( char * ) "%s\t\t%u\t\t%u%%\r\n",
+						  usedLen += snprintf( ( char * ) pcWriteBuffer, xWriteBufferLen,( char * ) "%s\t\t%u\t\t%u%%\r\n",
 							        pxTaskStatusArray[ x ].pcTaskName,
 							        ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter,
 							        ( unsigned int ) ulStatsAsPercentage );
@@ -2977,8 +2978,9 @@ tskTCB *pxNewTCB;
 						}
 						#endif
 					}
-
-					pcWriteBuffer += strlen( ( char * ) pcWriteBuffer );
+					usedLen = strlen( ( char * ) pcWriteBuffer );
+					pcWriteBuffer += usedLen;
+					xWriteBufferLen -= usedLen;
 				}
 			}
 
