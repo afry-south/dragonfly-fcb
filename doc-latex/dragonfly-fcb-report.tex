@@ -90,6 +90,90 @@ The BLM motors used for this project have an “outrunner” architecture, which
 \chapter{State Estimation Theory}
 
 	\section{Attitude Estimation}
+		\subsection{Accelerometer \& Gyroscope Fusion: Kalman Filter}
+
+		Step 1:	
+		\begin{equation}
+		x^{k+1}=Ax_{k}+B\dot{\Theta}_{gyro}^{k}
+		\end{equation}
+		\begin{equation*}
+		z^{k+1}=Hx^{k}
+		\end{equation*}	
+
+		\begin{equation}
+		x^{k+1}=
+		\left[
+      		\begin{array}{c}
+      		\theta\\
+		\dot{\theta}_{b}
+      		\end{array} \right]^{k+1}
+		=
+		\left[
+		\begin{array}{c c} 
+		1 & - \Delta T\\
+		0 & 1
+		\end{array} \right]
+		\left[
+		\begin{array}{c}
+		\theta\\
+		\dot{\theta}_{b}
+		\end{array} \right]^{k}
+		+
+		\left[
+		\begin{array}{c}
+		\Delta T\\
+		0
+		\end{array} \right]
+		\dot{\theta}^{k}_{gyro}\\
+		\end{equation}
+		\begin{equation*}
+		z^{k+1}=
+		\left[
+		\begin{array}{c c}
+		1 & 0
+		\end{array} \right]
+		\left[
+		\begin{array}{c}
+		\theta\\
+		\dot{\theta}_{b}
+		\end{array} \right]^{k}
+		\end{equation*}
+		Step 2:
+		\begin{equation}
+		P^{k+1}=AP^{k}A^{T}+Q^{k}
+		\end{equation}
+
+		\begin{equation}
+		\left[
+		\begin{array}{c c}
+		P_{00}	&	P_{01}\\
+		P_{10}	&	P_{11}
+		\end{array} \right]^{k+1}
+		=
+		\left[
+		\begin{array}{c c}
+		1 & - \Delta T\\
+		0 & 1
+		\end{array} \right]
+		\left[
+		\begin{array}{c c}
+		P_{00}	&	P_{01}\\
+		P_{10}	&	P_{11}
+		\end{array} \right]^{k}
+		\left[
+		\begin{array}{c c}
+		1 & 0\\
+		- \Delta T & 1
+		\end{array} \right]
+		+
+		\left[
+		\begin{array}{c c}
+		Q_{1}	&	0\\
+		0	&	Q_{2}
+		\end{array} \right]
+		\end{equation}
+		Step 3:
+
 
 	\section{Velocity Estimation}
 

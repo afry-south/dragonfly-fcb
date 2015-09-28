@@ -14,36 +14,37 @@
 \BOOKMARK [2][-]{subsection.4.5.4}{Magnetometer}{section.4.5}% 14
 \BOOKMARK [0][-]{chapter.5}{State Estimation Theory}{part.1}% 15
 \BOOKMARK [1][-]{section.5.1}{Attitude Estimation}{chapter.5}% 16
-\BOOKMARK [1][-]{section.5.2}{Velocity Estimation}{chapter.5}% 17
-\BOOKMARK [0][-]{chapter.6}{Flight Control Theory}{part.1}% 18
-\BOOKMARK [1][-]{section.6.1}{Controller Design}{chapter.6}% 19
-\BOOKMARK [1][-]{section.6.2}{Attitude Control}{chapter.6}% 20
-\BOOKMARK [1][-]{section.6.3}{Velocity Control}{chapter.6}% 21
-\BOOKMARK [0][-]{chapter.7}{Sensor Calibration Algorithms}{part.1}% 22
-\BOOKMARK [1][-]{section.7.1}{Gauss-Newton Optimization}{chapter.7}% 23
-\BOOKMARK [1][-]{section.7.2}{Magnetometer calibration}{chapter.7}% 24
-\BOOKMARK [1][-]{section.7.3}{Accelerometer calibration}{chapter.7}% 25
-\BOOKMARK [-1][-]{part.2}{II Implementation}{}% 26
-\BOOKMARK [0][-]{chapter.8}{Introduction}{part.2}% 27
-\BOOKMARK [0][-]{chapter.9}{Hardware}{part.2}% 28
-\BOOKMARK [1][-]{section.9.1}{Flight Control Board - STM32F3Discovery}{chapter.9}% 29
-\BOOKMARK [1][-]{section.9.2}{T-Motor U3 BLDC Motors}{chapter.9}% 30
-\BOOKMARK [1][-]{section.9.3}{T-Motor ESC30A Electronic Speed Controllers}{chapter.9}% 31
-\BOOKMARK [1][-]{section.9.4}{RC Receiver and Transmitter}{chapter.9}% 32
-\BOOKMARK [1][-]{section.9.5}{Battery}{chapter.9}% 33
-\BOOKMARK [1][-]{section.9.6}{Sensors}{chapter.9}% 34
-\BOOKMARK [0][-]{chapter.10}{Software}{part.2}% 35
-\BOOKMARK [1][-]{section.10.1}{System Design Overview}{chapter.10}% 36
-\BOOKMARK [1][-]{section.10.2}{Real-time Design}{chapter.10}% 37
-\BOOKMARK [1][-]{section.10.3}{Code Documentation}{chapter.10}% 38
-\BOOKMARK [2][-]{subsection.10.3.1}{CMSIS}{section.10.3}% 39
-\BOOKMARK [2][-]{subsection.10.3.2}{STM32F3xx HAL Drivers}{section.10.3}% 40
-\BOOKMARK [2][-]{subsection.10.3.3}{STM32 USB Device Drivers}{section.10.3}% 41
-\BOOKMARK [2][-]{subsection.10.3.4}{STM32F3Discovery Board-specific Package}{section.10.3}% 42
-\BOOKMARK [2][-]{subsection.10.3.5}{FreeRTOS}{section.10.3}% 43
-\BOOKMARK [2][-]{subsection.10.3.6}{FreeRTOS Plus CLI}{section.10.3}% 44
-\BOOKMARK [2][-]{subsection.10.3.7}{FCB Control}{section.10.3}% 45
-\BOOKMARK [2][-]{subsection.10.3.8}{FCB Communication}{section.10.3}% 46
-\BOOKMARK [2][-]{subsection.10.3.9}{FCB Sensors}{section.10.3}% 47
-\BOOKMARK [2][-]{subsection.10.3.10}{FCB Utilities}{section.10.3}% 48
-\BOOKMARK [2][-]{subsection.10.3.11}{NanoPB Protocol Buffer}{section.10.3}% 49
+\BOOKMARK [2][-]{subsection.5.1.1}{Accelerometer \046 Gyroscope Fusion: Kalman Filter}{section.5.1}% 17
+\BOOKMARK [1][-]{section.5.2}{Velocity Estimation}{chapter.5}% 18
+\BOOKMARK [0][-]{chapter.6}{Flight Control Theory}{part.1}% 19
+\BOOKMARK [1][-]{section.6.1}{Controller Design}{chapter.6}% 20
+\BOOKMARK [1][-]{section.6.2}{Attitude Control}{chapter.6}% 21
+\BOOKMARK [1][-]{section.6.3}{Velocity Control}{chapter.6}% 22
+\BOOKMARK [0][-]{chapter.7}{Sensor Calibration Algorithms}{part.1}% 23
+\BOOKMARK [1][-]{section.7.1}{Gauss-Newton Optimization}{chapter.7}% 24
+\BOOKMARK [1][-]{section.7.2}{Magnetometer calibration}{chapter.7}% 25
+\BOOKMARK [1][-]{section.7.3}{Accelerometer calibration}{chapter.7}% 26
+\BOOKMARK [-1][-]{part.2}{II Implementation}{}% 27
+\BOOKMARK [0][-]{chapter.8}{Introduction}{part.2}% 28
+\BOOKMARK [0][-]{chapter.9}{Hardware}{part.2}% 29
+\BOOKMARK [1][-]{section.9.1}{Flight Control Board - STM32F3Discovery}{chapter.9}% 30
+\BOOKMARK [1][-]{section.9.2}{T-Motor U3 BLDC Motors}{chapter.9}% 31
+\BOOKMARK [1][-]{section.9.3}{T-Motor ESC30A Electronic Speed Controllers}{chapter.9}% 32
+\BOOKMARK [1][-]{section.9.4}{RC Receiver and Transmitter}{chapter.9}% 33
+\BOOKMARK [1][-]{section.9.5}{Battery}{chapter.9}% 34
+\BOOKMARK [1][-]{section.9.6}{Sensors}{chapter.9}% 35
+\BOOKMARK [0][-]{chapter.10}{Software}{part.2}% 36
+\BOOKMARK [1][-]{section.10.1}{System Design Overview}{chapter.10}% 37
+\BOOKMARK [1][-]{section.10.2}{Real-time Design}{chapter.10}% 38
+\BOOKMARK [1][-]{section.10.3}{Code Documentation}{chapter.10}% 39
+\BOOKMARK [2][-]{subsection.10.3.1}{CMSIS}{section.10.3}% 40
+\BOOKMARK [2][-]{subsection.10.3.2}{STM32F3xx HAL Drivers}{section.10.3}% 41
+\BOOKMARK [2][-]{subsection.10.3.3}{STM32 USB Device Drivers}{section.10.3}% 42
+\BOOKMARK [2][-]{subsection.10.3.4}{STM32F3Discovery Board-specific Package}{section.10.3}% 43
+\BOOKMARK [2][-]{subsection.10.3.5}{FreeRTOS}{section.10.3}% 44
+\BOOKMARK [2][-]{subsection.10.3.6}{FreeRTOS Plus CLI}{section.10.3}% 45
+\BOOKMARK [2][-]{subsection.10.3.7}{FCB Control}{section.10.3}% 46
+\BOOKMARK [2][-]{subsection.10.3.8}{FCB Communication}{section.10.3}% 47
+\BOOKMARK [2][-]{subsection.10.3.9}{FCB Sensors}{section.10.3}% 48
+\BOOKMARK [2][-]{subsection.10.3.10}{FCB Utilities}{section.10.3}% 49
+\BOOKMARK [2][-]{subsection.10.3.11}{NanoPB Protocol Buffer}{section.10.3}% 50
