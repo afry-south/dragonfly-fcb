@@ -21,6 +21,11 @@
 \usepackage{graphicx}		% Imports the graphicx package, useful for images
 % \usepackage{}
 % \makeatletter\@addtoreset{chapter}{part}\makeatother% % Makes chapter numbering reset after each part
+\usepackage{listingsutf8}
+\lstset{language=C,
+	extendedchars=true,
+   	inputencoding=utf8,
+	gobble=12}
 
 \title{Dragonfly Quadrotor UAV \\ Flight Control Board}
 \author{Daniel Stenberg \\ Adam Steineck \\ Nina Khayyami}
@@ -92,21 +97,20 @@ The BLM motors used for this project have an “outrunner” architecture, which
 	\section{Attitude Estimation}
 		\subsection{Accelerometer \& Gyroscope Fusion: Kalman Filter}
 
-		Step 1:	
+		Step 1: Predict the states $\hat{x}_{k|k-1}$
 		\begin{equation}
-		x^{k+1}=Ax_{k}+B\dot{\Theta}_{gyro}^{k}
+		\hat{x}_{k|k-1}=A\hat{x}_{k-1|k-1}+Bu_{k}
 		\end{equation}
 		\begin{equation*}
-		z^{k+1}=Hx^{k}
+		z_{k}=H\hat{x}_{k|k-1}
 		\end{equation*}	
 
 		\begin{equation}
-		x^{k+1}=
 		\left[
       		\begin{array}{c}
       		\theta\\
 		\dot{\theta}_{b}
-      		\end{array} \right]^{k+1}
+      		\end{array} \right]_{k|k-1}
 		=
 		\left[
 		\begin{array}{c c} 
@@ -117,17 +121,17 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\begin{array}{c}
 		\theta\\
 		\dot{\theta}_{b}
-		\end{array} \right]^{k}
+		\end{array} \right]_{k-1|k-1}
 		+
 		\left[
 		\begin{array}{c}
 		\Delta T\\
 		0
 		\end{array} \right]
-		\dot{\theta}^{k}_{gyro}\\
+		\dot{\theta}_{gyro, k}\\
 		\end{equation}
 		\begin{equation*}
-		z^{k+1}=
+		z_{k}=
 		\left[
 		\begin{array}{c c}
 		1 & 0
@@ -136,11 +140,16 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\begin{array}{c}
 		\theta\\
 		\dot{\theta}_{b}
-		\end{array} \right]^{k}
+		\end{array} \right]_{k|k-1}
 		\end{equation*}
-		Step 2:
+
+		\begin{lstlisting}[frame=single]
+		angle += dt*newRate - dt*bias;
+		//newRate is the rate from the gyroscope
+		\end{lstlisting}
+		Step 2: Predict the error covariance matrix $P_{k|k-1}$
 		\begin{equation}
-		P^{k+1}=AP^{k}A^{T}+Q^{k}
+		P_{k|k-1}=AP_{k-1|k-1}A^{T}+Q
 		\end{equation}
 
 		\begin{equation}
@@ -148,7 +157,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\begin{array}{c c}
 		P_{00}	&	P_{01}\\
 		P_{10}	&	P_{11}
-		\end{array} \right]^{k+1}
+		\end{array} \right]_{k|k-1}
 		=
 		\left[
 		\begin{array}{c c}
@@ -159,10 +168,10 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\begin{array}{c c}
 		P_{00}	&	P_{01}\\
 		P_{10}	&	P_{11}
-		\end{array} \right]^{k}
+		\end{array} \right]_{k-1|k-1}
 		\left[
 		\begin{array}{c c}
-		1 & 0\\
+		1	&	0\\
 		- \Delta T & 1
 		\end{array} \right]
 		+
@@ -172,8 +181,170 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		0	&	Q_{2}
 		\end{array} \right]
 		\end{equation}
-		Step 3:
 
+		\begin{lstlisting}[frame=single]
+		P[0][0] += dt*(dt*P[1][1] - P[0][1] - P[1][0] + Q1);
+		P[0][1] -= dt*P[1][1];
+		P[1][0] -= dt*P[1][1];
+		P[1][1] += dt*Q2;
+		\end{lstlisting}
+		Step 3: Now calculate the difference between the predicted state $\hat{x}_{k|k-1}$ and the measurement $z_{k}$
+		\begin{equation}
+		\tilde{y}_{k}=z_{k}-H\hat{x}_{k|k-1}
+		\end{equation}
+
+		\begin{equation}
+		\tilde{y}_{k}=z_{k}-\left[
+		\begin{array}{c c}
+		1	&	0
+		\end{array} \right]
+		\left[
+		\begin{array}{c}
+		\theta \\
+		\dot{\theta}_{b}
+		\end{array} \right]_{k|k-1}
+		\end{equation}
+
+		\begin{lstlisting}[frame=single]
+		y = newAngle - angle; 
+		//newAngle is the angle from the accelerometer
+		\end{lstlisting}
+		Step 4: Calculate the innovation covariance matrix $S_{k}$
+		\begin{equation}
+		S_{k}=HP_{k|k-1}H^{T}+R
+		\end{equation}
+
+		\begin{equation}
+		S_{k}=
+		\left[
+		\begin{array}{c c}
+		1	&	0
+		\end{array} \right]
+		\left[
+		\begin{array}{c c}
+		P_{00}	&	P_{01}\\
+		P_{10}	&	P_{11}
+		\end{array} \right]_{k|k-1}
+		\left[
+		\begin{array}{c}
+		1\\
+		0
+		\end{array} \right]	
+		+ \sigma(\theta_{acc})
+		\end{equation}
+
+		where 
+		\begin{equation*}
+		\theta_{acc}=\arctan{\left(\frac{a_{y}}{a_{z}}\right)}
+		 \end{equation*}
+
+		\begin{lstlisting}[frame=single]
+		S = P[0][0] + R;
+		\end{lstlisting}
+		Step 5: Calculate the Kalman gain $K_{k}$
+		\begin{equation}
+		K_{k}=P_{k|k-1}H^{T}S^{-1}_{k}
+		\end{equation}
+
+		\begin{equation}
+		\left[
+		\begin{array}{c}
+		K_{0}\\
+		K_{1}
+		\end{array} \right]_{k}
+		=
+		\left[
+		\begin{array}{c c}
+		P_{00}	&	P_{01}\\
+		P_{10}	&	P_{11}
+		\end{array}  \right]_{k|k-1}
+		\left[
+		\begin{array}{c}
+		1\\
+		0
+		\end{array} \right]
+		S^{-1}_{k}
+		\end{equation}
+
+		\begin{lstlisting}[frame=single]
+		K[0] = P[0][0] / S;
+		K[1] = P[1][0] / S;
+		\end{lstlisting}
+		Step 6: Update the state prediction $\hat{x}_{k|k-1}$ to  $\hat{x}_{k|k}$
+		\begin{equation}
+		\hat{x}_{k|k}=\hat{x}_{k|k-1}+K_{k}\tilde{y}_{k}
+		\end{equation}
+
+		\begin{equation}
+		\left[
+		\begin{array}{c}
+		\theta\\
+		\dot{\theta}_{b}
+		\end{array} \right]_{k|k}
+		=
+		\left[
+		\begin{array}{c}
+		\theta\\
+		\dot{\theta}_{b}
+		\end{array} \right]_{k|k-1}
+		+
+		\left[
+		\begin{array}{c}
+		K_{0}\\
+		K_{1}
+		\end{array} \right]_{k}
+		\tilde{y}_{k}
+		\end{equation}
+
+		\begin{lstlisting}[frame=single]
+		angle += K[0]*y;
+		bias += K[1]*y;
+		\end{lstlisting}
+		Step 7: Update the error covariance matrix prediction $P_{k|k-1}$ to $P_{k|k}$
+		\begin{equation}
+		P_{k|k}=(I-K_{k}H)P_{k|k-1}
+		\end{equation}
+
+		\begin{equation}
+		\left[
+		\begin{array}{c c}
+		P_{00}	&	P_{01}\\
+		P_{10}	&	P_{11}
+		\end{array} \right]_{k|k}
+		=
+		\left(
+		\left[
+		\begin{array}{c c}
+		1	&	0\\
+		0	&	1
+		\end{array} \right]
+		-
+		\left[
+		\begin{array}{c}
+		K_{0}\\
+		K_{1}
+		\end{array} \right]_{k}
+		\left[
+		\begin{array}{c c}
+		1	&	0
+		\end{array} \right]
+		\right)
+		\left[
+		\begin{array}{c c}
+		P_{00}	&	P_{01}\\
+		P_{10}	&	P_{11}
+		\end{array} \right]_{k|k-1}
+		\end{equation}
+
+		\begin{lstlisting}[frame=single]
+		float P00_tmp = P[0][0];
+		float P01_tmp = P[0][1];
+
+		P[0][0] -= K[0]*P00_tmp;
+		P[0][1] -= K[0]*P01_tmp;
+		P[1][0] -= K[0]*P00_tmp;
+		P[1][1] -= K[0]*P01_tmp;
+		\end{lstlisting}
 
 	\section{Velocity Estimation}
 
