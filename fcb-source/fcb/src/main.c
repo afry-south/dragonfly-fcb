@@ -10,6 +10,7 @@
 #include "common.h"
 #include "motor_control.h"
 #include "flight_control.h"
+#include "rotation_transformation.h"
 #include "pid_control.h"
 #include "receiver.h"
 #include "task_status.h"

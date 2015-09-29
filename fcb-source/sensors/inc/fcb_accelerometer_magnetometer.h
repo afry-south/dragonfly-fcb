@@ -77,7 +77,7 @@ void BeginMagnetometerCalibration(void);
  *
  * The caller allocates memory for input variables.
  */
-void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot);
+void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot);
 
 
 /**
@@ -98,18 +98,5 @@ void FetchDataFromMagnetometer(void);
  * @see lsm303dlhc.c
  */
 void GetMagVector(float32_t * x, float32_t * y, float32_t * z);
-
-/**
- * Print accelerometer values to USB, intended to be used from the
- * sensor sampling task.
- */
-void PrintAccelerometerValues(void);
-
-/**
- * ditto magnetometer
- * @see PrintAccelerometerValues
- */
-void PrintMagnetometerValues(void);
-
 
 #endif /* FCB_ACCELEROMETER_H */

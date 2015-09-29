@@ -36,7 +36,6 @@ enum { X_IDX = 0 }; /* index into sGyroXYZDotDot & ditto Offset sXYZMagVectors *
 enum { Y_IDX = 1 }; /* as above */
 enum { Z_IDX = 2 }; /* as above */
 
-enum { ACCMAG_SAMPLING_MAX_STRING_SIZE = 128 };
 enum { ACCMAG_CALIBRATION_SAMPLES_N = 6 }; /* TODO increase */
 
 
@@ -161,7 +160,7 @@ void FetchDataFromMagnetometer(void) {
 #endif
 }
 
-void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot) {
+void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot) {
 	*xDotDot = sXYZDotDot[X_IDX];
 	*yDotDot = sXYZDotDot[Y_IDX];
 	*zDotDot = sXYZDotDot[Z_IDX];
@@ -173,27 +172,11 @@ void GetMagVector(float32_t * x, float32_t * y, float32_t * z) {
 	*z = sXYZMagVector[Z_IDX];
 }
 
+/**
+ * @}
+ */
 
-void PrintAccelerometerValues(void) {
-    static char sampleString[ACCMAG_SAMPLING_MAX_STRING_SIZE];
-
-    snprintf((char*) sampleString, ACCMAG_SAMPLING_MAX_STRING_SIZE,
-            "Accelerometer readings [m/(s * s)]:\nAccX: %f\nAccY: %f\nAccZ: %f\n\r\n",
-            sXYZDotDot[X_IDX],
-            sXYZDotDot[Y_IDX],
-            sXYZDotDot[Z_IDX]);
-
-    USBComSendString(sampleString);
-}
-
-void PrintMagnetometerValues(void) {
-    static char sampleString[ACCMAG_SAMPLING_MAX_STRING_SIZE];
-
-    snprintf((char*) sampleString, ACCMAG_SAMPLING_MAX_STRING_SIZE,
-            "Magnetometer readings [Gauss]:\nMagX: %1.6f\nMagY: %1.6f\nMagZ: %1.6f\n\r\n",
-            sXYZMagVector[X_IDX],
-            sXYZMagVector[Y_IDX],
-            sXYZMagVector[Z_IDX]);
-
-    USBComSendString(sampleString);
-}
+/**
+ * @}
+ */
+/*****END OF FILE****/

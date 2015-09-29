@@ -204,9 +204,9 @@ static const CLI_Command_Definition_t stopReceiverSamplingCommand = { (const int
 
 /* Structure that defines the "get-sensors" command line command. */
 static const CLI_Command_Definition_t getSensorsCommand = { (const int8_t * const ) "get-sensors",
-		(const int8_t * const ) "\r\nget-sensors:\r\n Prints last read sensor values\r\n",
+		(const int8_t * const ) "\r\nget-sensors: <encoding>\r\n Prints last read sensor values with <encoding> (n=none, p=proto)\r\n",
 		CLIGetSensors, /* The function to run. */
-		0 /* Number of parameters expected */
+		1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "start-sensor-sampling" command line command. */
@@ -772,15 +772,27 @@ static portBASE_TYPE CLIStopReceiverSampling(int8_t* pcWriteBuffer, size_t xWrit
  */
 static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
 	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
-	(void) pcCommandString;
-	(void) xWriteBufferLen;
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength;
+	portBASE_TYPE lParameterNumber = 0;
 
+	/* Empty pcWriteBuffer so no strange output is sent as command response */
 	configASSERT(pcWriteBuffer);
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 
-	PrintGyroscopeValues();
-	PrintAccelerometerValues();
-	PrintMagnetometerValues();
+	lParameterNumber++;
+
+	/* Obtain the parameter string. */
+	pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+			lParameterNumber, /* Return the next parameter. */
+			&xParameterStringLength /* Store the parameter string length. */
+	);
+
+	/* Get the current sensor values */
+	if(pcParameter[0] == 'n')
+		PrintSensorValues(NO_SERIALIZATION);
+	else if(pcParameter[0] == 'p')
+		PrintSensorValues(PROTOBUFFER_SERIALIZATION);
 
 	return pdFALSE;
 }

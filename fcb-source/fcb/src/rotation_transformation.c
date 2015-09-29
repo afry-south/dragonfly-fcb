@@ -30,7 +30,17 @@ arm_matrix_instance_f32 DCMInv;
  */
 void InitRotationMatrix(void)
 {
-	/* Initializes the DCM to the unit matrix */
+	float32_t DCMInvInit[9] =
+	{
+			1,     0,     1,
+			0,     1,     0,
+			0,     0,     1,
+	};
+
+	/* Initialize the inverse DCM to the unit matrix (3x3) */
+	arm_mat_init_f32(&DCMInv, 3, 3, DCMInvInit);
+
+	/* Initializes the DCM to the unit matrix (3x3) */
 	UpdateRotationMatrix(0.0, 0.0, 0.0);
 }
 

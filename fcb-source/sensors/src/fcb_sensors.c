@@ -11,18 +11,28 @@
 #include "fcb_gyroscope.h"
 #include "fcb_error.h"
 #include "fcb_retval.h"
+#include "dragonfly_fcb.pb.h"
+#include "pb_encode.h"
+#include "usb_com_cli.h"
+
+#include "arm_math.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
 
 /* Private define ------------------------------------------------------------*/
 #define FCB_SENSORS_DEBUG /* todo delete */
 
-#define SENSOR_PRINT_SAMPLING_TASK_PRIO					1
-#define SENSOR_PRINT_MINIMUM_SAMPLING_TIME				10 // [ms]
+#define SENSOR_PRINT_SAMPLING_TASK_PRIO				1
+#define SENSOR_PRINT_MINIMUM_SAMPLING_TIME			10 // [ms]
+
+#define	SENSOR_PRINT_MAX_STRING_SIZE				64
 
 #ifdef FCB_SENSORS_DEBUG
 static uint32_t cbk_gyro_counter = 0;
@@ -140,6 +150,90 @@ SensorsErrorStatus StopSensorSamplingTask(void) {
 	return SENSORS_ERROR;
 }
 
+/**
+ * @brief  Prints the latest sensor values to the USB com port
+ * @param  none
+ * @retval none
+ */
+void PrintSensorValues(const SerializationType_TypeDef serializationType) {
+	static char sensorString[SENSOR_PRINT_MAX_STRING_SIZE];
+	float32_t accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ;
+
+	/* Get the latest sensor values */
+	GetAcceleration(&accX, &accY, &accZ);
+	GetAngleDot(&gyroX, &gyroY, &gyroZ);
+	GetMagVector(&magX, &magY, &magZ);
+
+	if(serializationType == NO_SERIALIZATION) {
+		for(uint8_t i = 0; i < 3; i++) {
+			switch(i) {
+			case 0:
+				snprintf((char*) sensorString, SENSOR_PRINT_MAX_STRING_SIZE,
+						"Accelerometer [m/s^2]:\nAccX: %1.3f\nAccY: %1.3f\nAccZ: %1.3f\r\n",
+						accX, accY, accZ);
+				break;
+			case 1:
+				snprintf((char*) sensorString, SENSOR_PRINT_MAX_STRING_SIZE,
+						"Gyroscope [rad/s]:\nGyroX: %1.3f\nGyroY: %1.3f\nGyroZ: %1.3f\r\n",
+						gyroX, gyroY, gyroZ);
+				break;
+			case 2:
+				snprintf((char*) sensorString, SENSOR_PRINT_MAX_STRING_SIZE,
+						"Magnetometer [G]:\nMagX: %1.3f\nMagY: %1.3f\nMagZ: %1.3f\r\n",
+						magX, magY, magZ);
+				break;
+			}
+
+			USBComSendString(sensorString);
+		}
+	}
+	else if(serializationType == PROTOBUFFER_SERIALIZATION) {
+		bool protoStatus;
+		uint8_t serializedSensorData[SensorSamplesProto_size];
+		SensorSamplesProto sensorSamplesProto;
+		uint32_t strLen;
+
+		/* Update the protobuffer type struct members */
+		sensorSamplesProto.has_accX = true;
+		sensorSamplesProto.accX = accX;
+		sensorSamplesProto.has_accY = true;
+		sensorSamplesProto.accY = accY;
+		sensorSamplesProto.has_accZ = true;
+		sensorSamplesProto.accZ = accZ;
+
+		sensorSamplesProto.has_gyroAngRateXb = true;
+		sensorSamplesProto.gyroAngRateXb = gyroX;
+		sensorSamplesProto.has_gyroAngRateYb = true;
+		sensorSamplesProto.gyroAngRateYb = gyroY;
+		sensorSamplesProto.has_gyroAngRateZb = true;
+		sensorSamplesProto.gyroAngRateZb = gyroZ;
+
+		sensorSamplesProto.has_magX = true;
+		sensorSamplesProto.magX = magX;
+		sensorSamplesProto.has_magY = true;
+		sensorSamplesProto.magY = magY;
+		sensorSamplesProto.has_magZ = true;
+		sensorSamplesProto.magZ = magZ;
+
+		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
+		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedSensorData, SensorSamplesProto_size);
+		protoStatus = pb_encode(&protoStream, SensorSamplesProto_fields, &sensorSamplesProto);
+
+		/* Insert header to the sample string, then copy the data after that */
+		snprintf(sensorString, SENSOR_PRINT_MAX_STRING_SIZE, "%c %c ", SENSOR_SAMPLES_MSG_ENUM, protoStream.bytes_written);
+		strLen = strlen(sensorString);
+		if(strLen + protoStream.bytes_written + strlen("\r\n") < SENSOR_PRINT_MAX_STRING_SIZE) {
+			memcpy(&sensorString[strLen], serializedSensorData, protoStream.bytes_written);
+			memcpy(&sensorString[strLen+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+		}
+
+		if(protoStatus)
+			USBComSendData((uint8_t*)sensorString, strLen+protoStream.bytes_written+strlen("\r\n"));
+		else
+			ErrorHandler();
+	}
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 static void ProcessSensorValues(void* val __attribute__ ((unused))) {
@@ -233,9 +327,7 @@ static void SensorPrintSamplingTask(void const *argument) {
 	for (;;) {
 		vTaskDelayUntil(&xLastWakeTime, sensorPrintSampleTime);
 
-		PrintGyroscopeValues();
-		PrintAccelerometerValues();
-		PrintMagnetometerValues();
+		PrintSensorValues(NO_SERIALIZATION);
 
 		/* If sampling duration exceeded, delete task to stop sampling */
 		if (xTaskGetTickCount() >= xSampleStartTime + sensorPrintSampleDuration * configTICK_RATE_HZ)

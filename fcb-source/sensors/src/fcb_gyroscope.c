@@ -34,8 +34,6 @@ enum { XDOT_IDX = 0 }; /* index of sGyroXYZAngleDot & ditto Offset */
 enum { YDOT_IDX = 1 }; /* as above */
 enum { ZDOT_IDX = 2 }; /* as above */
 
-enum { GYRO_SAMPLING_MAX_STRING_SIZE = 128 };
-
 /**
  * Angular velocities, in degrees.
  *
@@ -130,26 +128,17 @@ void FetchDataFromGyroscope(void) {
 
 }
 
-#warning "TODO - implement get x, y, z separately. And perhaps use integer values to represent sensor values"
-void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot) {
+void GetAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngleDot) {
 	*xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
 	*yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
 	*zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
 }
 
 /**
- * @brief  Prints the latest gyroscope sensor values to the USB com port
- * @param  none
- * @retval none
+ * @}
  */
-void PrintGyroscopeValues(void) {
-    static char sampleString[GYRO_SAMPLING_MAX_STRING_SIZE];
-    float angRateXb, angRateYb, angRateZb;
 
-    GetAngleDot(&angRateXb, &angRateYb, &angRateZb);
-    snprintf((char*) sampleString, GYRO_SAMPLING_MAX_STRING_SIZE,
-            "Gyroscope readings [rad/s]:\nAngRateXb: %1.6f\nAngRateYb: %1.6f\nAngRateZb: %1.6f\n\r\n", angRateXb,
-            angRateYb, angRateZb);
-
-    USBComSendString(sampleString);
-}
+/**
+ * @}
+ */
+/*****END OF FILE****/
