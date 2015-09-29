@@ -234,7 +234,7 @@ static void StatePrediction(float32_t* newRate, KalmanFilter_TypeDef * Estimator
 	*stateAngle += CONTROL_SAMPLE_PERIOD * (*newRate) - CONTROL_SAMPLE_PERIOD * (*stateRateBias);
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
-	Estimator->p11 += (CONTROL_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1*CONTROL_SAMPLE_PERIOD*CONTROL_SAMPLE_PERIOD)*CONTROL_SAMPLE_PERIOD;
+	Estimator->p11 += (CONTROL_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1)*CONTROL_SAMPLE_PERIOD;
 	Estimator->p12 -= Estimator->p22 * CONTROL_SAMPLE_PERIOD;
 	Estimator->p21 -= Estimator->p22 * CONTROL_SAMPLE_PERIOD;
 	Estimator->p22 += Estimator->q2 * CONTROL_SAMPLE_PERIOD;
