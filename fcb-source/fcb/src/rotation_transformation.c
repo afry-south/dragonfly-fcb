@@ -51,9 +51,6 @@ void UpdateRotationMatrix(float32_t roll, float32_t pitch, float32_t yaw)
 			arm_sin_f32(roll)*arm_sin_f32(yaw)+arm_cos_f32(roll)*arm_sin_f32(pitch)*arm_cos_f32(yaw),     -arm_sin_f32(roll)*arm_cos_f32(yaw)+arm_cos_f32(roll)*arm_sin_f32(pitch)*arm_sin_f32(yaw),     arm_cos_f32(roll)*arm_cos_f32(pitch),
 	};
 
-	// TODO Do normalization on columns, sum of each column should be = 1
-	// TODO also do something to achieve orthogonality?
-
 	/* Init the DCM that transforms FROM the inertial frame TO the body frame */
 	arm_mat_init_f32(&DCM, 3, 3, DCMUpdate);
 
