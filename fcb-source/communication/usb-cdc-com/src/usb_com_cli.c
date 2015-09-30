@@ -211,9 +211,9 @@ static const CLI_Command_Definition_t getSensorsCommand = { (const int8_t * cons
 
 /* Structure that defines the "start-sensor-sampling" command line command. */
 static const CLI_Command_Definition_t startSensorSamplingCommand = { (const int8_t * const ) "start-sensor-sampling",
-		(const int8_t * const ) "\r\nstart-sensor-sampling <sampletime> <sampleduration>:\r\n Prints sensor values once every <sampletime> ms for <sampleduration> s\r\n",
+		(const int8_t * const ) "\r\nstart-sensor-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints sensor values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
 		CLIStartSensorSampling, /* The function to run. */
-		2 /* Number of parameters expected */
+		3 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-sensor-sampling" command line command. */
@@ -862,6 +862,22 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
 		strncat((char*) pcWriteBuffer, "\n\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 		sensorSampleDuration = atoi((char*) pcParameter);
+
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+				lParameterNumber, /* Return the next parameter. */
+				&xParameterStringLength /* Store the parameter string length. */);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		/* Set serialization and start the receiver value sampling task */
+		if (pcParameter[0] == 'n') {
+			SetSensorPrintSamplingSerialization(NO_SERIALIZATION);
+		} else if (pcParameter[0] == 'p') {
+			SetSensorPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
+		}
 
 		/* Start the sensor sample printing task */
 		StartSensorSamplingTask(sensorSampleTime, sensorSampleDuration);

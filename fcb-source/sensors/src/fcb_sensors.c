@@ -53,6 +53,7 @@ static xQueueHandle qFcbSensors = NULL;
 xTaskHandle SensorPrintSamplingTaskHandle = NULL;
 static volatile uint16_t sensorPrintSampleTime;
 static volatile uint16_t sensorPrintSampleDuration;
+static SerializationType_TypeDef sensorValuesPrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static void ProcessSensorValues(void*);
@@ -105,6 +106,15 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
     }
 
     portYIELD_FROM_ISR(higherPriorityTaskWoken);
+}
+
+void FcbSensorsInitGpioPinForInterrupt(GPIO_TypeDef  *GPIOx, uint32_t pin) {
+	GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitStructure.Pin = pin;
+	GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStructure.Pull = GPIO_NOPULL;
+	GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+	HAL_GPIO_Init(GPIOx, &GPIO_InitStructure);
 }
 
 /*
@@ -220,6 +230,15 @@ void PrintSensorValues(const SerializationType_TypeDef serializationType) {
 	}
 }
 
+/*
+ * @brief  Sets the serialization type of printed sensor sample values
+ * @param  serializationType : Data serialization type enum
+ * @retval None.
+ */
+void SetSensorPrintSamplingSerialization(const SerializationType_TypeDef serializationType) {
+	sensorValuesPrintSerializationType = serializationType;
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 static void ProcessSensorValues(void* val __attribute__ ((unused))) {
@@ -232,7 +251,6 @@ static void ProcessSensorValues(void* val __attribute__ ((unused))) {
     if (FCB_OK != InitialiseGyroscope()) {
     	ErrorHandler();
     }
-
 
     if (FCB_OK != FcbInitialiseAccMagSensor()) {
     	ErrorHandler();
@@ -285,15 +303,6 @@ Error:
     goto Exit;
 }
 
-void FcbSensorsInitGpioPinForInterrupt(GPIO_TypeDef  *GPIOx, uint32_t pin) {
-	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.Pin = pin;
-	GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
-	GPIO_InitStructure.Pull = GPIO_NOPULL;
-	GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-	HAL_GPIO_Init(GPIOx, &GPIO_InitStructure);
-}
-
 
 /**
  * @brief  Task code handles sensor print sampling
@@ -313,7 +322,7 @@ static void SensorPrintSamplingTask(void const *argument) {
 	for (;;) {
 		vTaskDelayUntil(&xLastWakeTime, sensorPrintSampleTime);
 
-		PrintSensorValues(NO_SERIALIZATION);
+		PrintSensorValues(sensorValuesPrintSerializationType);
 
 		/* If sampling duration exceeded, delete task to stop sampling */
 		if (xTaskGetTickCount() >= xSampleStartTime + sensorPrintSampleDuration * configTICK_RATE_HZ)
