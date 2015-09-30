@@ -1,0 +1,49 @@
+\contentsline {chapter}{\numberline {1}List of Abbreviations}{3}{chapter.1}
+\contentsline {chapter}{\numberline {2}Introduction}{4}{chapter.2}
+\contentsline {part}{I\hspace {1em}Theory}{5}{part.1}
+\contentsline {chapter}{\numberline {3}Introduction}{6}{chapter.3}
+\contentsline {chapter}{\numberline {4}System Description}{7}{chapter.4}
+\contentsline {section}{\numberline {4.1}Coordinate System Representation}{7}{section.4.1}
+\contentsline {section}{\numberline {4.2}Flight Dynamics}{7}{section.4.2}
+\contentsline {section}{\numberline {4.3}BLDC Motor Theory}{7}{section.4.3}
+\contentsline {section}{\numberline {4.4}Radio Control Theory}{8}{section.4.4}
+\contentsline {section}{\numberline {4.5}Sensor Theory}{8}{section.4.5}
+\contentsline {subsection}{\numberline {4.5.1}Microelectromechanical Systems (MEMS) Sensors}{8}{subsection.4.5.1}
+\contentsline {subsection}{\numberline {4.5.2}Gyroscope}{8}{subsection.4.5.2}
+\contentsline {subsection}{\numberline {4.5.3}Accelerometer}{8}{subsection.4.5.3}
+\contentsline {subsection}{\numberline {4.5.4}Magnetometer}{8}{subsection.4.5.4}
+\contentsline {chapter}{\numberline {5}State Estimation Theory}{9}{chapter.5}
+\contentsline {section}{\numberline {5.1}Attitude Estimation}{9}{section.5.1}
+\contentsline {section}{\numberline {5.2}Velocity Estimation}{9}{section.5.2}
+\contentsline {chapter}{\numberline {6}Flight Control Theory}{10}{chapter.6}
+\contentsline {section}{\numberline {6.1}Controller Design}{10}{section.6.1}
+\contentsline {section}{\numberline {6.2}Attitude Control}{10}{section.6.2}
+\contentsline {section}{\numberline {6.3}Velocity Control}{10}{section.6.3}
+\contentsline {chapter}{\numberline {7}Sensor Calibration Algorithms}{11}{chapter.7}
+\contentsline {section}{\numberline {7.1}Gauss-Newton Optimization}{11}{section.7.1}
+\contentsline {section}{\numberline {7.2}Magnetometer calibration}{11}{section.7.2}
+\contentsline {section}{\numberline {7.3}Accelerometer calibration}{11}{section.7.3}
+\contentsline {part}{II\hspace {1em}Implementation}{12}{part.2}
+\contentsline {chapter}{\numberline {8}Introduction}{13}{chapter.8}
+\contentsline {chapter}{\numberline {9}Hardware}{14}{chapter.9}
+\contentsline {section}{\numberline {9.1}Flight Control Board - STM32F3Discovery}{14}{section.9.1}
+\contentsline {section}{\numberline {9.2}T-Motor U3 BLDC Motors}{15}{section.9.2}
+\contentsline {section}{\numberline {9.3}T-Motor ESC30A Electronic Speed Controllers}{16}{section.9.3}
+\contentsline {section}{\numberline {9.4}RC Receiver and Transmitter}{17}{section.9.4}
+\contentsline {section}{\numberline {9.5}Battery}{18}{section.9.5}
+\contentsline {section}{\numberline {9.6}Sensors}{18}{section.9.6}
+\contentsline {chapter}{\numberline {10}Software}{20}{chapter.10}
+\contentsline {section}{\numberline {10.1}System Design Overview}{20}{section.10.1}
+\contentsline {section}{\numberline {10.2}Real-time Design}{21}{section.10.2}
+\contentsline {section}{\numberline {10.3}Code Documentation}{21}{section.10.3}
+\contentsline {subsection}{\numberline {10.3.1}CMSIS}{21}{subsection.10.3.1}
+\contentsline {subsection}{\numberline {10.3.2}STM32F3xx HAL Drivers}{21}{subsection.10.3.2}
+\contentsline {subsection}{\numberline {10.3.3}STM32 USB Device Drivers}{22}{subsection.10.3.3}
+\contentsline {subsection}{\numberline {10.3.4}STM32F3Discovery Board-specific Package}{22}{subsection.10.3.4}
+\contentsline {subsection}{\numberline {10.3.5}FreeRTOS}{22}{subsection.10.3.5}
+\contentsline {subsection}{\numberline {10.3.6}FreeRTOS Plus CLI}{22}{subsection.10.3.6}
+\contentsline {subsection}{\numberline {10.3.7}FCB Control}{22}{subsection.10.3.7}
+\contentsline {subsection}{\numberline {10.3.8}FCB Communication}{22}{subsection.10.3.8}
+\contentsline {subsection}{\numberline {10.3.9}FCB Sensors}{22}{subsection.10.3.9}
+\contentsline {subsection}{\numberline {10.3.10}FCB Utilities}{22}{subsection.10.3.10}
+\contentsline {subsection}{\numberline {10.3.11}NanoPB Protocol Buffer}{22}{subsection.10.3.11}

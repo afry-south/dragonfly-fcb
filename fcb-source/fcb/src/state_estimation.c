@@ -10,18 +10,37 @@
 #include "state_estimation.h"
 #include "stm32f3xx.h"
 #include "fcb_gyroscope.h"
+#include "string.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "fcb_error.h"
+
+/* Private define ------------------------------------------------------------*/
+#define STATE_PRINT_SAMPLING_TASK_PRIO			1
+#define STATE_PRINT_MINIMUM_SAMPLING_TIME		2	// updated every 2.5 ms
+#define STATE_PRINT_MAX_STRING_SIZE				256
 
 /* Private variables ---------------------------------------------------------*/
 StateVector_TypeDef States;
-
 KalmanFilter_TypeDef RollEstimator;
 KalmanFilter_TypeDef PitchEstimator;
 KalmanFilter_TypeDef YawEstimator;
 
-/* Private functions -----------------------------------------------*/
+/* Task handle for printing of sensor values task */
+static volatile uint16_t statePrintSampleTime;
+static volatile uint16_t statePrintSampleDuration;
+xTaskHandle StatePrintSamplingTaskHandle = NULL;
+static SerializationType_TypeDef statePrintSerializationType;
+
+/* Private function prototypes -----------------------------------------------*/
 static void StateInit(KalmanFilter_TypeDef * Estimator);
-static void StatePrediction(float* newRate, KalmanFilter_TypeDef * Estimator, float* stateAngle, float* stateRateBias);
-static void StateCorrection(float* newAngle, KalmanFilter_TypeDef * Estimator, float* stateAngle, float* stateRateBias);
+static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
+static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
+static void StatePrintSamplingTask(void const *argument);
+
+
+
+/* Exported functions --------------------------------------------------------*/
 
 /* InitEstimator
  * @brief  Initializes the roll state Kalman estimator
@@ -33,7 +52,148 @@ void InitStatesXYZ(void)
   StateInit(&RollEstimator);
   StateInit(&PitchEstimator);
   StateInit(&YawEstimator);
+
+  States.roll = 0;
+  States.rollRateBias = 0;
+  States.pitch = 0;
+  States.pitchRateBias = 0;
+  States.yaw = 0;
+  States.yawRateBias = 0;
+
 }
+
+/* PredictStatesXYZ
+ * @brief  Updates the state estimates for X, Y, Z (roll, pitch, yaw)
+ * @param  newRatesXYZ: Pointer to measured gyroscope rates, X,Y,Z
+ * @retval None
+ */
+void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRatePitch, const float32_t sensorRateYaw)
+{
+  StatePrediction( sensorRateRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
+  StatePrediction( sensorRatePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
+  StatePrediction( sensorRateYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
+}
+
+/* CorrectStatesXYZ
+ * @brief  Updates the state estimates
+ * @param  None
+ * @retval None
+ */
+void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw)
+{
+	StateCorrection( sensorAngleRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
+	StateCorrection( sensorAnglePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
+	StateCorrection( sensorAngleYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
+}
+
+/* GetRoll
+ * @brief  Gets the roll angle
+ * @param  None
+ * @retval Roll angle state
+ */
+float32_t GetRollAngle(void)
+{
+  return States.roll;
+}
+
+/* GetPitch
+ * @brief  Gets the pitch angle
+ * @param  None
+ * @retval Pitch angle state
+ */
+float32_t GetPitchAngle(void)
+{
+  return States.pitch;
+}
+
+/* GetYaw
+ * @brief  Gets the yaw angle
+ * @param  None
+ * @retval Yaw angle state
+ */
+float32_t GetYawAngle(void)
+{
+  return States.yaw;
+}
+
+/*
+ * @brief  Creates a task to print states over USB.
+ * @param  sampleTime : Sets how often a sample should be printed.
+ * @param  sampleDuration : Sets for how long sampling should be performed.
+ * @retval MOTORCTRL_OK if thread started, else MOTORCTRL_ERROR.
+ */
+StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
+	if(sampleTime < STATE_PRINT_MINIMUM_SAMPLING_TIME)
+		statePrintSampleTime = STATE_PRINT_MINIMUM_SAMPLING_TIME;
+	else
+		statePrintSampleTime = sampleTime;
+
+	statePrintSampleDuration = sampleDuration;
+
+	/* State value print sampling handler thread creation
+	 * Task function pointer: StatePrintSamplingTask
+	 * Task name: STATE_PRINT_SAMPL
+	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Parameter: NULL
+	 * Priority: STATE_PRINT_SAMPLING_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
+	 * Handle: StatePrintSamplingTaskHandle
+	 **/
+	if (pdPASS != xTaskCreate((pdTASK_CODE )StatePrintSamplingTask, (signed portCHAR*)"STATE_PRINT_SAMPL",
+			configMINIMAL_STACK_SIZE, NULL, STATE_PRINT_SAMPLING_TASK_PRIO, &StatePrintSamplingTaskHandle)) {
+		ErrorHandler();
+		return STATE_ERROR;
+	}
+
+
+	return STATE_OK;
+
+}
+
+/*
+ * @brief  Stops motor control print sampling by deleting the task.
+ * @param  None.
+ * @retval MOTORCTRL_OK if task deleted, MOTORCTRL_ERROR if not.
+ */
+StateErrorStatus StopStateSamplingTask(void) {
+	if(StatePrintSamplingTaskHandle != NULL) {
+		vTaskDelete(StatePrintSamplingTaskHandle);
+		StatePrintSamplingTaskHandle = NULL;
+		return STATE_OK;
+	}
+	return STATE_ERROR;
+}
+
+/*
+ * @brief  Sets the serialization type of printed motor signal values
+ * @param  serializationType : Data serialization type enum
+ * @retval None.
+ */
+void SetStateSamplingSerialization(const SerializationType_TypeDef serializationType) {
+	statePrintSerializationType = serializationType;
+}
+
+/*
+ * @brief Prints the state values
+ * @param serializationType: Data serialization type enum
+ * @retval None
+ */
+void PrintStateValues(const SerializationType_TypeDef serializationType) {
+	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
+
+	if(serializationType == NO_SERIALIZATION) {
+		snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
+				"States (float32_t):\nrollAngle: %1.4f\nrollRateBias: %1.4f\npitchAngle: %1.4f\npitchRateBias: %1.4f\nyawAngle: %1.4f\nyawRateBias: %1.4f\n\r\n",
+				States.roll, States.rollRateBias, States.pitch, States.pitchRateBias, States.yaw, States.yawRateBias);
+
+		USBComSendString(stateString);
+	}
+	else if(serializationType == PROTOBUFFER_SERIALIZATION) {
+		//TODO
+	}
+}
+
+/* Private functions ----------------------------------------------------
+ * -----*/
 
 /* InitEstimator
  * @brief  Initializes the roll state Kalman estimator
@@ -56,17 +216,7 @@ static void StateInit(KalmanFilter_TypeDef * Estimator)
   Estimator->r1 = R1_CAL;
 }
 
-/* PredictStatesXYZ
- * @brief  Updates the state estimates for X, Y, Z (roll, pitch, yaw)
- * @param  newRatesXYZ: Pointer to measured gyroscope rates, X,Y,Z
- * @retval None
- */
-void PredictStatesXYZ(float newRatesXYZ[])
-{
-  StatePrediction( &newRatesXYZ[0], &RollEstimator, &(States.roll), &(States.rollRateBias));
-  StatePrediction( &newRatesXYZ[1], &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
-  StatePrediction( &newRatesXYZ[2], &YawEstimator, &(States.yaw), &(States.yawRateBias));
-}
+
 
 /* StatePrediction
  * @brief	Performs the prediction part of the Kalman filtering.
@@ -76,32 +226,22 @@ void PredictStatesXYZ(float newRatesXYZ[])
  * @param 	stateRateBias: Pointer to struct member of StateVector_TypeDef (rollRateBias, pitchRateBias or yawRateBias)
  * @retval 	None
  */
-static void StatePrediction(float* newRate, KalmanFilter_TypeDef * Estimator, float* stateAngle, float* stateRateBias)
+static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
 {
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
 
 	/* WARNING: CONTROL_SAMPLE_PERIOD is set to 0 right now!! WARNING */
-	*stateAngle += CONTROL_SAMPLE_PERIOD * (*newRate) - CONTROL_SAMPLE_PERIOD * (*stateRateBias);
+	*stateAngle += CONTROL_SAMPLE_PERIOD * sensorRate - CONTROL_SAMPLE_PERIOD * (*stateRateBias);
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
-	Estimator->p11 += (CONTROL_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1*CONTROL_SAMPLE_PERIOD*CONTROL_SAMPLE_PERIOD)*CONTROL_SAMPLE_PERIOD;
+	Estimator->p11 += (CONTROL_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1)*CONTROL_SAMPLE_PERIOD;
 	Estimator->p12 -= Estimator->p22 * CONTROL_SAMPLE_PERIOD;
 	Estimator->p21 -= Estimator->p22 * CONTROL_SAMPLE_PERIOD;
 	Estimator->p22 += Estimator->q2 * CONTROL_SAMPLE_PERIOD;
 }
 
-/* CorrectStatesXYZ
- * @brief  Updates the state estimates
- * @param  None
- * @retval None
- */
-void CorrectStatesXYZ(float newAnglesXYZ[])
-{
-	StateCorrection( &newAnglesXYZ[0], &RollEstimator, &(States.roll), &(States.rollRateBias));
-	StateCorrection( &newAnglesXYZ[1], &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
-	StateCorrection( &newAnglesXYZ[2], &YawEstimator, &(States.yaw), &(States.yawRateBias));
-}
+
 
 /* StateCorrection
  * @brief	Performs the correction part of the Kalman filtering.
@@ -111,14 +251,14 @@ void CorrectStatesXYZ(float newAnglesXYZ[])
  * @param 	stateRateBias: Pointer to struct member of StateVector_TypeDef (rollRateBias, pitchRateBias or yawRateBias)
  * @retval 	None
  */
-static void StateCorrection(float* newAngle, KalmanFilter_TypeDef * Estimator, float* stateAngle, float* stateRateBias)
+static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
 {
 	/* Correction */
 	/* Step3: Calculate y, difference between a-priori state and measurement z. */
-	float y = *newAngle - *stateAngle;
+	float32_t y = sensorAngle - *stateAngle;
 
 	/* Step 4: Calculate innovation covariance matrix S*/
-	float s = Estimator->p11 + Estimator->r1;
+	float32_t s = Estimator->p11 + Estimator->r1;
 
 	/* Step 5: Calculate Kalman gain*/
 	Estimator->k1 = Estimator->p11 /s;
@@ -129,62 +269,42 @@ static void StateCorrection(float* newAngle, KalmanFilter_TypeDef * Estimator, f
 	*stateRateBias += Estimator->k2 * y;
 
 	/* Step 7: Update a posteriori error covariance matrix P*/
-	float p11_tmp = Estimator->p11;
-	float p12_tmp = Estimator->p12;
+	float32_t p11_tmp = Estimator->p11;
+	float32_t p12_tmp = Estimator->p12;
 	Estimator->p11 -= Estimator->k1 * p11_tmp;
 	Estimator->p12 -= Estimator->k1 * p12_tmp;
 	Estimator->p21 -= Estimator->k1 * p11_tmp;
 	Estimator->p22 -= Estimator->k1 * p12_tmp;
 }
 
-/* GetRoll
- * @brief  Gets the roll angle
- * @param  None
- * @retval Roll angle state
+
+/**
+ * @brief  Task code handles state (angle, rate, ratebias) print sampling
+ * @param  argument : Unused parameter
+ * @retval None
  */
-float GetRollAngle(void)
-{
-  return States.roll;
-}
+static void StatePrintSamplingTask(void const *argument) {
+	(void) argument;
 
-/* GetPitch
- * @brief  Gets the pitch angle
- * @param  None
- * @retval Pitch angle state
- */
-float GetPitchAngle(void)
-{
-  return States.pitch;
-}
+	portTickType xLastWakeTime;
+	portTickType xSampleStartTime;
 
-/* GetYaw
- * @brief  Gets the yaw angle
- * @param  None
- * @retval Yaw angle state
- */
-float GetYawAngle(void)
-{
-  return States.yaw;
+	/* Initialize the xLastWakeTime variable with the current time */
+	xLastWakeTime = xTaskGetTickCount();
+	xSampleStartTime = xLastWakeTime;
+
+	for (;;) {
+		vTaskDelayUntil(&xLastWakeTime, statePrintSampleTime);
+
+		PrintStateValues(statePrintSerializationType);
+
+		/* If sampling duration exceeded, delete task to stop sampling */
+		if (xTaskGetTickCount() >= xSampleStartTime + statePrintSampleDuration * configTICK_RATE_HZ)
+			StopStateSamplingTask();
+	}
 }
 
 
-float GetHeading(void)
-{
-#ifdef TODO
-  float fTiltedX = MagBuffer[0]*cosf(States.pitch) + MagBuffer[1]*sinf(States.roll)*sinf(States.pitch) + MagBuffer[2]*cosf(States.roll)*sinf(States.pitch);
-  float fTiltedY = MagBuffer[1]*cosf(States.roll) - MagBuffer[2]*sinf(States.roll);
-
-  float HeadingValue = atan2f(fTiltedY, fTiltedX) - COMPASS_DECLINATION;
-
-  if (HeadingValue < 0)
-    {
-      HeadingValue = HeadingValue + 2.0*PI;
-    }
-
-  return HeadingValue;
-#endif
-  return 0.0;
-}
 
 
 /*****END OF FILE****/

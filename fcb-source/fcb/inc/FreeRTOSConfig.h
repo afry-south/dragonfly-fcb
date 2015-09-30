@@ -78,8 +78,8 @@
 #define configCPU_CLOCK_HZ                (SystemCoreClock)
 #define configTICK_RATE_HZ                ((portTickType)1000)
 #define configMAX_PRIORITIES              ((unsigned portBASE_TYPE)7)
-#define configMINIMAL_STACK_SIZE          ((unsigned short)128)
-#define configTOTAL_HEAP_SIZE             ((size_t)(16 * 1024))
+#define configMINIMAL_STACK_SIZE          ((unsigned short)256)
+#define configTOTAL_HEAP_SIZE             ((size_t)(15 * 1024))
 #define configMAX_TASK_NAME_LEN           (16)
 #define configUSE_TRACE_FACILITY          1
 #define configUSE_16_BIT_TICKS            0
@@ -93,7 +93,7 @@
 #define configUSE_COUNTING_SEMAPHORES     1
 
  /* Task Status Feature*/
-#define TASK_STATUS
+/* TASK STATUS is defined in project properties */
 #ifdef TASK_STATUS
 	#define configGENERATE_RUN_TIME_STATS			1
 	#define portGET_RUN_TIME_COUNTER_VALUE			getRunTimeCounterValue
@@ -125,6 +125,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil        1
 #define INCLUDE_vTaskDelay             1
 #define INCLUDE_xTaskGetSchedulerState 1
+#define INCLUDE_uxTaskGetStackHighWaterMark 1
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS

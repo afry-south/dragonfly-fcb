@@ -19,6 +19,7 @@
 #include "fcb_gyroscope.h"
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_sensors.h"
+#include "state_estimation.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -137,6 +138,26 @@ static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBuffer
  * Function implements the "get-ref-signals" command.
  */
 static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+
+/*
+ * Function implements the "task-status" command.
+ */
+static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+
+/*
+ * Function implements the "get-states" command.
+ */
+static portBASE_TYPE CLIGetStateValues(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+
+/*
+ * Function implements the "start-state-sampling" command.
+ */
+static portBASE_TYPE CLIStartStateSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+
+/*
+ * Function implements the "stop-state-sampling" command.
+ */
+static portBASE_TYPE CLIStopStateSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -269,6 +290,34 @@ static const CLI_Command_Definition_t getFlightModeCommand = { (const int8_t * c
 static const CLI_Command_Definition_t getRefSignalsCommand = { (const int8_t * const ) "get-ref-signals",
 		(const int8_t * const ) "\r\nget-ref-signals:\r\n Prints the current reference signal\r\n",
 		CLIGetRefSignals, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "task-status" command line command. */
+static const CLI_Command_Definition_t taskStatusCommand = { (const int8_t * const ) "task-status",
+		(const int8_t * const ) "\r\nsystime:\r\n Prints task status\r\n",
+		CLITaskStatus, /* The function to run. */
+		0 /* Number of parameters expected */
+};
+
+/* Structure that defines the "get-states" command line command. */
+static const CLI_Command_Definition_t getStatesCommand = { (const int8_t * const ) "get-states",
+		(const int8_t * const ) "\r\nget-states <encoding>:\r\n Prints state values with <encoding> (n=none, p=proto)\r\n",
+		CLIGetStateValues, /* The function to run. */
+		1 /* Number of parameters expected */
+};
+
+/* Structure that defines the "start-motor-sampling" command line command. */
+static const CLI_Command_Definition_t startStateSamplingCommand = { (const int8_t * const ) "start-state-sampling",
+		(const int8_t * const ) "\r\nstart-state-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints state values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
+		CLIStartStateSampling, /* The function to run. */
+		3 /* Number of parameters expected */
+};
+
+/* Structure that defines the "stop-motor-sampling" command line command. */
+static const CLI_Command_Definition_t stopStateSamplingCommand = { (const int8_t * const ) "stop-state-sampling",
+		(const int8_t * const ) "\r\nstop-state-sampling:\r\n Stops printing of state sample values\r\n",
+		CLIStopStateSampling, /* The function to run. */
 		0 /* Number of parameters expected */
 };
 
@@ -1162,6 +1211,188 @@ static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBuffer
 	snprintf((char*) pcWriteBuffer, xWriteBufferLen,
 			"Reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angular rate: %1.4f rad/s\n",
 			GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchAngleReferenceSignal(), GetYawAngularRateReferenceSignal());
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements "task-status" command, prints task status
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer,
+				"\nTask\t\t\t Abs Time\t % Time\n",
+				xWriteBufferLen);
+	size_t len = strlen((char*) pcWriteBuffer);
+	vTaskGetRunTimeStats(pcWriteBuffer + len, xWriteBufferLen-len);
+	len = strlen((char*)pcWriteBuffer);
+	strncat((char*) pcWriteBuffer, "\n",
+				xWriteBufferLen - len -1);
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Implements CLI command to print the last control signal values sent to the motors
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength;
+	portBASE_TYPE lParameterNumber = 0;
+
+	configASSERT(pcWriteBuffer);
+
+	/* Empty pcWriteBuffer so no strange output is sent as command response */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+
+	lParameterNumber++;
+
+	/* Obtain the parameter string. */
+	pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+			lParameterNumber, /* Return the next parameter. */
+			&xParameterStringLength /* Store the parameter string length. */
+	);
+
+	/* Sanity check something was returned. */
+	configASSERT(pcParameter);
+
+	/* Get the current receiver values */
+	if(pcParameter[0] == 'n')
+		PrintStateValues(NO_SERIALIZATION);
+	else if(pcParameter[0] == 'p')
+		PrintStateValues(NO_SERIALIZATION);
+	//PrintMotorControlValues(PROTOBUFFER_SERIALIZATION);
+
+	return pdFALSE;
+}
+
+/**
+ * @brief  Starts state sampling for a specified sample time and duration
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStartStateSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	int8_t* pcParameter;
+	portBASE_TYPE xParameterStringLength, xReturn;
+	static portBASE_TYPE lParameterNumber = 0;
+
+	/* Check the write buffer is not NULL */
+	configASSERT(pcWriteBuffer);
+
+	if (lParameterNumber == 0) {
+		/* The first time the function is called after the command has been entered just a header string is returned. */
+		strncpy((char*) pcWriteBuffer, "Starting print sampling of state values...\r\n", xWriteBufferLen);
+	} else {
+		uint16_t stateSampleTime;
+		uint16_t stateSampleDuration;
+
+		/* Obtain the parameter string */
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */
+		);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		strncpy((char*) pcWriteBuffer, "Sample time (ms): ", xWriteBufferLen);
+
+		size_t paramMaxSize;
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		stateSampleTime = atoi((char*) pcParameter);
+
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		strncat((char*) pcWriteBuffer, "Duration (s): ", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		if ((unsigned long) xParameterStringLength > xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1)
+			paramMaxSize = xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1;
+		else
+			paramMaxSize = xParameterStringLength;
+
+		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
+		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+
+		stateSampleDuration = atoi((char*) pcParameter);
+
+		lParameterNumber++;
+
+		pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+		lParameterNumber, /* Return the next parameter. */
+		&xParameterStringLength /* Store the parameter string length. */);
+
+		/* Sanity check something was returned. */
+		configASSERT(pcParameter);
+
+		/* Set serialization and start the motor control sampling task */
+		if (pcParameter[0] == 'n') {
+			SetMotorPrintSamplingSerialization(NO_SERIALIZATION);
+		} else if (pcParameter[0] == 'p') {
+			SetMotorPrintSamplingSerialization(NO_SERIALIZATION);
+			//TODO
+			//SetMotorPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
+		}
+
+		StartStateSamplingTask(stateSampleTime, stateSampleDuration);
+	}
+
+	/* Update return value and parameter index */
+	if (lParameterNumber == startStateSamplingCommand.cExpectedNumberOfParameters) {
+		/* If this is the last parameter then there are no more strings to return after this one. */
+		xReturn = pdFALSE;
+		lParameterNumber = 0;
+	} else {
+		/* There are more parameters to return after this one. */
+		xReturn = pdTRUE;
+		lParameterNumber++;
+	}
+
+	return xReturn;
+}
+
+/**
+ * @brief  Stops printing of state sample values
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIStopStateSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+	/* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
+	(void) pcCommandString;
+	configASSERT(pcWriteBuffer);
+
+	strncpy((char*) pcWriteBuffer, "Stopping printing of state sample values...\r\n", xWriteBufferLen);
+
+	/* Stop the state sample printing task */
+	StopStateSamplingTask();
 
 	return pdFALSE;
 }
