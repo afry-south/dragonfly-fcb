@@ -1,0 +1,24 @@
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Eclipse settings folder
+.settings/
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# LaTeX
+doc-latex/**/*.aux
+doc-latex/**/*.pdf
+doc-latex/**/*.gz
+doc-latex/**/*.toc
+doc-latex/**/*.log
+
+# Binary folders
+Debug/
+Release/

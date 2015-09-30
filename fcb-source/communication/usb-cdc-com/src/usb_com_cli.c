@@ -295,7 +295,7 @@ static const CLI_Command_Definition_t getRefSignalsCommand = { (const int8_t * c
 
 /* Structure that defines the "task-status" command line command. */
 static const CLI_Command_Definition_t taskStatusCommand = { (const int8_t * const ) "task-status",
-		(const int8_t * const ) "\r\nsystime:\r\n Prints task status\r\n",
+		(const int8_t * const ) "\r\ntask-status:\r\n Prints task status\r\n",
 		CLITaskStatus, /* The function to run. */
 		0 /* Number of parameters expected */
 };
@@ -361,10 +361,14 @@ void RegisterCLICommands(void) {
 	/* System info CLI commands */
 	FreeRTOS_CLIRegisterCommand(&aboutCommand);
 	FreeRTOS_CLIRegisterCommand(&systimeCommand);
+	FreeRTOS_CLIRegisterCommand(&taskStatusCommand);
 
 	/* Flight control CLI commands */
 	FreeRTOS_CLIRegisterCommand(&getFlightModeCommand);
 	FreeRTOS_CLIRegisterCommand(&getRefSignalsCommand);
+	FreeRTOS_CLIRegisterCommand(&getStatesCommand);
+	FreeRTOS_CLIRegisterCommand(&startStateSamplingCommand);
+	FreeRTOS_CLIRegisterCommand(&stopStateSamplingCommand);
 }
 
 /* Private functions ---------------------------------------------------------*/

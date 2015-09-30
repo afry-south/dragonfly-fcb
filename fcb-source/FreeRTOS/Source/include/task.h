@@ -1342,7 +1342,7 @@ void vTaskList( signed char *pcWriteBuffer ) PRIVILEGED_FUNCTION;
  * \defgroup vTaskGetRunTimeStats vTaskGetRunTimeStats
  * \ingroup TaskUtils
  */
-void vTaskGetRunTimeStats( signed char *pcWriteBuffer ) PRIVILEGED_FUNCTION;
+void vTaskGetRunTimeStats( signed char *pcWriteBuffer, size_t bufLen ) PRIVILEGED_FUNCTION;
 
 /*-----------------------------------------------------------
  * SCHEDULER INTERNALS AVAILABLE FOR PORTING PURPOSES
@@ -1515,6 +1515,3 @@ eSleepModeStatus eTaskConfirmSleepModeStatus( void );
 }
 #endif
 #endif /* INC_TASK_H */
-
-
-
