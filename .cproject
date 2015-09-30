@@ -67,8 +67,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/nanopb-0.3.3-windows-x86}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/sensors/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/utilities/inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/Tools/4.9 2015q1/arm-none-eabi/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/communication/protobuf}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/CMSIS/Include}&quot;"/>
@@ -141,8 +139,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/nanopb-0.3.3-windows-x86}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/sensors/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/utilities/inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/STM32Cube_FW_F3_V1.1.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/Tools/4.9 2015q1/arm-none-eabi/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/communication/protobuf}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/CMSIS/Include}&quot;"/>

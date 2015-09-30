@@ -35,7 +35,7 @@
 /* Private define ------------------------------------------------------------*/
 #define MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO			1
 #define MOTOR_CONTROL_PRINT_MINIMUM_SAMPLING_TIME		2	// Motor control updated every 2.5 ms
-#define MOTOR_CONTROL_PRINT_MAX_STRING_SIZE				128
+#define MOTOR_CONTROL_PRINT_MAX_STRING_SIZE				96
 
 /* Private macro -------------------------------------------------------------*/
 
@@ -208,7 +208,7 @@ void SetMotorPrintSamplingSerialization(const SerializationType_TypeDef serializ
  * @retval None.
  */
 void PrintMotorControlValues(const SerializationType_TypeDef serializationType) {
-	static char motorCtrlString[MOTOR_CONTROL_PRINT_MAX_STRING_SIZE];
+	char motorCtrlString[MOTOR_CONTROL_PRINT_MAX_STRING_SIZE];
 
 	if(serializationType == NO_SERIALIZATION) {
 		snprintf((char*) motorCtrlString, MOTOR_CONTROL_PRINT_MAX_STRING_SIZE,
@@ -347,13 +347,13 @@ MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime,
 	/* Motor control signal value print sampling handler thread creation
 	 * Task function pointer: MotorControlPrintSamplingTask
 	 * Task name: MOTORCTRL_PRINT_SAMPL
-	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Stack depth: 2*configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: MotorControlPrintSamplingTaskHandle
 	 * */
 	if (pdPASS != xTaskCreate((pdTASK_CODE )MotorControlPrintSamplingTask, (signed portCHAR*)"MOTORCTRL_PRINT_SAMPL",
-			configMINIMAL_STACK_SIZE, NULL, MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO, &MotorControlPrintSamplingTaskHandle)) {
+			2*configMINIMAL_STACK_SIZE, NULL, MOTOR_CONTROL_PRINT_SAMPLING_TASK_PRIO, &MotorControlPrintSamplingTaskHandle)) {
 		ErrorHandler();
 		return MOTORCTRL_ERROR;
 	}

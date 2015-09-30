@@ -29,10 +29,12 @@
 /* Private define ------------------------------------------------------------*/
 #define FCB_SENSORS_DEBUG /* todo delete */
 
+#define PROCESS_SENSORS_TASK_PRIO					configMAX_PRIORITIES-1 // Max priority
+
 #define SENSOR_PRINT_SAMPLING_TASK_PRIO				1
 #define SENSOR_PRINT_MINIMUM_SAMPLING_TIME			10 // [ms]
 
-#define	SENSOR_PRINT_MAX_STRING_SIZE				64
+#define	SENSOR_PRINT_MAX_STRING_SIZE				192
 
 #ifdef FCB_SENSORS_DEBUG
 static uint32_t cbk_gyro_counter = 0;
@@ -74,7 +76,7 @@ int FcbSensorsConfig(void) {
                                (signed portCHAR*)"tFcbSensors",
                                4 * configMINIMAL_STACK_SIZE,
                                NULL /* parameter */,
-                               1 /* priority */,
+							   PROCESS_SENSORS_TASK_PRIO /* priority */,
                                &tFcbSensors))) {
         ErrorHandler();
         goto Error;
@@ -122,13 +124,13 @@ SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint
 	/* Sensor value print sampling handler thread creation
 	 * Task function pointer: SensorPrintSamplingTask
 	 * Task name: SENS_PRINT_SAMPL
-	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Stack depth: 2*configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: SENSOR_PRINT_SAMPLING_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: SensorPrintSamplingTaskHandle
 	 * */
 	if (pdPASS != xTaskCreate((pdTASK_CODE )SensorPrintSamplingTask, (signed portCHAR*)"SENS_PRINT_SAMPL",
-			configMINIMAL_STACK_SIZE, NULL, SENSOR_PRINT_SAMPLING_TASK_PRIO, &SensorPrintSamplingTaskHandle)) {
+			3*configMINIMAL_STACK_SIZE, NULL, SENSOR_PRINT_SAMPLING_TASK_PRIO, &SensorPrintSamplingTaskHandle)) {
 		ErrorHandler();
 		return SENSORS_ERROR;
 	}
@@ -156,7 +158,7 @@ SensorsErrorStatus StopSensorSamplingTask(void) {
  * @retval none
  */
 void PrintSensorValues(const SerializationType_TypeDef serializationType) {
-	static char sensorString[SENSOR_PRINT_MAX_STRING_SIZE];
+	char sensorString[SENSOR_PRINT_MAX_STRING_SIZE];
 	float32_t accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ;
 
 	/* Get the latest sensor values */
@@ -165,27 +167,11 @@ void PrintSensorValues(const SerializationType_TypeDef serializationType) {
 	GetMagVector(&magX, &magY, &magZ);
 
 	if(serializationType == NO_SERIALIZATION) {
-		for(uint8_t i = 0; i < 3; i++) {
-			switch(i) {
-			case 0:
-				snprintf((char*) sensorString, SENSOR_PRINT_MAX_STRING_SIZE,
-						"Accelerometer [m/s^2]:\nAccX: %1.3f\nAccY: %1.3f\nAccZ: %1.3f\r\n",
-						accX, accY, accZ);
-				break;
-			case 1:
-				snprintf((char*) sensorString, SENSOR_PRINT_MAX_STRING_SIZE,
-						"Gyroscope [rad/s]:\nGyroX: %1.3f\nGyroY: %1.3f\nGyroZ: %1.3f\r\n",
-						gyroX, gyroY, gyroZ);
-				break;
-			case 2:
-				snprintf((char*) sensorString, SENSOR_PRINT_MAX_STRING_SIZE,
-						"Magnetometer [G]:\nMagX: %1.3f\nMagY: %1.3f\nMagZ: %1.3f\r\n",
-						magX, magY, magZ);
-				break;
-			}
+		snprintf((char*) sensorString, SENSOR_PRINT_MAX_STRING_SIZE,
+				"Accelerometer [m/s^2]:\nAccX: %1.3f\nAccY: %1.3f\nAccZ: %1.3f\r\nGyroscope [rad/s]:\nGyroX: %1.3f\nGyroY: %1.3f\nGyroZ: %1.3f\r\nMagnetometer [G]:\nMagX: %1.3f\nMagY: %1.3f\nMagZ: %1.3f\n\r\n",
+				accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ);
 
-			USBComSendString(sensorString);
-		}
+		USBComSendString(sensorString);
 	}
 	else if(serializationType == PROTOBUFFER_SERIALIZATION) {
 		bool protoStatus;

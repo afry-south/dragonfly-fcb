@@ -705,7 +705,7 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 			paramMaxSize = xParameterStringLength;
 
 		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
-		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		strncat((char*) pcWriteBuffer, "\n\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 		receiverSampleDuration = atoi((char*) pcParameter);
 
@@ -859,7 +859,7 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
 			paramMaxSize = xParameterStringLength;
 
 		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
-		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		strncat((char*) pcWriteBuffer, "\n\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 		sensorSampleDuration = atoi((char*) pcParameter);
 
@@ -999,7 +999,7 @@ static portBASE_TYPE CLIStartMotorSampling(int8_t* pcWriteBuffer, size_t xWriteB
 			paramMaxSize = xParameterStringLength;
 
 		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
-		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		strncat((char*) pcWriteBuffer, "\n\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 		motorSampleDuration = atoi((char*) pcParameter);
 
