@@ -28,7 +28,7 @@
 	gobble=12}
 
 \title{Dragonfly Quadrotor UAV \\ Flight Control Board}
-\author{Daniel Stenberg \\ Adam Steineck \\ Nina Khayyami}
+\author{Nina Khayyami \\ Adam Steineck \\ Daniel Stenberg }
 
 \date{\today}         			% Sets date on first page
 
@@ -364,7 +364,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 
 \chapter{Flight Control Theory}
 
-	\section{Controller Design}
+	\section{Control Design Overview}
 
 Figure \ref{fig:controloverview} shows an overview of the control problem.
 
@@ -374,13 +374,32 @@ Figure \ref{fig:controloverview} shows an overview of the control problem.
     \caption{Control overview diagram}
     \label{fig:controloverview}
 \end{figure}
+
+	\section{PID Control}
 	
-PID controller equation presented in (\ref{PID_classic}), where $u(t)$ is the control signal and $e(t) = y_{ref}(t) - y(t)$ is the control error.
+		\subsection{The algorithm}
+The PID control strategy is one of the most commonly used control algorithms. It consists of three parts that each contribute to the control signal; Proportional (P), Integral (I) and Derivative (D). The equation for the PID algorithms is presented in (\ref{PID_classic}), where $u(t)$ is the control signal and $e(t) = y_{ref}(t) - y(t)$ is the control error. This is the classical representation without any modifications. When used in practice, some alterations are typically made to address some practical issues and increase performance in a real-world environment. For one, it needs to be discretized so that a digital computer may generate control signals, but there are numerous other modifications to consider. 
 
 \begin{equation}
 u(t) = K \bigg( e(t) + \dfrac{1}{T_i} \int_{0}^{\infty}  e(t) dt + T_d \dfrac{d}{dt} e(t) \bigg)
 \label{PID_classic}
 \end{equation}
+
+When tuning the algorithm (\ref{PID_classic}), a set of parameters $K$, $T_i$, $T_d$ are selected by, for example, pole placement, step response analysis or frequency diagram design.
+
+	\subsection{Practical modifications}
+To ensure performance in a real-world environment, a number of modifications are typically made to address the following issues:
+
+\begin{itemize}
+\item High-frequency noise
+\item Integrator wind-up due to saturation
+\item Transfer between control parameters and modes
+\end{itemize}
+
+Along with this, a few other parameters are introduced enable more possibilities to achieve desired performance.
+
+	\subsection{Discretization}
+To run the algorithms on a digital system, the equation needs to be discretized. This is often achieved using a finite-step approximation such as backward and forward difference or Tustin approximation.
 
 	\section{Attitude Control}
 
