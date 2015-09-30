@@ -67,11 +67,11 @@ void InitStatesXYZ(void)
  * @param  newRatesXYZ: Pointer to measured gyroscope rates, X,Y,Z
  * @retval None
  */
-void PredictStatesXYZ(float32_t newRatesXYZ[])
+void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRatePitch, const float32_t sensorRateYaw)
 {
-  StatePrediction( &newRatesXYZ[0], &RollEstimator, &(States.roll), &(States.rollRateBias));
-  StatePrediction( &newRatesXYZ[1], &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
-  StatePrediction( &newRatesXYZ[2], &YawEstimator, &(States.yaw), &(States.yawRateBias));
+  StatePrediction( sensorRateRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
+  StatePrediction( sensorRatePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
+  StatePrediction( sensorRateYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
 }
 
 /* CorrectStatesXYZ
@@ -79,11 +79,11 @@ void PredictStatesXYZ(float32_t newRatesXYZ[])
  * @param  None
  * @retval None
  */
-void CorrectStatesXYZ(float32_t newAnglesXYZ[])
+void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw)
 {
-	StateCorrection( &newAnglesXYZ[0], &RollEstimator, &(States.roll), &(States.rollRateBias));
-	StateCorrection( &newAnglesXYZ[1], &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
-	StateCorrection( &newAnglesXYZ[2], &YawEstimator, &(States.yaw), &(States.yawRateBias));
+	StateCorrection( sensorAngleRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
+	StateCorrection( sensorAnglePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
+	StateCorrection( sensorAngleYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
 }
 
 /* GetRoll
@@ -192,7 +192,8 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 	}
 }
 
-/* Private functions ---------------------------------------------------------*/
+/* Private functions ----------------------------------------------------
+ * -----*/
 
 /* InitEstimator
  * @brief  Initializes the roll state Kalman estimator
@@ -225,13 +226,13 @@ static void StateInit(KalmanFilter_TypeDef * Estimator)
  * @param 	stateRateBias: Pointer to struct member of StateVector_TypeDef (rollRateBias, pitchRateBias or yawRateBias)
  * @retval 	None
  */
-static void StatePrediction(float32_t* newRate, KalmanFilter_TypeDef * Estimator, float32_t* stateAngle, float32_t* stateRateBias)
+static void StatePrediction(float32_t sensorRate, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
 {
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
 
 	/* WARNING: CONTROL_SAMPLE_PERIOD is set to 0 right now!! WARNING */
-	*stateAngle += CONTROL_SAMPLE_PERIOD * (*newRate) - CONTROL_SAMPLE_PERIOD * (*stateRateBias);
+	*stateAngle += CONTROL_SAMPLE_PERIOD * sensorRate - CONTROL_SAMPLE_PERIOD * (*stateRateBias);
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
 	Estimator->p11 += (CONTROL_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1)*CONTROL_SAMPLE_PERIOD;
@@ -250,11 +251,11 @@ static void StatePrediction(float32_t* newRate, KalmanFilter_TypeDef * Estimator
  * @param 	stateRateBias: Pointer to struct member of StateVector_TypeDef (rollRateBias, pitchRateBias or yawRateBias)
  * @retval 	None
  */
-static void StateCorrection(float32_t* newAngle, KalmanFilter_TypeDef * Estimator, float32_t* stateAngle, float32_t* stateRateBias)
+static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
 {
 	/* Correction */
 	/* Step3: Calculate y, difference between a-priori state and measurement z. */
-	float32_t y = *newAngle - *stateAngle;
+	float32_t y = sensorAngle - *stateAngle;
 
 	/* Step 4: Calculate innovation covariance matrix S*/
 	float32_t s = Estimator->p11 + Estimator->r1;
