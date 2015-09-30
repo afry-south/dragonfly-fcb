@@ -58,8 +58,8 @@ float32_t GetYawAngle(void);
 float32_t GetHeading(void);
 
 void InitStatesXYZ(void);
-void PredictStatesXYZ(float32_t newRatesXYZ[]);
-void CorrectStatesXYZ(float32_t newAnglesXYZ[]);
+void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRatePitch, const float32_t sensorRateYaw);
+void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw);
 StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 StateErrorStatus StopStateSamplingTask(void);
 void SetStateSamplingSerialization(const SerializationType_TypeDef serializationType);

@@ -34,8 +34,8 @@ static SerializationType_TypeDef statePrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static void StateInit(KalmanFilter_TypeDef * Estimator);
-static void StatePrediction(float* newRate, KalmanFilter_TypeDef * Estimator, float* stateAngle, float* stateRateBias);
-static void StateCorrection(float* newAngle, KalmanFilter_TypeDef * Estimator, float* stateAngle, float* stateRateBias);
+static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
+static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
 static void StatePrintSamplingTask(void const *argument);
 
 
@@ -226,7 +226,7 @@ static void StateInit(KalmanFilter_TypeDef * Estimator)
  * @param 	stateRateBias: Pointer to struct member of StateVector_TypeDef (rollRateBias, pitchRateBias or yawRateBias)
  * @retval 	None
  */
-static void StatePrediction(float32_t sensorRate, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
+static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
 {
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
