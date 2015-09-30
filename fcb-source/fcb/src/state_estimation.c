@@ -8,17 +8,22 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "state_estimation.h"
+
 #include "stm32f3xx.h"
+
 #include "fcb_gyroscope.h"
 #include "string.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "fcb_error.h"
+#include "dragonfly_fcb.pb.h"
+#include "usb_com_cli.h"
+#include "pb_encode.h"
 
 /* Private define ------------------------------------------------------------*/
 #define STATE_PRINT_SAMPLING_TASK_PRIO			1
 #define STATE_PRINT_MINIMUM_SAMPLING_TIME		2	// updated every 2.5 ms
-#define STATE_PRINT_MAX_STRING_SIZE				256
+#define STATE_PRINT_MAX_STRING_SIZE				160
 
 /* Private variables ---------------------------------------------------------*/
 StateVector_TypeDef States;
@@ -133,13 +138,13 @@ StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_
 	/* State value print sampling handler thread creation
 	 * Task function pointer: StatePrintSamplingTask
 	 * Task name: STATE_PRINT_SAMPL
-	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Stack depth: 2*configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: STATE_PRINT_SAMPLING_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: StatePrintSamplingTaskHandle
 	 **/
 	if (pdPASS != xTaskCreate((pdTASK_CODE )StatePrintSamplingTask, (signed portCHAR*)"STATE_PRINT_SAMPL",
-			configMINIMAL_STACK_SIZE, NULL, STATE_PRINT_SAMPLING_TASK_PRIO, &StatePrintSamplingTaskHandle)) {
+			3*configMINIMAL_STACK_SIZE, NULL, STATE_PRINT_SAMPLING_TASK_PRIO, &StatePrintSamplingTaskHandle)) {
 		ErrorHandler();
 		return STATE_ERROR;
 	}
@@ -168,7 +173,7 @@ StateErrorStatus StopStateSamplingTask(void) {
  * @param  serializationType : Data serialization type enum
  * @retval None.
  */
-void SetStateSamplingSerialization(const SerializationType_TypeDef serializationType) {
+void SetStatePrintSamplingSerialization(const SerializationType_TypeDef serializationType) {
 	statePrintSerializationType = serializationType;
 }
 
@@ -178,17 +183,69 @@ void SetStateSamplingSerialization(const SerializationType_TypeDef serialization
  * @retval None
  */
 void PrintStateValues(const SerializationType_TypeDef serializationType) {
-	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
+	char stateString[STATE_PRINT_MAX_STRING_SIZE];
 
 	if(serializationType == NO_SERIALIZATION) {
 		snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-				"States (float32_t):\nrollAngle: %1.4f\nrollRateBias: %1.4f\npitchAngle: %1.4f\npitchRateBias: %1.4f\nyawAngle: %1.4f\nyawRateBias: %1.4f\n\r\n",
+				"States:\nrollAngle: %1.3f\nrollRateBias: %1.3f\npitchAngle: %1.3f\npitchRateBias: %1.3f\nyawAngle: %1.4f\nyawRateBias: %1.3f\n\r\n",
 				States.roll, States.rollRateBias, States.pitch, States.pitchRateBias, States.yaw, States.yawRateBias);
 
 		USBComSendString(stateString);
 	}
 	else if(serializationType == PROTOBUFFER_SERIALIZATION) {
-		//TODO
+		bool protoStatus;
+		uint8_t serializedStateData[FlightStatesProto_size];
+		FlightStatesProto stateValuesProto;
+		uint32_t strLen;
+
+		/* Add estimated attitude states to protobuffer type struct members */
+		stateValuesProto.has_rollAngle = true;
+		stateValuesProto.rollAngle = States.roll;
+		stateValuesProto.has_pitchAngle = true;
+		stateValuesProto.pitchAngle = States.pitch;
+		stateValuesProto.has_yawAngle = true;
+		stateValuesProto.yawAngle = States.yaw;
+
+		// TODO add attitude rates when available
+		stateValuesProto.has_rollRate = false;
+		stateValuesProto.rollRate = 0.0;
+		stateValuesProto.has_pitchRate = false;
+		stateValuesProto.pitchRate = 0.0;
+		stateValuesProto.has_yawRate = false;
+		stateValuesProto.yawRate = 0.0;
+
+		// TODO add position estimates when available
+		stateValuesProto.has_posX = false;
+		stateValuesProto.posX = 0.0;
+		stateValuesProto.has_posY = false;
+		stateValuesProto.posY = 0.0;
+		stateValuesProto.has_posZ = false;
+		stateValuesProto.posZ = 0.0;
+
+		// TODO add velocity estimates when available
+		stateValuesProto.has_velX = false;
+		stateValuesProto.velX = 0.0;
+		stateValuesProto.has_velY = false;
+		stateValuesProto.velY = 0.0;
+		stateValuesProto.has_velZ = false;
+		stateValuesProto.velZ = 0.0;
+
+		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
+		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedStateData, FlightStatesProto_size);
+		protoStatus = pb_encode(&protoStream, FlightStatesProto_fields, &stateValuesProto);
+
+		/* Insert header to the sample string, then copy the data after that */
+		snprintf(stateString, STATE_PRINT_MAX_STRING_SIZE, "%c %c ", FLIGHT_STATE_MSG_ENUM, protoStream.bytes_written);
+		strLen = strlen(stateString);
+		if(strLen + protoStream.bytes_written + strlen("\r\n") < STATE_PRINT_MAX_STRING_SIZE) {
+			memcpy(&stateString[strLen], serializedStateData, protoStream.bytes_written);
+			memcpy(&stateString[strLen+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+		}
+
+		if(protoStatus)
+			USBComSendData((uint8_t*)stateString, strLen+protoStream.bytes_written+strlen("\r\n"));
+		else
+			ErrorHandler();
 	}
 }
 

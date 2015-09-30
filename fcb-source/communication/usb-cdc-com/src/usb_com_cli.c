@@ -1275,8 +1275,7 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
 	if(pcParameter[0] == 'n')
 		PrintStateValues(NO_SERIALIZATION);
 	else if(pcParameter[0] == 'p')
-		PrintStateValues(NO_SERIALIZATION);
-	//PrintMotorControlValues(PROTOBUFFER_SERIALIZATION);
+		PrintStateValues(PROTOBUFFER_SERIALIZATION);
 
 	return pdFALSE;
 }
@@ -1342,7 +1341,7 @@ static portBASE_TYPE CLIStartStateSampling(int8_t* pcWriteBuffer, size_t xWriteB
 			paramMaxSize = xParameterStringLength;
 
 		strncat((char*) pcWriteBuffer, (char*) pcParameter, paramMaxSize);
-		strncat((char*) pcWriteBuffer, "\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+		strncat((char*) pcWriteBuffer, "\n\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
 		stateSampleDuration = atoi((char*) pcParameter);
 
@@ -1357,11 +1356,9 @@ static portBASE_TYPE CLIStartStateSampling(int8_t* pcWriteBuffer, size_t xWriteB
 
 		/* Set serialization and start the motor control sampling task */
 		if (pcParameter[0] == 'n') {
-			SetMotorPrintSamplingSerialization(NO_SERIALIZATION);
+			SetStatePrintSamplingSerialization(NO_SERIALIZATION);
 		} else if (pcParameter[0] == 'p') {
-			SetMotorPrintSamplingSerialization(NO_SERIALIZATION);
-			//TODO
-			//SetMotorPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
+			SetStatePrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
 		}
 
 		StartStateSamplingTask(stateSampleTime, stateSampleDuration);
