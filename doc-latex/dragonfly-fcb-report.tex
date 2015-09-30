@@ -147,12 +147,14 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		//gyroRate is the rate from the gyroscope
 		predictBias = bias;
 		\end{lstlisting}
-		Step 2: Predict the error covariance matrix $P_{k|k-1}$
+		Step 2: Predict the error covariance matrix $P_{k|k-1}$,
 		\begin{equation}
 		P_{k|k-1}=AP_{k-1|k-1}A^{T}+Q
 		\end{equation}
 
-		\begin{equation}
+		where $Q$ is the process noise covariance matrix.
+
+		\begin{equation*}
 		\left[
 		\begin{array}{c c}
 		P_{00}	&	P_{01}\\
@@ -175,10 +177,13 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		- \Delta T & 1
 		\end{array} \right]
 		+
+		\end{equation*}
+		\begin{equation}
+		+
 		\left[
 		\begin{array}{c c}
-		Q_{1}	&	0\\
-		0	&	Q_{2}
+		\sigma(\dot{\theta}_{gyro})\cdot\Delta T^{2}	&	0\\
+		0	&	 \sigma(\dot{\theta_{b}})
 		\end{array} \right]
 		\end{equation}
 
@@ -213,6 +218,8 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\begin{equation}
 		S_{k}=HP_{k|k-1}H^{T}+R
 		\end{equation}
+
+		where $R$ is the measurement noise covariance matrix.
 
 		\begin{equation}
 		S_{k}=
@@ -347,6 +354,13 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\end{lstlisting}
 
 	\section{Velocity Estimation}
+	Kalman filters are used to estimate the angles, $\theta_{k}$, and in order to find the angular velocity, $\dot{\theta}_{k}$, we can calculate the derivative of the angle.
+	\begin{equation}
+	\label{thetaDot}
+	\dot{\theta}_{k}=\frac{\theta_{k}-\theta_{k-1}}{\Delta T}
+	\end{equation}
+
+	Question: Is the $\Delta T$ in the above equation the same $\Delta T$ as in the attitude estimation equations? If they differ, I think that $\Delta T$ that is used in the Kalman filter is the sample rate for the sensor values, and $\Delta T$ in equation (\ref{thetaDot}) is the period for a Kalman filter iteration.
 
 \chapter{Flight Control Theory}
 
