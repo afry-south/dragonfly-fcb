@@ -102,8 +102,7 @@ typedef struct {
 /* Private define ------------------------------------------------------------*/
 #define RECEIVER_PRINT_SAMPLING_TASK_PRIO				1
 #define RECEIVER_PRINT_MINIMUM_SAMPLING_TIME			22	// Since the receiver pulses have this update frequency
-#define RECEIVER_SAMPLING_MAX_STRING_SIZE				256
-#define RECEIVER_CALRES_MAX_STRING_SIZE					256
+#define RECEIVER_SAMPLING_MAX_STRING_SIZE				160
 #define RECEIVER_SWITCH_ON_MIN_VAL						INT16_MAX*8/10
 #define RECEIVER_SWITCH_OFF_MAX_VAL						INT16_MIN*8/10
 
@@ -239,13 +238,13 @@ ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const u
 	/* Receiver value print sampling handler thread creation
 	 * Task function pointer: ReceiverPrintSamplingTask
 	 * Task name: RC_PRINT_SAMPL
-	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Stack depth: 2*configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: RECEIVER_PRINT_SAMPLING_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: ReceiverPrintSamplingTask
 	 * */
 	if (pdPASS != xTaskCreate((pdTASK_CODE )ReceiverPrintSamplingTask, (signed portCHAR*)"RC_PRINT_SAMPL",
-					configMINIMAL_STACK_SIZE, NULL, RECEIVER_PRINT_SAMPLING_TASK_PRIO,
+					2*configMINIMAL_STACK_SIZE, NULL, RECEIVER_PRINT_SAMPLING_TASK_PRIO,
 					&ReceiverPrintSamplingTaskHandle)) {
 		ErrorHandler();
 		return RECEIVER_ERROR;
@@ -470,7 +469,7 @@ bool GetReceiverPIDFlightSet(void) {
  */
 void PrintReceiverValues(const SerializationType_TypeDef serializationType)
 {
-	static char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE];
+	char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE];
 
 	if(serializationType == NO_SERIALIZATION) {
 		strncpy(sampleString, "Receiver channel values:\r\nStatus: ", RECEIVER_SAMPLING_MAX_STRING_SIZE);

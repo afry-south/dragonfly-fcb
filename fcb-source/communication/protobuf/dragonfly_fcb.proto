@@ -32,7 +32,7 @@ message SensorSamplesProto {
 	optional float magZ = 9;
 }
 
-// Actual flight states as estimated by the on-board Kalman and sensor fusion algorithms
+// Actual flight states as estimated by the on-board Kalman and/or sensor fusion algorithms
 message FlightStatesProto {
 	optional float posX = 1; // World state coordinates [m]
 	optional float posY = 2;
@@ -40,12 +40,12 @@ message FlightStatesProto {
 	optional float velX = 4;
 	optional float velY = 5;
 	optional float velZ = 6;
-	optional float angRoll = 7; // [rad]
-	optional float angPitch = 8;
-	optional float angYaw = 9;
-	optional float rateRoll = 10; // [rad/s]
-	optional float ratePitch = 11;
-	optional float rateYaw = 12;
+	optional float rollAngle = 7; // [rad]
+	optional float pitchAngle = 8;
+	optional float yawAngle = 9;
+	optional float rollRate = 10; // [rad/s]
+	optional float pitchRate = 11;
+	optional float yawRate = 12;
 }
 
 // Sets the PID control parameters used by the Flight Control Board control algorithms

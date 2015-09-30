@@ -10,6 +10,7 @@
 #include "common.h"
 #include "motor_control.h"
 #include "flight_control.h"
+#include "rotation_transformation.h"
 #include "pid_control.h"
 #include "receiver.h"
 #include "task_status.h"
@@ -101,6 +102,9 @@ static void InitSystem(void) {
 	if (FCB_OK != FcbSensorsConfig()) {
 		ErrorHandler();
 	}
+
+	/* Init the rotation matrix */
+	InitRotationMatrix();
 
 	/* Initialize PID control variables */
 	InitPIDControllers();

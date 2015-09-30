@@ -1,6 +1,8 @@
 #ifndef FCB_SENSORS_H
 #define FCB_SENSORS_H
 
+#include "usbd_cdc_if.h"
+
 #include "fcb_retval.h"
 #include <stdint.h>
 
@@ -62,8 +64,10 @@ int FcbSensorsConfig(void);
  */
 void FcbSendSensorMessageFromISR(uint8_t msg);
 
+void PrintSensorValues(const SerializationType_TypeDef serializationType);
 SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 SensorsErrorStatus StopSensorSamplingTask(void);
+void SetSensorPrintSamplingSerialization(const SerializationType_TypeDef serializationType);
 
 /**
  * Wrapper fcn for enabling GPIO pin with default settings for receiving

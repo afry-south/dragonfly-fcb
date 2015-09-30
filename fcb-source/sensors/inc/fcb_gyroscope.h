@@ -8,6 +8,7 @@
 
 #include "fcb_retval.h"
 #include "stm32f3_discovery.h"
+#include "arm_math.h"
 
 /**
  * The Data Ready input from the gyro sensor.
@@ -37,12 +38,6 @@ void FetchDataFromGyroscope(void);
  *
  * It is updated at a rate of 94.5Hz (configurable).
  */
-void GetAngleDot(float * xAngleDot, float * yAngleDot, float * zAngleDot);
-
-/**
- * Print gyroscope values to USB, intended to be used from the
- * sensor sampling task.
- */
-void PrintGyroscopeValues(void);
+void GetAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float32_t * zAngleDot);
 
 #endif /* GYROSCOPE_H */

@@ -449,7 +449,7 @@ void CreateUSBComTasks(void) {
 	 * Handle: USBComPortRxTaskHandle
 	 * */
 	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask, (signed portCHAR*)"USB_COM_RX", configMINIMAL_STACK_SIZE,
+			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask, (signed portCHAR*)"USB_COM_RX", 3*configMINIMAL_STACK_SIZE,
 					NULL, USB_COM_RX_TASK_PRIO, &USBComPortRxTaskHandle)) {
 		ErrorHandler();
 	}
@@ -457,13 +457,13 @@ void CreateUSBComTasks(void) {
 	/* USB Virtual Com Port Tx handler task creation
 	 * Task function pointer: USBComPortRXTask
 	 * Task name: USB_COM_TX
-	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Stack depth: 3*configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: USB_COM_TX_THREAD_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: USBComPortTxTaskHandle
 	 * */
 	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )USBComPortTXTask, (signed portCHAR*)"USB_COM_TX", configMINIMAL_STACK_SIZE,
+			!= xTaskCreate((pdTASK_CODE )USBComPortTXTask, (signed portCHAR*)"USB_COM_TX", 1*configMINIMAL_STACK_SIZE,
 					NULL, USB_COM_TX_TASK_PRIO, &USBComPortTxTaskHandle)) {
 		ErrorHandler();
 	}
@@ -507,15 +507,6 @@ void CreateUSBComSemaphores(void) {
 }
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @param  None
- * @retval None
- */
-//static void Error_Handler(void)
-//{
-//  /* Add your own code here */
-//}
-/**
  * @}
  */
 
@@ -523,9 +514,5 @@ void CreateUSBComSemaphores(void) {
  * @}
  */
 
-/**
- * @}
- */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/*****END OF FILE****/
 
