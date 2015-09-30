@@ -95,7 +95,6 @@ The BLM motors used for this project have an “outrunner” architecture, which
 \chapter{State Estimation Theory}
 
 	\section{Attitude Estimation}
-		\subsection{Accelerometer \& Gyroscope Fusion: Kalman Filter}
 
 		Step 1: Predict the states $\hat{x}_{k|k-1}$
 		\begin{equation}
@@ -144,8 +143,9 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\end{equation*}
 
 		\begin{lstlisting}[frame=single]
-		angle += dt*newRate - dt*bias;
-		//newRate is the rate from the gyroscope
+		predictAngle = angle + dt*gyroRate - dt*bias;
+		//gyroRate is the rate from the gyroscope
+		predictBias = bias;
 		\end{lstlisting}
 		Step 2: Predict the error covariance matrix $P_{k|k-1}$
 		\begin{equation}
@@ -206,8 +206,8 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\end{equation}
 
 		\begin{lstlisting}[frame=single]
-		y = newAngle - angle; 
-		//newAngle is the angle from the accelerometer
+		y = sensorAngle - predictAngle; 
+		//sensorAngle is the angle computed from sensor values
 		\end{lstlisting}
 		Step 4: Calculate the innovation covariance matrix $S_{k}$
 		\begin{equation}
@@ -297,8 +297,8 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\end{equation}
 
 		\begin{lstlisting}[frame=single]
-		angle += K[0]*y;
-		bias += K[1]*y;
+		correctAngle = predictAngle + K[0]*y;
+		correctBias = predictBias + K[1]*y;
 		\end{lstlisting}
 		Step 7: Update the error covariance matrix prediction $P_{k|k-1}$ to $P_{k|k}$
 		\begin{equation}
