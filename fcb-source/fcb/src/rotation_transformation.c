@@ -8,6 +8,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "rotation_transformation.h"
+#include "fcb_accelerometer_magnetometer.h"
 
 #include <math.h>
 
@@ -67,6 +68,64 @@ void UpdateRotationMatrix(float32_t roll, float32_t pitch, float32_t yaw)
 	/* Calculate the DCM inverse, which is the same as matrix transpose since DCM is an orthonormal matrix. The inverse
 	 * transforms FROM the body frame TO the inertial frame*/
 	arm_mat_trans_f32(&DCM, &DCMInv);
+}
+
+/*
+ * @brief	Returns the roll angle calculated from accelerometer values.
+ * @param	None
+ * @retval	rollAngle: roll angle in radians.
+ */
+float32_t GetAccRollAngle(void)
+{
+	float32_t accX;
+	float32_t accY;
+	float32_t accZ;
+	float32_t rollAngle;
+
+	GetAcceleration(&accX, &accY, &accZ);
+	rollAngle = atan2(accY, accZ);
+
+	return rollAngle;
+}
+
+/*
+ * @brief	Returns the pitch angle calculated from accelerometer values.
+ * @param	None
+ * @retval	pitchAngle: pitch angle in radians.
+ */
+float32_t GetAccPitchAngle(void)
+{
+	float32_t accX;
+	float32_t accY;
+	float32_t accZ;
+	float32_t pitchAngle;
+
+	GetAcceleration(&accX, &accY, &accZ);
+	pitchAngle = atan2(accX, accZ);
+
+	return pitchAngle;
+}
+
+/*
+ * @brief	Returns the yaw angle calculated from magnetometer values.
+ * @param	roll: roll angle in radians (kalman estimated or from acc)
+ * @param	pitch: pitch angle in radians (kalman estimated or from acc)
+ * @retval	yawAngle: yaw angle in radians.
+ */
+float32_t GetMagYawAngle(const float32_t roll, const float32_t pitch)
+{
+	float32_t magX;
+	float32_t magY;
+	float32_t magZ;
+	float32_t yawAngle;
+
+	GetMagVector(&magX, &magY, &magZ);
+
+	/* Equation found at https://www.pololu.com/file/download/...?file_id=0J434 */
+	yawAngle = atan2(magX*arm_sin_f32(roll)*arm_sin_f32(pitch)+magY*arm_cos_f32(roll)-magZ*arm_sin_f32(roll)*arm_cos_f32(pitch),
+						magX*arm_cos_f32(pitch)+magZ*arm_sin_f32(pitch));
+
+	return yawAngle;
 }
 
 /* Private functions ---------------------------------------------------------*/

@@ -19,6 +19,8 @@
 /* Exported functions ------------------------------------------------------- */
 void InitRotationMatrix(void);
 void UpdateRotationMatrix(float32_t roll, float32_t pitch, float32_t yaw);
+float32_t GetAccRollAngle(void);
+float32_t GetAccPitchAngle(void);
 
 #endif /* INC_ROTATION_TRANSFORMATION_H_ */
 
