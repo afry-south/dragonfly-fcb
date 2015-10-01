@@ -43,10 +43,6 @@ extern void xPortSysTickHandler(void);
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == USER_BUTTON_PIN) {
-#ifdef FCB_SENSORS_SCILAB_CALIB
-	  FcbFetchAccMagCalibrationSample();
-#endif
-
 		UserButtonPressed++;
 		if (UserButtonPressed > 0x7) {
 			BSP_LED_Toggle(LED7);

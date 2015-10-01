@@ -131,11 +131,4 @@ void PrintAccelerometerValues(void);
  */
 void PrintMagnetometerValues(void);
 
-#ifdef FCB_SENSORS_SCILAB_CALIB
-/**
- * When called, the sensor value is sampled.
- */
-void FcbFetchAccMagCalibrationSample(void);
-#endif
-
 #endif /* FCB_ACCELEROMETER_H */

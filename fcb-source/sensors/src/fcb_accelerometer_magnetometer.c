@@ -15,6 +15,7 @@
  * @see fcb_accelerometer.h
  */
 #include "fcb_accelerometer_magnetometer.h"
+#include "fcb_sensor_calibration.h"
 #include "fcb_sensors.h"
 #include "fcb_error.h"
 #include "lsm303dlhc.h"
@@ -45,7 +46,13 @@ static float32_t calibrationSamples[ACCMAG_CALIBRATION_SAMPLES_N][ACCMAG_AXES_N]
 static float32_t sXYZDotDot[] = { 0, 0 , 0 };
 static float32_t sXYZMagVector[] = { 0, 0 , 0 };
 
-static uint8_t sampleFetchIsArmed = 0; /* armed by USER button */
+/**
+ * @see FcbSensorCalibrationParmIndex for what the numbers mean.
+ */
+static float32_t sXYZMagCalPrm[CALIB_IDX_MAX] {
+  - 0.0127656,    0.0804974,    0.0338544,    0.9025001,    0.9189748,    0.9415154
+}; /* values copied from MagnetometerCalibration.sce */
+
 static enum FcbMagnetometerMode magMode = MAGMTR_UNINITIALISED;
 static enum FcbAccelerometerMode accMode = ACCMTR_UNINITIALISED;
 
@@ -153,7 +160,6 @@ void BeginMagnetometerCalibration(uint8_t samples) {
   configASSERT(samples >= ACCMAG_CALIBRATION_SAMPLES_N);
 
   sampleMax = samples;
-  sampleFetchIsArmed = 0;
   magMode = MAGMTR_CALIBRATING;
 #ifdef FCB_ACCMAG_DEBUG
   BSP_LED_On(LED6); /** ACCMAG_TODO - LED doesn't really work to indicate btn press. Nice to have - delete if hard to fix */
@@ -190,21 +196,20 @@ void FetchDataFromMagnetometer(void) {
     sXYZMagVector[X_IDX] = magnetoMeterData[X_IDX];
     sXYZMagVector[Y_IDX] = - magnetoMeterData[Y_IDX];
     sXYZMagVector[Z_IDX] = - magnetoMeterData[Z_IDX];
+
+    sXYZMagVector[X_IDX] = (sXYZMagVector[X_IDX] - sXYZMagCalPrm[X_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[X_SCALING_CALIB_IDX];
+    sXYZMagVector[Y_IDX] = (sXYZMagVector[Y_IDX] - sXYZMagCalPrm[Y_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[Y_SCALING_CALIB_IDX];
+    sXYZMagVector[Z_IDX] = (sXYZMagVector[Z_IDX] - sXYZMagCalPrm[Z_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[Z_SCALING_CALIB_IDX];
+
 #ifdef FCB_ACCMAG_DEBUG
     HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
 #endif
   }
 
   if (MAGMTR_CALIBRATING == magMode) {
-    if ((sampleIndex < sampleMax) &&  (0 != sampleFetchIsArmed)) {
-      sampleFetchIsArmed = 0;
-#ifdef FCB_ACCMAG_DEBUG
-      BSP_LED_On(LED6); /* indication to press USER btn again */
-#endif /* FCB_ACCMAG_DEBUG */
+    if (sampleIndex < sampleMax) {
 
-#ifdef FCB_SENSORS_SCILAB_CALIB
-      PrintMagnetometerValues();
-#else
+#ifndef FCB_SENSORS_SCILAB_CALIB
       /* store sample */
       calibrationSamples[sampleIndex][X_IDX] = sXYZMagVector[X_IDX];
       calibrationSamples[sampleIndex][Y_IDX] = sXYZMagVector[Y_IDX];
@@ -228,7 +233,6 @@ void FetchDataFromMagnetometer(void) {
 #endif
       magMode = MAGMTR_FETCHING;
       sampleIndex = 0;
-      sampleFetchIsArmed = 0;
     }
   }
 }
@@ -270,13 +274,6 @@ void PrintMagnetometerValues(void) {
   USBComSendString(sampleString);
 }
 
-void FcbFetchAccMagCalibrationSample(void) {
-  if ((MAGMTR_CALIBRATING == magMode) || (ACCMTR_CALIBRATING == accMode)) {
-    sampleFetchIsArmed = 1;
-    BSP_LED_Off(LED6); /* indication to operator */
-  }
-}
-
 
 #ifdef ACCMAG_TODO
 void GaussNewtonLeastSphereFit(void) {
@@ -311,4 +308,3 @@ void GaussNewtonLeastSphereFit(void) {
   float32_t JtR[6]; //The right-hand side of equation 2.
 }
 #endif
-
