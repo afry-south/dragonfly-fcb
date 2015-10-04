@@ -26,6 +26,7 @@ typedef enum {
 
 typedef enum {
 	NO_SERIALIZATION,
+  CALIBRATION_SERIALIZATION,
 	PROTOBUFFER_SERIALIZATION
 } SerializationType_TypeDef;
 

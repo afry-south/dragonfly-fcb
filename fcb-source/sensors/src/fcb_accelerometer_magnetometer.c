@@ -49,7 +49,7 @@ static float32_t sXYZMagVector[] = { 0, 0 , 0 };
 /**
  * @see FcbSensorCalibrationParmIndex for what the numbers mean.
  */
-static float32_t sXYZMagCalPrm[CALIB_IDX_MAX] {
+static float32_t sXYZMagCalPrm[CALIB_IDX_MAX] = {
   - 0.0127656,    0.0804974,    0.0338544,    0.9025001,    0.9189748,    0.9415154
 }; /* values copied from MagnetometerCalibration.sce */
 

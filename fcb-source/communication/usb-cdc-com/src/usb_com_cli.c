@@ -874,7 +874,7 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
 	int8_t* pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
 	static portBASE_TYPE lParameterNumber = 0;
-
+	SerializationType_TypeDef serialisationType = NO_SERIALIZATION;
 	/* Check the write buffer is not NULL */
 	configASSERT(pcWriteBuffer);
 
@@ -938,12 +938,20 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
 		configASSERT(pcParameter);
 
 		/* Set serialization and start the receiver value sampling task */
-		if (pcParameter[0] == 'n') {
-			SetSensorPrintSamplingSerialization(NO_SERIALIZATION);
-		} else if (pcParameter[0] == 'p') {
-			SetSensorPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
-		}
 
+    switch (pcParameter[0]) {
+      case 'n':
+        serialisationType = NO_SERIALIZATION;
+        break;
+      case 'p':
+        serialisationType = PROTOBUFFER_SERIALIZATION;
+        break;
+		 case 'c':
+       serialisationType = CALIBRATION_SERIALIZATION;
+       break;
+    }
+
+    SetSensorPrintSamplingSerialization(serialisationType);
 		/* Start the sensor sample printing task */
 		StartSensorSamplingTask(sensorSampleTime, sensorSampleDuration);
 	}
