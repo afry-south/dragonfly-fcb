@@ -262,18 +262,6 @@ void PrintAccelerometerValues(void) {
   USBComSendString(sampleString);
 }
 
-void PrintMagnetometerValues(void) {
-  static char sampleString[ACCMAG_SAMPLING_MAX_STRING_SIZE];
-
-  snprintf((char*) sampleString, ACCMAG_SAMPLING_MAX_STRING_SIZE,
-      "Magnetometer readings [Gauss]:\nMagX: %1.6f\nMagY: %1.6f\nMagZ: %1.6f\n\r\n",
-      sXYZMagVector[X_IDX],
-      sXYZMagVector[Y_IDX],
-      sXYZMagVector[Z_IDX]);
-
-  USBComSendString(sampleString);
-}
-
 
 #ifdef ACCMAG_TODO
 void GaussNewtonLeastSphereFit(void) {

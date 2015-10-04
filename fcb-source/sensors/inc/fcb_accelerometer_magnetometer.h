@@ -125,10 +125,4 @@ void GetMagVector(float32_t * x, float32_t * y, float32_t * z);
  */
 void PrintAccelerometerValues(void);
 
-/**
- * ditto magnetometer
- * @see PrintAccelerometerValues
- */
-void PrintMagnetometerValues(void);
-
 #endif /* FCB_ACCELEROMETER_H */
