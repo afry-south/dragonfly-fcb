@@ -98,7 +98,7 @@ void BeginMagnetometerCalibration(uint8_t samples);
  *
  * The caller allocates memory for input variables.
  */
-void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot);
+void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot);
 
 
 /**

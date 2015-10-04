@@ -237,7 +237,7 @@ void FetchDataFromMagnetometer(void) {
   }
 }
 
-void GetAcceleration(int16_t * xDotDot, int16_t * yDotDot, int16_t * zDotDot) {
+void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot) {
   *xDotDot = sXYZDotDot[X_IDX];
   *yDotDot = sXYZDotDot[Y_IDX];
   *zDotDot = sXYZDotDot[Z_IDX];

@@ -1,7 +1,7 @@
 exec('GaussNewton.sce'); // working directory is assumed to be dir of this file.
 
 // ============ entry point of script ==========================
-// entry point means things run sequientially from here
+// entry point means things run sequentially from here
 
 // clc cmd deliberately commented out
 
@@ -36,7 +36,7 @@ MagSamples = [
 //
 // NOTE:
 // offsets may not be zero - that will mean divide by zero in the betaChange
-// calculation in function gaussNewtonLeastSquares!
+// calculation in function GaussNewtonLeastSquares!
 calBeta = [-0.01; 0.01; 0.1; 1; 1; 1]; // N x 1 matrix, initial guess of beta
 
 [sampleRows, sampleColumns] = size(MagSamples);
@@ -60,7 +60,7 @@ end
 debugShowVar("normSamp", normSamp);
 
 maxIterations = 10
-calBeta = gaussNewtonLeastSquares(normSamp, calBeta, maxIterations);
+calBeta = GaussNewtonLeastSquares(normSamp, calBeta, maxIterations);
 
 // then convert beta offsets (calBeta[1..3])back to local magnetic vector ...
 // the beta scaling (calBeta[4..6]) is already correct.
@@ -70,6 +70,6 @@ showVar("calBeta - denormalised", calBeta');
 printf("Double Check:\n");
 
 
-displayNorms(MagSamples, calBeta);
+DisplayNorms(MagSamples, calBeta);
 
 // calBeta result: - 0.0127656    0.0804974    0.0338544    0.9025001    0.9189748    0.9415154 

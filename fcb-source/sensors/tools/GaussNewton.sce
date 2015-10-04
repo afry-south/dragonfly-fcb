@@ -11,10 +11,11 @@
 // radius 1 at good calibration. It is 
 // 
 // @param normSamp N by 3 matrix
-// @param calBetaInitialGuess - (xij - Bij) * Bij+3 for j = 1..3. A good helps lets GN converge faster
+// @param calBetaInitialGuess - 6 x 1 matrix
+//                              (xij - Bij) * Bij+3 for j = 1..3. A good helps lets GN converge faster
 //                                                                a bad one lets GN diverge
 // @param maxIterations set the maximum number of iterations, unless the iterations have already converged before.
-function retVal = gaussNewtonLeastSquares(normSamp, calBetaInitialGuess, maxIterations)
+function retVal = GaussNewtonLeastSquares(normSamp, calBetaInitialGuess, maxIterations)
     calBeta = calBetaInitialGuess;
     iteration = 0;
     while iteration < maxIterations do
@@ -55,7 +56,7 @@ showDebug = 1;
 // on the following lines.
 function debugShowVar(variableName, variable)
     if showDebug <> 0 then
-        disp(variableName);
+        printf("%s\n", variableName);
         disp(variable);
     end
 endfunction
@@ -74,7 +75,7 @@ endfunction
 // param samples: the N x 6 matrix of sensor samples.
 // param calBeta: the 1 x 6 matrix of offsets & scalings (1 scaling plus 1 offset per x y z axis)
 // x_ij = (sample_ij - beta_j) * beta_j+3
-function retval = getResiduals(samples, calBeta)
+function retval = GetResiduals(samples, calBeta)
     [rSampSize, cSampSize] = size(samples);
     myResiduals = ones(rSampSize, 1);
     for i = 1:rSampSize
@@ -91,7 +92,7 @@ function retval = getResiduals(samples, calBeta)
     retval = myResiduals;
 endfunction
 
-function retVal = getJacobian(samples, calBeta)
+function retVal = GetJacobian(samples, calBeta)
    [rSampSize, cSampSize] = size(samples); // nbr of rows & columns
     myJacobian = zeros(rSampSize, 6);
     for i = 1:rSampSize
@@ -109,15 +110,15 @@ function retVal = getJacobian(samples, calBeta)
 endfunction
 
 function retval = gnStep(samples, calBeta)
-    myResiduals = getResiduals(samples, calBeta);
+    myResiduals = GetResiduals(samples, calBeta);
     disp("myResiduals");
     disp(myResiduals');
     
     // Jacobian elements are residual function derived with
-    // respect to offset & scaling respectively - see getJacobian comments
-    myJacobian = getJacobian(samples, calBeta);
-    disp("myJacobian");
-    disp(myJacobian);
+    // respect to offset & scaling respectively - see GetJacobian comments
+    myJacobian = GetJacobian(samples, calBeta);
+    debugShowVar("myJacobian", myJacobian);
+
     // let's choose S, a number representing total error, to be a sum
     // of the residuals squared:
     
@@ -142,7 +143,7 @@ function retval = gnStep(samples, calBeta)
 endfunction
 
 // displays norms of raw and calibrated samples respectively.
-function displayNorms(samples, calBeta)
+function DisplayNorms(samples, calBeta)
 [nSamp, dummy] = size(samples);
 for i=1:nSamp
     calibrated(1:3) = [ (samples(i, 1) - calBeta(1, 1)) * calBeta(4,1),
