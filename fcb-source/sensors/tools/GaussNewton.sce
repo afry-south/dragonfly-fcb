@@ -20,7 +20,7 @@ function retVal = gaussNewtonLeastSquares(normSamp, calBetaInitialGuess, maxIter
     while iteration < maxIterations do
         oldBeta = calBeta;
         
-        disp("iteration:" + string(iteration));
+        printf("iteration:%i", iteration);
         [calBeta] = gnStep(normSamp, calBeta);
         
         disp("calBeta");
@@ -31,12 +31,12 @@ function retVal = gaussNewtonLeastSquares(normSamp, calBetaInitialGuess, maxIter
         for i = 1:6
             sumBetaChange = sumBetaChange + abs(((calBeta(i, 1) - oldBeta(i, 1))) / oldBeta(i, 1));
         end
-        disp("sumBetaChange" + string(sumBetaChange));
+        printf("sumBetaChange:%f\n", sumBetaChange);
 
         // ... and break the loop if the change is sufficiently small.
         // What counts as 'small' was arbitrarily chosen.
         if sumBetaChange < 0.001 then
-            disp("break at sumBetaChange:" + string(sumBetaChange));
+            printf("break at sumBetaChange: %f\n", sumBetaChange);
             break
         end
         iteration = iteration + 1;
@@ -139,4 +139,16 @@ function retval = gnStep(samples, calBeta)
     new_calBeta = calBeta - myDelta;
     
     retval = new_calBeta
+endfunction
+
+// displays norms of raw and calibrated samples respectively.
+function displayNorms(samples, calBeta)
+[nSamp, dummy] = size(samples);
+for i=1:nSamp
+    calibrated(1:3) = [ (samples(i, 1) - calBeta(1, 1)) * calBeta(4,1),
+        (samples(i, 2) - calBeta(2, 1)) * calBeta(5,1),
+        (samples(i, 3) - calBeta(3, 1)) * calBeta(6,1) ];
+                            
+    printf("norm(MagSamples[%i]): %f norm(calibrated[%i]):%f\n", i, norm(samples(i, 1:3)),i, norm(calibrated));
+end
 endfunction

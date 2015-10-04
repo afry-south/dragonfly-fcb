@@ -236,7 +236,7 @@ static const CLI_Command_Definition_t getSensorsCommand = { (const int8_t * cons
 
 /* Structure that defines the "start-sensor-sampling" command line command. */
 static const CLI_Command_Definition_t startSensorSamplingCommand = { (const int8_t * const ) "start-sensor-sampling",
-		(const int8_t * const ) "\r\nstart-sensor-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints sensor values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
+		(const int8_t * const ) "\r\nstart-sensor-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints sensor values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto, c=calibration)\r\n",
 		CLIStartSensorSampling, /* The function to run. */
 		3 /* Number of parameters expected */
 };

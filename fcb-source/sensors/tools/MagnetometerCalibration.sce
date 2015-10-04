@@ -67,14 +67,9 @@ calBeta = gaussNewtonLeastSquares(normSamp, calBeta, maxIterations);
 calBeta(1:3,1) = calBeta(1:3,1) * localMagField;
 showVar("calBeta - denormalised", calBeta');
 
-// and ... double check:
 printf("Double Check:\n");
-for i=1:nSamp
-    calibrated(1:3) = [ (MagSamples(i, 1) - calBeta(1, 1)) * calBeta(4,1),
-        (MagSamples(i, 2) - calBeta(2, 1)) * calBeta(5,1),
-        (MagSamples(i, 3) - calBeta(3, 1)) * calBeta(6,1) ];
-                            
-    printf("norm(MagSamples[%i]): %f norm(calibrated[%i]):%f\n", i, norm(MagSamples(i, 1:3)),i, norm(calibrated));
-end
+
+
+displayNorms(MagSamples, calBeta);
 
 // calBeta result: - 0.0127656    0.0804974    0.0338544    0.9025001    0.9189748    0.9415154 
