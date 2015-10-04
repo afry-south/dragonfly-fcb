@@ -999,7 +999,7 @@ static portBASE_TYPE CLIStartMagnetometerCalibration(int8_t *pcWriteBuffer, size
 
   strncpy((char*) pcWriteBuffer, "Starting Magnetometer calibration, press USER btn 6 times ...\r\n", xWriteBufferLen);
 
-  BeginMagnetometerCalibration(ACCMAG_CALIBRATION_SAMPLES_N);
+  BeginAccMagMtrCalibration(ACCMAG_CALIBRATION_SAMPLES_N);
   return pdFALSE; /* false indicates CLI activity completed */
 }
 

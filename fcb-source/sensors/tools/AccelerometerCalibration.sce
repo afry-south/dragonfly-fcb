@@ -41,3 +41,8 @@ calBeta(1:3) = g * calBeta(1:3);
 DisplayNorms(accSamples , calBeta);
 
 showVar("calBeta", calBeta');
+
+// calBeta
+ //  - 0.1155430  - 0.0068883    0.4760651    0.9649397    0.9764581    0.9652411  
+// need flatter surface and more samples to improve it.
+// The resulting norms fluctuate quite a bit from 9.82 m/s2

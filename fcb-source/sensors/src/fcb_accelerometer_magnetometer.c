@@ -31,6 +31,10 @@
 
 #define FCB_ACCMAG_DEBUG
 
+#ifdef FCB_ACCMAG_DEBUG
+#include "stm32f3xx_hal_gpio.h"
+#endif
+
 enum { ACCMAG_AXES_N = 3 };
 enum { X_IDX = 0 }; /* index into sGyroXYZDotDot & ditto Offset sXYZMagVectors */
 enum { Y_IDX = 1 }; /* as above */
@@ -47,15 +51,25 @@ static float32_t sXYZDotDot[] = { 0, 0 , 0 };
 static float32_t sXYZMagVector[] = { 0, 0 , 0 };
 
 /**
+ * Magnetometer calibration offset & scaling coefficients
+ *
  * @see FcbSensorCalibrationParmIndex for what the numbers mean.
  */
 static float32_t sXYZMagCalPrm[CALIB_IDX_MAX] = {
-  - 0.0127656,    0.0804974,    0.0338544,    0.9025001,    0.9189748,    0.9415154
+    - 0.0127656,    0.0804974,    0.0338544,    0.9025001,    0.9189748,    0.9415154
 }; /* values copied from MagnetometerCalibration.sce */
 
-static enum FcbMagnetometerMode magMode = MAGMTR_UNINITIALISED;
-static enum FcbAccelerometerMode accMode = ACCMTR_UNINITIALISED;
 
+/**
+ * Accelerometer offset & scaling coefficients
+ * @see FcbSensorCalibrationParmIndex for what the numbers mean.
+ */
+static float32_t sXYZAccCalPrm[CALIB_IDX_MAX] = {
+    - 0.1155430,  - 0.0068883,    0.4760651,    0.9649397,    0.9764581,    0.9652411
+}; /* values copied from bottom of AccelerometerCalibration.sce */
+
+
+static enum FcbAccMagMode accMagMode = ACCMAGMTR_UNINITIALISED;
 
 /* static fcn declarations */
 
@@ -71,7 +85,7 @@ static void GaussNewtonLeastSphereFit(void);
 uint8_t FcbInitialiseAccMagSensor(void) {
   uint8_t retVal = FCB_OK;
 
-  if ((magMode != MAGMTR_UNINITIALISED) && (accMode != ACCMTR_UNINITIALISED)) {
+  if (accMagMode != ACCMAGMTR_UNINITIALISED) {
     /* they are already initialised - this is a logical error. */
     return FCB_ERR_INIT;
   }
@@ -118,8 +132,7 @@ uint8_t FcbInitialiseAccMagSensor(void) {
   LSM303DLHC_AccReadXYZ(sXYZDotDot);
   LSM303DLHC_MagReadXYZ(sXYZMagVector);
 
-  accMode = ACCMTR_FETCHING;
-  magMode = MAGMTR_FETCHING;
+  accMagMode = ACCMAGMTR_FETCHING;
   return retVal;
 }
 
@@ -139,31 +152,33 @@ void FetchDataFromAccelerometer(void) {
   HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_9);
 #endif
 
-  LSM303DLHC_AccReadXYZ(acceleroMeterData);
+  if (ACCMAGMTR_FETCHING == accMagMode) {
+    LSM303DLHC_AccReadXYZ(acceleroMeterData);
+    /* from accelerometer to quadcopter coordinate axes
+     * see "Sensors" page in Wiki.
+     */
+    sXYZDotDot[X_IDX] = acceleroMeterData[X_IDX];
+    sXYZDotDot[Y_IDX] = -acceleroMeterData[Y_IDX];
+    sXYZDotDot[Z_IDX] = -acceleroMeterData[Z_IDX];
+  }
 
-  /* TODO apply calibration */
-
-  /* from accelerometer to quadcopter coordinate axes
-   * see "Sensors" page in Wiki.
-   */
-  sXYZDotDot[X_IDX] = acceleroMeterData[X_IDX];
-  sXYZDotDot[Y_IDX] = -acceleroMeterData[Y_IDX];
-  sXYZDotDot[Z_IDX] = -acceleroMeterData[Z_IDX];
+  if (ACCMAGMTR_FETCHING == accMagMode) {
+    sXYZDotDot[X_IDX] = (sXYZDotDot[X_IDX] - sXYZAccCalPrm[X_OFFSET_CALIB_IDX]) * sXYZAccCalPrm[X_SCALING_CALIB_IDX];
+    sXYZDotDot[Y_IDX] = (sXYZDotDot[Y_IDX] - sXYZAccCalPrm[Y_OFFSET_CALIB_IDX]) * sXYZAccCalPrm[Y_SCALING_CALIB_IDX];
+    sXYZDotDot[Z_IDX] = (sXYZDotDot[Z_IDX] - sXYZAccCalPrm[Z_OFFSET_CALIB_IDX]) * sXYZAccCalPrm[Z_SCALING_CALIB_IDX];
+  }
 
 #ifdef FCB_ACCMAG_DEBUG
   HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_9);
 #endif
 }
 
-void BeginMagnetometerCalibration(uint8_t samples) {
+void BeginAccMagMtrCalibration(uint8_t samples) {
   configASSERT(samples < 251);
   configASSERT(samples >= ACCMAG_CALIBRATION_SAMPLES_N);
 
   sampleMax = samples;
-  magMode = MAGMTR_CALIBRATING;
-#ifdef FCB_ACCMAG_DEBUG
-  BSP_LED_On(LED6); /** ACCMAG_TODO - LED doesn't really work to indicate btn press. Nice to have - delete if hard to fix */
-#endif
+  accMagMode = ACCMAGMTR_CALIBRATING;
 }
 
 
@@ -174,7 +189,7 @@ void FetchDataFromMagnetometer(void) {
 
   {
     if ((call_counter % 75) == 0) {
-      if (MAGMTR_FETCHING == magMode) {
+      if (ACCMAGMTR_FETCHING == accMagMode) {
         BSP_LED_Toggle(LED6);
       }
     }
@@ -182,13 +197,13 @@ void FetchDataFromMagnetometer(void) {
   }
 
   /* measure duration with oscilloscope on pin PD11 */
-    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
+  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
 #endif
 
-  if (MAGMTR_FETCHING == magMode || MAGMTR_CALIBRATING == magMode) {
+  if (ACCMAGMTR_FETCHING == accMagMode) {
     LSM303DLHC_MagReadXYZ(magnetoMeterData);
 
-    /* TODO ... and then copy them into a mutex-protected sXYZMagVector here */
+    /* TODO ... and then copy them into a mutex-protected sXYZMagVector here?? */
 
     /* adjust magnetometer axes to the axes of the quadcopter fuselage
      * see "Sensors" page in Wiki.
@@ -196,17 +211,19 @@ void FetchDataFromMagnetometer(void) {
     sXYZMagVector[X_IDX] = magnetoMeterData[X_IDX];
     sXYZMagVector[Y_IDX] = - magnetoMeterData[Y_IDX];
     sXYZMagVector[Z_IDX] = - magnetoMeterData[Z_IDX];
+  }
 
+  if (ACCMAGMTR_FETCHING == accMagMode) {
     sXYZMagVector[X_IDX] = (sXYZMagVector[X_IDX] - sXYZMagCalPrm[X_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[X_SCALING_CALIB_IDX];
     sXYZMagVector[Y_IDX] = (sXYZMagVector[Y_IDX] - sXYZMagCalPrm[Y_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[Y_SCALING_CALIB_IDX];
     sXYZMagVector[Z_IDX] = (sXYZMagVector[Z_IDX] - sXYZMagCalPrm[Z_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[Z_SCALING_CALIB_IDX];
-
-#ifdef FCB_ACCMAG_DEBUG
-    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
-#endif
   }
 
-  if (MAGMTR_CALIBRATING == magMode) {
+#ifdef FCB_ACCMAG_DEBUG
+  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
+#endif
+
+  if (ACCMAGMTR_CALIBRATING == accMagMode) {
     if (sampleIndex < sampleMax) {
 
 #ifndef FCB_SENSORS_SCILAB_CALIB
@@ -231,11 +248,12 @@ void FetchDataFromMagnetometer(void) {
        * - insert calibration values manually into code
        */
 #endif
-      magMode = MAGMTR_FETCHING;
+      accMagMode = ACCMAGMTR_FETCHING;
       sampleIndex = 0;
     }
   }
 }
+
 
 void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot) {
   *xDotDot = sXYZDotDot[X_IDX];
@@ -291,8 +309,8 @@ void GaussNewtonLeastSphereFit(void) {
   float32_t J[N][6]; // Jacobian matrix N rows, 6 columns. 6 = 2 for each vector dimension (3)
   float32_t x[N][3]; //the observations - N by 3-tuple
   float32_t JtJ[21]; /* The left-hand side of equation 2. It is symmetric so
-                      * we only need to store 21 of the 36 matrix entires.
-                      */
+   * we only need to store 21 of the 36 matrix entires.
+   */
   float32_t JtR[6]; //The right-hand side of equation 2.
 }
 #endif

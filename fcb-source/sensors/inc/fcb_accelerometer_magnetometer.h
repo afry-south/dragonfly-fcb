@@ -48,16 +48,10 @@
 /**
  *
  */
-enum FcbMagnetometerMode {
-  MAGMTR_UNINITIALISED = 0,
-  MAGMTR_FETCHING = 1, /** fetching data from sensor */
-  MAGMTR_CALIBRATING = 2, /** fetching calibration samples */
-};
-
-enum FcbAccelerometerMode {
-  ACCMTR_UNINITIALISED = 0,
-  ACCMTR_FETCHING = 1, /* simply fetching data */
-  ACCMTR_CALIBRATING = 2, /* fetching data & storing in calibration samples */
+enum FcbAccMagMode {
+  ACCMAGMTR_UNINITIALISED = 0,
+  ACCMAGMTR_FETCHING = 1, /** fetching data from sensor */
+  ACCMAGMTR_CALIBRATING = 2, /** fetching calibration samples */
 };
 
 
@@ -82,14 +76,14 @@ void FetchDataFromAccelerometer(void);
 /**
  * Begins calibration of magnetometer.
  *
- * This is an asynchronous operation. This call sets a flag
- * and the calibration will be done in the tFcbSensors context.
+ * This is an asynchronous operation.
+ *
  *
  * @param samples ACCMAG_CALIBRATION_SAMPLES_N <= val <= 250 (data type limitation)
  *
  * @see ACCMAG_CALIBRATION_SAMPLES_N
  */
-void BeginMagnetometerCalibration(uint8_t samples);
+void BeginAccMagMtrCalibration(uint8_t samples);
 
 /*
  * get the current reading from the accelerometer.
