@@ -63,7 +63,7 @@ endfunction
 
 // show a variable unconditionally
 function showVar(variableName, variable)
-        disp(variableName);
+        printf("%s\n", variableName);
         disp(variable);
 endfunction
 

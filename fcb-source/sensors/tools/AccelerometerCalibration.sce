@@ -39,3 +39,5 @@ calBeta = GaussNewtonLeastSquares(normSamps, calBetaInitialGuess, maxIterations)
 calBeta(1:3) = g * calBeta(1:3);
 
 DisplayNorms(accSamples , calBeta);
+
+showVar("calBeta", calBeta');

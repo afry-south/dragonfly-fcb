@@ -146,8 +146,8 @@ void FetchDataFromAccelerometer(void) {
   /* from accelerometer to quadcopter coordinate axes
    * see "Sensors" page in Wiki.
    */
-  sXYZDotDot[X_IDX] = acceleroMeterData[Y_IDX];
-  sXYZDotDot[Y_IDX] = -acceleroMeterData[X_IDX];
+  sXYZDotDot[X_IDX] = acceleroMeterData[X_IDX];
+  sXYZDotDot[Y_IDX] = -acceleroMeterData[Y_IDX];
   sXYZDotDot[Z_IDX] = -acceleroMeterData[Z_IDX];
 
 #ifdef FCB_ACCMAG_DEBUG
