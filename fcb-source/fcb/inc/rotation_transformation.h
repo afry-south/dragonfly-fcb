@@ -18,7 +18,10 @@
 
 /* Exported functions ------------------------------------------------------- */
 void InitRotationMatrix(void);
-void UpdateRotationMatrix(float32_t roll, float32_t pitch, float32_t yaw);
+void UpdateRotationMatrix(const float32_t roll, const float32_t pitch, const float32_t yaw);
+void GetAttitudeFromMagnetometer(float32_t* dstAttitude, const float32_t* bodyMagneticReadings, const float32_t* inertialMagneticVector);
+void Vector3DCrossProduct(float32_t* dstVector, const float32_t* srcVector1, const float32_t* srcVector2);
+void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector);
 
 #endif /* INC_ROTATION_TRANSFORMATION_H_ */
 

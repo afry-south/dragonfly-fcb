@@ -28,8 +28,7 @@ arm_matrix_instance_f32 DCMInv;
  * @param  None
  * @retval None
  */
-void InitRotationMatrix(void)
-{
+void InitRotationMatrix(void) {
 	float32_t DCMInvInit[9] =
 	{
 			1,     0,     1,
@@ -51,8 +50,7 @@ void InitRotationMatrix(void)
  * @param  yaw : yaw angle in radians
  * @retval None
  */
-void UpdateRotationMatrix(float32_t roll, float32_t pitch, float32_t yaw)
-{
+void UpdateRotationMatrix(const float32_t roll, const float32_t pitch, const float32_t yaw) {
 	/* Calculate the DCM based on roll, pitch and yaw angles */
 	float32_t DCMUpdate[9] =
 	{
@@ -67,6 +65,54 @@ void UpdateRotationMatrix(float32_t roll, float32_t pitch, float32_t yaw)
 	/* Calculate the DCM inverse, which is the same as matrix transpose since DCM is an orthonormal matrix. The inverse
 	 * transforms FROM the body frame TO the inertial frame*/
 	arm_mat_trans_f32(&DCM, &DCMInv);
+}
+
+/*
+ * @brief  Calculates the attitude (roll, pitch, yaw angles) based on magnetometer input
+ * @param  dstAttitude : Destination vector in which to store the calculated attitude (roll, pitch, yaw)
+ * @param  bodyMagneticReadings : The magnetometer sensor readings in the UAV body-frame
+ * @param  inertialMagneticVector : The magnetic flux vector in the inertial frame
+ * @retval None
+ */
+void GetAttitudeFromMagnetometer(float32_t* dstAttitude, const float32_t* bodyMagneticReadings,
+		const float32_t* inertialMagneticVector) {
+
+	/* Calculate the axis/angle representing the rotation from inertial-frame magnetic field to the body-frame sensor
+	 * readings. NOTE: Inertial magnetic field vector depends on where on earth UAV is operating. Malmö, Sweden assumed.
+	 * */
+
+	// TODO Init inertialMagneticVector somewhere at startup
+	// TODO adjust for difference between magnetic and geographic north pole? Is this done here?
+}
+
+/*
+ * @brief  Calculates the cross product of two 3D vectors and stores the result in a third
+ * @param  dstVector : Destination vector
+ * @param  srcVector1 : Source vector 1
+ * @param  srcVector2 : Source vector 2
+ * @retval None
+ */
+void Vector3DCrossProduct(float32_t* dstVector, const float32_t* srcVector1, const float32_t* srcVector2) {
+	dstVector[0] = srcVector1[1]*srcVector2[2] - srcVector1[2]*srcVector2[1];
+	dstVector[1] = srcVector1[2]*srcVector2[0] - srcVector1[0]*srcVector2[2];
+	dstVector[2] = srcVector1[0]*srcVector2[1] - srcVector1[1]*srcVector2[0];;
+}
+
+/*
+ * @brief  Normalizes the input 3D vector to unit length
+ * @param  dstVector : normalized vector result
+ * @param  srcVector : vector to be normalized
+ * @retval None
+ */
+void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector) {
+	float32_t norm;
+
+	/* Calculate norm of source vector */
+	arm_dot_prod_f32(srcVector, srcVector, 3, &norm);
+	norm = sqrt(norm);
+
+	/* Normalize the vector to unit length and store it in destination vector */
+	arm_scale_f32(srcVector, 1.0/norm, dstVector, 3);
 }
 
 /* Private functions ---------------------------------------------------------*/
