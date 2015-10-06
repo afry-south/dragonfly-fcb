@@ -74,15 +74,46 @@ void UpdateRotationMatrix(const float32_t roll, const float32_t pitch, const flo
  * @param  inertialMagneticVector : The magnetic flux vector in the inertial frame
  * @retval None
  */
-void GetAttitudeFromMagnetometer(float32_t* dstAttitude, const float32_t* bodyMagneticReadings,
-		const float32_t* inertialMagneticVector) {
+void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagneticReadings,
+		float32_t* inertialMagneticVector) {
 
 	/* Calculate the axis/angle representing the rotation from inertial-frame magnetic field to the body-frame sensor
-	 * readings. NOTE: Inertial magnetic field vector depends on where on earth UAV is operating. Malmö, Sweden assumed.
+	 * readings. NOTE: Inertial magnetic field vector depends on where on earth UAV is operating - Malmö, SE assumed.
 	 * */
 
+	float32_t bodyMagneticNormalized[3];
+	float32_t inertialMagneticNormalized[3];
+	float32_t rotationAxisVector[3];
+	float32_t rotationAngle;
+	float32_t dotProd;
+
+	/* Get unit length normalized versions of the vectors */
+	Vector3DNormalize(bodyMagneticNormalized, bodyMagneticReadings);
+	Vector3DNormalize(inertialMagneticNormalized, inertialMagneticVector);
+
+	/* Get the rotation axis vector between the two magnetic vectors (inertial and body) */
+	Vector3DCrossProduct(rotationAxisVector, bodyMagneticNormalized, inertialMagneticNormalized);
+
+	/* Get the angle for the body to the inertial frame vectors rotated around rotation vector axis */
+	arm_dot_prod_f32(bodyMagneticNormalized, inertialMagneticNormalized, 3, &dotProd);
+	rotationAngle = acos(dotProd);
+
+	/* Calculate rotation matrix elements formed by axis/angle representation */
+	float32_t cosAngle = arm_cos_f32(rotationAngle);
+	float32_t sinAngle = arm_sin_f32(rotationAngle);
+	float32_t r11 = cosAngle + rotationAxisVector[0]*rotationAxisVector[0]*(1.0-cosAngle);
+	float32_t r12 = rotationAxisVector[0]*rotationAxisVector[1]*(1.0-cosAngle) - rotationAxisVector[2]*sinAngle;
+	float32_t r13 = rotationAxisVector[0]*rotationAxisVector[2]*(1.0-cosAngle) + rotationAxisVector[1]*sinAngle;
+	float32_t r23 = rotationAxisVector[1]*rotationAxisVector[2]*(1.0-cosAngle) - rotationAxisVector[0]*sinAngle;
+	float32_t r33 = cosAngle + rotationAxisVector[2]*rotationAxisVector[2]*(1.0-cosAngle);
+
+	/* Extract Euler angles from rotation matrix elements */
+	dstAttitude[0] = atan2(r23, r33);
+	dstAttitude[1] = asin(-r13);
+	dstAttitude[2] = atan2(r12, r11);
+
 	// TODO Init inertialMagneticVector somewhere at startup
-	// TODO adjust for difference between magnetic and geographic north pole? Is this done here?
+	// TODO adjust for difference between magnetic and geographic north pole? Should this done here?
 }
 
 /*

@@ -1231,14 +1231,11 @@ static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen
 	(void) pcCommandString;
 	configASSERT(pcWriteBuffer);
 
-	strncpy((char*) pcWriteBuffer,
-				"\nTask\t\t\t Abs Time\t % Time\n",
-				xWriteBufferLen);
+	strncpy((char*) pcWriteBuffer, "\nTask\t\t\t Abs Time\t % Time\n", xWriteBufferLen);
 	size_t len = strlen((char*) pcWriteBuffer);
 	vTaskGetRunTimeStats(pcWriteBuffer + len, xWriteBufferLen-len);
 	len = strlen((char*)pcWriteBuffer);
-	strncat((char*) pcWriteBuffer, "\n",
-				xWriteBufferLen - len -1);
+	strncat((char*) pcWriteBuffer, "\n", xWriteBufferLen - len - 1);
 
 	return pdFALSE;
 }
