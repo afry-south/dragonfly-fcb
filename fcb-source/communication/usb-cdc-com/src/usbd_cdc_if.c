@@ -7,6 +7,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
+
 #include "main.h"
 #include "fifo_buffer.h"
 #include "usb_com_cli.h"
