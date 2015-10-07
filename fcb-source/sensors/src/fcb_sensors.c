@@ -102,7 +102,7 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
 #endif
 
     if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
-        ErrorHandler();
+     //   ErrorHandler();
     }
 
     portYIELD_FROM_ISR(higherPriorityTaskWoken);

@@ -16,6 +16,9 @@
 #include "receiver.h"
 #include "motor_control.h"
 #include "pid_control.h"
+#include "fcb_gyroscope.h"
+#include "rotation_transformation.h"
+#include "state_estimation.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -229,17 +232,36 @@ static void FlightControlTask(void const *argument) {
 	/* Initialise the xLastWakeTime variable with the current time */
 	xLastWakeTime = xTaskGetTickCount();
 
+
 	for (;;) {
 		vTaskDelayUntil(&xLastWakeTime, FLIGHT_CONTROL_TASK_PERIOD);
+
+		/* Kalman Filter */
+			float32_t sensorRateRoll;
+			float32_t sensorRatePitch;
+			float32_t sensorRateYaw;
+			float32_t sensorAngleRoll;
+			float32_t sensorAnglePitch;
+			float32_t sensorAngleYaw;
+
+			GetAngleDot(&sensorRateRoll, &sensorRatePitch, &sensorRateYaw);
+			sensorAngleRoll = GetAccRollAngle();
+			sensorAnglePitch = GetAccPitchAngle();
+			sensorAngleYaw = GetMagYawAngle(sensorAngleRoll, sensorAnglePitch);
+			PredictStatesXYZ(sensorRateRoll, sensorRatePitch, sensorRateYaw);
+			CorrectStatesXYZ(sensorAngleRoll, sensorAnglePitch, sensorAngleYaw);
+
 
 		/* Update the flight control state and perform flight control activities */
 		UpdateFlightControl();
 
 		/* Blink with LED to indicate thread is alive */
-		if(ledFlashCounter % 100 == 0)
+		if(ledFlashCounter % 100 == 0) {
 			BSP_LED_On(LED6);
-		else if(ledFlashCounter % 20 == 0)
+		}
+		else if(ledFlashCounter % 20 == 0) {
 			BSP_LED_Off(LED6);
+		}
 
 		ledFlashCounter++;
 	}
