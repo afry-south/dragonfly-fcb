@@ -1339,10 +1339,12 @@ void vTaskList( signed char *pcWriteBuffer ) PRIVILEGED_FUNCTION;
  * contain the generated report.  Approximately 40 bytes per task should
  * be sufficient.
  *
+ * @return number of bytes used up in pcWriteBuffer
+ *
  * \defgroup vTaskGetRunTimeStats vTaskGetRunTimeStats
  * \ingroup TaskUtils
  */
-void vTaskGetRunTimeStats( signed char *pcWriteBuffer, size_t bufLen ) PRIVILEGED_FUNCTION;
+size_t vTaskGetRunTimeStats( signed char *pcWriteBuffer, size_t bufLen ) PRIVILEGED_FUNCTION;
 
 /*-----------------------------------------------------------
  * SCHEDULER INTERNALS AVAILABLE FOR PORTING PURPOSES

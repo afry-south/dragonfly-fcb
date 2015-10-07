@@ -2872,7 +2872,7 @@ tskTCB *pxNewTCB;
 
 #if ( ( configGENERATE_RUN_TIME_STATS == 1 ) && ( configUSE_STATS_FORMATTING_FUNCTIONS == 1 ) )
 
-	void vTaskGetRunTimeStats( signed char *pcWriteBuffer, size_t xWriteBufferLen)
+	size_t vTaskGetRunTimeStats( signed char *pcWriteBuffer, size_t xWriteBufferLen)
 	{
 	xTaskStatusType *pxTaskStatusArray;
 	volatile unsigned portBASE_TYPE uxArraySize, x;
@@ -2926,7 +2926,7 @@ tskTCB *pxNewTCB;
 			if( ulTotalTime > 0 )
 			{
 				/* Create a human readable table from the binary data. */
-				for( x = 0; x < uxArraySize; x++ )
+				for( x = 0; x < uxArraySize; x++ && usedLen < xWriteBufferLen)
 				{
 					/* What percentage of the total run time has the task used?
 					This will always be rounded down to the nearest integer.
@@ -2938,19 +2938,21 @@ tskTCB *pxNewTCB;
 
 						#ifdef portLU_PRINTF_SPECIFIER_REQUIRED
 						{
-						    snprintf( ( char * ) pcWriteBuffer, xWriteBufferLen,( char * ) "%s\t\t%lu\t\t%lu%%\r\n",
+						  usedLen += snprintf( ( char * ) pcWriteBuffer + usedLen, xWriteBufferLen - usedLen,( char * ) "%s\t\t%lu\t\t%lu%%\t\t%u\r\n",
 							    pxTaskStatusArray[ x ].pcTaskName,
 							    pxTaskStatusArray[ x ].ulRunTimeCounter,
-							    ulStatsAsPercentage );
+							    ulStatsAsPercentage,
+							    pxTaskStatusArray[ x ].usStackHighWaterMark);
 						}
 						#else
 						{
 							/* sizeof( int ) == sizeof( long ) so a smaller
 							printf() library can be used. ISSUE33 HERE */
-						  usedLen += snprintf( ( char * ) pcWriteBuffer, xWriteBufferLen,( char * ) "%s\t\t%u\t\t%u%%\r\n",
+						  usedLen += snprintf( ( char * ) pcWriteBuffer + usedLen, xWriteBufferLen - usedLen,( char * ) "%s\t\t%u\t\t%u%%\t\t%u\r\n",
 							        pxTaskStatusArray[ x ].pcTaskName,
 							        ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter,
-							        ( unsigned int ) ulStatsAsPercentage );
+							        ( unsigned int ) ulStatsAsPercentage,
+							        ( unsigned int ) pxTaskStatusArray[ x ].usStackHighWaterMark);
 						}
 						#endif
 					}
@@ -2960,33 +2962,34 @@ tskTCB *pxNewTCB;
 						consumed less than 1% of the total run time. */
 						#ifdef portLU_PRINTF_SPECIFIER_REQUIRED
 						{
-							snprintf( ( char * ) pcWriteBuffer,
-							    xWriteBufferLen,
+						  usedLen += snprintf( ( char * ) pcWriteBuffer + usedLen,
+							    xWriteBufferLen - usedLen,
 							    ( char * ) "%s\t\t%lu\t\t<1%%\r\n",
 							    pxTaskStatusArray[ x ].pcTaskName,
-							    pxTaskStatusArray[ x ].ulRunTimeCounter );
+							    pxTaskStatusArray[ x ].ulRunTimeCounter,
+							    pxTaskStatusArray[ x ].usStackHighWaterMark);
 						}
 						#else
 						{
 							/* sizeof( int ) == sizeof( long ) so a smaller
 							printf() library can be used. */
-							snprintf( ( char * ) pcWriteBuffer,
-							    xWriteBufferLen,
-							    ( char * ) "%s\t\t%u\t\t<1%%\r\n",
+						  usedLen += snprintf( ( char * ) pcWriteBuffer + usedLen,
+							    xWriteBufferLen - usedLen,
+							    ( char * ) "%s\t\t%u\t\t<1%%\t\t%u\r\n",
 							    pxTaskStatusArray[ x ].pcTaskName,
-							    ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter );
+							    ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter,
+							    ( unsigned int ) pxTaskStatusArray[ x ].usStackHighWaterMark);
 						}
 						#endif
 					}
-					usedLen = strlen( ( char * ) pcWriteBuffer );
-					pcWriteBuffer += usedLen;
-					xWriteBufferLen -= usedLen;
 				}
 			}
 
 			/* Free the array again. */
 			vPortFree( pxTaskStatusArray );
 		}
+
+		return usedLen;
 	}
 
 #endif /* configGENERATE_RUN_TIME_STATS */
