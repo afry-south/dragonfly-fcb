@@ -19,11 +19,14 @@
 #include "dragonfly_fcb.pb.h"
 #include "usb_com_cli.h"
 #include "pb_encode.h"
+#include "math.h"
+#include "rotation_transformation.h"
 
 /* Private define ------------------------------------------------------------*/
 #define STATE_PRINT_SAMPLING_TASK_PRIO			1
-#define STATE_PRINT_MINIMUM_SAMPLING_TIME		2	// updated every 2.5 ms
-#define STATE_PRINT_MAX_STRING_SIZE				160
+#define STATE_PRINT_MINIMUM_SAMPLING_TIME		20	// updated every 2.5 ms
+#define STATE_PRINT_MAX_STRING_SIZE				256
+#define RAD_TO_DEG								360/(2*PI)
 
 /* Private variables ---------------------------------------------------------*/
 StateVector_TypeDef States;
@@ -178,17 +181,39 @@ void SetStatePrintSamplingSerialization(const SerializationType_TypeDef serializ
 }
 
 /*
+ * @brief	Converts radians to degrees
+ * @param	radian: The value in radians that should be converted.
+ * @return	degree: The converted value in degrees.
+ */
+float32_t RadianToDegree(float32_t radian) {
+	float32_t degree = radian*RAD_TO_DEG;
+
+	while(degree>180) {
+		degree -= 360;
+	}
+	while(degree<-180) {
+		degree += 360;
+	}
+
+	return degree;
+}
+
+/*
  * @brief Prints the state values
  * @param serializationType: Data serialization type enum
  * @retval None
  */
 void PrintStateValues(const SerializationType_TypeDef serializationType) {
-	char stateString[STATE_PRINT_MAX_STRING_SIZE];
+	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
 
 	if(serializationType == NO_SERIALIZATION) {
+		float32_t sensorAngleRoll = GetAccRollAngle();
+		float32_t sensorAnglePitch = GetAccPitchAngle();
+		float32_t sensorAngleYaw = GetMagYawAngle(sensorAngleRoll, sensorAnglePitch);
+
 		snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-				"States:\nrollAngle: %1.3f\nrollRateBias: %1.3f\npitchAngle: %1.3f\npitchRateBias: %1.3f\nyawAngle: %1.4f\nyawRateBias: %1.3f\n\r\n",
-				States.roll, States.rollRateBias, States.pitch, States.pitchRateBias, States.yaw, States.yawRateBias);
+				"States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\n\r\n",
+				RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw), States.rollRateBias, States.pitchRateBias, States.yawRateBias);
 
 		USBComSendString(stateString);
 	}

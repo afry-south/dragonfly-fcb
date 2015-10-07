@@ -9,6 +9,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "rotation_transformation.h"
 #include "fcb_accelerometer_magnetometer.h"
+#include "trace.h"
 
 #include <math.h>
 
@@ -183,6 +184,7 @@ float32_t GetAccRollAngle(void)
 	GetAcceleration(&accX, &accY, &accZ);
 	rollAngle = atan2(accY, accZ);
 
+	//trace_printf("The rollAngle is: %1.3f radians.\n", rollAngle);
 	return rollAngle;
 }
 
@@ -201,6 +203,8 @@ float32_t GetAccPitchAngle(void)
 	GetAcceleration(&accX, &accY, &accZ);
 	pitchAngle = atan2(accX, accZ);
 
+
+	//trace_printf("The pitchAngle is: %1.3f radians.\n", pitchAngle);
 	return pitchAngle;
 }
 
@@ -223,6 +227,7 @@ float32_t GetMagYawAngle(const float32_t roll, const float32_t pitch)
 	yawAngle = atan2(magX*arm_sin_f32(roll)*arm_sin_f32(pitch)+magY*arm_cos_f32(roll)-magZ*arm_sin_f32(roll)*arm_cos_f32(pitch),
 						magX*arm_cos_f32(pitch)+magZ*arm_sin_f32(pitch));
 
+	//trace_printf("The yawAngle is: %1.3f radians.\n", yawAngle);
 	return yawAngle;
 }
 

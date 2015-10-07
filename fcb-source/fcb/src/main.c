@@ -20,6 +20,7 @@
 #include "fcb_retval.h"
 #include "fcb_sensors.h"
 #include "fcb_gyroscope.h"
+#include "state_estimation.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -102,6 +103,9 @@ static void InitSystem(void) {
 	if (FCB_OK != FcbSensorsConfig()) {
 		ErrorHandler();
 	}
+
+	/* Init the states for the Kalman filter */
+	InitStatesXYZ();
 
 	/* Init the rotation matrix */
 	InitRotationMatrix();
