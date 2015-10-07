@@ -64,7 +64,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  * @retval none
  */
 void HAL_PWR_PVDCallback(void) {
-	USBComSendString("PVD\n");
+	USBComSendString("Error: PVD\n");
 
 	/* Voltage drop detected - Go to error handler */
 	ErrorHandler();

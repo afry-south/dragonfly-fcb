@@ -87,7 +87,7 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
   Vector3DNormalize(accNormalized, bodyAccelerometerReadings);
 
   /* Calculate roll and pitch Euler angles  */
-  dstAttitude[1] = asin(-accNormalized[0]); // Roll-Phi // TODO asin singularity? CHANGE SIGN?! Z DOWN...
+  dstAttitude[1] = asin(accNormalized[0]); // Roll-Phi
   dstAttitude[0] = atan2(accNormalized[1], accNormalized[2]); // Pitch-Theta // TODO atan2 working as intended?
 }
 
@@ -99,6 +99,7 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
  * @param  inertialMagneticVector : The magnetic flux vector in the inertial frame
  * @retval None
  */
+
 void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagneticReadings) {
 
 	/* Calculate the axis/angle representing the rotation from inertial-frame magnetic field to the body-frame sensor
@@ -133,7 +134,7 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 
 	/* Extract Euler angles from rotation matrix elements */
 	dstAttitude[0] = atan2(r23, r33); // Roll-Phi // TODO does atan2 work as expected?
-	dstAttitude[1] = asin(-r13); // Pitch-Theta // TODO arcsin singularity
+	dstAttitude[1] = asin(-r13); // Pitch-Theta
 	dstAttitude[2] = atan2(r12, r11); // Yaw-Psi // TODO does atan2 work as expected?
 }
 
