@@ -47,8 +47,8 @@ static uint32_t sampleIndex = 0;
 #ifndef FCB_SENSORS_SCILAB_CALIB
 static float32_t calibrationSamples[ACCMAG_CALIBRATION_SAMPLES_N][ACCMAG_AXES_N];
 #endif // FCB_SENSORS_SCILAB_CALIB
-static float32_t sXYZDotDot[] = { 0, 0 , 0 };
-static float32_t sXYZMagVector[] = { 0, 0 , 0 };
+static float32_t sXYZDotDot[] = { 0.0 , 0.0 , 0.0 };
+static float32_t sXYZMagVector[] = { 0.0 , 0.0 , 0.0 };
 
 /**
  * Magnetometer calibration offset & scaling coefficients

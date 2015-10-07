@@ -87,7 +87,7 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
   Vector3DNormalize(accNormalized, bodyAccelerometerReadings);
 
   /* Calculate roll and pitch Euler angles  */
-  dstAttitude[1] = asin(-accNormalized[0]); // Roll-Phi // TODO asin singularity?
+  dstAttitude[1] = asin(-accNormalized[0]); // Roll-Phi // TODO asin singularity? CHANGE SIGN?! Z DOWN...
   dstAttitude[0] = atan2(accNormalized[1], accNormalized[2]); // Pitch-Theta // TODO atan2 working as intended?
 }
 
