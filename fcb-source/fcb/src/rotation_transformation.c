@@ -19,6 +19,11 @@
 arm_matrix_instance_f32 DCM;
 arm_matrix_instance_f32 DCMInv;
 
+/* [Unit: Gauss] Set to the magnetic vector in Malmö, SE, year 2015
+* Data used from http://www.ngdc.noaa.gov/geomag-web/
+* Note: Difference between magnetic and geographic north pole ignored (declination) */
+float32_t inertialMagneticVector[3] = {0.171045, 0.01055, 0.472443};
+
 /* Private function prototypes -----------------------------------------------*/
 
 /* Exported functions --------------------------------------------------------*/
@@ -81,7 +86,7 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
   Vector3DNormalize(accNormalized, bodyAccelerometerReadings);
 
   /* Calculate roll and pitch Euler angles  */
-  dstAttitude[1] = asin(-accNormalized[0]); // Roll-Phi
+  dstAttitude[1] = asin(-accNormalized[0]); // Roll-Phi // TODO asin singularity?
   dstAttitude[0] = atan2(accNormalized[1], accNormalized[2]); // Pitch-Theta // TODO atan2 working as intended?
 }
 
@@ -93,8 +98,7 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
  * @param  inertialMagneticVector : The magnetic flux vector in the inertial frame
  * @retval None
  */
-void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagneticReadings,
-		float32_t* inertialMagneticVector) {
+void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagneticReadings) {
 
 	/* Calculate the axis/angle representing the rotation from inertial-frame magnetic field to the body-frame sensor
 	 * readings. NOTE: Inertial magnetic field vector depends on where on earth UAV is operating - Malmö, SE assumed.
@@ -128,11 +132,8 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 
 	/* Extract Euler angles from rotation matrix elements */
 	dstAttitude[0] = atan2(r23, r33); // Roll-Phi // TODO does atan2 work as expected?
-	dstAttitude[1] = asin(-r13); // Pitch-Theta
+	dstAttitude[1] = asin(-r13); // Pitch-Theta // TODO arcsin singularity
 	dstAttitude[2] = atan2(r12, r11); // Yaw-Psi // TODO does atan2 work as expected?
-
-	// TODO Init inertialMagneticVector somewhere at startup
-	// TODO adjust for difference between magnetic and geographic north pole (magnetic declination)? Should this be done here (if at all)?
 }
 
 /*
