@@ -16,6 +16,20 @@
 #include <stdint.h>
 
 /**
+ * Issue 2 & 3:
+ *
+ * start off by implementing Gauss-Newton in SciLab
+ *
+ * This means simply print the value to the console,
+ * copy them into a file and then run SciLab script to calculate
+ * the calibration data.
+ *
+ * TODO add script name.
+ */
+#define FCB_SENSORS_SCILAB_CALIB
+
+
+/**
  * The Data Ready input from the magnetometer.
  *
  * This definition is intended to be used in the
@@ -34,17 +48,15 @@
 /**
  *
  */
-enum FcbMagnetometerMode {
-  MAGMTR_UNINITIALISED = 0,
-  MAGMTR_FETCHING = 1, /** fetching data from sensor */
-  MAGMTR_CALIBRATION_FETCH = 2, /** fetching calibration samples */
+enum FcbAccMagMode {
+  ACCMAGMTR_UNINITIALISED = 0,
+  ACCMAGMTR_FETCHING = 1, /** fetching data from sensor */
+  ACCMAGMTR_CALIBRATING = 2, /** fetching calibration samples */
 };
 
-enum FcbAccelerometerMode {
-  ACCMTR_UNINITIALISED = 0,
-  ACCMTR_FETCHING = 1, /* simply fetching data */
-  ACCMTR_CALIBRATION_FETCH = 2, /* fetching data & storing in calibration samples */
-};
+
+enum { ACCMAG_CALIBRATION_SAMPLES_N = 6 }; /* calibration samplin. TODO increase */
+
 
 
 /**
@@ -66,9 +78,12 @@ void FetchDataFromAccelerometer(void);
  *
  * This is an asynchronous operation.
  *
- * @todo design/describe asynchronicity.
+ *
+ * @param samples ACCMAG_CALIBRATION_SAMPLES_N <= val <= 250 (data type limitation)
+ *
+ * @see ACCMAG_CALIBRATION_SAMPLES_N
  */
-void BeginMagnetometerCalibration(void);
+void BeginAccMagMtrCalibration(uint8_t samples);
 
 /*
  * get the current reading from the accelerometer.
@@ -98,5 +113,10 @@ void FetchDataFromMagnetometer(void);
  * @see lsm303dlhc.c
  */
 void GetMagVector(float32_t * x, float32_t * y, float32_t * z);
+
+/**
+ * Print accelerometer values to USB.
+ */
+void PrintAccelerometerValues(void);
 
 #endif /* FCB_ACCELEROMETER_H */

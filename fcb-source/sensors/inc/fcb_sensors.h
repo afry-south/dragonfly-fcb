@@ -44,7 +44,7 @@ enum FcbSensorMessage {
 
 typedef enum {
 	SENSORS_ERROR = 0, SENSORS_OK = !SENSORS_ERROR
-} SensorsErrorStatus;
+} SensorsReturnCode;
 
 
 /**
@@ -65,8 +65,8 @@ int FcbSensorsConfig(void);
 void FcbSendSensorMessageFromISR(uint8_t msg);
 
 void PrintSensorValues(const SerializationType_TypeDef serializationType);
-SensorsErrorStatus StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
-SensorsErrorStatus StopSensorSamplingTask(void);
+SensorsReturnCode StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
+SensorsReturnCode StopSensorSamplingTask(void);
 void SetSensorPrintSamplingSerialization(const SerializationType_TypeDef serializationType);
 
 /**

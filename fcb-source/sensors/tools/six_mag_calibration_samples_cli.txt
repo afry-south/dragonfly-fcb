@@ -1,0 +1,30 @@
+Starting Magnetometer calibration, press USER btn 6 times ...
+Magnetometer readings [Gauss]:
+MagX: -0.221818
+MagY: 0.090909
+MagZ: 0.516327
+
+Magnetometer readings [Gauss]:
+MagX: 0.207273
+MagY: 0.048182
+MagZ: 0.545918
+
+Magnetometer readings [Gauss]:
+MagX: 0.018182
+MagY: 0.282727
+MagZ: 0.532653
+
+Magnetometer readings [Gauss]:
+MagX: -0.036364
+MagY: -0.140000
+MagZ: 0.534694
+
+Magnetometer readings [Gauss]:
+MagX: 0.539091
+MagY: -0.078182
+MagZ: 0.067347
+
+Magnetometer readings [Gauss]:
+MagX: -0.562727
+MagY: -0.077273
+MagZ: -0.074490
