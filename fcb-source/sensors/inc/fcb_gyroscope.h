@@ -38,6 +38,6 @@ void FetchDataFromGyroscope(void);
  *
  * It is updated at a rate of 94.5Hz (configurable).
  */
-void GetAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float32_t * zAngleDot);
+void GetGyroAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float32_t * zAngleDot);
 
 #endif /* GYROSCOPE_H */

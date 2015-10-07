@@ -10,6 +10,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "arm_math.h"
 #include "usbd_cdc_if.h"
+#include "flight_control.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct
@@ -41,10 +42,7 @@ typedef enum {
 
 
 /* Exported constants --------------------------------------------------------*/
-#define ACC_CALIBRATION_SAMPLES		(int)		100
-#define MAG_CALIBRATION_SAMPLES    	(int)		2000
-#define INIT_SAMPLES			(int)		1000
-#define	CONTROL_SAMPLE_PERIOD (float32_t)		0
+#define	CONTROL_SAMPLE_PERIOD					0.020 // TODO calc this from sample rate
 #define Q1_CAL (float32_t)						0.5
 #define	Q2_CAL (float32_t)						0.05
 #define	R1_CAL (float32_t)						1.5

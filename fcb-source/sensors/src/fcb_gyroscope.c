@@ -128,7 +128,7 @@ void FetchDataFromGyroscope(void) {
 
 }
 
-void GetAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngleDot) {
+void GetGyroAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngleDot) {
 	*xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
 	*yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
 	*zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];

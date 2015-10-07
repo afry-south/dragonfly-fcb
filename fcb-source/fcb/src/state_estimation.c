@@ -131,6 +131,9 @@ float32_t GetYawAngle(void)
  * @retval MOTORCTRL_OK if thread started, else MOTORCTRL_ERROR.
  */
 StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
+
+	// TODO do not start a new task if one is already running, just update sampleTime/sampleDuration
+
 	if(sampleTime < STATE_PRINT_MINIMUM_SAMPLING_TIME)
 		statePrintSampleTime = STATE_PRINT_MINIMUM_SAMPLING_TIME;
 	else
@@ -207,13 +210,19 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
 
 	if(serializationType == NO_SERIALIZATION) {
-		float32_t sensorAngleRoll = GetAccRollAngle();
-		float32_t sensorAnglePitch = GetAccPitchAngle();
-		float32_t sensorAngleYaw = GetMagYawAngle(sensorAngleRoll, sensorAnglePitch);
+//		float32_t sensorAngleRoll = GetAccRollAngle();
+//		float32_t sensorAnglePitch = GetAccPitchAngle();
+//		float32_t sensorAngleYaw = GetMagYawAngle(sensorAngleRoll, sensorAnglePitch);
+		float32_t accValues[3];
+		float32_t accAttitude[3]; // Roll, pitch, yaw
+
+		GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
+		GetAttitudeFromAccelerometer(accAttitude, accValues);
+		accAttitude[2] = GetMagYawAngle(accAttitude[0], accAttitude[1]);
 
 		snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-				"States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\n\r\n",
-				RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw), States.rollRateBias, States.pitchRateBias, States.yawRateBias);
+				"States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\n\r\n",
+				RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw), States.rollRateBias, States.pitchRateBias, States.yawRateBias, accAttitude[0], accAttitude[1], accAttitude[2]);
 
 		USBComSendString(stateString);
 	}
@@ -341,6 +350,8 @@ static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* E
 
 	/* Step 4: Calculate innovation covariance matrix S*/
 	float32_t s = Estimator->p11 + Estimator->r1;
+
+	// TODO if s becomes 0.0, below values will become NaN
 
 	/* Step 5: Calculate Kalman gain*/
 	Estimator->k1 = Estimator->p11 /s;

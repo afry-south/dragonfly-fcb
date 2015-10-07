@@ -19,6 +19,7 @@
 #include "fcb_gyroscope.h"
 #include "rotation_transformation.h"
 #include "state_estimation.h"
+#include "fcb_accelerometer_magnetometer.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -49,6 +50,8 @@ xTaskHandle FlightControlTaskHandle; // Task handle for flight control task
 
 /* Private function prototypes -----------------------------------------------*/
 static void UpdateFlightControl(void);
+static void UpdateFlightStates(void);
+
 static void SetFlightMode(void);
 static void SetReferenceSignals(void);
 
@@ -125,7 +128,7 @@ float GetYawAngularRateReferenceSignal(void) {
 /* Private functions ---------------------------------------------------------*/
 
 /*
- * @brief  Performs program duties with regular intervals.
+ * @brief  Performs program flight control duties with regular intervals.
  * @param  None.
  * @retval None.
  */
@@ -164,6 +167,32 @@ static void UpdateFlightControl(void) {
 		return;
 
 	}
+}
+
+/*
+ * @brief  Updates state estimation Kalman filter to update flight states
+ * @param  None.
+ * @retval None.
+ */
+static void UpdateFlightStates(void) {
+	float32_t sensorRateRoll, sensorRatePitch, sensorRateYaw;
+	float32_t accValues[3];
+	float32_t sensorAttitude[3]; // Roll, pitch, yaw
+
+	/* Get sensor values */
+	GetGyroAngleDot(&sensorRateRoll, &sensorRatePitch, &sensorRateYaw);
+	GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
+	GetAttitudeFromAccelerometer(sensorAttitude, accValues);
+	sensorAttitude[2] = GetMagYawAngle(sensorAttitude[0], sensorAttitude[1]);
+
+	// TODO improve Kalman algorithm real-time performance (event-based). Do prediction more often AND when new gyro values arrive
+	// TODO do correction when new accelerometer values arrive
+
+	/* Do Kalman prediction step */
+	PredictStatesXYZ(sensorRateRoll, sensorRatePitch, sensorRateYaw);
+
+	/* Do Kalman correction step */
+	CorrectStatesXYZ(sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
 }
 
 /*
@@ -236,23 +265,10 @@ static void FlightControlTask(void const *argument) {
 	for (;;) {
 		vTaskDelayUntil(&xLastWakeTime, FLIGHT_CONTROL_TASK_PERIOD);
 
-		/* Kalman Filter */
-			float32_t sensorRateRoll;
-			float32_t sensorRatePitch;
-			float32_t sensorRateYaw;
-			float32_t sensorAngleRoll;
-			float32_t sensorAnglePitch;
-			float32_t sensorAngleYaw;
+		/* Perform flight state estimation update */
+		UpdateFlightStates();
 
-			GetAngleDot(&sensorRateRoll, &sensorRatePitch, &sensorRateYaw);
-			sensorAngleRoll = GetAccRollAngle();
-			sensorAnglePitch = GetAccPitchAngle();
-			sensorAngleYaw = GetMagYawAngle(sensorAngleRoll, sensorAnglePitch);
-			PredictStatesXYZ(sensorRateRoll, sensorRatePitch, sensorRateYaw);
-			CorrectStatesXYZ(sensorAngleRoll, sensorAnglePitch, sensorAngleYaw);
-
-
-		/* Update the flight control state and perform flight control activities */
+		/* Perform flight control activities */
 		UpdateFlightControl();
 
 		/* Blink with LED to indicate thread is alive */

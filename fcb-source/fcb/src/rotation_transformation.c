@@ -88,10 +88,9 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
   Vector3DNormalize(accNormalized, bodyAccelerometerReadings);
 
   /* Calculate roll and pitch Euler angles  */
-  dstAttitude[0] = atan2(accNormalized[1], -accNormalized[2]); // Roll-Phi // TODO atan2 working as intended? // TODO check sign(s)
-  dstAttitude[1] = asin(-accNormalized[0]); // Pitch-Theta // TODO check sign
+  dstAttitude[0] = atan2(-accNormalized[1], -accNormalized[2]); // Roll-Phi need sign on both params to get right section of unit circle
+  dstAttitude[1] = asin(accNormalized[0]); // Pitch-Theta
 }
-
 
 /*
  * @brief  Calculates the attitude (roll, pitch, yaw angles) based on magnetometer input
@@ -100,7 +99,6 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
  * @param  inertialMagneticVector : The magnetic flux vector in the inertial frame
  * @retval None
  */
-
 void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagneticReadings) {
 
 	/* Calculate the axis/angle representing the rotation from inertial-frame magnetic field to the body-frame sensor
@@ -133,7 +131,7 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 	float32_t r23 = rotationAxisVector[1]*rotationAxisVector[2]*(1.0-cosAngle) - rotationAxisVector[0]*sinAngle;
 	float32_t r33 = cosAngle + rotationAxisVector[2]*rotationAxisVector[2]*(1.0-cosAngle);
 
-	/* Extract Euler angles from rotation matrix elements */
+	/* Extract Euler angles from rotation matrix elements */ // TODO all this needs testing
 	dstAttitude[0] = atan2(r23, r33); // Roll-Phi // TODO does atan2 work as expected?
 	dstAttitude[1] = asin(-r13); // Pitch-Theta
 	dstAttitude[2] = atan2(r12, r11); // Yaw-Psi // TODO does atan2 work as expected?
@@ -170,64 +168,22 @@ void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector) {
 }
 
 /*
- * @brief	Returns the roll angle calculated from accelerometer values.
- * @param	None
- * @retval	rollAngle: roll angle in radians.
- */
-float32_t GetAccRollAngle(void)
-{
-	float32_t accX;
-	float32_t accY;
-	float32_t accZ;
-	float32_t rollAngle;
-
-	GetAcceleration(&accX, &accY, &accZ);
-	rollAngle = atan2(accY, accZ);
-
-	//trace_printf("The rollAngle is: %1.3f radians.\n", rollAngle);
-	return rollAngle;
-}
-
-/*
- * @brief	Returns the pitch angle calculated from accelerometer values.
- * @param	None
- * @retval	pitchAngle: pitch angle in radians.
- */
-float32_t GetAccPitchAngle(void)
-{
-	float32_t accX;
-	float32_t accY;
-	float32_t accZ;
-	float32_t pitchAngle;
-
-	GetAcceleration(&accX, &accY, &accZ);
-	pitchAngle = atan2(accX, accZ);
-
-
-	//trace_printf("The pitchAngle is: %1.3f radians.\n", pitchAngle);
-	return pitchAngle;
-}
-
-/*
- * @brief	Returns the yaw angle calculated from magnetometer values.
- * @param	roll: roll angle in radians (kalman estimated or from acc)
- * @param	pitch: pitch angle in radians (kalman estimated or from acc)
- * @retval	yawAngle: yaw angle in radians.
+ * @brief	Returns the yaw angle calculated from magnetometer values with tilt (roll/pitch) compensation
+ * @param	roll : roll angle in radians (kalman estimated or from accelerometer)
+ * @param	pitch : pitch angle in radians (kalman estimated or from accelerometer)
+ * @retval	yawAngle : yaw angle in radians
  */
 float32_t GetMagYawAngle(const float32_t roll, const float32_t pitch)
 {
-	float32_t magX;
-	float32_t magY;
-	float32_t magZ;
+	float32_t magX, magY, magZ;
 	float32_t yawAngle;
 
 	GetMagVector(&magX, &magY, &magZ);
 
-	/* Equation found at https://www.pololu.com/file/download/...?file_id=0J434 */
-	yawAngle = atan2(magX*arm_sin_f32(roll)*arm_sin_f32(pitch)+magY*arm_cos_f32(roll)-magZ*arm_sin_f32(roll)*arm_cos_f32(pitch),
-						magX*arm_cos_f32(pitch)+magZ*arm_sin_f32(pitch));
+	/* Equation found in LSM303DLH Application Note document */
+	yawAngle = -atan2(magX*arm_sin_f32(roll)*arm_sin_f32(pitch) + magY*arm_cos_f32(roll) - magZ*arm_sin_f32(roll)*arm_cos_f32(pitch),
+						magX*arm_cos_f32(pitch) + magZ*arm_sin_f32(pitch)); // TODO check sign on atan2 and atan2 params
 
-	//trace_printf("The yawAngle is: %1.3f radians.\n", yawAngle);
 	return yawAngle;
 }
 
