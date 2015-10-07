@@ -68,6 +68,25 @@ void UpdateRotationMatrix(const float32_t roll, const float32_t pitch, const flo
 }
 
 /*
+ * @brief  Calculates the attitude (roll and pitch, NOT yaw) based on accelerometer input, assuming
+ * 	  that only gravity influences the accelerometer sensor readings
+ * @param  dstAttitude : Destination vector in which to store the calculated attitude (roll and pitch)
+ * @param  bodyAccelerometerReadings : The accelerometer sensor readings in the UAV body-frame
+ * @retval None
+ */
+void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAccelerometerReadings) {
+  float32_t accNormalized[3];
+
+  /* Get unit length normalized version of accelerometer readings vector */
+  Vector3DNormalize(accNormalized, bodyAccelerometerReadings);
+
+  /* Calculate roll and pitch Euler angles  */
+  dstAttitude[1] = asin(-accNormalized[0]); // Roll-Phi
+  dstAttitude[0] = atan2(accNormalized[1], accNormalized[2]); // Pitch-Theta // TODO atan2 working as intended?
+}
+
+
+/*
  * @brief  Calculates the attitude (roll, pitch, yaw angles) based on magnetometer input
  * @param  dstAttitude : Destination vector in which to store the calculated attitude (roll, pitch, yaw)
  * @param  bodyMagneticReadings : The magnetometer sensor readings in the UAV body-frame
@@ -108,12 +127,12 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 	float32_t r33 = cosAngle + rotationAxisVector[2]*rotationAxisVector[2]*(1.0-cosAngle);
 
 	/* Extract Euler angles from rotation matrix elements */
-	dstAttitude[0] = atan2(r23, r33);
-	dstAttitude[1] = asin(-r13);
-	dstAttitude[2] = atan2(r12, r11);
+	dstAttitude[0] = atan2(r23, r33); // Roll-Phi // TODO does atan2 work as expected?
+	dstAttitude[1] = asin(-r13); // Pitch-Theta
+	dstAttitude[2] = atan2(r12, r11); // Yaw-Psi // TODO does atan2 work as expected?
 
 	// TODO Init inertialMagneticVector somewhere at startup
-	// TODO adjust for difference between magnetic and geographic north pole? Should this done here?
+	// TODO adjust for difference between magnetic and geographic north pole (magnetic declination)? Should this be done here (if at all)?
 }
 
 /*
