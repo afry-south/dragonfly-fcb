@@ -317,3 +317,12 @@ void GaussNewtonLeastSphereFit(void) {
   float32_t JtR[6]; //The right-hand side of equation 2.
 }
 #endif
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/

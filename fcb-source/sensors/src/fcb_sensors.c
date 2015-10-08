@@ -173,7 +173,7 @@ void PrintSensorValues(const SerializationType_TypeDef serializationType) {
 
   /* Get the latest sensor values */
   GetAcceleration(&accX, &accY, &accZ);
-  GetAngleDot(&gyroX, &gyroY, &gyroZ);
+  GetGyroAngleDot(&gyroX, &gyroY, &gyroZ);
   GetMagVector(&magX, &magY, &magZ);
 
   switch (serializationType) {

@@ -9,6 +9,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "rotation_transformation.h"
 #include "fcb_accelerometer_magnetometer.h"
+#include "trace.h"
 
 #include <math.h>
 
@@ -87,10 +88,9 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
   Vector3DNormalize(accNormalized, bodyAccelerometerReadings);
 
   /* Calculate roll and pitch Euler angles  */
-  dstAttitude[1] = asin(-accNormalized[0]); // Roll-Phi // TODO asin singularity?
-  dstAttitude[0] = atan2(accNormalized[1], accNormalized[2]); // Pitch-Theta // TODO atan2 working as intended?
+  dstAttitude[0] = atan2(-accNormalized[1], -accNormalized[2]); // Roll-Phi need sign on both params to get right section of unit circle
+  dstAttitude[1] = asin(accNormalized[0]); // Pitch-Theta
 }
-
 
 /*
  * @brief  Calculates the attitude (roll, pitch, yaw angles) based on magnetometer input
@@ -131,9 +131,9 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 	float32_t r23 = rotationAxisVector[1]*rotationAxisVector[2]*(1.0-cosAngle) - rotationAxisVector[0]*sinAngle;
 	float32_t r33 = cosAngle + rotationAxisVector[2]*rotationAxisVector[2]*(1.0-cosAngle);
 
-	/* Extract Euler angles from rotation matrix elements */
+	/* Extract Euler angles from rotation matrix elements */ // TODO all this needs testing
 	dstAttitude[0] = atan2(r23, r33); // Roll-Phi // TODO does atan2 work as expected?
-	dstAttitude[1] = asin(-r13); // Pitch-Theta // TODO arcsin singularity
+	dstAttitude[1] = asin(-r13); // Pitch-Theta
 	dstAttitude[2] = atan2(r12, r11); // Yaw-Psi // TODO does atan2 work as expected?
 }
 
@@ -168,60 +168,23 @@ void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector) {
 }
 
 /*
- * @brief	Returns the roll angle calculated from accelerometer values.
- * @param	None
- * @retval	rollAngle: roll angle in radians.
- */
-float32_t GetAccRollAngle(void)
-{
-	float32_t accX;
-	float32_t accY;
-	float32_t accZ;
-	float32_t rollAngle;
-
-	GetAcceleration(&accX, &accY, &accZ);
-	rollAngle = atan2(accY, accZ);
-
-	return rollAngle;
-}
-
-/*
- * @brief	Returns the pitch angle calculated from accelerometer values.
- * @param	None
- * @retval	pitchAngle: pitch angle in radians.
- */
-float32_t GetAccPitchAngle(void)
-{
-	float32_t accX;
-	float32_t accY;
-	float32_t accZ;
-	float32_t pitchAngle;
-
-	GetAcceleration(&accX, &accY, &accZ);
-	pitchAngle = atan2(accX, accZ);
-
-	return pitchAngle;
-}
-
-/*
- * @brief	Returns the yaw angle calculated from magnetometer values.
- * @param	roll: roll angle in radians (kalman estimated or from acc)
- * @param	pitch: pitch angle in radians (kalman estimated or from acc)
- * @retval	yawAngle: yaw angle in radians.
+ * @brief	Returns the yaw angle calculated from magnetometer values with tilt (roll/pitch) compensation
+ * @param	roll : roll angle in radians (kalman estimated or from accelerometer)
+ * @param	pitch : pitch angle in radians (kalman estimated or from accelerometer)
+ * @retval	yawAngle : yaw angle in radians
  */
 float32_t GetMagYawAngle(const float32_t roll, const float32_t pitch)
 {
-	float32_t magX;
-	float32_t magY;
-	float32_t magZ;
+	float32_t magValues[3];
+	float32_t normalizedMag[3];
 	float32_t yawAngle;
 
-	GetMagVector(&magX, &magY, &magZ);
+	GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
+	Vector3DNormalize(normalizedMag, magValues);
 
-	/* Equation found at https://www.pololu.com/file/download/...?file_id=0J434 */
-	yawAngle = atan2(magX*arm_sin_f32(roll)*arm_sin_f32(pitch)+magY*arm_cos_f32(roll)-magZ*arm_sin_f32(roll)*arm_cos_f32(pitch),
-						magX*arm_cos_f32(pitch)+magZ*arm_sin_f32(pitch));
-
+	/* Equation found in LSM303DLH Application Note document. Minus sign in first parameter in atan2 to get correct rotation direction around Z axis ("down") */
+	yawAngle = atan2(-(normalizedMag[0]*arm_sin_f32(roll)*arm_sin_f32(pitch) + normalizedMag[1]*arm_cos_f32(roll) - normalizedMag[2]*arm_sin_f32(roll)*arm_cos_f32(pitch)),
+			normalizedMag[0]*arm_cos_f32(pitch) + normalizedMag[2]*arm_sin_f32(pitch));
 	return yawAngle;
 }
 

@@ -19,11 +19,14 @@
 #include "dragonfly_fcb.pb.h"
 #include "usb_com_cli.h"
 #include "pb_encode.h"
+#include "math.h"
+#include "rotation_transformation.h"
 
 /* Private define ------------------------------------------------------------*/
 #define STATE_PRINT_SAMPLING_TASK_PRIO			1
-#define STATE_PRINT_MINIMUM_SAMPLING_TIME		2	// updated every 2.5 ms
-#define STATE_PRINT_MAX_STRING_SIZE				160
+#define STATE_PRINT_MINIMUM_SAMPLING_TIME		20	// updated every 2.5 ms
+#define STATE_PRINT_MAX_STRING_SIZE				256
+#define RAD_TO_DEG								360/(2*PI)
 
 /* Private variables ---------------------------------------------------------*/
 StateVector_TypeDef States;
@@ -128,6 +131,9 @@ float32_t GetYawAngle(void)
  * @retval MOTORCTRL_OK if thread started, else MOTORCTRL_ERROR.
  */
 StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
+
+	// TODO do not start a new task if one is already running, just update sampleTime/sampleDuration
+
 	if(sampleTime < STATE_PRINT_MINIMUM_SAMPLING_TIME)
 		statePrintSampleTime = STATE_PRINT_MINIMUM_SAMPLING_TIME;
 	else
@@ -178,17 +184,45 @@ void SetStatePrintSamplingSerialization(const SerializationType_TypeDef serializ
 }
 
 /*
+ * @brief	Converts radians to degrees
+ * @param	radian: The value in radians that should be converted.
+ * @return	degree: The converted value in degrees.
+ */
+float32_t RadianToDegree(float32_t radian) {
+	float32_t degree = radian*RAD_TO_DEG;
+
+	while(degree>180) {
+		degree -= 360;
+	}
+	while(degree<-180) {
+		degree += 360;
+	}
+
+	return degree;
+}
+
+/*
  * @brief Prints the state values
  * @param serializationType: Data serialization type enum
  * @retval None
  */
 void PrintStateValues(const SerializationType_TypeDef serializationType) {
-	char stateString[STATE_PRINT_MAX_STRING_SIZE];
+	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
 
 	if(serializationType == NO_SERIALIZATION) {
+//		float32_t sensorAngleRoll = GetAccRollAngle();
+//		float32_t sensorAnglePitch = GetAccPitchAngle();
+//		float32_t sensorAngleYaw = GetMagYawAngle(sensorAngleRoll, sensorAnglePitch);
+		float32_t accValues[3];
+		float32_t accAttitude[3]; // Roll, pitch, yaw
+
+		GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
+		GetAttitudeFromAccelerometer(accAttitude, accValues);
+		accAttitude[2] = GetMagYawAngle(accAttitude[0], accAttitude[1]);
+
 		snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-				"States:\nrollAngle: %1.3f\nrollRateBias: %1.3f\npitchAngle: %1.3f\npitchRateBias: %1.3f\nyawAngle: %1.4f\nyawRateBias: %1.3f\n\r\n",
-				States.roll, States.rollRateBias, States.pitch, States.pitchRateBias, States.yaw, States.yawRateBias);
+				"States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\n\r\n",
+				RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw), States.rollRateBias, States.pitchRateBias, States.yawRateBias, accAttitude[0], accAttitude[1], accAttitude[2]);
 
 		USBComSendString(stateString);
 	}
@@ -265,7 +299,7 @@ static void StateInit(KalmanFilter_TypeDef * Estimator)
   Estimator->p21 = 0.0;
   Estimator->p22 = 1.0;
 
-  /* q1 = sqrt(var(rate))*CONTROL_SAMPLE_PERIOD^2
+  /* q1 = sqrt(var(rate))*STATE_ESTIMATION_SAMPLE_PERIOD^2
    * q2 = sqrt(var(rateBias))
    * r1 = sqrt(var(angle)) */
   Estimator->q1 = Q1_CAL;
@@ -288,14 +322,14 @@ static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Es
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
 
-	/* WARNING: CONTROL_SAMPLE_PERIOD is set to 0 right now!! WARNING */
-	*stateAngle += CONTROL_SAMPLE_PERIOD * sensorRate - CONTROL_SAMPLE_PERIOD * (*stateRateBias);
+	/* WARNING: STATE_ESTIMATION_SAMPLE_PERIOD is set to 0 right now!! WARNING */
+	*stateAngle += STATE_ESTIMATION_SAMPLE_PERIOD * sensorRate - STATE_ESTIMATION_SAMPLE_PERIOD * (*stateRateBias);
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
-	Estimator->p11 += (CONTROL_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1)*CONTROL_SAMPLE_PERIOD;
-	Estimator->p12 -= Estimator->p22 * CONTROL_SAMPLE_PERIOD;
-	Estimator->p21 -= Estimator->p22 * CONTROL_SAMPLE_PERIOD;
-	Estimator->p22 += Estimator->q2 * CONTROL_SAMPLE_PERIOD;
+	Estimator->p11 += (STATE_ESTIMATION_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1)*STATE_ESTIMATION_SAMPLE_PERIOD;
+	Estimator->p12 -= Estimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
+	Estimator->p21 -= Estimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
+	Estimator->p22 += Estimator->q2 * STATE_ESTIMATION_SAMPLE_PERIOD;
 }
 
 
@@ -316,6 +350,8 @@ static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* E
 
 	/* Step 4: Calculate innovation covariance matrix S*/
 	float32_t s = Estimator->p11 + Estimator->r1;
+
+	// TODO if s becomes 0.0, below values will become NaN
 
 	/* Step 5: Calculate Kalman gain*/
 	Estimator->k1 = Estimator->p11 /s;
@@ -361,7 +397,11 @@ static void StatePrintSamplingTask(void const *argument) {
 	}
 }
 
+/**
+ * @}
+ */
 
-
-
+/**
+ * @}
+ */
 /*****END OF FILE****/

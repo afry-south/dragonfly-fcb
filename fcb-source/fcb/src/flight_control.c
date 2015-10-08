@@ -16,6 +16,10 @@
 #include "receiver.h"
 #include "motor_control.h"
 #include "pid_control.h"
+#include "fcb_gyroscope.h"
+#include "rotation_transformation.h"
+#include "state_estimation.h"
+#include "fcb_accelerometer_magnetometer.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -46,6 +50,8 @@ xTaskHandle FlightControlTaskHandle; // Task handle for flight control task
 
 /* Private function prototypes -----------------------------------------------*/
 static void UpdateFlightControl(void);
+static void UpdateFlightStates(void);
+
 static void SetFlightMode(void);
 static void SetReferenceSignals(void);
 
@@ -122,7 +128,7 @@ float GetYawAngularRateReferenceSignal(void) {
 /* Private functions ---------------------------------------------------------*/
 
 /*
- * @brief  Performs program duties with regular intervals.
+ * @brief  Performs program flight control duties with regular intervals.
  * @param  None.
  * @retval None.
  */
@@ -161,6 +167,38 @@ static void UpdateFlightControl(void) {
 		return;
 
 	}
+}
+
+/*
+ * @brief  Updates state estimation Kalman filter to update flight states
+ * @param  None.
+ * @retval None.
+ */
+static void UpdateFlightStates(void) {
+	float32_t sensorRateRoll, sensorRatePitch, sensorRateYaw;
+	float32_t accValues[3];	// accX, accY, accZ
+	float32_t sensorAttitude[3]; // Roll, pitch, yaw
+
+	/* Get gyroscope values */
+	GetGyroAngleDot(&sensorRateRoll, &sensorRatePitch, &sensorRateYaw);
+
+	/* Get accelerometer values */
+	GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
+
+	/* Calculate roll and pitch based on accelerometer values */
+	GetAttitudeFromAccelerometer(sensorAttitude, accValues);
+
+	/* Calculate yaw based on magnetometer value with roll/pitch tilt-compensation */
+	sensorAttitude[2] = GetMagYawAngle(sensorAttitude[0], sensorAttitude[1]);
+
+	// TODO improve Kalman algorithm real-time performance (event-based). Do prediction more often AND when new gyro values arrive
+	// TODO do correction when new accelerometer values arrive
+
+	/* Do Kalman prediction step */
+	PredictStatesXYZ(sensorRateRoll, sensorRatePitch, sensorRateYaw);
+
+	/* Do Kalman correction step */
+	CorrectStatesXYZ(sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
 }
 
 /*
@@ -229,17 +267,23 @@ static void FlightControlTask(void const *argument) {
 	/* Initialise the xLastWakeTime variable with the current time */
 	xLastWakeTime = xTaskGetTickCount();
 
+
 	for (;;) {
 		vTaskDelayUntil(&xLastWakeTime, FLIGHT_CONTROL_TASK_PERIOD);
 
-		/* Update the flight control state and perform flight control activities */
+		/* Perform flight state estimation update */
+		UpdateFlightStates();
+
+		/* Perform flight control activities */
 		UpdateFlightControl();
 
 		/* Blink with LED to indicate thread is alive */
-		if(ledFlashCounter % 100 == 0)
+		if(ledFlashCounter % 100 == 0) {
 			BSP_LED_On(LED6);
-		else if(ledFlashCounter % 20 == 0)
+		}
+		else if(ledFlashCounter % 20 == 0) {
 			BSP_LED_Off(LED6);
+		}
 
 		ledFlashCounter++;
 	}

@@ -136,3 +136,12 @@ void GetMagVector(float32_t * x, float32_t * y, float32_t * z);
 void PrintAccelerometerValues(void);
 
 #endif /* FCB_ACCELEROMETER_H */
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+/*****END OF FILE****/

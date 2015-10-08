@@ -14,6 +14,7 @@
 #include "fcb_gyroscope.h"
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_error.h"
+#include "usbd_cdc_if.h"
 
 #include "stm32f3_discovery.h"
 
@@ -63,6 +64,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  * @retval none
  */
 void HAL_PWR_PVDCallback(void) {
+	USBComSendString("Error: PVD\n");
+
 	/* Voltage drop detected - Go to error handler */
 	ErrorHandler();
 }

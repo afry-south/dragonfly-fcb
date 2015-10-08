@@ -10,6 +10,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "arm_math.h"
 #include "usbd_cdc_if.h"
+#include "flight_control.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct
@@ -41,10 +42,7 @@ typedef enum {
 
 
 /* Exported constants --------------------------------------------------------*/
-#define ACC_CALIBRATION_SAMPLES		(int)		100
-#define MAG_CALIBRATION_SAMPLES    	(int)		2000
-#define INIT_SAMPLES			(int)		1000
-#define	CONTROL_SAMPLE_PERIOD (float32_t)		0
+#define	STATE_ESTIMATION_SAMPLE_PERIOD			(float32_t) FLIGHT_CONTROL_TASK_PERIOD / 1000.0
 #define Q1_CAL (float32_t)						0.5
 #define	Q2_CAL (float32_t)						0.05
 #define	R1_CAL (float32_t)						1.5
@@ -63,6 +61,7 @@ void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAng
 StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 StateErrorStatus StopStateSamplingTask(void);
 void SetStatePrintSamplingSerialization(const SerializationType_TypeDef serializationType);
+float32_t RadianToDegree(float32_t radian);
 void PrintStateValues(const SerializationType_TypeDef serializationType);
 
 #endif /* __SENSORS_H */
