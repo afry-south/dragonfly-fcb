@@ -21,12 +21,13 @@
 #include "pb_encode.h"
 #include "math.h"
 #include "rotation_transformation.h"
+#include "fcb_accelerometer_magnetometer.h"
 
 /* Private define ------------------------------------------------------------*/
 #define STATE_PRINT_SAMPLING_TASK_PRIO			1
 #define STATE_PRINT_MINIMUM_SAMPLING_TIME		20	// updated every 2.5 ms
 #define STATE_PRINT_MAX_STRING_SIZE				256
-#define RAD_TO_DEG								360/(2*PI)
+#define RAD_TO_DEG								180/PI
 
 /* Private variables ---------------------------------------------------------*/
 StateVector_TypeDef States;
