@@ -74,21 +74,33 @@ uint8_t FcbInitialiseAccMagSensor(void);
 void FetchDataFromAccelerometer(void);
 
 /**
- * Begins calibration of magnetometer.
- *
- * This is an asynchronous operation.
- *
+ * When this function has been called, GetAcceleration and GetMagVector
+ * will return uncalibrated values until the CPU has rebooted or
+ * StopAccMagMtrCalibration has been called.
  *
  * @param samples ACCMAG_CALIBRATION_SAMPLES_N <= val <= 250 (data type limitation)
  *
  * @see ACCMAG_CALIBRATION_SAMPLES_N
  */
-void BeginAccMagMtrCalibration(uint8_t samples);
+void StartAccMagMtrCalibration(uint8_t samples);
+
+/**
+ * When this function has been called, GetAcceleration and GetMagVector
+ * will return calibrated values (which is the default).
+ *
+ * @note this function will not be needed if or when all calibration
+ * is done onboard the FCB board, today the calculations are done offline
+ * in SciLab.
+ */
+void StopAccMagMtrCalibration(uint8_t samples);
 
 /*
- * get the current reading from the accelerometer.
+ * get the current calibrated reading from the accelerometer.
  *
  * It is updated at a rate of 50 Hz (configurable in lsm303dlhc.c).
+ *
+ * By default, it returns calibrated values, but after StartAccMagMtrCalibration
+ * is called, it returns uncalibrated values.
  *
  * The caller allocates memory for input variables.
  */
@@ -107,6 +119,10 @@ void FetchDataFromMagnetometer(void);
  *
  * The magnetometer values are updated at a rate
  * of 75 Hz (configurable in lsm303dlhc.c).
+ *
+ * By default, it returns calibrated values, but after StartAccMagMtrCalibration
+ * is called, it returns uncalibrated values.
+ *
  *
  * The caller allocates memory for input variables.
  *

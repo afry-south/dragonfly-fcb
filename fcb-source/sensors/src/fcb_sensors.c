@@ -185,7 +185,7 @@ void PrintSensorValues(const SerializationType_TypeDef serializationType) {
       break;
     case CALIBRATION_SERIALIZATION:
       snprintf((char*) sensorString, SENSOR_PRINT_MAX_STRING_SIZE,
-               "AccXYZ: %1.3f, %1.3f, %1.3f\r\nGyrXYZ: %1.3f, %1.3f, %1.3f\r\nMagXYZ: %1.3f, %1.3f, %1.3f\n\r\n",
+               "AccXYZ: %f, %f, %f\r\nGyrXYZ: %f, %f, %f\r\nMagXYZ: %f, %f, %f\n\r\n",
                accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ);
       USBComSendString(sensorString);
       break;

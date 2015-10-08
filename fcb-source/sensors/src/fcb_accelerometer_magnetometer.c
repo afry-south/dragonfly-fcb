@@ -56,7 +56,8 @@ static float32_t sXYZMagVector[] = { 0, 0 , 0 };
  * @see FcbSensorCalibrationParmIndex for what the numbers mean.
  */
 static float32_t sXYZMagCalPrm[CALIB_IDX_MAX] = {
-    - 0.0127656,    0.0804974,    0.0338544,    0.9025001,    0.9189748,    0.9415154
+    - 0.0105836,    0.0906626,    0.0484313,    0.8757337,    0.8965046,    0.8977956 /* 123 samples */
+/* - 0.0127656,    0.0804974,    0.0338544,    0.9025001,    0.9189748,    0.9415154 6 samples */
 }; /* values copied from MagnetometerCalibration.sce */
 
 
@@ -152,7 +153,8 @@ void FetchDataFromAccelerometer(void) {
   HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_9);
 #endif
 
-  if (ACCMAGMTR_FETCHING == accMagMode) {
+  if ((ACCMAGMTR_FETCHING == accMagMode) ||
+      (ACCMAGMTR_CALIBRATING == accMagMode)) {
     LSM303DLHC_AccReadXYZ(acceleroMeterData);
     /* from accelerometer to quadcopter coordinate axes
      * see "Sensors" page in Wiki.
@@ -173,7 +175,7 @@ void FetchDataFromAccelerometer(void) {
 #endif
 }
 
-void BeginAccMagMtrCalibration(uint8_t samples) {
+void StartAccMagMtrCalibration(uint8_t samples) {
   configASSERT(samples < 251);
   configASSERT(samples >= ACCMAG_CALIBRATION_SAMPLES_N);
 
@@ -181,6 +183,9 @@ void BeginAccMagMtrCalibration(uint8_t samples) {
   accMagMode = ACCMAGMTR_CALIBRATING;
 }
 
+void StopAccMagMtrCalibration(uint8_t samples) {
+  accMagMode = ACCMAGMTR_FETCHING;
+}
 
 void FetchDataFromMagnetometer(void) {
   float magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
@@ -200,7 +205,8 @@ void FetchDataFromMagnetometer(void) {
   HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
 #endif
 
-  if (ACCMAGMTR_FETCHING == accMagMode) {
+  if ((ACCMAGMTR_FETCHING == accMagMode) ||
+      (ACCMAGMTR_CALIBRATING == accMagMode)) {
     LSM303DLHC_MagReadXYZ(magnetoMeterData);
 
     /* TODO ... and then copy them into a mutex-protected sXYZMagVector here?? */
@@ -223,18 +229,21 @@ void FetchDataFromMagnetometer(void) {
   HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
 #endif
 
+#ifdef FCB_SENSORS_SCILAB_CALIB
+  /* - copy values from CLI to SciLab data file
+   * - run SciLab Gauss-Newton
+   * - insert calibration values manually into code
+   */
+#else
   if (ACCMAGMTR_CALIBRATING == accMagMode) {
     if (sampleIndex < sampleMax) {
 
-#ifndef FCB_SENSORS_SCILAB_CALIB
       /* store sample */
       calibrationSamples[sampleIndex][X_IDX] = sXYZMagVector[X_IDX];
       calibrationSamples[sampleIndex][Y_IDX] = sXYZMagVector[Y_IDX];
       calibrationSamples[sampleIndex][Z_IDX] = sXYZMagVector[Z_IDX];
-#endif
       sampleIndex++;
     } else if (sampleIndex == sampleMax) {
-#ifndef FCB_SENSORS_SCILAB_CALIB
       /* run Gauss-Newton Least Sphere fit algorithm */
 
       /* ISSUE2_TODO do the offset & scaling calculations */
@@ -242,16 +251,10 @@ void FetchDataFromMagnetometer(void) {
       /* ISSUE2_TODO store the offsets (in flash) & scaling */
 
       /* calibration done */
-#else
-      /* - copy values from CLI to SciLab data file
-       * - run SciLab Gauss-Newton
-       * - insert calibration values manually into code
-       */
-#endif
       accMagMode = ACCMAGMTR_FETCHING;
       sampleIndex = 0;
     }
-  }
+#endif /* FCB_SENSORS_SCILAB_CALIB */
 }
 
 
