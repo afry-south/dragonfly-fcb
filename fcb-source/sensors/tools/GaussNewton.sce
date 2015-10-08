@@ -36,7 +36,7 @@ function retVal = GaussNewtonLeastSquares(normSamp, calBetaInitialGuess, maxIter
 
         // ... and break the loop if the change is sufficiently small.
         // What counts as 'small' was arbitrarily chosen.
-        if sumBetaChange < 0.001 then
+        if sumBetaChange < 0.0001 then
             printf("break at sumBetaChange: %f\n", sumBetaChange);
             break
         end
@@ -49,7 +49,7 @@ endfunction
 
 
 // ------ debug utilities ----------
-showDebug = 1;
+showDebug = 0;
 
 // show debug variable
 // it will print the name of the variable on a line, the value of the variable
@@ -141,16 +141,4 @@ function retval = gnStep(samples, calBeta)
     new_calBeta = calBeta - myDelta;
     
     retval = new_calBeta
-endfunction
-
-// displays norms of raw and calibrated samples respectively.
-function DisplayNorms(samples, calBeta)
-[nSamp, dummy] = size(samples);
-for i=1:nSamp
-    calibrated(1:3) = [ (samples(i, 1) - calBeta(1, 1)) * calBeta(4,1),
-        (samples(i, 2) - calBeta(2, 1)) * calBeta(5,1),
-        (samples(i, 3) - calBeta(3, 1)) * calBeta(6,1) ];
-                            
-    printf("norm(MagSamples[%i]): %f norm(calibrated[%i]):%f\n", i, norm(samples(i, 1:3)),i, norm(calibrated));
-end
 endfunction
