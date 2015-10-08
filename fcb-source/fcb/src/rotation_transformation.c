@@ -175,15 +175,16 @@ void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector) {
  */
 float32_t GetMagYawAngle(const float32_t roll, const float32_t pitch)
 {
-	float32_t magX, magY, magZ;
+	float32_t magValues[3];
+	float32_t normalizedMag[3];
 	float32_t yawAngle;
 
-	GetMagVector(&magX, &magY, &magZ);
+	GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
+	Vector3DNormalize(normalizedMag, magValues);
 
-	/* Equation found in LSM303DLH Application Note document */
-	yawAngle = -atan2(magX*arm_sin_f32(roll)*arm_sin_f32(pitch) + magY*arm_cos_f32(roll) - magZ*arm_sin_f32(roll)*arm_cos_f32(pitch),
-						magX*arm_cos_f32(pitch) + magZ*arm_sin_f32(pitch)); // TODO check sign on atan2 and atan2 params
-
+	/* Equation found in LSM303DLH Application Note document. Minus sign in first parameter in atan2 to get correct rotation direction around Z axis ("down") */
+	yawAngle = atan2(-(normalizedMag[0]*arm_sin_f32(roll)*arm_sin_f32(pitch) + normalizedMag[1]*arm_cos_f32(roll) - normalizedMag[2]*arm_sin_f32(roll)*arm_cos_f32(pitch)),
+			normalizedMag[0]*arm_cos_f32(pitch) + normalizedMag[2]*arm_sin_f32(pitch));
 	return yawAngle;
 }
 

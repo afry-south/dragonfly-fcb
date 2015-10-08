@@ -176,13 +176,19 @@ static void UpdateFlightControl(void) {
  */
 static void UpdateFlightStates(void) {
 	float32_t sensorRateRoll, sensorRatePitch, sensorRateYaw;
-	float32_t accValues[3];
+	float32_t accValues[3];	// accX, accY, accZ
 	float32_t sensorAttitude[3]; // Roll, pitch, yaw
 
-	/* Get sensor values */
+	/* Get gyroscope values */
 	GetGyroAngleDot(&sensorRateRoll, &sensorRatePitch, &sensorRateYaw);
+
+	/* Get accelerometer values */
 	GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
+
+	/* Calculate roll and pitch based on accelerometer values */
 	GetAttitudeFromAccelerometer(sensorAttitude, accValues);
+
+	/* Calculate yaw based on magnetometer value with roll/pitch tilt-compensation */
 	sensorAttitude[2] = GetMagYawAngle(sensorAttitude[0], sensorAttitude[1]);
 
 	// TODO improve Kalman algorithm real-time performance (event-based). Do prediction more often AND when new gyro values arrive

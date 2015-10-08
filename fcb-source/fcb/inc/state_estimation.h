@@ -42,7 +42,7 @@ typedef enum {
 
 
 /* Exported constants --------------------------------------------------------*/
-#define	CONTROL_SAMPLE_PERIOD					0.020 // TODO calc this from sample rate
+#define	STATE_ESTIMATION_SAMPLE_PERIOD			(float32_t) FLIGHT_CONTROL_TASK_PERIOD / 1000.0
 #define Q1_CAL (float32_t)						0.5
 #define	Q2_CAL (float32_t)						0.05
 #define	R1_CAL (float32_t)						1.5

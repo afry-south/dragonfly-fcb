@@ -299,7 +299,7 @@ static void StateInit(KalmanFilter_TypeDef * Estimator)
   Estimator->p21 = 0.0;
   Estimator->p22 = 1.0;
 
-  /* q1 = sqrt(var(rate))*CONTROL_SAMPLE_PERIOD^2
+  /* q1 = sqrt(var(rate))*STATE_ESTIMATION_SAMPLE_PERIOD^2
    * q2 = sqrt(var(rateBias))
    * r1 = sqrt(var(angle)) */
   Estimator->q1 = Q1_CAL;
@@ -322,14 +322,14 @@ static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Es
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
 
-	/* WARNING: CONTROL_SAMPLE_PERIOD is set to 0 right now!! WARNING */
-	*stateAngle += CONTROL_SAMPLE_PERIOD * sensorRate - CONTROL_SAMPLE_PERIOD * (*stateRateBias);
+	/* WARNING: STATE_ESTIMATION_SAMPLE_PERIOD is set to 0 right now!! WARNING */
+	*stateAngle += STATE_ESTIMATION_SAMPLE_PERIOD * sensorRate - STATE_ESTIMATION_SAMPLE_PERIOD * (*stateRateBias);
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
-	Estimator->p11 += (CONTROL_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1)*CONTROL_SAMPLE_PERIOD;
-	Estimator->p12 -= Estimator->p22 * CONTROL_SAMPLE_PERIOD;
-	Estimator->p21 -= Estimator->p22 * CONTROL_SAMPLE_PERIOD;
-	Estimator->p22 += Estimator->q2 * CONTROL_SAMPLE_PERIOD;
+	Estimator->p11 += (STATE_ESTIMATION_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1)*STATE_ESTIMATION_SAMPLE_PERIOD;
+	Estimator->p12 -= Estimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
+	Estimator->p21 -= Estimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
+	Estimator->p22 += Estimator->q2 * STATE_ESTIMATION_SAMPLE_PERIOD;
 }
 
 
@@ -397,7 +397,11 @@ static void StatePrintSamplingTask(void const *argument) {
 	}
 }
 
+/**
+ * @}
+ */
 
-
-
+/**
+ * @}
+ */
 /*****END OF FILE****/
