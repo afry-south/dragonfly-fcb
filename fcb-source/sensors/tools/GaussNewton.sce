@@ -1,11 +1,11 @@
-// Web links for explanation & credits to Rolfe Schmidt, the author
+// Web links for explanation & credits to Rolfe Schmidt, the author of [1] and [5]
 //
 // [1] https://chionophilous.wordpress.com/2012/09/01/implementing-the-gauss-newton-algorithm-for-sphere-fitting-1-of-3/
-// [2] http://www.ngdc.noaa.gov/geomag-web/
+// [2] http://www.ngdc.noaa.gov/geomag-web/ (National Oceanic and Atmospheric Administration - for earth's magnetic field values)
 // [3] https://chionophilous.wordpress.com/2011/08/26/accelerometer-calibration-iii-improving-accuracy-with-least-squares-and-the-gauss-newton-method/
-
-// GNU Octave file (also by Rolfe Schmidt):
-// http://rolfeschmidt.com/mathtools/skimetrics/gaussnewton.m
+// [4] https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm (Gauss-Newton article in en.Wikipedia)
+// [5] GNU Octave file (also by Rolfe Schmidt):
+//  http://rolfeschmidt.com/mathtools/skimetrics/gaussnewton.m
 
 // calBeta will send the normalised normSamp values to a sphere with
 // radius 1 at good calibration. It is 
@@ -132,8 +132,9 @@ function retval = gnStep(samples, calBeta)
     // d2S / (d_betaj dbeta_k) ~ 2 * Jacobian_transposed * Jacobian
     //
     // due to S being a sum of square residuals.
+    // see ref[3] and [4] for theoretical background
     JS = myJacobian' * myJacobian;
-    myDelta = JS \ (myJacobian' * myResiduals); // a bit shaky on the theory here.
+    myDelta = JS \ (myJacobian' * myResiduals);
     disp("myDelta");
     disp(myDelta');
     
