@@ -55,12 +55,12 @@ PlotResidualsInitialFinal(initialResiduals, finalResiduals);
 // the beta scaling (calBeta[4..6]) is already correct.
 calBeta(1:3,1) = calBeta(1:3,1) * localMagField;
 printf("Displaying norms of uncailbrated and calibrated values:\n");
-
 DisplayNorms(magSamples, calBeta);
+DisplayXYZStdDev(magSamples, calBeta);
 
 showVar("calBeta - denormalised", calBeta');
 
 
-// calBeta result 
 
+// calBeta result 
 // (123 samples):  - 0.0105836    0.0906626    0.0484313    0.8757337    0.8965046    0.8977956
