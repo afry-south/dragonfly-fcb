@@ -123,6 +123,7 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 	rotationAngle = acos(dotProd);
 
 	/* Calculate rotation matrix elements formed by axis/angle representation */
+	// TODO See https://en.wikipedia.org/wiki/Rotation_matrix, maybe we are using wrong matrix elements if transposed rot matrix
 	float32_t cosAngle = arm_cos_f32(rotationAngle);
 	float32_t sinAngle = arm_sin_f32(rotationAngle);
 	float32_t r11 = cosAngle + rotationAxisVector[0]*rotationAxisVector[0]*(1.0-cosAngle);
@@ -169,17 +170,16 @@ void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector) {
 
 /*
  * @brief	Returns the yaw angle calculated from magnetometer values with tilt (roll/pitch) compensation
+ * @param	magValues : Vector containing 3D magnetometer values
  * @param	roll : roll angle in radians (kalman estimated or from accelerometer)
  * @param	pitch : pitch angle in radians (kalman estimated or from accelerometer)
  * @retval	yawAngle : yaw angle in radians
  */
-float32_t GetMagYawAngle(const float32_t roll, const float32_t pitch)
+float32_t GetMagYawAngle(const float32_t* magValues, const float32_t roll, const float32_t pitch)
 {
-	float32_t magValues[3];
 	float32_t normalizedMag[3];
 	float32_t yawAngle;
 
-	GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
 	Vector3DNormalize(normalizedMag, magValues);
 
 	/* Equation found in LSM303DLH Application Note document. Minus sign in first parameter in atan2 to get correct rotation direction around Z axis ("down") */

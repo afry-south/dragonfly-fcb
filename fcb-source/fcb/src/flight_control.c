@@ -68,13 +68,13 @@ void CreateFlightControlTask(void) {
 	/* Flight Control task creation
 	 * Task function pointer: FlightControlTask
 	 * Task name: FLIGHT_CTRL
-	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Stack depth: 2*configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: FLIGHT_CONTROL_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: FlightControlTaskHandle
 	 * */
 	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )FlightControlTask, (signed portCHAR*)"FLIGHT_CTRL", configMINIMAL_STACK_SIZE,
+			!= xTaskCreate((pdTASK_CODE )FlightControlTask, (signed portCHAR*)"FLIGHT_CTRL", 2*configMINIMAL_STACK_SIZE,
 					NULL, FLIGHT_CONTROL_TASK_PRIO, &FlightControlTaskHandle)) {
 		ErrorHandler();
 	}
@@ -177,6 +177,7 @@ static void UpdateFlightControl(void) {
 static void UpdateFlightStates(void) {
 	float32_t sensorRateRoll, sensorRatePitch, sensorRateYaw;
 	float32_t accValues[3];	// accX, accY, accZ
+	float32_t magValues[3]; // magX, magY, magZ
 	float32_t sensorAttitude[3]; // Roll, pitch, yaw
 
 	/* Get gyroscope values */
@@ -185,11 +186,14 @@ static void UpdateFlightStates(void) {
 	/* Get accelerometer values */
 	GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
 
+	/* Get magnetometer values */
+	GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
+
 	/* Calculate roll and pitch based on accelerometer values */
 	GetAttitudeFromAccelerometer(sensorAttitude, accValues);
 
 	/* Calculate yaw based on magnetometer value with roll/pitch tilt-compensation */
-	sensorAttitude[2] = GetMagYawAngle(sensorAttitude[0], sensorAttitude[1]);
+	sensorAttitude[2] = GetMagYawAngle(magValues, sensorAttitude[0], sensorAttitude[1]); // TODO input magValues as param!
 
 	// TODO improve Kalman algorithm real-time performance (event-based). Do prediction more often AND when new gyro values arrive
 	// TODO do correction when new accelerometer values arrive
