@@ -22,10 +22,14 @@
 % \usepackage{}
 % \makeatletter\@addtoreset{chapter}{part}\makeatother% % Makes chapter numbering reset after each part
 \usepackage{listingsutf8}
-\lstset{language=C,
+\lstset{
+  basicstyle=\scriptsize\ttfamily,
+  language=C,
 	extendedchars=true,
-   	inputencoding=utf8,
-	gobble=12}
+  inputencoding=utf8,
+  commentstyle=\color{black},
+	gobble=12
+}
 
 \title{Dragonfly Quadrotor UAV \\ Flight Control Board}
 \author{Nina Khayyami \\ Adam Steineck \\ Daniel Stenberg }
@@ -187,7 +191,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		0	&	 \sigma(\dot{\theta_{b}})
 		\end{array} \right]
 		\end{equation}
-
+    In pseudo code:
 		\begin{lstlisting}[frame=single]
 		P[0][0] += dt*(dt*P[1][1] - P[0][1] - P[1][0] + Q1);
 		P[0][1] -= dt*P[1][1];
@@ -210,7 +214,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\dot{\theta}_{b}
 		\end{array} \right]_{k|k-1}
 		\end{equation}
-
+    In pseudo code:
 		\begin{lstlisting}[frame=single]
 		y = sensorAngle - predictAngle;
 		//sensorAngle is the angle computed from sensor values
@@ -245,7 +249,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\begin{equation*}
 		\theta_{acc}=\arctan{\left(\frac{a_{y}}{a_{z}}\right)}
 		 \end{equation*}
-
+    In pseudo code:
 		\begin{lstlisting}[frame=single]
 		S = P[0][0] + R;
 		\end{lstlisting}
@@ -273,7 +277,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\end{array} \right]
 		S^{-1}_{k}
 		\end{equation}
-
+    In pseudo code:
 		\begin{lstlisting}[frame=single]
 		K[0] = P[0][0] / S;
 		K[1] = P[1][0] / S;
@@ -303,7 +307,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\end{array} \right]_{k}
 		\tilde{y}_{k}
 		\end{equation}
-
+    In pseudo code:
 		\begin{lstlisting}[frame=single]
 		correctAngle = predictAngle + K[0]*y;
 		correctBias = predictBias + K[1]*y;
@@ -343,7 +347,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		P_{10}	&	P_{11}
 		\end{array} \right]_{k|k-1}
 		\end{equation}
-
+    In pseudo code:
 		\begin{lstlisting}[frame=single]
 		float P00_tmp = P[0][0];
 		float P01_tmp = P[0][1];
