@@ -13,7 +13,7 @@
 \usepackage{amsmath}
 \usepackage{verbatim}   		% Useful for program listings
 \usepackage[T1]{fontenc}       	% For Swedish characters ÅÄÖ etc.
-\usepackage[utf8]{inputenc}	
+\usepackage[utf8]{inputenc}
 % \usepackage[swedish]{babel} % For Swedish hyphenation
 \usepackage{fancyvrb}           	% For lists with tabulators
 \fvset{tabsize=4}              	 	% Tabulator size
@@ -71,7 +71,7 @@ This part concerns the physical, mathematical and control system theory essentia
 World-frame and body-frame coordinate systems. Euler angles and rotation matrices. Transformations between coordinate frames.
 
 	\section{Flight Dynamics}
-	
+
 	\section{BLDC Motor Theory}
 	\label{sec:BLDCMotorTheory}
 Brushless DC electric motor (BLDC motors, BL motors) also known as electronically commutated motors (ECMs, EC motors) are synchronous motors that are powered by a DC electric source via an integrated inverter/switching power supply, which produces an AC electric signal to drive the motor. In this context, AC, alternating current, does not imply a sinusoidal waveform, but rather a bi-directional current with no restriction on waveform. Additional sensors and electronics control the inverter output amplitude and waveform (and therefore percent of DC bus usage/efficiency) and frequency (i.e. rotor speed).
@@ -83,7 +83,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 	\section{Radio Control Theory}
 
 	\section{Sensor Theory}
-		
+
 		\subsection{Microelectromechanical Systems (MEMS) Sensors}
 
 		\subsection{Gyroscope}
@@ -102,24 +102,24 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\end{equation}
 		\begin{equation*}
 		z_{k}=H\hat{x}_{k|k-1}
-		\end{equation*}	
+		\end{equation*}
 
 		\begin{equation}
 		\left[
       		\begin{array}{c}
-      		\theta\\
-		\dot{\theta}_{b}
+      		\hat{\theta}\\
+		\dot{\hat{\theta}}_{b}
       		\end{array} \right]_{k|k-1}
 		=
 		\left[
-		\begin{array}{c c} 
+		\begin{array}{c c}
 		1 & - \Delta T\\
 		0 & 1
 		\end{array} \right]
 		\left[
 		\begin{array}{c}
-		\theta\\
-		\dot{\theta}_{b}
+		\hat{\theta}\\
+		\dot{\hat{\theta}}_{b}
 		\end{array} \right]_{k-1|k-1}
 		+
 		\left[
@@ -141,12 +141,13 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\dot{\theta}_{b}
 		\end{array} \right]_{k|k-1}
 		\end{equation*}
-
-		\begin{lstlisting}[frame=single]
+    In pseudo code:
+    \begin{lstlisting}[frame=single]
 		predictAngle = angle + dt*gyroRate - dt*bias;
 		//gyroRate is the rate from the gyroscope
 		predictBias = bias;
 		\end{lstlisting}
+
 		Step 2: Predict the error covariance matrix $P_{k|k-1}$,
 		\begin{equation}
 		P_{k|k-1}=AP_{k-1|k-1}A^{T}+Q
@@ -211,7 +212,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\end{equation}
 
 		\begin{lstlisting}[frame=single]
-		y = sensorAngle - predictAngle; 
+		y = sensorAngle - predictAngle;
 		//sensorAngle is the angle computed from sensor values
 		\end{lstlisting}
 		Step 4: Calculate the innovation covariance matrix $S_{k}$
@@ -236,11 +237,11 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\begin{array}{c}
 		1\\
 		0
-		\end{array} \right]	
+		\end{array} \right]
 		+ \sigma(\theta_{acc})
 		\end{equation}
 
-		where 
+		where
 		\begin{equation*}
 		\theta_{acc}=\arctan{\left(\frac{a_{y}}{a_{z}}\right)}
 		 \end{equation*}
@@ -376,9 +377,9 @@ Figure \ref{fig:controloverview} shows an overview of the control problem.
 \end{figure}
 
 	\section{PID Control}
-	
+
 		\subsection{The algorithm}
-The PID control strategy is one of the most commonly used control algorithms. It consists of three parts that each contribute to the control signal; Proportional (P), Integral (I) and Derivative (D). The equation for the PID algorithms is presented in (\ref{PID_classic}), where $u(t)$ is the control signal and $e(t) = y_{ref}(t) - y(t)$ is the control error. This is the classical representation without any modifications. When used in practice, some alterations are typically made to address some practical issues and increase performance in a real-world environment. For one, it needs to be discretized so that a digital computer may generate control signals, but there are numerous other modifications to consider. 
+The PID control strategy is one of the most commonly used control algorithms. It consists of three parts that each contribute to the control signal; Proportional (P), Integral (I) and Derivative (D). The equation for the PID algorithms is presented in (\ref{PID_classic}), where $u(t)$ is the control signal and $e(t) = y_{ref}(t) - y(t)$ is the control error. This is the classical representation without any modifications. When used in practice, some alterations are typically made to address some practical issues and increase performance in a real-world environment. For one, it needs to be discretized so that a digital computer may generate control signals, but there are numerous other modifications to consider.
 
 \begin{equation}
 u(t) = K \bigg( e(t) + \dfrac{1}{T_i} \int_{0}^{\infty}  e(t) dt + T_d \dfrac{d}{dt} e(t) \bigg)
@@ -477,15 +478,15 @@ The T-motor U3 motors have 12 stator coils and 14 rotor magnets. The motor theor
 The motor and propeller manufacturer, T-motors, provides some information on the actuation characteristics in Table \ref{table:motorManufacturerData}. The values were obtained with an operating temperature of $43^{\circ}$ $C$ with 11x3.7 inch T-motors carbon fibre propellers attached to the motor shaft.
 
 \begin{table}
-\begin{tabular}{ |c|c|c|c|c|c| } 
+\begin{tabular}{ |c|c|c|c|c|c| }
 \hline
 \textbf{Throttle} & \textbf{Current} & \textbf{Power} & \textbf{Thrust} & \textbf{Speed} & \textbf{Efficiency} \\
 \textbf{\%} & \textbf{[$A$]} & \textbf{[$W$]} & \textbf{[$g$]} & \textbf{[$rpm$]} & \textbf{[$g/W$]} \\
 \hline
-$50$ & $3.2$ & $48$ & $460$ & $5300$ & $9.58$ \\ 
-$65$ & $6.0$ & $87$ & $710$ & $6500$ & $8.16$ \\ 
-$75$ & $8.2$ & $120$ & $870$ & $7500$ & $7.25$ \\ 
-$85$ & $11.0$ & $160$ & $1080$ & $8200$ & $6.75$ \\ 
+$50$ & $3.2$ & $48$ & $460$ & $5300$ & $9.58$ \\
+$65$ & $6.0$ & $87$ & $710$ & $6500$ & $8.16$ \\
+$75$ & $8.2$ & $120$ & $870$ & $7500$ & $7.25$ \\
+$85$ & $11.0$ & $160$ & $1080$ & $8200$ & $6.75$ \\
 $100$ & $13.0$ & $193$ & $1230$ & $8700$ & $6.37$ \\
 \hline
 \end{tabular}
@@ -496,8 +497,8 @@ $100$ & $13.0$ & $193$ & $1230$ & $8700$ & $6.37$ \\
 	\section{T-Motor ESC30A Electronic Speed Controllers}
 Motor speed control is achieved using ESCs, which cyclically shift the coils’ current by applying a three-phase alternating-current. So the motors themselves are really AC motors, although driven by a DC power source (battery).
 
-The battery drain is determined using MOSFET transistors. By feeding an ESC with a pulse-width modulated (PWM) signal, battery power is switched on and off rapidly for periods decided by the PWM duty cycle. Since this is done at a sufficiently high frequency, the supplied current (which is modulated to AC) “seen” by the motors can be approximated to the mean battery drain. So, the higher the duty cycle the more battery drain and the higher larger electromagnetic torque generated in motor. 
- 
+The battery drain is determined using MOSFET transistors. By feeding an ESC with a pulse-width modulated (PWM) signal, battery power is switched on and off rapidly for periods decided by the PWM duty cycle. Since this is done at a sufficiently high frequency, the supplied current (which is modulated to AC) “seen” by the motors can be approximated to the mean battery drain. So, the higher the duty cycle the more battery drain and the higher larger electromagnetic torque generated in motor.
+
 The ESCs of choice for this project is the \emph{T-Motor ESC30A}, shown in Figure \ref{fig:esc_tmotor}. It takes a PWM input signal up to $400$ $Hz$ to drive the motors. Normally in RC applications, a $1$ $ms$ pulse width indicates $0$ \% throttle, whereas $2$ $ms$ is 100 \% throttle (with $50$ \% being approx. $1.5$ $ms$). The ESCs feature BEC (Battery eliminator circuit), which outputs a low-power $5$ $V$ source useful to power onboard electronics.
 
 \begin{figure}[h]
@@ -509,7 +510,7 @@ The ESCs of choice for this project is the \emph{T-Motor ESC30A}, shown in Figur
 
 \begin{itemize}
   \item Output: Continuous 30A, Burst 40A up to 10 Secs.
-  \item Input: 2-4 cells lithium battery or 5-12 cells NiCd/NIMh battery.  
+  \item Input: 2-4 cells lithium battery or 5-12 cells NiCd/NIMh battery.
   \item BEC: $2$ $A$ / $5$ $V$ (Linear mode)
   \item Max speed: $35000$ $rpm$ for BLDC motor
 \end{itemize}
@@ -521,7 +522,7 @@ The Spektrum AR610 receiver, shown in Figure \ref{fig:ar610}, employs full-range
 \begin{itemize}
   \item BND/DAT (Bind) - Used only to bind the controller to the receiver with the bind plug (see image). More on this can be found in the controller and/or receiver manuals.
   \item THRO (Throttle) – Typically used to control the altitude actuation.
-  \item AILE (Aileron) – Typically used to control the roll actuation. 
+  \item AILE (Aileron) – Typically used to control the roll actuation.
   \item ELEV (Elevator) – Typically used to control the pitch actuation.
   \item RUDD (Rudder) – Typically used to control the yaw actuation.
   \item GEAR – Open to interpretation
@@ -534,7 +535,7 @@ The Spektrum AR610 receiver, shown in Figure \ref{fig:ar610}, employs full-range
     \caption{Spektrum AR610 receiver}
     \label{fig:ar610}
 \end{figure}
- 
+
 The RC transmitter of choice is the Spektrum DX6i, which is a 6-channel transmitter using $2.4$ GHz Spektrum DSMX modulation. In Figure \ref{fig:dx6i_map}, the transmitter's stick and switch mapping and labeling is shown.
 
 \begin{figure}[h]
@@ -583,7 +584,7 @@ As can be viewed in the digram in Figure \ref{fig:fcb-sw-hw-arch}, the Flight Co
 	\section{Real-time Design}
 
 	\section{Code Documentation}
-		
+
 		\subsection{CMSIS}
 
 		\subsection{STM32F3xx HAL Drivers}
@@ -610,11 +611,11 @@ STMicroelectronics provides an extensive library simplifying application interac
 \begin{thebibliography}{99}
 \bibitem[1]{stenberg} Model-based Design Development and Control of a Wind Resistant Multirotor UAV, C. Månsson, D. Stenberg, Dept. of Automatic Control LTH 2014, \url{http://www.control.lth.se/Publication/5947.html}
 \bibitem[2]{bresciani} Modelling, Identification and Control of a Quadrotor Helicopter, T. Bresciani, Dept. of Automatic Control LTH 2008, http://\url{www.control.lth.se/Publication/5823.html}
-\bibitem[3]{stm32f3discovery1} UM1562 User Manual: Getting started with software and firmware environments for the STM32F3DISCOVERY Kit, ST Microelectronics, \url{http://www.st.com/web/catalog/tools/FM116/SC959/SS1532/PF254044} 
-\bibitem[4]{stm32f303refman} RM0316 User Manual: Reference Manual for  STM32F303xB/C, STM32F303x6/8, STM32F328x8 and STM32F358xC advanced ARM®-based 32-bit MCUs, ST Microelectronics, \url{http://www.st.com/web/en/resource/technical/document/reference_manual/DM00043574.pdf} 
-\bibitem[5]{stm32f3discovery2}UM1570 User Manual: STM32F3DISCOVERY Discovery kit for STM32F303xx microcontrollers, ST Microelectronics, http://\url{www.st.com/web/catalog/tools/FM116/SC959/SS1532/PF254044} 
-\bibitem[6]{stm32f3progman}PM0214 Programming Manual: STM32F3 and STM32F4 Series Cortex®-M4 programming manual, ST Microelectronics, http://\url{www.st.com/st-web-ui/static/active/en/resource/technical/document/programming_manual/DM00046982.pdf} 
-\bibitem[6]{stm32f3haldrivers}UM1786 User Manual: Description of STM32F3xx HAL drivers, ST Microelectronics, http://\url{http://www.st.com/st-web-ui/static/active/en/resource/technical/document/user_manual/DM00122016.pdf} 
+\bibitem[3]{stm32f3discovery1} UM1562 User Manual: Getting started with software and firmware environments for the STM32F3DISCOVERY Kit, ST Microelectronics, \url{http://www.st.com/web/catalog/tools/FM116/SC959/SS1532/PF254044}
+\bibitem[4]{stm32f303refman} RM0316 User Manual: Reference Manual for  STM32F303xB/C, STM32F303x6/8, STM32F328x8 and STM32F358xC advanced ARM®-based 32-bit MCUs, ST Microelectronics, \url{http://www.st.com/web/en/resource/technical/document/reference_manual/DM00043574.pdf}
+\bibitem[5]{stm32f3discovery2}UM1570 User Manual: STM32F3DISCOVERY Discovery kit for STM32F303xx microcontrollers, ST Microelectronics, http://\url{www.st.com/web/catalog/tools/FM116/SC959/SS1532/PF254044}
+\bibitem[6]{stm32f3progman}PM0214 Programming Manual: STM32F3 and STM32F4 Series Cortex®-M4 programming manual, ST Microelectronics, http://\url{www.st.com/st-web-ui/static/active/en/resource/technical/document/programming_manual/DM00046982.pdf}
+\bibitem[6]{stm32f3haldrivers}UM1786 User Manual: Description of STM32F3xx HAL drivers, ST Microelectronics, http://\url{http://www.st.com/st-web-ui/static/active/en/resource/technical/document/user_manual/DM00122016.pdf}
 \bibitem[7]{spektrumar610userguide}Spektrum AR610 User Guide, Spektrum 2012, \url{https://www.spektrumrc.com/ProdInfo/Files/SPMAR610_Manual_EN.pdf}
 
 \end{thebibliography}
