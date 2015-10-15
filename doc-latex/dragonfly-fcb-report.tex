@@ -99,7 +99,6 @@ The BLM motors used for this project have an “outrunner” architecture, which
 \chapter{State Estimation Theory}
 
 	\section{Attitude Estimation}
-
 		Step 1: Predict the states $\hat{x}_{k|k-1}$
 		\begin{equation}
 		\hat{x}_{k|k-1}=A\hat{x}_{k-1|k-1}+Bu_{k}
@@ -112,7 +111,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\left[
       		\begin{array}{c}
       		\hat{\theta}\\
-		\dot{\hat{\theta}}_{b}
+		\hat{\dot{\theta}}_{b}
       		\end{array} \right]_{k|k-1}
 		=
 		\left[
@@ -123,7 +122,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\left[
 		\begin{array}{c}
 		\hat{\theta}\\
-		\dot{\hat{\theta}}_{b}
+		\hat{\dot{\theta}}_{b}
 		\end{array} \right]_{k-1|k-1}
 		+
 		\left[
