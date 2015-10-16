@@ -97,15 +97,12 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\subsection{Magnetometer}
 
 \chapter{State Estimation Theory}
-
+The state vector for the attitude is the attitude angle and the angular rate bias. The latter is due to gyroscope having a drift in its measured angular velocity, that is, taking a number of samples and averaging the value and using this as an offset.
 	\section{Attitude Estimation}
-		Step 1: Predict the states $\hat{x}_{k|k-1}$
+		Step 1: Predict the estimated states $\hat{x}_{k|k-1}$
 		\begin{equation}
 		\hat{x}_{k|k-1}=A\hat{x}_{k-1|k-1}+Bu_{k}
 		\end{equation}
-		\begin{equation*}
-		z_{k}=H\hat{x}_{k|k-1}
-		\end{equation*}
 
 		\begin{equation}
 		\left[
@@ -197,11 +194,15 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		P[1][0] -= dt*P[1][1];
 		P[1][1] += dt*Q2;
 		\end{lstlisting}
-		Step 3: Now calculate the difference between the predicted state $\hat{x}_{k|k-1}$ and the measurement $z_{k}$
+		Step 3: Now calculate the difference $\tilde{y}_{k}$ between the predicted state $\hat{x}_{k|k-1}$ and the measurement $z_{k}$
+		\begin{equation}
+		z_{k}=H\hat{x}_{k|k-1}
+		\end{equation}
 		\begin{equation}
 		\tilde{y}_{k}=z_{k}-H\hat{x}_{k|k-1}
 		\end{equation}
-
+		The extraction matrix $H$ matrix defines what sensor readings we would get under the conditions that our $\hat{x}$ was perfectly estimated and our sensors delivered perfect values.\footnote{See  \url{https://www.udacity.com/wiki/cs373/kalman-filter-matrices}}
+		
 		\begin{equation}
 		\tilde{y}_{k}=z_{k}-\left[
 		\begin{array}{c c}
