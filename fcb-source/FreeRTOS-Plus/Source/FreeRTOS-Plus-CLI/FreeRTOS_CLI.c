@@ -207,7 +207,10 @@ size_t xCommandStringLength;
 	else
 	{
 		/* pxCommand was NULL, the command was not found. */
-		strncpy( ( char * ) pcWriteBuffer, ( const char * const ) "Command not recognised.  Enter 'help' to view a list of available commands.\r\n\r\n", xWriteBufferLen );
+		snprintf( ( char * ) pcWriteBuffer,
+		    xWriteBufferLen,
+		    ( const char * const ) "Command \"%s\" not recognised.  Enter 'help' to view a list of available commands.\r\n\r\n",
+		    pcCommandInput);
 		xReturn = pdFALSE;
 	}
 
