@@ -108,7 +108,9 @@ static SPI_HandleTypeDef SpiHandle;
 
 #ifdef HAL_I2C_MODULE_ENABLED
 static I2C_HandleTypeDef I2cHandle;
-uint32_t I2cxTimeout = I2Cx_TIMEOUT_MAX;    /*<! Value of Timeout when I2C communication fails */
+// uint32_t I2cxTimeout = I2Cx_TIMEOUT_MAX;    /*<! Value of Timeout when I2C communication fails */
+// uint32_t I2cxTimeout = I2Cx_TIMEOUT_MAX;    /*<! Value of Timeout when I2C communication fails */
+uint32_t I2cxTimeout = 1;    /*<! Value of Timeout when I2C communication fails */
 #endif
 
 /**
@@ -459,10 +461,10 @@ static uint8_t I2Cx_ReadDataLen(uint16_t Addr, uint8_t Reg, uint16_t Len)
   */
 static void I2Cx_Error (void)
 {
-  /* De-initialize the I2C comunication BUS */
+  /* De-initialise the I2C communication BUS */
   HAL_I2C_DeInit(&I2cHandle);
 
-  /* Re- Initiaize the I2C comunication BUS */
+  /* Re-Initialise the I2C communication BUS */
   I2Cx_Init();
 }
 #endif

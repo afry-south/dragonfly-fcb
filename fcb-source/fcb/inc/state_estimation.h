@@ -22,8 +22,9 @@ typedef struct
 	float32_t p12;
 	float32_t p21;
 	float32_t p22;
-	float32_t k1;	// Kalman gains
-	float32_t k2;
+	float32_t k1;	// Kalman gain
+	float32_t k2;   // TODO: k1 & k2 these don't have to be part of the struct as they
+	                // are not carried over from one iteration to the next
 }KalmanFilter_TypeDef;
 
 typedef struct
@@ -45,7 +46,9 @@ typedef enum {
 #define	STATE_ESTIMATION_SAMPLE_PERIOD			(float32_t) FLIGHT_CONTROL_TASK_PERIOD / 1000.0
 #define Q1_CAL (float32_t)						0.5
 #define	Q2_CAL (float32_t)						0.05
-#define	R1_CAL (float32_t)						1.5
+#define	R1_CAL (float32_t)						0.000185 /* 480 measured from USB console and
+                                                          * calculated with SensorVariance.sce
+                                                          */
 
 /* Exported macro ------------------------------------------------------------*/
 

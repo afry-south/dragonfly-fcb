@@ -320,7 +320,8 @@ static const CLI_Command_Definition_t getStatesCommand = { (const int8_t * const
 
 /* Structure that defines the "start-motor-sampling" command line command. */
 static const CLI_Command_Definition_t startStateSamplingCommand = { (const int8_t * const ) "start-state-sampling",
-		(const int8_t * const ) "\r\nstart-state-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints state values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
+		(const int8_t * const ) "\r\nstart-state-sampling <sampletime> <sampleduration> <encoding>:\r\n"
+		" Prints state values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto, c=calibration)\r\n",
 		CLIStartStateSampling, /* The function to run. */
 		3 /* Number of parameters expected */
 };
@@ -1389,6 +1390,8 @@ static portBASE_TYPE CLIStartStateSampling(int8_t* pcWriteBuffer, size_t xWriteB
 			SetStatePrintSamplingSerialization(NO_SERIALIZATION);
 		} else if (pcParameter[0] == 'p') {
 			SetStatePrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
+		} else if (pcParameter[0] == 'c') {
+		  SetStatePrintSamplingSerialization(CALIBRATION_SERIALIZATION);
 		}
 
 		StartStateSamplingTask(stateSampleTime, stateSampleDuration);

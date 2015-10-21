@@ -65,7 +65,7 @@ void InitStatesXYZ(void)
   States.rollRateBias = 0;
   States.pitch = 0;
   States.pitchRateBias = 0;
-  States.yaw = 0;
+  States.yaw = 0;  // TODO ISSUE119 - our state for yaw is turn rate, not heading?
   States.yawRateBias = 0;
 
 }
@@ -208,8 +208,9 @@ float32_t RadianToDegree(float32_t radian) {
  */
 void PrintStateValues(const SerializationType_TypeDef serializationType) {
 	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
+	int usedLen = 0;
 
-	if(serializationType == NO_SERIALIZATION) {
+	if ((serializationType == NO_SERIALIZATION) || (serializationType == CALIBRATION_SERIALIZATION)) {
 //		float32_t sensorAngleRoll = GetAccRollAngle();
 //		float32_t sensorAnglePitch = GetAccPitchAngle();
 //		float32_t sensorAngleYaw = GetMagYawAngle(sensorAngleRoll, sensorAnglePitch);
@@ -220,9 +221,25 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 		GetAttitudeFromAccelerometer(accAttitude, accValues);
 		accAttitude[2] = GetMagYawAngle(accAttitude[0], accAttitude[1]);
 
-		snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-				"States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\n\r\n",
-				RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw), States.rollRateBias, States.pitchRateBias, States.yawRateBias, accAttitude[0], accAttitude[1], accAttitude[2]);
+		if (serializationType == NO_SERIALIZATION) {
+		  snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
+		      "States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\n\r\n",
+		      RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw),
+		      States.rollRateBias, States.pitchRateBias, States.yawRateBias,
+		      accAttitude[0], accAttitude[1], accAttitude[2]);
+		} else /* CALIBRATION_SERIALIZATION */ {
+		  usedLen = snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
+		      "States:\nlAngle-RPY [deg]: %1.3f, %1.3f, %1.4f\n Bias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %f, %f, %f\n\r\n",
+		      RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw),
+		      States.rollRateBias, States.pitchRateBias, States.yawRateBias,
+		      accAttitude[0], accAttitude[1], accAttitude[2]);
+
+		  if (usedLen < STATE_PRINT_MAX_STRING_SIZE) {
+		    usedLen = snprintf((char*) stateString+usedLen, STATE_PRINT_MAX_STRING_SIZE - usedLen,
+		        "KF: P11-RPY: %f, %f, %f\n\r\n",
+		        RollEstimator.p11, PitchEstimator.p11, YawEstimator.p11);
+		  }
+		}
 
 		USBComSendString(stateString);
 	}
@@ -294,17 +311,17 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 static void StateInit(KalmanFilter_TypeDef * Estimator)
 {
   /* P matrix init is the Identity matrix*/
-  Estimator->p11 = 1.0;
+  Estimator->p11 = 0.01;
   Estimator->p12 = 0.0;
   Estimator->p21 = 0.0;
-  Estimator->p22 = 1.0;
+  Estimator->p22 = 0.01;
 
   /* q1 = sqrt(var(rate))*STATE_ESTIMATION_SAMPLE_PERIOD^2
    * q2 = sqrt(var(rateBias))
    * r1 = sqrt(var(angle)) */
-  Estimator->q1 = Q1_CAL;
+  Estimator->q1 = GYRO_AXIS_VARIANCE_ROUGH * STATE_ESTIMATION_SAMPLE_PERIOD * STATE_ESTIMATION_SAMPLE_PERIOD; /* Q1_CAL */
   Estimator->q2 = Q2_CAL;
-  Estimator->r1 = R1_CAL;
+  Estimator->r1 = R1_CAL; /* TODO_ISSUE119 - accelerometer based angle variance */
 }
 
 

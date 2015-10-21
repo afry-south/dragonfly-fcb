@@ -35,6 +35,12 @@ enum { XDOT_IDX = 0 }; /* index of sGyroXYZAngleDot & ditto Offset */
 enum { YDOT_IDX = 1 }; /* as above */
 enum { ZDOT_IDX = 2 }; /* as above */
 
+const float32_t GYRO_X_AXIS_VARIANCE = 0.098603;
+const float32_t GYRO_Y_AXIS_VARIANCE = 0.104274;
+const float32_t GYRO_Z_AXIS_VARIANCE = 0.103256;
+const float32_t GYRO_AXIS_VARIANCE_ROUGH = 0.000256;
+
+
 /**
  * Angular velocities, in degrees.
  *

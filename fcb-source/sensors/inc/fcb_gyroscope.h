@@ -10,6 +10,15 @@
 #include "stm32f3_discovery.h"
 #include "arm_math.h"
 
+
+/**
+ * sensor variance as measured with GyroVariance.sce SciLab script tool
+ */
+extern const float32_t GYRO_X_AXIS_VARIANCE;
+extern const float32_t GYRO_Y_AXIS_VARIANCE;
+extern const float32_t GYRO_Z_AXIS_VARIANCE;
+extern const float32_t GYRO_AXIS_VARIANCE_ROUGH;
+
 /**
  * The Data Ready input from the gyro sensor.
  *
