@@ -129,7 +129,7 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\end{array} \right]
 		\dot{\theta}_{gyro, k}\\
 		\end{equation}
-		\begin{equation*}
+		\begin{equation}
 		z_{k}=
 		\left[
 		\begin{array}{c c}
@@ -140,7 +140,7 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\theta\\
 		\dot{\theta}_{b}
 		\end{array} \right]_{k|k-1}
-		\end{equation*}
+		\end{equation}
     In pseudo code:
     \begin{lstlisting}[frame=single]
 		predictAngle = angle + dt*gyroRate - dt*bias;

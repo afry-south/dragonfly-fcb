@@ -25,9 +25,9 @@ typedef enum {
 } BufferType_TypeDef;
 
 typedef enum {
-	NO_SERIALIZATION,
+  NO_SERIALIZATION,
   CALIBRATION_SERIALIZATION,
-	PROTOBUFFER_SERIALIZATION
+  PROTOBUFFER_SERIALIZATION
 } SerializationType_TypeDef;
 
 extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
