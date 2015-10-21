@@ -10,3 +10,8 @@ Don't keep the device near any laptops or other electric sources when calibratin
 ## Accelerometer
 
 Make sure the device is on a flat/orthogonal surface.
+
+
+## Gyroscope
+
+Variance script was run with FCB board stationary on the desk.
