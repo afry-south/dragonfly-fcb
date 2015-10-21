@@ -21,11 +21,11 @@
 arm_matrix_instance_f32 DCM;
 arm_matrix_instance_f32 DCMInv;
 
-/* [Unit: Gauss] Set to the magnetic vector in Malmö, SE, year 2015
+/* [Unit: Gauss] Set to the magnetic vector in Malmö, SE, year 2015 (Components in north, east, down convention)
 * Data used from http://www.ngdc.noaa.gov/geomag-web/
-* Note: Difference between magnetic and geographic north pole (declination) ignored for now
 * TODO: Optionally, perform calibration of this vector at system startup */
-float32_t inertialMagneticVector[3] = {0.171045, 0.01055, 0.472443};
+// float32_t inertialMagneticVector[3] = {0.171045, 0.01055, 0.472443};
+float32_t inertialMagneticVectorNormalized[3] = {0.340345, 0.0209924, 0.940066};
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -97,7 +97,6 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
  * @brief  Calculates the attitude (roll, pitch, yaw angles) based on magnetometer input
  * @param  dstAttitude : Destination vector in which to store the calculated attitude (roll, pitch, yaw)
  * @param  bodyMagneticReadings : The magnetometer sensor readings in the UAV body-frame
- * @param  inertialMagneticVector : The magnetic flux vector in the inertial frame
  * @retval None
  */
 void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagneticReadings) {
@@ -106,32 +105,32 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 	 * readings. NOTE: Inertial magnetic field vector depends on where on earth UAV is operating - Malmö, SE assumed.
 	 * */
 
-	float32_t bodyMagneticNormalized[3], inertialMagneticNormalized[3], rotationAxisVector[3];
-	float32_t rotationAngle, dotProd, cosHalfAngle, sinHalfAngle, qi, qj, qk, qr;
+	float32_t bodyMagneticVectorNormalized[3], rotationAxisVector[3], rotationAxisVectorNormalized[3];
+	float32_t rotationAngle, dotProd, cosHalfAngle, sinHalfAngle, q0, q1, q2, q3;
 
 	/* Get unit length normalized versions of the vectors */
-	Vector3DNormalize(bodyMagneticNormalized, bodyMagneticReadings);
-	Vector3DNormalize(inertialMagneticNormalized, inertialMagneticVector);
+	Vector3DNormalize(bodyMagneticVectorNormalized, bodyMagneticReadings);
 
 	/* Get the rotation axis vector between the two magnetic vectors (inertial and body) */
-	Vector3DCrossProduct(rotationAxisVector, bodyMagneticNormalized, inertialMagneticNormalized);
+	Vector3DCrossProduct(rotationAxisVector, bodyMagneticVectorNormalized, inertialMagneticVectorNormalized);
+	Vector3DNormalize(rotationAxisVectorNormalized, rotationAxisVector);
 
 	/* Get the angle for the body to the inertial frame vectors rotated around rotation vector axis */
-	arm_dot_prod_f32(bodyMagneticNormalized, inertialMagneticNormalized, 3, &dotProd);
+	arm_dot_prod_f32(bodyMagneticVectorNormalized, inertialMagneticVectorNormalized, 3, &dotProd);
 	rotationAngle = acos(dotProd);
 
 	/* Calculate the axis/angle quaternion representation */
-	cosHalfAngle = arm_cos_f32(rotationAngle/2);
-	sinHalfAngle = arm_sin_f32(rotationAngle/2);
-	qi = rotationAxisVector[0]*sinHalfAngle;
-	qj = rotationAxisVector[1]*sinHalfAngle;
-	qk = rotationAxisVector[2]*sinHalfAngle;
-	qr = cosHalfAngle;
+	cosHalfAngle = arm_cos_f32(rotationAngle*0.5);
+	sinHalfAngle = arm_sin_f32(rotationAngle*0.5);
+	q0 = cosHalfAngle;
+	q1 = rotationAxisVectorNormalized[0]*sinHalfAngle;
+	q2 = rotationAxisVectorNormalized[1]*sinHalfAngle;
+	q3 = rotationAxisVectorNormalized[2]*sinHalfAngle;
 
 	/* From the quaternion, the Euler angles (roll, pitch, yaw) are obtained */
-	dstAttitude[0] = atan2(2*(qr*qi+qj*qk), 1-2*(qi*qi+qj*qj)); // Roll-Phi
-	dstAttitude[1] = asin(2*(qr*qj-qk*qi)); // Pitch-Theta
-	dstAttitude[2] = atan2(2*(qr*qk+qi*qj), 1-2*(qj*qj+qk*qk)); // Yaw-Psi
+	dstAttitude[0] = atan2(2*(q2*q3+q0*q1), q0*q0-q1*q1-q2*q2+q3*q3); // Roll-Phi
+	dstAttitude[1] = -asin(2.0*(q1*q3-q0*q2)); // Pitch-Theta
+	dstAttitude[2] = atan2(2*(q1*q2+q0*q3), q0*q0+q1*q1-q2*q2-q3*q3); // Yaw-Psi
 }
 
 /*
