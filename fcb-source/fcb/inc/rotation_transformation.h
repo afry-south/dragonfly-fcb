@@ -25,7 +25,7 @@ void Vector3DCrossProduct(float32_t* dstVector, const float32_t* srcVector1, con
 void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector);
 float32_t GetAccRollAngle(void);
 float32_t GetAccPitchAngle(void);
-float32_t GetMagYawAngle(const float32_t* magValues, const float32_t roll, const float32_t pitch);
+float32_t GetMagYawAngle(float32_t* magValues, const float32_t roll, const float32_t pitch);
 
 #endif /* INC_ROTATION_TRANSFORMATION_H_ */
 
