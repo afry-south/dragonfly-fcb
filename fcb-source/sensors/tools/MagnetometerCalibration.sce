@@ -1,5 +1,5 @@
 exec('GaussNewton.sce'); // working directory is assumed to be dir of this file.
-
+exec('PresentationUtilities.sce');
 // ============ entry point of script ==========================
 // entry point means things run sequentially from here
 
@@ -42,21 +42,25 @@ for i = 1:nSamp
 end
 
 debugShowVar("normSamp", normSamp);
+initialResiduals=GetResiduals(normSamp, calBeta); // store them for later
 
 maxIterations = 10
 calBeta = GaussNewtonLeastSquares(normSamp, calBeta, maxIterations);
 
+// show a plot of initial and final residuals
+finalResiduals=GetResiduals(normSamp, calBeta);
+PlotResidualsInitialFinal(initialResiduals, finalResiduals);
+
 // then convert beta offsets (calBeta[1..3])back to local magnetic vector ...
 // the beta scaling (calBeta[4..6]) is already correct.
 calBeta(1:3,1) = calBeta(1:3,1) * localMagField;
-
-printf("Displaying norems of uncailbrated and calibrated values:\n");
-
+printf("Displaying norms of uncailbrated and calibrated values:\n");
 DisplayNorms(magSamples, calBeta);
+DisplayXYZStdDev(magSamples, calBeta);
 
 showVar("calBeta - denormalised", calBeta');
 
 
-// calBeta result 
 
+// calBeta result 
 // (123 samples):  - 0.0105836    0.0906626    0.0484313    0.8757337    0.8965046    0.8977956

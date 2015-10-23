@@ -1,11 +1,11 @@
-// Web links for explanation & credits to Rolfe Schmidt, the author
+// Web links for explanation & credits to Rolfe Schmidt, the author of [1] and [5]
 //
 // [1] https://chionophilous.wordpress.com/2012/09/01/implementing-the-gauss-newton-algorithm-for-sphere-fitting-1-of-3/
-// [2] http://www.ngdc.noaa.gov/geomag-web/
+// [2] http://www.ngdc.noaa.gov/geomag-web/ (National Oceanic and Atmospheric Administration - for earth's magnetic field values)
 // [3] https://chionophilous.wordpress.com/2011/08/26/accelerometer-calibration-iii-improving-accuracy-with-least-squares-and-the-gauss-newton-method/
-
-// GNU Octave file (also by Rolfe Schmidt):
-// http://rolfeschmidt.com/mathtools/skimetrics/gaussnewton.m
+// [4] https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm (Gauss-Newton article in en.Wikipedia)
+// [5] GNU Octave file (also by Rolfe Schmidt):
+//  http://rolfeschmidt.com/mathtools/skimetrics/gaussnewton.m
 
 // calBeta will send the normalised normSamp values to a sphere with
 // radius 1 at good calibration. It is 
@@ -36,7 +36,7 @@ function retVal = GaussNewtonLeastSquares(normSamp, calBetaInitialGuess, maxIter
 
         // ... and break the loop if the change is sufficiently small.
         // What counts as 'small' was arbitrarily chosen.
-        if sumBetaChange < 0.001 then
+        if sumBetaChange < 0.0001 then
             printf("break at sumBetaChange: %f\n", sumBetaChange);
             break
         end
@@ -49,7 +49,7 @@ endfunction
 
 
 // ------ debug utilities ----------
-showDebug = 1;
+showDebug = 0;
 
 // show debug variable
 // it will print the name of the variable on a line, the value of the variable
@@ -132,24 +132,13 @@ function retval = gnStep(samples, calBeta)
     // d2S / (d_betaj dbeta_k) ~ 2 * Jacobian_transposed * Jacobian
     //
     // due to S being a sum of square residuals.
+    // see ref[3] and [4] for theoretical background
     JS = myJacobian' * myJacobian;
-    myDelta = JS \ (myJacobian' * myResiduals); // a bit shaky on the theory here.
+    myDelta = JS \ (myJacobian' * myResiduals);
     disp("myDelta");
     disp(myDelta');
     
     new_calBeta = calBeta - myDelta;
     
     retval = new_calBeta
-endfunction
-
-// displays norms of raw and calibrated samples respectively.
-function DisplayNorms(samples, calBeta)
-[nSamp, dummy] = size(samples);
-for i=1:nSamp
-    calibrated(1:3) = [ (samples(i, 1) - calBeta(1, 1)) * calBeta(4,1),
-        (samples(i, 2) - calBeta(2, 1)) * calBeta(5,1),
-        (samples(i, 3) - calBeta(3, 1)) * calBeta(6,1) ];
-                            
-    printf("norm(MagSamples[%i]): %f norm(calibrated[%i]):%f\n", i, norm(samples(i, 1:3)),i, norm(calibrated));
-end
 endfunction

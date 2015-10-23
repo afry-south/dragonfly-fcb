@@ -3,6 +3,7 @@
 // ref[1]: http://physics.nist.gov/cgi-bin/cuu/Value?gn (g: acceleration due to gravity)
 
 exec('GaussNewton.sce'); // working directory is assumed to be dir of this file.
+exec('PresentationUtilities.sce');
 
 // ============ entry point of script ==========================
 
@@ -37,8 +38,8 @@ calBeta = GaussNewtonLeastSquares(normSamps, calBetaInitialGuess, maxIterations)
 
 // denormalise the offsets - leave the scalings
 calBeta(1:3) = g * calBeta(1:3);
-
 DisplayNorms(accSamples , calBeta);
+DisplayXYZStdDev(accSamples, calBeta);
 
 showVar("calBeta", calBeta');
 

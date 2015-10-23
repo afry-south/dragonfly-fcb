@@ -14,6 +14,7 @@
 
 #include "fcb_error.h"
 #include "FreeRTOS.h"
+#include "semphr.h"
 #include "usbd_cdc_if.h"
 
 #include "trace.h"
@@ -45,6 +46,8 @@ enum { ZDOT_IDX = 2 }; /* as above */
 static volatile float sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 };
 static volatile float sGyroXYZAngleDotOffset[3] = { 0.0, 0.0, 0.0 };
 
+static xSemaphoreHandle mutexGyro;
+
 /* Private function prototypes -----------------------------------------------*/
 
 /* Exported functions --------------------------------------------------------*/
@@ -54,6 +57,11 @@ uint8_t InitialiseGyroscope(void) {
     uint8_t retVal = FCB_OK;
 
     GPIO_InitTypeDef GPIO_InitStructure;
+
+    if (NULL == (mutexGyro = xSemaphoreCreateMutex())) {
+      return FCB_ERR_INIT;
+    }
+
 
     /* configure GYRO DRDY (data ready) interrupt */
     GYRO_CS_GPIO_CLK_ENABLE(); /* happens to be GPIOE */
@@ -82,26 +90,29 @@ uint8_t InitialiseGyroscope(void) {
 
 
 void FetchDataFromGyroscope(void) {
-  float gyroscopeValuesXYZ[3] = { 0.0f, 0.0f, 0.0f };
+  float gyroscopeData[3] = { 0.0f, 0.0f, 0.0f };
 
+  /* paranoia - this is used for calculations to reduce the time this function
+   * needs to hold the mutexMag
+   */
+  float lGyroXYZAngleDot[3] = { 0.0f, 0.0f, 0.0f };
 #ifdef FCB_GYRO_DEBUG
     static uint32_t call_counter = 0;
 #else
     static uint16_t call_counter = 0;
 #endif
     /* returns rad/s */
-    BSP_GYRO_GetXYZ(gyroscopeValuesXYZ);
+    BSP_GYRO_GetXYZ(gyroscopeData);
 
-    /* TODO apply calibration */
-
-    sGyroXYZAngleDot[XDOT_IDX] = - gyroscopeValuesXYZ[YDOT_IDX];
-    sGyroXYZAngleDot[YDOT_IDX] = - gyroscopeValuesXYZ[XDOT_IDX];
-    sGyroXYZAngleDot[ZDOT_IDX] = - gyroscopeValuesXYZ[ZDOT_IDX];
+    /* see "Sensors" wiki page for gyroscope vs Quadcopter axes orientations */
+    lGyroXYZAngleDot[XDOT_IDX] = - gyroscopeData[YDOT_IDX];
+    lGyroXYZAngleDot[YDOT_IDX] = - gyroscopeData[XDOT_IDX];
+    lGyroXYZAngleDot[ZDOT_IDX] = - gyroscopeData[ZDOT_IDX];
 
     if (GYROSCOPE_OFFSET_SAMPLES > call_counter) {
-    	sGyroXYZAngleDotOffset[XDOT_IDX] += sGyroXYZAngleDot[XDOT_IDX];
-    	sGyroXYZAngleDotOffset[YDOT_IDX] += sGyroXYZAngleDot[YDOT_IDX];
-    	sGyroXYZAngleDotOffset[ZDOT_IDX] += sGyroXYZAngleDot[ZDOT_IDX];
+    	sGyroXYZAngleDotOffset[XDOT_IDX] += lGyroXYZAngleDot[XDOT_IDX];
+    	sGyroXYZAngleDotOffset[YDOT_IDX] += lGyroXYZAngleDot[YDOT_IDX];
+    	sGyroXYZAngleDotOffset[ZDOT_IDX] += lGyroXYZAngleDot[ZDOT_IDX];
         call_counter++;
     } else if (GYROSCOPE_OFFSET_SAMPLES  == call_counter) {
     	sGyroXYZAngleDotOffset[XDOT_IDX] = sGyroXYZAngleDotOffset[XDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
@@ -109,9 +120,15 @@ void FetchDataFromGyroscope(void) {
     	sGyroXYZAngleDotOffset[ZDOT_IDX] = sGyroXYZAngleDotOffset[ZDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
         call_counter++;
     } else {
-    	sGyroXYZAngleDot[XDOT_IDX] = sGyroXYZAngleDot[XDOT_IDX] - sGyroXYZAngleDotOffset[XDOT_IDX];
-    	sGyroXYZAngleDot[YDOT_IDX] = sGyroXYZAngleDot[YDOT_IDX] - sGyroXYZAngleDotOffset[YDOT_IDX];
-    	sGyroXYZAngleDot[ZDOT_IDX] = sGyroXYZAngleDot[ZDOT_IDX] - sGyroXYZAngleDotOffset[ZDOT_IDX];
+      /* TODO apply calibration
+       *
+       * as things are, the gyroscope drifts in time. Even taking 200 samples
+       * at startup and then using this to calculate an offset will not
+       * produce zero drift.
+       */
+    	lGyroXYZAngleDot[XDOT_IDX] = lGyroXYZAngleDot[XDOT_IDX] - sGyroXYZAngleDotOffset[XDOT_IDX];
+    	lGyroXYZAngleDot[YDOT_IDX] = lGyroXYZAngleDot[YDOT_IDX] - sGyroXYZAngleDotOffset[YDOT_IDX];
+    	lGyroXYZAngleDot[ZDOT_IDX] = lGyroXYZAngleDot[ZDOT_IDX] - sGyroXYZAngleDotOffset[ZDOT_IDX];
 
 #ifdef FCB_GYRO_DEBUG
     	if (call_counter % 200) {
@@ -125,13 +142,35 @@ void FetchDataFromGyroscope(void) {
 #endif
     }
 
+    if (pdTRUE != xSemaphoreTake(mutexGyro,  portMAX_DELAY /* wait forever */)) {
+      ErrorHandler();
+      return;
+    }
 
+    sGyroXYZAngleDot[XDOT_IDX] = lGyroXYZAngleDot[XDOT_IDX];
+    sGyroXYZAngleDot[YDOT_IDX] = lGyroXYZAngleDot[YDOT_IDX];
+    sGyroXYZAngleDot[ZDOT_IDX] = lGyroXYZAngleDot[ZDOT_IDX];
+
+    if (pdTRUE != xSemaphoreGive(mutexGyro)) {
+      ErrorHandler();
+      return;
+    }
 }
 
 void GetGyroAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngleDot) {
-	*xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
-	*yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
-	*zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
+  if (pdTRUE != xSemaphoreTake(mutexGyro,  portMAX_DELAY /* wait forever */)) {
+    ErrorHandler();
+    return;
+  }
+
+  *xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
+  *yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
+  *zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
+
+  if (pdTRUE != xSemaphoreGive(mutexGyro)) {
+    ErrorHandler();
+    return;
+  }
 }
 
 /**

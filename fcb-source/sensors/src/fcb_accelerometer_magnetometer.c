@@ -26,6 +26,7 @@
 #include "FreeRTOS.h"
 #include "FreeRTOSConfig.h"
 #include "task.h"
+#include "semphr.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -42,6 +43,7 @@ enum { Z_IDX = 2 }; /* as above */
 
 enum { ACCMAG_SAMPLING_MAX_STRING_SIZE = 128 }; /* print-to-usb com port sampling */
 
+
 static uint8_t sampleMax = ACCMAG_CALIBRATION_SAMPLES_N;
 static uint32_t sampleIndex = 0;
 #ifndef FCB_SENSORS_SCILAB_CALIB
@@ -49,6 +51,10 @@ static float32_t calibrationSamples[ACCMAG_CALIBRATION_SAMPLES_N][ACCMAG_AXES_N]
 #endif // FCB_SENSORS_SCILAB_CALIB
 static float32_t sXYZDotDot[] = { 0, 0 , 0 };
 static float32_t sXYZMagVector[] = { 0, 0 , 0 };
+
+static xSemaphoreHandle mutexAcc;
+static xSemaphoreHandle mutexMag;
+
 
 /**
  * Magnetometer calibration offset & scaling coefficients
@@ -91,6 +97,15 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     return FCB_ERR_INIT;
   }
 
+  if (NULL == (mutexAcc = xSemaphoreCreateMutex())) {
+    return FCB_ERR_INIT;
+  }
+
+  if (NULL == (mutexMag = xSemaphoreCreateMutex())) {
+    return FCB_ERR_INIT;
+  }
+
+
   /* configure STM32 interrupts & GPIO */
   ACCELERO_DRDY_GPIO_CLK_ENABLE(); /* GPIOE clock */
 
@@ -111,10 +126,12 @@ uint8_t FcbInitialiseAccMagSensor(void) {
   }
 #endif
 
+  /* set up interrupt DRDY for accelerometer - see HAL_GPIO_EXTI_Callback fcn */
   HAL_NVIC_SetPriority(EXTI4_IRQn,
       configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
+  /* set up interrupt DRDY for magnetometer - see HAL_GPIO_EXTI_Callback fcn */
   HAL_NVIC_SetPriority(EXTI2_TSC_IRQn,
       configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
   HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
@@ -156,19 +173,39 @@ void FetchDataFromAccelerometer(void) {
   if ((ACCMAGMTR_FETCHING == accMagMode) ||
       (ACCMAGMTR_CALIBRATING == accMagMode)) {
     LSM303DLHC_AccReadXYZ(acceleroMeterData);
+
     /* from accelerometer to quadcopter coordinate axes
      * see "Sensors" page in Wiki.
+     *
+     * NOTE: X axis already aligned
      */
+    acceleroMeterData[Y_IDX] = -acceleroMeterData[Y_IDX];
+    acceleroMeterData[Z_IDX] = -acceleroMeterData[Z_IDX];
+
+    if (ACCMAGMTR_FETCHING == accMagMode) {
+      /* only apply calibration tune when in normal fetch mode - in calibrate
+       * mode raw data is desired.
+       */
+      acceleroMeterData[X_IDX] = (acceleroMeterData[X_IDX] - sXYZAccCalPrm[X_OFFSET_CALIB_IDX]) * sXYZAccCalPrm[X_SCALING_CALIB_IDX];
+      acceleroMeterData[Y_IDX] = (acceleroMeterData[Y_IDX] - sXYZAccCalPrm[Y_OFFSET_CALIB_IDX]) * sXYZAccCalPrm[Y_SCALING_CALIB_IDX];
+      acceleroMeterData[Z_IDX] = (acceleroMeterData[Z_IDX] - sXYZAccCalPrm[Z_OFFSET_CALIB_IDX]) * sXYZAccCalPrm[Z_SCALING_CALIB_IDX];
+    }
+
+    if (pdTRUE != xSemaphoreTake(mutexAcc,  portMAX_DELAY /* wait forever */)) {
+      ErrorHandler();
+      return;
+    }
+
     sXYZDotDot[X_IDX] = acceleroMeterData[X_IDX];
-    sXYZDotDot[Y_IDX] = -acceleroMeterData[Y_IDX];
-    sXYZDotDot[Z_IDX] = -acceleroMeterData[Z_IDX];
+    sXYZDotDot[Y_IDX] = acceleroMeterData[Y_IDX];
+    sXYZDotDot[Z_IDX] = acceleroMeterData[Z_IDX];
+
+    if (pdTRUE != xSemaphoreGive(mutexAcc)) {
+      ErrorHandler();
+      return;
+    }
   }
 
-  if (ACCMAGMTR_FETCHING == accMagMode) {
-    sXYZDotDot[X_IDX] = (sXYZDotDot[X_IDX] - sXYZAccCalPrm[X_OFFSET_CALIB_IDX]) * sXYZAccCalPrm[X_SCALING_CALIB_IDX];
-    sXYZDotDot[Y_IDX] = (sXYZDotDot[Y_IDX] - sXYZAccCalPrm[Y_OFFSET_CALIB_IDX]) * sXYZAccCalPrm[Y_SCALING_CALIB_IDX];
-    sXYZDotDot[Z_IDX] = (sXYZDotDot[Z_IDX] - sXYZAccCalPrm[Z_OFFSET_CALIB_IDX]) * sXYZAccCalPrm[Z_SCALING_CALIB_IDX];
-  }
 
 #ifdef FCB_ACCMAG_DEBUG
   HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_9);
@@ -213,17 +250,34 @@ void FetchDataFromMagnetometer(void) {
 
     /* adjust magnetometer axes to the axes of the quadcopter fuselage
      * see "Sensors" page in Wiki.
+     *
+     * NOTE: X axis is already aligned
      */
+    magnetoMeterData[Y_IDX] = - magnetoMeterData[Y_IDX];
+    magnetoMeterData[Z_IDX] = - magnetoMeterData[Z_IDX];
+
+    if (ACCMAGMTR_FETCHING == accMagMode) {
+      magnetoMeterData[X_IDX] = (magnetoMeterData[X_IDX] - sXYZMagCalPrm[X_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[X_SCALING_CALIB_IDX];
+      magnetoMeterData[Y_IDX] = (magnetoMeterData[Y_IDX] - sXYZMagCalPrm[Y_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[Y_SCALING_CALIB_IDX];
+      magnetoMeterData[Z_IDX] = (magnetoMeterData[Z_IDX] - sXYZMagCalPrm[Z_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[Z_SCALING_CALIB_IDX];
+    }
+
+    if (pdTRUE != xSemaphoreTake(mutexMag,  portMAX_DELAY /* wait forever */)) {
+      ErrorHandler();
+      return;
+    }
+
     sXYZMagVector[X_IDX] = magnetoMeterData[X_IDX];
-    sXYZMagVector[Y_IDX] = - magnetoMeterData[Y_IDX];
-    sXYZMagVector[Z_IDX] = - magnetoMeterData[Z_IDX];
+    sXYZMagVector[Y_IDX] = magnetoMeterData[Y_IDX];
+    sXYZMagVector[Z_IDX] = magnetoMeterData[Z_IDX];
+
+    if (pdTRUE != xSemaphoreGive(mutexMag)) {
+      ErrorHandler();
+      return;
+    }
+
   }
 
-  if (ACCMAGMTR_FETCHING == accMagMode) {
-    sXYZMagVector[X_IDX] = (sXYZMagVector[X_IDX] - sXYZMagCalPrm[X_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[X_SCALING_CALIB_IDX];
-    sXYZMagVector[Y_IDX] = (sXYZMagVector[Y_IDX] - sXYZMagCalPrm[Y_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[Y_SCALING_CALIB_IDX];
-    sXYZMagVector[Z_IDX] = (sXYZMagVector[Z_IDX] - sXYZMagCalPrm[Z_OFFSET_CALIB_IDX]) * sXYZMagCalPrm[Z_SCALING_CALIB_IDX];
-  }
 
 #ifdef FCB_ACCMAG_DEBUG
   HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
@@ -259,15 +313,35 @@ void FetchDataFromMagnetometer(void) {
 
 
 void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot) {
+  if (pdTRUE != xSemaphoreTake(mutexAcc,  portMAX_DELAY /* wait forever */)) {
+    ErrorHandler();
+    return;
+  }
+
   *xDotDot = sXYZDotDot[X_IDX];
   *yDotDot = sXYZDotDot[Y_IDX];
   *zDotDot = sXYZDotDot[Z_IDX];
+
+  if (pdTRUE != xSemaphoreGive(mutexAcc)) {
+    ErrorHandler();
+    return;
+  }
 }
 
 void GetMagVector(float32_t * x, float32_t * y, float32_t * z) {
+  if (pdTRUE != xSemaphoreTake(mutexMag,  portMAX_DELAY /* wait forever */)) {
+    ErrorHandler();
+    return;
+  }
+
   *x = sXYZMagVector[X_IDX];
   *y = sXYZMagVector[Y_IDX];
   *z = sXYZMagVector[Z_IDX];
+
+  if (pdTRUE != xSemaphoreGive(mutexMag)) {
+    ErrorHandler();
+    return;
+  }
 }
 
 

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec latex -output-format=pdf $*
