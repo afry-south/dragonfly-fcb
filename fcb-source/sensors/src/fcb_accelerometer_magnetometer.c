@@ -55,7 +55,6 @@ static float32_t sXYZMagVector[] = { 0, 0 , 0 };
 static xSemaphoreHandle mutexAcc;
 static xSemaphoreHandle mutexMag;
 
-
 /**
  * Magnetometer calibration offset & scaling coefficients
  *
@@ -348,6 +347,7 @@ void GetMagVector(float32_t * x, float32_t * y, float32_t * z) {
 void PrintAccelerometerValues(void) {
   static char sampleString[ACCMAG_SAMPLING_MAX_STRING_SIZE];
 
+  // TODO use mutex
   snprintf((char*) sampleString, ACCMAG_SAMPLING_MAX_STRING_SIZE,
       "Accelerometer readings [m/(s * s)]:\nAccX: %f\nAccY: %f\nAccZ: %f\n\r\n",
       sXYZDotDot[X_IDX],

@@ -118,7 +118,7 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 
 	/* Get the angle for the body to the inertial frame vectors rotated around rotation vector axis */
 	arm_dot_prod_f32(bodyMagneticVectorNormalized, inertialMagneticVectorNormalized, 3, &dotProd);
-	rotationAngle = acos(dotProd);
+	rotationAngle = acosf(dotProd);
 
 	/* Calculate the axis/angle quaternion representation (q = q0 + q1*i + q2*j + q3*k) */
 	cosHalfAngle = arm_cos_f32(rotationAngle*0.5);
@@ -180,7 +180,7 @@ float32_t GetMagYawAngle(float32_t* magValues, const float32_t roll, const float
 	Vector3DNormalize(normalizedMag, magValues);
 
 	/* Equation found in LSM303DLH Application Note document. Minus sign in first parameter in atan2 to get correct rotation direction around Z axis ("down") */
-	yawAngle = atan2(-(normalizedMag[0]*arm_sin_f32(roll)*arm_sin_f32(pitch) + normalizedMag[1]*arm_cos_f32(roll) - normalizedMag[2]*arm_sin_f32(roll)*arm_cos_f32(pitch)),
+	yawAngle = atan2f(-(normalizedMag[0]*arm_sin_f32(roll)*arm_sin_f32(pitch) + normalizedMag[1]*arm_cos_f32(roll) - normalizedMag[2]*arm_sin_f32(roll)*arm_cos_f32(pitch)),
 			normalizedMag[0]*arm_cos_f32(pitch) + normalizedMag[2]*arm_sin_f32(pitch));
 
 	return yawAngle;

@@ -47,8 +47,6 @@ static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Es
 static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
 static void StatePrintSamplingTask(void const *argument);
 
-
-
 /* Exported functions --------------------------------------------------------*/
 
 /* InitEstimator
@@ -66,7 +64,7 @@ void InitStatesXYZ(void)
   States.rollRateBias = 0;
   States.pitch = 0;
   States.pitchRateBias = 0;
-  States.yaw = 0;  // TODO ISSUE119 - our state for yaw is turn rate, not heading?
+  States.yaw = 0;  // TODO ISSUE119 - our state for yaw is turn rate, not heading? No, we are estimating the yaw angle.
   States.yawRateBias = 0;
 
 }
@@ -219,6 +217,10 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 
 		/* Get accelerometer values */
 		GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
+
+		/* Calculate roll, pitch, yaw based on accelerometer and magnetometer values */
+		GetAttitudeFromAccelerometer(sensorAttitude, accValues);
+		sensorAttitude[2] = GetMagYawAngle(magValues, sensorAttitude[0], sensorAttitude[1]);
 
 		if (serializationType == NO_SERIALIZATION) {
 		  snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
