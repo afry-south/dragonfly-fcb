@@ -89,12 +89,13 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
   Vector3DNormalize(accNormalized, bodyAccelerometerReadings);
 
   /* Calculate roll and pitch Euler angles  */
-  dstAttitude[0] = atan2(-accNormalized[1], -accNormalized[2]); // Roll-Phi need sign on both params to get right section of unit circle
-  dstAttitude[1] = asin(accNormalized[0]); // Pitch-Theta
+  dstAttitude[0] = atan2f(-accNormalized[1], -accNormalized[2]); // Roll-Phi need sign on both params to get right section of unit circle
+  dstAttitude[1] = asinf(accNormalized[0]); // Pitch-Theta (direction of g and minus sign cancel)
 }
 
 /*
  * @brief  Calculates the attitude (roll, pitch, yaw angles) based on magnetometer input
+ * @note   This function does not work very well, but can't find anything wrong with the implementation
  * @param  dstAttitude : Destination vector in which to store the calculated attitude (roll, pitch, yaw)
  * @param  bodyMagneticReadings : The magnetometer sensor readings in the UAV body-frame
  * @retval None
@@ -119,7 +120,7 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 	arm_dot_prod_f32(bodyMagneticVectorNormalized, inertialMagneticVectorNormalized, 3, &dotProd);
 	rotationAngle = acos(dotProd);
 
-	/* Calculate the axis/angle quaternion representation */
+	/* Calculate the axis/angle quaternion representation (q = q0 + q1*i + q2*j + q3*k) */
 	cosHalfAngle = arm_cos_f32(rotationAngle*0.5);
 	sinHalfAngle = arm_sin_f32(rotationAngle*0.5);
 	q0 = cosHalfAngle;
@@ -128,9 +129,9 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 	q3 = rotationAxisVectorNormalized[2]*sinHalfAngle;
 
 	/* From the quaternion, the Euler angles (roll, pitch, yaw) are obtained */
-	dstAttitude[0] = atan2(2*(q2*q3+q0*q1), q0*q0-q1*q1-q2*q2+q3*q3); // Roll-Phi
-	dstAttitude[1] = -asin(2.0*(q1*q3-q0*q2)); // Pitch-Theta
-	dstAttitude[2] = atan2(2*(q1*q2+q0*q3), q0*q0+q1*q1-q2*q2-q3*q3); // Yaw-Psi
+	dstAttitude[0] = atan2f(2.0*q0*q1 + 2.0*q2*q3, q0*q0 - q1*q1 - q2*q2 + q3*q3); // Roll-Phi
+	dstAttitude[1] = asinf(2.0*q0*q2 - 2.0*q1*q3); // Pitch-Theta
+	dstAttitude[2] = atan2f(2.0*q0*q3 + 2.0*q1*q2, q0*q0 + q1*q1 - q2*q2 - q3*q3); // Yaw-Psi
 }
 
 /*
@@ -164,11 +165,12 @@ void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector) {
 }
 
 /*
- * @brief	Returns the yaw angle calculated from magnetometer values with tilt (roll/pitch) compensation
- * @param	magValues : Vector containing 3D magnetometer values
- * @param	roll : roll angle in radians (kalman estimated or from accelerometer)
- * @param	pitch : pitch angle in radians (kalman estimated or from accelerometer)
- * @retval	yawAngle : yaw angle in radians
+ * @brief  Returns the yaw angle calculated from magnetometer values with tilt (roll/pitch) compensation
+ * @note   TODO The tilt-compensation could also be performed with the (previous) state values instead of accelerometer angle values
+ * @param  magValues : Vector containing 3D magnetometer values
+ * @param  roll : roll angle in radians (kalman estimated or from accelerometer)
+ * @param  pitch : pitch angle in radians (kalman estimated or from accelerometer)
+ * @retval yawAngle : yaw angle in radians
  */
 float32_t GetMagYawAngle(float32_t* magValues, const float32_t roll, const float32_t pitch)
 {
@@ -180,6 +182,7 @@ float32_t GetMagYawAngle(float32_t* magValues, const float32_t roll, const float
 	/* Equation found in LSM303DLH Application Note document. Minus sign in first parameter in atan2 to get correct rotation direction around Z axis ("down") */
 	yawAngle = atan2(-(normalizedMag[0]*arm_sin_f32(roll)*arm_sin_f32(pitch) + normalizedMag[1]*arm_cos_f32(roll) - normalizedMag[2]*arm_sin_f32(roll)*arm_cos_f32(pitch)),
 			normalizedMag[0]*arm_cos_f32(pitch) + normalizedMag[2]*arm_sin_f32(pitch));
+
 	return yawAngle;
 }
 

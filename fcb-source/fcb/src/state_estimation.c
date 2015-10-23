@@ -211,25 +211,21 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
 
 	if(serializationType == NO_SERIALIZATION) {
-		// TODO: Cleanup needed here!
-
-		float32_t accValues[3];	// accX, accY, accZ
-		float32_t accAttitude[3]; // Roll, pitch, yaw
-
-		float32_t magValues[3];
-		float32_t sensorMagAttitude[3]; // Only for test // TODO delete this later!?
+		float32_t sensorAttitude[3], accValues[3], magValues[3];
 
 		/* Get magnetometer values */
 		GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
-		GetAttitudeFromMagnetometer(sensorMagAttitude, magValues);
 
+		/* Get accelerometer values */
 		GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
-		GetAttitudeFromAccelerometer(accAttitude, accValues);
-		accAttitude[2] = GetMagYawAngle(magValues, accAttitude[0], accAttitude[1]);
+
+		/* Calculate roll, pitch, yaw based on accelerometer and magnetometer values */
+		GetAttitudeFromAccelerometer(sensorAttitude, accValues);
+		sensorAttitude[2] = GetMagYawAngle(magValues, sensorAttitude[0], sensorAttitude[1]);
 
 		snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-				"States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\nmag2Roll:%1.3f, mag2Pitch:%1.3f, mag2Yaw:%1.3f\n\r\n",
-				RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw), States.rollRateBias, States.pitchRateBias, States.yawRateBias, accAttitude[0], accAttitude[1], accAttitude[2], sensorMagAttitude[0], sensorMagAttitude[1], sensorMagAttitude[2]);
+				"States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\n\r\n",
+				RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw), States.rollRateBias, States.pitchRateBias, States.yawRateBias);
 
 		USBComSendString(stateString);
 	}
@@ -290,8 +286,7 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 	}
 }
 
-/* Private functions ----------------------------------------------------
- * -----*/
+/* Private functions ---------------------------------------------------------*/
 
 /* InitEstimator
  * @brief  Initializes the roll state Kalman estimator
@@ -376,7 +371,6 @@ static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* E
 	Estimator->p21 -= Estimator->k1 * p11_tmp;
 	Estimator->p22 -= Estimator->k1 * p12_tmp;
 }
-
 
 /**
  * @brief  Task code handles state (angle, rate, ratebias) print sampling
