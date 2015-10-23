@@ -21,10 +21,11 @@
 arm_matrix_instance_f32 DCM;
 arm_matrix_instance_f32 DCMInv;
 
-/* [Unit: Gauss] Set to the magnetic vector in Malmö, SE, year 2015
+/* [Unit: Gauss] Set to the magnetic vector in Malmö, SE, year 2015 (Components in north, east, down convention)
 * Data used from http://www.ngdc.noaa.gov/geomag-web/
-* Note: Difference between magnetic and geographic north pole ignored (declination) */
-float32_t inertialMagneticVector[3] = {0.171045, 0.01055, 0.472443};
+* TODO: Optionally, perform calibration of this vector at system startup */
+// float32_t inertialMagneticVector[3] = {0.171045, 0.01055, 0.472443};
+float32_t inertialMagneticVectorNormalized[3] = {0.340345, 0.0209924, 0.940066};
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -76,7 +77,7 @@ void UpdateRotationMatrix(const float32_t roll, const float32_t pitch, const flo
 
 /*
  * @brief  Calculates the attitude (roll and pitch, NOT yaw) based on accelerometer input, assuming
- * 	  that only gravity influences the accelerometer sensor readings
+ * 	  	   that only gravity influences the accelerometer sensor readings
  * @param  dstAttitude : Destination vector in which to store the calculated attitude (roll and pitch)
  * @param  bodyAccelerometerReadings : The accelerometer sensor readings in the UAV body-frame
  * @retval None
@@ -88,15 +89,15 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAcceler
   Vector3DNormalize(accNormalized, bodyAccelerometerReadings);
 
   /* Calculate roll and pitch Euler angles  */
-  dstAttitude[0] = atan2(-accNormalized[1], -accNormalized[2]); // Roll-Phi need sign on both params to get right section of unit circle
-  dstAttitude[1] = asin(accNormalized[0]); // Pitch-Theta
+  dstAttitude[0] = atan2f(-accNormalized[1], -accNormalized[2]); // Roll-Phi need sign on both params to get right section of unit circle
+  dstAttitude[1] = asinf(accNormalized[0]); // Pitch-Theta (direction of g and minus sign cancel)
 }
 
 /*
  * @brief  Calculates the attitude (roll, pitch, yaw angles) based on magnetometer input
+ * @note   This function does not work very well, but can't find anything wrong with the implementation
  * @param  dstAttitude : Destination vector in which to store the calculated attitude (roll, pitch, yaw)
  * @param  bodyMagneticReadings : The magnetometer sensor readings in the UAV body-frame
- * @param  inertialMagneticVector : The magnetic flux vector in the inertial frame
  * @retval None
  */
 void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagneticReadings) {
@@ -105,36 +106,32 @@ void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagnetic
 	 * readings. NOTE: Inertial magnetic field vector depends on where on earth UAV is operating - Malmö, SE assumed.
 	 * */
 
-	float32_t bodyMagneticNormalized[3];
-	float32_t inertialMagneticNormalized[3];
-	float32_t rotationAxisVector[3];
-	float32_t rotationAngle;
-	float32_t dotProd;
+	float32_t bodyMagneticVectorNormalized[3], rotationAxisVector[3], rotationAxisVectorNormalized[3];
+	float32_t rotationAngle, dotProd, cosHalfAngle, sinHalfAngle, q0, q1, q2, q3;
 
 	/* Get unit length normalized versions of the vectors */
-	Vector3DNormalize(bodyMagneticNormalized, bodyMagneticReadings);
-	Vector3DNormalize(inertialMagneticNormalized, inertialMagneticVector);
+	Vector3DNormalize(bodyMagneticVectorNormalized, bodyMagneticReadings);
 
 	/* Get the rotation axis vector between the two magnetic vectors (inertial and body) */
-	Vector3DCrossProduct(rotationAxisVector, bodyMagneticNormalized, inertialMagneticNormalized);
+	Vector3DCrossProduct(rotationAxisVector, bodyMagneticVectorNormalized, inertialMagneticVectorNormalized);
+	Vector3DNormalize(rotationAxisVectorNormalized, rotationAxisVector);
 
 	/* Get the angle for the body to the inertial frame vectors rotated around rotation vector axis */
-	arm_dot_prod_f32(bodyMagneticNormalized, inertialMagneticNormalized, 3, &dotProd);
+	arm_dot_prod_f32(bodyMagneticVectorNormalized, inertialMagneticVectorNormalized, 3, &dotProd);
 	rotationAngle = acos(dotProd);
 
-	/* Calculate rotation matrix elements formed by axis/angle representation */
-	float32_t cosAngle = arm_cos_f32(rotationAngle);
-	float32_t sinAngle = arm_sin_f32(rotationAngle);
-	float32_t r11 = cosAngle + rotationAxisVector[0]*rotationAxisVector[0]*(1.0-cosAngle);
-	float32_t r12 = rotationAxisVector[0]*rotationAxisVector[1]*(1.0-cosAngle) - rotationAxisVector[2]*sinAngle;
-	float32_t r13 = rotationAxisVector[0]*rotationAxisVector[2]*(1.0-cosAngle) + rotationAxisVector[1]*sinAngle;
-	float32_t r23 = rotationAxisVector[1]*rotationAxisVector[2]*(1.0-cosAngle) - rotationAxisVector[0]*sinAngle;
-	float32_t r33 = cosAngle + rotationAxisVector[2]*rotationAxisVector[2]*(1.0-cosAngle);
+	/* Calculate the axis/angle quaternion representation (q = q0 + q1*i + q2*j + q3*k) */
+	cosHalfAngle = arm_cos_f32(rotationAngle*0.5);
+	sinHalfAngle = arm_sin_f32(rotationAngle*0.5);
+	q0 = cosHalfAngle;
+	q1 = rotationAxisVectorNormalized[0]*sinHalfAngle;
+	q2 = rotationAxisVectorNormalized[1]*sinHalfAngle;
+	q3 = rotationAxisVectorNormalized[2]*sinHalfAngle;
 
-	/* Extract Euler angles from rotation matrix elements */ // TODO all this needs testing
-	dstAttitude[0] = atan2(r23, r33); // Roll-Phi // TODO does atan2 work as expected?
-	dstAttitude[1] = asin(-r13); // Pitch-Theta
-	dstAttitude[2] = atan2(r12, r11); // Yaw-Psi // TODO does atan2 work as expected?
+	/* From the quaternion, the Euler angles (roll, pitch, yaw) are obtained */
+	dstAttitude[0] = atan2f(2.0*q0*q1 + 2.0*q2*q3, q0*q0 - q1*q1 - q2*q2 + q3*q3); // Roll-Phi
+	dstAttitude[1] = asinf(2.0*q0*q2 - 2.0*q1*q3); // Pitch-Theta
+	dstAttitude[2] = atan2f(2.0*q0*q3 + 2.0*q1*q2, q0*q0 + q1*q1 - q2*q2 - q3*q3); // Yaw-Psi
 }
 
 /*
@@ -168,23 +165,24 @@ void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector) {
 }
 
 /*
- * @brief	Returns the yaw angle calculated from magnetometer values with tilt (roll/pitch) compensation
- * @param	roll : roll angle in radians (kalman estimated or from accelerometer)
- * @param	pitch : pitch angle in radians (kalman estimated or from accelerometer)
- * @retval	yawAngle : yaw angle in radians
+ * @brief  Returns the yaw angle calculated from magnetometer values with tilt (roll/pitch) compensation
+ * @note   TODO The tilt-compensation could also be performed with the (previous) state values instead of accelerometer angle values
+ * @param  magValues : Vector containing 3D magnetometer values
+ * @param  roll : roll angle in radians (kalman estimated or from accelerometer)
+ * @param  pitch : pitch angle in radians (kalman estimated or from accelerometer)
+ * @retval yawAngle : yaw angle in radians
  */
-float32_t GetMagYawAngle(const float32_t roll, const float32_t pitch)
+float32_t GetMagYawAngle(float32_t* magValues, const float32_t roll, const float32_t pitch)
 {
-	float32_t magValues[3];
 	float32_t normalizedMag[3];
 	float32_t yawAngle;
 
-	GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
 	Vector3DNormalize(normalizedMag, magValues);
 
 	/* Equation found in LSM303DLH Application Note document. Minus sign in first parameter in atan2 to get correct rotation direction around Z axis ("down") */
 	yawAngle = atan2(-(normalizedMag[0]*arm_sin_f32(roll)*arm_sin_f32(pitch) + normalizedMag[1]*arm_cos_f32(roll) - normalizedMag[2]*arm_sin_f32(roll)*arm_cos_f32(pitch)),
 			normalizedMag[0]*arm_cos_f32(pitch) + normalizedMag[2]*arm_sin_f32(pitch));
+
 	return yawAngle;
 }
 
