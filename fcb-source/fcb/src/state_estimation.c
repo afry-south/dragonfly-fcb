@@ -341,10 +341,9 @@ static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Es
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
 
-	/* WARNING: STATE_ESTIMATION_SAMPLE_PERIOD is set to 0 right now!! WARNING */
 	*stateAngle += STATE_ESTIMATION_SAMPLE_PERIOD * sensorRate - STATE_ESTIMATION_SAMPLE_PERIOD * (*stateRateBias);
 
-	/* Step 2: Calculate a priori error covariance matrix P*/
+	/* Step 2: Calculate a priori error covariance matrix P */
 	Estimator->p11 += (STATE_ESTIMATION_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1)*STATE_ESTIMATION_SAMPLE_PERIOD;
 	Estimator->p12 -= Estimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
 	Estimator->p21 -= Estimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
