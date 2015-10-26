@@ -232,15 +232,16 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 		      sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
 		} else /* CALIBRATION_SERIALIZATION */ {
 		  usedLen = snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-		      "States:\nlAngle-RPY [deg]: %1.3f, %1.3f, %1.4f\n Bias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %f, %f, %f\n\r\n",
+		      "States:\nAngle-RPY [deg]: %1.3f, %1.3f, %1.4f\n Bias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %f, %f, %f\n\r\n",
 		      RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw),
 		      States.rollRateBias, States.pitchRateBias, States.yawRateBias,
 		      sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
 
 		  if (usedLen < STATE_PRINT_MAX_STRING_SIZE) {
 		    usedLen = snprintf((char*) stateString+usedLen, STATE_PRINT_MAX_STRING_SIZE - usedLen,
-		        "KF: P11-RPY: %f, %f, %f\n\r\n",
-		        RollEstimator.p11, PitchEstimator.p11, YawEstimator.p11);
+		        "KF: P11-RPY: %e, %e, %e\n"
+		        "KF: K1-RPY: %e, %e, %e\n\r\n",
+		        RollEstimator.p11, PitchEstimator.p11, YawEstimator.p11, RollEstimator.k1, PitchEstimator.k1, YawEstimator.k1);
 		  }
 		}
 
