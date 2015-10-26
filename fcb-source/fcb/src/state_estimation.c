@@ -47,8 +47,6 @@ static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Es
 static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
 static void StatePrintSamplingTask(void const *argument);
 
-
-
 /* Exported functions --------------------------------------------------------*/
 
 /* InitEstimator
@@ -66,7 +64,7 @@ void InitStatesXYZ(void)
   States.rollRateBias = 0;
   States.pitch = 0;
   States.pitchRateBias = 0;
-  States.yaw = 0;  // TODO ISSUE119 - our state for yaw is turn rate, not heading?
+  States.yaw = 0;  // TODO ISSUE119 - our state for yaw is turn rate, not heading? No, we are estimating the yaw angle.
   States.yawRateBias = 0;
 
 }
