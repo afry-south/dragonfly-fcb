@@ -177,13 +177,13 @@ void LSM303DLHC_AccInit(uint8_t ctrlReg1, uint8_t ctrlReg3, uint8_t ctrlReg4)
   }
 
 #ifdef FCB_ACCMAG_DEBUG
-  uint8_t tmpreg = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG5_A);
+  uint8_t tmpreg = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG5_A);
 #endif
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG5_A, 0x00);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG5_A, 0x00);
 
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG1_A, ctrlReg1);
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, ctrlReg3);
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlReg4);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG1_A, ctrlReg1);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, ctrlReg3);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG4_A, ctrlReg4);
 }
 
 /**
@@ -198,7 +198,7 @@ uint8_t LSM303DLHC_AccReadID(void)
   COMPASSACCELERO_IO_Init();
 
   /* Read value at Who am I register address*/
-  ctrl = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_WHO_AM_I_ADDR);
+  ctrl = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_WHO_AM_I_ADDR);
 
   return ctrl;
 }
@@ -212,13 +212,13 @@ void LSM303DLHC_AccRebootCmd(void)
   uint8_t tmpreg;
 
   /* Read CTRL_REG5 register */
-  tmpreg = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG5_A);
+  tmpreg = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG5_A);
 
   /* Enable or Disable the reboot memory */
   tmpreg |= LSM303DLHC_BOOT_REBOOTMEMORY;
 
   /* Write value to ACC MEMS CTRL_REG5 regsister */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG5_A, tmpreg);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG5_A, tmpreg);
 }
 
 /**
@@ -231,13 +231,13 @@ void LSM303DLHC_AccFilterConfig(uint8_t FilterStruct)
   uint8_t tmpreg;
 
   /* Read CTRL_REG2 register */
-  tmpreg = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A);
+  tmpreg = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A);
 
   tmpreg &= 0x0C;
   tmpreg |= FilterStruct;
 
   /* Write value to ACC MEMS CTRL_REG2 regsister */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A, tmpreg);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A, tmpreg);
 }
 
 /**
@@ -253,14 +253,14 @@ void LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState)
   uint8_t tmpreg;
 
   /* Read CTRL_REG2 register */
-  tmpreg = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A);
+  tmpreg = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A);
 
   tmpreg &= 0xF7;
 
   tmpreg |= HighPassFilterState;
 
   /* Write value to ACC MEMS CTRL_REG2 regsister */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A, tmpreg);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A, tmpreg);
 }
 
 /**
@@ -275,12 +275,12 @@ void LSM303DLHC_AccReadXYZ(float * pData)
   uint8_t i = 0;
 
   /* Read output register X, Y & Z acceleration */
-  buffer[0] = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A);
-  buffer[1] = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_H_A);
-  buffer[2] = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_A);
-  buffer[3] = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_A);
-  buffer[4] = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_A);
-  buffer[5] = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Z_H_A);
+  buffer[0] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A);
+  buffer[1] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_H_A);
+  buffer[2] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_A);
+  buffer[3] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_A);
+  buffer[4] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_A);
+  buffer[5] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Z_H_A);
 
   /* check in the control register4 the data alignment
    *
@@ -310,14 +310,14 @@ void LSM303DLHC_AccFilterClickCmd(uint8_t HighPassFilterClickState)
   uint8_t tmpreg = 0x00;
 
   /* Read CTRL_REG2 register */
-  tmpreg = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A);
+  tmpreg = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A);
 
   tmpreg &= ~(LSM303DLHC_HPF_CLICK_ENABLE);
 
   tmpreg |= HighPassFilterClickState;
 
   /* Write value to ACC MEMS CTRL_REG2 regsister */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A, tmpreg);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG2_A, tmpreg);
 }
 
 /**
@@ -337,13 +337,13 @@ void LSM303DLHC_AccIT1Enable(uint8_t LSM303DLHC_IT)
   uint8_t tmpval = 0x00;
 
   /* Read CTRL_REG3 register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A);
 
   /* Enable IT1 */
   tmpval |= LSM303DLHC_IT;
 
   /* Write value to MEMS CTRL_REG3 register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, tmpval);
 }
 
 /**
@@ -363,13 +363,13 @@ void LSM303DLHC_AccIT1Disable(uint8_t LSM303DLHC_IT)
   uint8_t tmpval = 0x00;
 
   /* Read CTRL_REG3 register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A);
 
   /* Disable IT1 */
   tmpval &= ~LSM303DLHC_IT;
 
   /* Write value to MEMS CTRL_REG3 register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG3_A, tmpval);
 }
 
 /**
@@ -389,13 +389,13 @@ void LSM303DLHC_AccIT2Enable(uint8_t LSM303DLHC_IT)
   uint8_t tmpval = 0x00;
 
   /* Read CTRL_REG3 register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG6_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG6_A);
 
   /* Enable IT2 */
   tmpval |= LSM303DLHC_IT;
 
   /* Write value to MEMS CTRL_REG3 register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG6_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG6_A, tmpval);
 }
 
 /**
@@ -415,13 +415,13 @@ void LSM303DLHC_AccIT2Disable(uint8_t LSM303DLHC_IT)
   uint8_t tmpval = 0x00;
 
   /* Read CTRL_REG3 register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG6_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG6_A);
 
   /* Disable IT2 */
   tmpval &= ~LSM303DLHC_IT;
 
   /* Write value to MEMS CTRL_REG3 register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG6_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CTRL_REG6_A, tmpval);
 }
 
 /**
@@ -435,13 +435,13 @@ void LSM303DLHC_AccINT1InterruptEnable(uint8_t ITCombination, uint8_t ITAxes)
   uint8_t tmpval = 0x00;
 
   /* Read INT1_CFR register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_INT1_CFG_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_INT1_CFG_A);
 
   /* Enable the selected interrupt */
   tmpval |= (ITAxes | ITCombination);
 
   /* Write value to MEMS INT1_CFR register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_INT1_CFG_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_INT1_CFG_A, tmpval);
 }
 
 /**
@@ -455,13 +455,13 @@ void LSM303DLHC_AccINT1InterruptDisable(uint8_t ITCombination, uint8_t ITAxes)
   uint8_t tmpval = 0x00;
 
   /* Read INT1_CFR register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_INT1_CFG_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_INT1_CFG_A);
 
   /* Disable the selected interrupt */
   tmpval &= ~(ITAxes | ITCombination);
 
   /* Write value to MEMS INT1_CFR register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_INT1_CFG_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_INT1_CFG_A, tmpval);
 }
 
 /**
@@ -476,13 +476,13 @@ void LSM303DLHC_AccINT2InterruptEnable(uint8_t ITCombination, uint8_t ITAxes)
   uint8_t tmpval = 0x00;
 
   /* Read INT2_CFR register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_INT2_CFG_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_INT2_CFG_A);
 
   /* Enable the selected interrupt */
   tmpval |= (ITAxes | ITCombination);
 
   /* Write value to MEMS INT2_CFR register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_INT2_CFG_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_INT2_CFG_A, tmpval);
 }
 
 /**
@@ -497,13 +497,13 @@ void LSM303DLHC_AccINT2InterruptDisable(uint8_t ITCombination, uint8_t ITAxes)
   uint8_t tmpval = 0x00;
 
   /* Read INT2_CFR register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_INT2_CFG_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_INT2_CFG_A);
 
   /* Disable the selected interrupt */
   tmpval &= ~(ITAxes | ITCombination);
 
   /* Write value to MEMS INT2_CFR register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_INT2_CFG_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_INT2_CFG_A, tmpval);
 }
 
 /**
@@ -517,28 +517,28 @@ void LSM303DLHC_AccClickITEnable(uint8_t ITClick)
   uint8_t tmpval = 0x00;
 
   /* Read CLICK_CFR register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_CFG_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_CFG_A);
 
   /* Enable the selected interrupt */
   tmpval |= ITClick;
 
   /* Write value to MEMS CLICK CFG register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_CFG_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_CFG_A, tmpval);
 
   /* Configure Click Threshold on Z axis */
   tmpval = 0x0A;
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_THS_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_THS_A, tmpval);
 
   /* Configure Time Limit */
   tmpval = 0x05;
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_TIME_LIMIT_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_TIME_LIMIT_A, tmpval);
 
   /* Configure Latency */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_TIME_LATENCY_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_TIME_LATENCY_A, tmpval);
 
   /* Configure Click Window */
   tmpval = 0x32;
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_TIME_WINDOW_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_TIME_WINDOW_A, tmpval);
 
 }
 
@@ -553,13 +553,13 @@ void LSM303DLHC_AccClickITDisable(uint8_t ITClick)
   uint8_t tmpval = 0x00;
 
   /* Read CLICK_CFR register */
-  tmpval = COMPASSACCELERO_IO_Read(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_CFG_A);
+  tmpval = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_CFG_A);
 
   /* Disable the selected interrupt */
   tmpval &= ~ITClick;
 
   /* Write value to MEMS CLICK_CFR register */
-  COMPASSACCELERO_IO_Write(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_CFG_A, tmpval);
+  I2Cx_WriteData(ACC_I2C_ADDRESS, LSM303DLHC_CLICK_CFG_A, tmpval);
 }
 
 /**
@@ -610,13 +610,13 @@ void LSM303DLHC_MagInit(void)
   mr_regm = (uint8_t) LSM303DLHC_CONTINUOS_CONVERSION;
 
   /* Write value to Mag MEMS CRA_REG regsister */
-  COMPASSACCELERO_IO_Write(MAG_I2C_ADDRESS, LSM303DLHC_CRA_REG_M, cra_regm);
+  I2Cx_WriteData(MAG_I2C_ADDRESS, LSM303DLHC_CRA_REG_M, cra_regm);
 
   /* Write value to Mag MEMS CRB_REG regsister */
-  COMPASSACCELERO_IO_Write(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M, crb_regm);
+  I2Cx_WriteData(MAG_I2C_ADDRESS, LSM303DLHC_CRB_REG_M, crb_regm);
 
   /* Write value to Mag MEMS MR_REG regsister */
-  COMPASSACCELERO_IO_Write(MAG_I2C_ADDRESS, LSM303DLHC_MR_REG_M, mr_regm);
+  I2Cx_WriteData(MAG_I2C_ADDRESS, LSM303DLHC_MR_REG_M, mr_regm);
 }
 
 /**
@@ -629,7 +629,7 @@ uint8_t LSM303DLHC_MagGetDataStatus(void)
   uint8_t tmpreg;
 
   /* Read Mag STATUS register */
-  tmpreg = COMPASSACCELERO_IO_Read(MAG_I2C_ADDRESS, LSM303DLHC_SR_REG_M);
+  tmpreg = I2Cx_ReadData(MAG_I2C_ADDRESS, LSM303DLHC_SR_REG_M);
 
   return tmpreg;
 }
@@ -648,12 +648,12 @@ void LSM303DLHC_MagReadXYZ(float* pfData)
   uint8_t addr = MAG_I2C_ADDRESS + 1;
 
   /* Read output register X, Y & Z acceleration */
-  buffer[1] = COMPASSACCELERO_IO_Read(addr, LSM303DLHC_OUT_X_H_M);
-  buffer[0] = COMPASSACCELERO_IO_Read(addr, LSM303DLHC_OUT_X_L_M);
-  buffer[5] = COMPASSACCELERO_IO_Read(addr, LSM303DLHC_OUT_Z_H_M);
-  buffer[4] = COMPASSACCELERO_IO_Read(addr, LSM303DLHC_OUT_Z_L_M);
-  buffer[3] = COMPASSACCELERO_IO_Read(addr, LSM303DLHC_OUT_Y_H_M);
-  buffer[2] = COMPASSACCELERO_IO_Read(addr, LSM303DLHC_OUT_Y_L_M);
+  buffer[1] = I2Cx_ReadData(addr, LSM303DLHC_OUT_X_H_M);
+  buffer[0] = I2Cx_ReadData(addr, LSM303DLHC_OUT_X_L_M);
+  buffer[5] = I2Cx_ReadData(addr, LSM303DLHC_OUT_Z_H_M);
+  buffer[4] = I2Cx_ReadData(addr, LSM303DLHC_OUT_Z_L_M);
+  buffer[3] = I2Cx_ReadData(addr, LSM303DLHC_OUT_Y_H_M);
+  buffer[2] = I2Cx_ReadData(addr, LSM303DLHC_OUT_Y_L_M);
 
   /* check in the control register4 the data alignment -
    * assume little endian (we never change it on the fly)
