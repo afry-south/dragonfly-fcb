@@ -14,10 +14,12 @@
 
 # LaTeX
 doc-latex/**/*.aux
-doc-latex/**/*.pdf
 doc-latex/**/*.gz
-doc-latex/**/*.toc
 doc-latex/**/*.log
+doc-latex/**/*.out
+doc-latex/**/*.pdf
+doc-latex/**/*.toc
+
 
 # Binary folders
 Debug/
