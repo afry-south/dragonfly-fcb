@@ -60,13 +60,12 @@ void InitStatesXYZ(void)
   StateInit(&PitchEstimator);
   StateInit(&YawEstimator);
 
-  States.roll = 0;
-  States.rollRateBias = 0;
-  States.pitch = 0;
-  States.pitchRateBias = 0;
-  States.yaw = 0;  // TODO ISSUE119 - our state for yaw is turn rate, not heading? No, we are estimating the yaw angle.
-  States.yawRateBias = 0;
-
+  States.roll = 0.0;
+  States.rollRateBias = 0.0;
+  States.pitch = 0.0;
+  States.pitchRateBias = 0.0;
+  States.yaw = 0.0;  // TODO ISSUE119 - our state for yaw is turn rate, not heading? No, we are estimating the yaw angle.
+  States.yawRateBias = 0.0;
 }
 
 /* PredictStatesXYZ
@@ -76,9 +75,9 @@ void InitStatesXYZ(void)
  */
 void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRatePitch, const float32_t sensorRateYaw)
 {
-  StatePrediction( sensorRateRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
-  StatePrediction( sensorRatePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
-  StatePrediction( sensorRateYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
+	StatePrediction(sensorRateRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
+	StatePrediction(sensorRatePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
+	StatePrediction(sensorRateYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
 }
 
 /* CorrectStatesXYZ
@@ -88,9 +87,9 @@ void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRate
  */
 void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw)
 {
-	StateCorrection( sensorAngleRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
-	StateCorrection( sensorAnglePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
-	StateCorrection( sensorAngleYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
+	StateCorrection(sensorAngleRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
+	StateCorrection(sensorAnglePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
+	StateCorrection(sensorAngleYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
 }
 
 /* GetRoll
@@ -133,10 +132,12 @@ StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_
 
 	// TODO do not start a new task if one is already running, just update sampleTime/sampleDuration
 
-	if(sampleTime < STATE_PRINT_MINIMUM_SAMPLING_TIME)
+	if(sampleTime < STATE_PRINT_MINIMUM_SAMPLING_TIME) {
 		statePrintSampleTime = STATE_PRINT_MINIMUM_SAMPLING_TIME;
-	else
+	}
+	else {
 		statePrintSampleTime = sampleTime;
+	}
 
 	statePrintSampleDuration = sampleDuration;
 
@@ -212,6 +213,7 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 	if ((serializationType == NO_SERIALIZATION) || (serializationType == CALIBRATION_SERIALIZATION)) {
 		float32_t sensorAttitude[3], accValues[3], magValues[3];
 
+		// TODO Delete sensor attitude printouts
 		/* Get magnetometer values */
 		GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
 
@@ -303,7 +305,7 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 
 /* Private functions ---------------------------------------------------------*/
 
-/* InitEstimator
+/*
  * @brief  Initializes the roll state Kalman estimator
  * @param  None
  * @retval None
@@ -311,10 +313,10 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 static void StateInit(KalmanFilter_TypeDef * Estimator)
 {
   /* P matrix init is the Identity matrix*/
-  Estimator->p11 = 0.01;
+  Estimator->p11 = 0.1;
   Estimator->p12 = 0.0;
   Estimator->p21 = 0.0;
-  Estimator->p22 = 0.01;
+  Estimator->p22 = 0.1;
 
   /* q1 = sqrt(var(rate))*STATE_ESTIMATION_SAMPLE_PERIOD^2
    * q2 = sqrt(var(rateBias))
@@ -324,9 +326,7 @@ static void StateInit(KalmanFilter_TypeDef * Estimator)
   Estimator->r1 = R1_CAL; /* TODO_ISSUE119 - accelerometer based angle variance */
 }
 
-
-
-/* StatePrediction
+/*
  * @brief	Performs the prediction part of the Kalman filtering.
  * @param 	newRate: Pointer to measured gyroscope rate (roll, pitch or yaw)
  * @param 	Estimator: Pointer to KalmanFilter_TypeDef struct (roll pitch or yaw estimator)
@@ -338,8 +338,6 @@ static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Es
 {
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
-
-	/* WARNING: STATE_ESTIMATION_SAMPLE_PERIOD is set to 0 right now!! WARNING */
 	*stateAngle += STATE_ESTIMATION_SAMPLE_PERIOD * sensorRate - STATE_ESTIMATION_SAMPLE_PERIOD * (*stateRateBias);
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
@@ -349,9 +347,7 @@ static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Es
 	Estimator->p22 += Estimator->q2 * STATE_ESTIMATION_SAMPLE_PERIOD;
 }
 
-
-
-/* StateCorrection
+/*
  * @brief	Performs the correction part of the Kalman filtering.
  * @param 	newAngle: Pointer to measured angle using accelerometer or magnetometer (roll, pitch or yaw)
  * @param 	Estimator: Pointer to KalmanFilter_TypeDef struct (roll pitch or yaw estimator)
@@ -362,13 +358,11 @@ static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Es
 static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
 {
 	/* Correction */
-	/* Step3: Calculate y, difference between a-priori state and measurement z. */
+	/* Step3: Calculate y, difference between a-priori state and measurement z */
 	float32_t y = sensorAngle - *stateAngle;
 
 	/* Step 4: Calculate innovation covariance matrix S*/
 	float32_t s = Estimator->p11 + Estimator->r1;
-
-	// TODO if s becomes 0.0, below values will become NaN
 
 	/* Step 5: Calculate Kalman gain*/
 	Estimator->k1 = Estimator->p11 /s;
@@ -376,15 +370,15 @@ static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* E
 
 	/* Step 6: Update a posteriori state estimation*/
 	*stateAngle += Estimator->k1 * y;
-	*stateRateBias += Estimator->k2 * y;
+	(void*) stateRateBias; // To avoid warnings
 
-	/* Step 7: Update a posteriori error covariance matrix P*/
+	/* Step 7: Update a posteriori error covariance matrix P */
 	float32_t p11_tmp = Estimator->p11;
 	float32_t p12_tmp = Estimator->p12;
-	Estimator->p11 -= Estimator->k1 * p11_tmp;
-	Estimator->p12 -= Estimator->k1 * p12_tmp;
-	Estimator->p21 -= Estimator->k1 * p11_tmp;
-	Estimator->p22 -= Estimator->k1 * p12_tmp;
+	Estimator->p11 = p11_tmp - Estimator->k1*p11_tmp;
+	Estimator->p12 = p12_tmp - Estimator->k1*p12_tmp;
+	Estimator->p21 = -Estimator->k2*p11_tmp;
+	Estimator->p22 = -Estimator->k2*p12_tmp;
 }
 
 /**

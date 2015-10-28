@@ -45,10 +45,10 @@ typedef enum {
 /* Exported constants --------------------------------------------------------*/
 
 // TODO we need separate values for roll pitch and yaw as well as separate init values of P matrix
-#define	STATE_ESTIMATION_SAMPLE_PERIOD			(float32_t) FLIGHT_CONTROL_TASK_PERIOD / 1000.0
-#define Q1_CAL (float32_t)						0.5
-#define	Q2_CAL (float32_t)						0.05
-#define	R1_CAL (float32_t)						0.000185 /* 480 measured from USB console and
+#define	STATE_ESTIMATION_SAMPLE_PERIOD	(float32_t) 	FLIGHT_CONTROL_TASK_PERIOD / 1000.0
+#define Q1_CAL (float32_t)								0.05
+#define	Q2_CAL (float32_t)								0.005
+#define	R1_CAL (float32_t)								0.000185 /* 480 measured from USB console and
                                                           * calculated with SensorVariance.sce
                                                           */
 
