@@ -129,7 +129,7 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\end{array} \right]
 		\dot{\theta}_{gyro, k}\\
 		\end{equation}
-		\begin{equation*}
+		\begin{equation}
 		z_{k}=
 		\left[
 		\begin{array}{c c}
@@ -140,7 +140,7 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\theta\\
 		\dot{\theta}_{b}
 		\end{array} \right]_{k|k-1}
-		\end{equation*}
+		\end{equation}
     In pseudo code:
     \begin{lstlisting}[frame=single]
 		predictAngle = angle + dt*gyroRate - dt*bias;
@@ -153,7 +153,7 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		P_{k|k-1}=AP_{k-1|k-1}A^{T}+Q
 		\end{equation}
 
-		where $Q$ is the process noise covariance matrix.
+		where $Q$ is the process noise covariance matrix, in this application, $q_{00}$ this is the measured gyroscope error variance.
 
 		\begin{equation*}
 		\left[
@@ -224,7 +224,7 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		S_{k}=HP_{k|k-1}H^{T}+R
 		\end{equation}
 
-		where $R$ is the measurement noise covariance matrix.
+		where $R$ is the measurement noise covariance matrix, in this application this the measured variance of the $\theta$ angles calculated from the accelerometer.
 
 		\begin{equation}
 		S_{k}=
