@@ -158,8 +158,8 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\begin{equation*}
 		\left[
 		\begin{array}{c c}
-		P_{00}	&	P_{01}\\
-		P_{10}	&	P_{11}
+		P_{11}	&	P_{12}\\
+		P_{21}	&	P_{22}
 		\end{array} \right]_{k|k-1}
 		=
 		\left[
@@ -169,8 +169,8 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\end{array} \right]
 		\left[
 		\begin{array}{c c}
-		P_{00}	&	P_{01}\\
-		P_{10}	&	P_{11}
+		P_{11}	&	P_{12}\\
+		P_{21}	&	P_{22}
 		\end{array} \right]_{k-1|k-1}
 		\left[
 		\begin{array}{c c}
@@ -189,10 +189,10 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\end{equation}
     In pseudo code:
 		\begin{lstlisting}[frame=single]
-		P[0][0] += dt*(dt*P[1][1] - P[0][1] - P[1][0] + Q1);
-		P[0][1] -= dt*P[1][1];
-		P[1][0] -= dt*P[1][1];
-		P[1][1] += dt*Q2;
+		P11 += dt*(dt*P22 - P12 - P21 + Q1);
+		P12 -= dt*P22;
+		P21 -= dt*P22;
+		P22 += dt*Q2;
 		\end{lstlisting}
 		Step 3: Now calculate the difference $\tilde{y}_{k}$ between the predicted state $\hat{x}_{k|k-1}$ and the measurement $z_{k}$
 		\begin{equation}
@@ -202,7 +202,7 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\tilde{y}_{k}=z_{k}-H\hat{x}_{k|k-1}
 		\end{equation}
 		The extraction matrix $H$ matrix defines what sensor readings we would get under the conditions that our $\hat{x}$ was perfectly estimated and our sensors delivered perfect values.\footnote{See  \url{https://www.udacity.com/wiki/cs373/kalman-filter-matrices}}
-		
+
 		\begin{equation}
 		\tilde{y}_{k}=z_{k}-\left[
 		\begin{array}{c c}
@@ -234,8 +234,8 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\end{array} \right]
 		\left[
 		\begin{array}{c c}
-		P_{00}	&	P_{01}\\
-		P_{10}	&	P_{11}
+		P_{11}	&	P_{12}\\
+		P_{21}	&	P_{22}
 		\end{array} \right]_{k|k-1}
 		\left[
 		\begin{array}{c}
@@ -251,7 +251,7 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		 \end{equation*}
     In pseudo code:
 		\begin{lstlisting}[frame=single]
-		S = P[0][0] + R;
+		S = P11 + R;
 		\end{lstlisting}
 		Step 5: Calculate the Kalman gain $K_{k}$
 		\begin{equation}
@@ -261,14 +261,14 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\begin{equation}
 		\left[
 		\begin{array}{c}
-		K_{0}\\
-		K_{1}
+		K_{1}\\
+		K_{2}
 		\end{array} \right]_{k}
 		=
 		\left[
 		\begin{array}{c c}
-		P_{00}	&	P_{01}\\
-		P_{10}	&	P_{11}
+		P_{11}	&	P_{12}\\
+		P_{21}	&	P_{22}
 		\end{array}  \right]_{k|k-1}
 		\left[
 		\begin{array}{c}
@@ -279,8 +279,8 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\end{equation}
     In pseudo code:
 		\begin{lstlisting}[frame=single]
-		K[0] = P[0][0] / S;
-		K[1] = P[1][0] / S;
+		K1 = P11 / S;
+		K2 = P21 / S;
 		\end{lstlisting}
 		Step 6: Update the state prediction $\hat{x}_{k|k-1}$ to  $\hat{x}_{k|k}$
 		\begin{equation}
@@ -302,8 +302,8 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		+
 		\left[
 		\begin{array}{c}
-		K_{0}\\
-		K_{1}
+		K_{1}\\
+		K_{2}
 		\end{array} \right]_{k}
 		\tilde{y}_{k}
 		\end{equation}
@@ -320,8 +320,8 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\begin{equation}
 		\left[
 		\begin{array}{c c}
-		P_{00}	&	P_{01}\\
-		P_{10}	&	P_{11}
+		P_{11}	&	P_{12}\\
+		P_{21}	&	P_{22}
 		\end{array} \right]_{k|k}
 		=
 		\left(
@@ -333,8 +333,8 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		-
 		\left[
 		\begin{array}{c}
-		K_{0}\\
-		K_{1}
+		K_{1}\\
+		K_{2}
 		\end{array} \right]_{k}
 		\left[
 		\begin{array}{c c}
@@ -343,19 +343,19 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 		\right)
 		\left[
 		\begin{array}{c c}
-		P_{00}	&	P_{01}\\
-		P_{10}	&	P_{11}
+		P_{11}	&	P_{12}\\
+		P_{21}	&	P_{22}
 		\end{array} \right]_{k|k-1}
 		\end{equation}
     In pseudo code:
 		\begin{lstlisting}[frame=single]
-		float P00_tmp = P[0][0];
-		float P01_tmp = P[0][1];
+		float P11_tmp = P11;
+		float P12_tmp = P12;
 
-		P[0][0] -= K[0]*P00_tmp;
-		P[0][1] -= K[0]*P01_tmp;
-		P[1][0] -= K[1]*P00_tmp;
-		P[1][1] -= K[1]*P01_tmp;
+		P11 -= K1*P11_tmp;
+		P12 -= K1*P12_tmp;
+		P21 -= K2*P11_tmp;
+		P22 -= K2*P12_tmp;
 		\end{lstlisting}
 
 	\section{Velocity Estimation}
