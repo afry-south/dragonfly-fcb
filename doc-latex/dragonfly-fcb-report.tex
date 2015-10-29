@@ -25,10 +25,10 @@
 \lstset{
   basicstyle=\scriptsize\ttfamily,
   language=C,
-	extendedchars=true,
+  extendedchars=true,
   inputencoding=utf8,
   commentstyle=\color{black},
-	gobble=12
+  gobble=12
 }
 
 \title{Dragonfly Quadrotor UAV \\ Flight Control Board}
@@ -354,8 +354,8 @@ The state vector for the attitude is the attitude angle and the angular rate bia
 
 		P[0][0] -= K[0]*P00_tmp;
 		P[0][1] -= K[0]*P01_tmp;
-		P[1][0] -= K[0]*P00_tmp;
-		P[1][1] -= K[0]*P01_tmp;
+		P[1][0] -= K[1]*P00_tmp;
+		P[1][1] -= K[1]*P01_tmp;
 		\end{lstlisting}
 
 	\section{Velocity Estimation}

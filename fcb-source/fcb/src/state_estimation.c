@@ -375,8 +375,8 @@ static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* E
 	float32_t p12_tmp = Estimator->p12;
 	Estimator->p11 = p11_tmp - Estimator->k1*p11_tmp;
 	Estimator->p12 = p12_tmp - Estimator->k1*p12_tmp;
-	Estimator->p21 = -Estimator->k2*p11_tmp;
-	Estimator->p22 = -Estimator->k2*p12_tmp;
+	Estimator->p21 -= Estimator->k2*p11_tmp;
+	Estimator->p22 -= Estimator->k2*p12_tmp;
 }
 
 /**
