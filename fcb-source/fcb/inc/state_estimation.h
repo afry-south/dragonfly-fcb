@@ -19,8 +19,8 @@ typedef struct
 	float32_t q2;
 	float32_t r1;	// Measurement noise covariance matrix component
 	float32_t p11;	// Error covariance matrix component
-	float32_t p12;  // TODO: change these to be p00, p01, p10 and p11 to
-	float32_t p21;  // align with .tex document
+	float32_t p12;
+	float32_t p21;
 	float32_t p22;
 	float32_t k1;	// Kalman gain
 	float32_t k2;   // note: k1 & k2 these don't have to be part of the struct as they
