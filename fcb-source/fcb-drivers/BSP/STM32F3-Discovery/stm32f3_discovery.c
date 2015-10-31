@@ -148,8 +148,6 @@ void            GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByt
 /* Link function for COMPASS / ACCELEROMETER peripheral */
 void      COMPASSACCELERO_IO_Init(void);
 void      COMPASSACCELERO_IO_ITConfig(void);
-void      COMPASSACCELERO_IO_Write(uint16_t DeviceAddr, uint8_t RegisterAddr, uint8_t Value);
-uint8_t   COMPASSACCELERO_IO_Read(uint16_t DeviceAddr, uint8_t RegisterAddr);
 #endif
 
 /**
@@ -432,23 +430,24 @@ uint8_t I2Cx_ReadData(uint16_t Addr, uint8_t Reg)
   * @brief  Read a value in a register of the device through BUS.
   * @param  Addr: Device address on BUS Bus.
   * @param  Reg: The target register address to write
-  * @retval Data read at register @
+  * @retval HAL_StatusTypeDef status
+  *
+  * @see HAL_StatusTypeDef
   */
-static uint8_t I2Cx_ReadDataLen(uint16_t Addr, uint8_t Reg, uint16_t Len)
+HAL_StatusTypeDef I2Cx_ReadDataLen(uint16_t Addr, uint8_t Reg, uint8_t * pData, uint16_t Len)
 {
   HAL_StatusTypeDef status = HAL_OK;
-  uint8_t value = 0;
 
-  status = HAL_I2C_Mem_Read(&I2cHandle, Addr, Reg, I2C_MEMADD_SIZE_8BIT, &value, Len, I2cxTimeout);
+  status = HAL_I2C_Mem_Read(&I2cHandle, Addr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Len, I2cxTimeout);
 
   /* Check the communication status */
   if(status != HAL_OK)
   {
     /* Execute user timeout callback */
     I2Cx_Error();
-
   }
-  return value;
+
+  return status;
 }
 
 
@@ -709,47 +708,8 @@ void COMPASSACCELERO_IO_ITConfig(void)
   /* Enable and set Button EXTI Interrupt to the lowest priority */
   HAL_NVIC_SetPriority(ACCELERO_INT1_EXTI_IRQn, 0x00, 0x00);
   HAL_NVIC_EnableIRQ(ACCELERO_INT1_EXTI_IRQn);
-
 }
 
-/**
-  * @brief  Writes one byte to the COMPASS / ACCELEROMETER.
-  * @param  DeviceAddr : specifies the slave address to be programmed.
-  * @param  RegisterAddr specifies the COMPASS / ACCELEROMETER register to be written.
-  * @param  Value : Data to be written
-  * @retval   None
- */
-void COMPASSACCELERO_IO_Write(uint16_t DeviceAddr, uint8_t RegisterAddr, uint8_t Value)
-{
-  /* call I2Cx Read data bus function */
-  I2Cx_WriteData(DeviceAddr, RegisterAddr, Value);
-}
-
-/**
-  * @brief  Reads a block of data from the COMPASS / ACCELEROMETER.
-  * @param  DeviceAddr : specifies the slave address to be programmed(ACC_I2C_ADDRESS or MAG_I2C_ADDRESS).
-  * @param  RegisterAddr : specifies the COMPASS / ACCELEROMETER internal address register to read from
-  * @retval ACCELEROMETER register value
-  */
-uint8_t COMPASSACCELERO_IO_Read(uint16_t DeviceAddr, uint8_t RegisterAddr)
-{
-  /* call I2Cx Read data bus function */
-  return I2Cx_ReadData(DeviceAddr, RegisterAddr);
-}
-
-
-/**
-  * @brief  Reads a block of data from the COMPASS / ACCELEROMETER.
-  * @param  DeviceAddr : specifies the slave address to be programmed(ACC_I2C_ADDRESS or MAG_I2C_ADDRESS).
-  * @param  RegisterAddr : specifies the COMPASS / ACCELEROMETER internal address register to read from
-  * @param  Len: number of bytes to read in autoincrement register mode.
-  * @retval ACCELEROMETER register value
-  */
-uint8_t COMPASSACCELERO_IO_Read_Len(uint16_t DeviceAddr, uint8_t RegisterAddr, uint16_t Len)
-{
-  /* call I2Cx Read data bus function */
-  return I2Cx_ReadDataLen(DeviceAddr, RegisterAddr, Len);
-}
 
 #endif /* HAL_I2C_MODULE_ENABLED */
 

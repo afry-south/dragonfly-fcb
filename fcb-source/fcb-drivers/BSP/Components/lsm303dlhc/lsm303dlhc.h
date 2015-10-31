@@ -484,8 +484,6 @@ void LSM303DLHC_CompassReadAcc(int16_t* pData);
 /* Link function for COMPASS / ACCELERO peripheral */
 void      COMPASSACCELERO_IO_Init(void);
 void      COMPASSACCELERO_IO_ITConfig(void);
-void      COMPASSACCELERO_IO_Write(uint16_t DeviceAddr, uint8_t RegisterAddr, uint8_t Value);
-uint8_t   COMPASSACCELERO_IO_Read(uint16_t DeviceAddr, uint8_t RegisterAddr);
 
 extern ACCELERO_DrvTypeDef Lsm303dlhcDrv;
 #ifdef __cplusplus

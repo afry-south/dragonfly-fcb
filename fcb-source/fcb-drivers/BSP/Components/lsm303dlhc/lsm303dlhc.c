@@ -270,17 +270,26 @@ void LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState)
  */
 void LSM303DLHC_AccReadXYZ(float * pData)
 {
-
+  int status = 0;
   uint8_t buffer[6];
   uint8_t i = 0;
 
-  /* Read output register X, Y & Z acceleration */
-  buffer[0] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A);
-  buffer[1] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_H_A);
-  buffer[2] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_A);
-  buffer[3] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_A);
-  buffer[4] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_A);
-  buffer[5] = I2Cx_ReadData(ACC_I2C_ADDRESS, LSM303DLHC_OUT_Z_H_A);
+  /* Read output register X, Y & Z acceleration
+   *
+   * note: set MSB of the SUB address (the 2nd argument) to allow reading
+   * multiple bytes ... see LSM303DLHC data sheet section 5.1.1.
+   *
+   * This means that the SUB address is auto-incremented.
+   *
+   * It also means that we only send the slave address once for 6 bytes
+   * instead of once for every byte read, this makes reading go faster.
+   */
+  if (HAL_OK != (status = I2Cx_ReadDataLen(ACC_I2C_ADDRESS,
+                                           LSM303DLHC_OUT_X_L_A | 0x80,
+                                           buffer,
+                                           6))) {
+    ErrorHandler();
+  }
 
   /* check in the control register4 the data alignment
    *
