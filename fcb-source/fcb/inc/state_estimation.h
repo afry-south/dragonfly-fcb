@@ -13,7 +13,7 @@
 #include "flight_control.h"
 
 /* Exported types ------------------------------------------------------------*/
-typedef struct
+typedef struct KalmanFilter
 {
 	float32_t q1;	// Process noise covariance matrix components
 	float32_t q2;
@@ -26,9 +26,9 @@ typedef struct
 	float32_t k2;   // note: k1 & k2 these don't have to be part of the struct as they
 	                // need not be carried over from one iteration to the next
 	                // but it's useful for displaying variables.
-}KalmanFilter_TypeDef;
+} KalmanFilterType;
 
-typedef struct
+typedef struct StateVector
 {
 	float32_t roll;
 	float32_t rollRateBias;
@@ -36,7 +36,7 @@ typedef struct
 	float32_t pitchRateBias;
 	float32_t yaw;
 	float32_t yawRateBias;
-}StateVector_TypeDef;
+} StateVectorType;
 
 typedef enum {
 	STATE_ERROR = 0, STATE_OK = !STATE_ERROR

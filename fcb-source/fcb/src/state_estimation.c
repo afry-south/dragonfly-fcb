@@ -30,10 +30,10 @@
 #define RAD_TO_DEG								180/PI
 
 /* Private variables ---------------------------------------------------------*/
-StateVector_TypeDef States;
-KalmanFilter_TypeDef RollEstimator;
-KalmanFilter_TypeDef PitchEstimator;
-KalmanFilter_TypeDef YawEstimator;
+StateVectorType States;
+KalmanFilterType RollEstimator;
+KalmanFilterType PitchEstimator;
+KalmanFilterType YawEstimator;
 
 /* Task handle for printing of sensor values task */
 static volatile uint16_t statePrintSampleTime;
@@ -42,9 +42,9 @@ xTaskHandle StatePrintSamplingTaskHandle = NULL;
 static SerializationType_TypeDef statePrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
-static void StateInit(KalmanFilter_TypeDef * Estimator);
-static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
-static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
+static void StateInit(KalmanFilterType * Estimator);
+static void StatePrediction(const float32_t sensorRate, KalmanFilterType* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
+static void StateCorrection(const float32_t sensorAngle, KalmanFilterType* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
 static void StatePrintSamplingTask(void const *argument);
 
 /* Exported functions --------------------------------------------------------*/
@@ -308,7 +308,7 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
  * @param  None
  * @retval None
  */
-static void StateInit(KalmanFilter_TypeDef * Estimator)
+static void StateInit(KalmanFilterType * Estimator)
 {
   /* P matrix init is the Identity matrix*/
   Estimator->p11 = 0.1;
@@ -327,12 +327,12 @@ static void StateInit(KalmanFilter_TypeDef * Estimator)
 /*
  * @brief	Performs the prediction part of the Kalman filtering.
  * @param 	newRate: Pointer to measured gyroscope rate (roll, pitch or yaw)
- * @param 	Estimator: Pointer to KalmanFilter_TypeDef struct (roll pitch or yaw estimator)
- * @param 	stateAngle: Pointer to struct member of StateVector_TypeDef (roll, pitch or yaw)
- * @param 	stateRateBias: Pointer to struct member of StateVector_TypeDef (rollRateBias, pitchRateBias or yawRateBias)
+ * @param 	Estimator: Pointer to KalmanFilterType struct (roll pitch or yaw estimator)
+ * @param 	stateAngle: Pointer to struct member of StateVectorType (roll, pitch or yaw)
+ * @param 	stateRateBias: Pointer to struct member of StateVectorType (rollRateBias, pitchRateBias or yawRateBias)
  * @retval 	None
  */
-static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
+static void StatePrediction(const float32_t sensorRate, KalmanFilterType* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
 {
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
@@ -348,12 +348,12 @@ static void StatePrediction(const float32_t sensorRate, KalmanFilter_TypeDef* Es
 /*
  * @brief	Performs the correction part of the Kalman filtering.
  * @param 	newAngle: Pointer to measured angle using accelerometer or magnetometer (roll, pitch or yaw)
- * @param 	Estimator: Pointer to KalmanFilter_TypeDef struct (roll pitch or yaw estimator)
- * @param 	stateAngle: Pointer to struct member of StateVector_TypeDef (roll, pitch or yaw)
- * @param 	stateRateBias: Pointer to struct member of StateVector_TypeDef (rollRateBias, pitchRateBias or yawRateBias)
+ * @param 	Estimator: Pointer to KalmanFilterType struct (roll pitch or yaw estimator)
+ * @param 	stateAngle: Pointer to struct member of StateVectorType (roll, pitch or yaw)
+ * @param 	stateRateBias: Pointer to struct member of StateVectorType (rollRateBias, pitchRateBias or yawRateBias)
  * @retval 	None
  */
-static void StateCorrection(const float32_t sensorAngle, KalmanFilter_TypeDef* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
+static void StateCorrection(const float32_t sensorAngle, KalmanFilterType* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
 {
 	/* Correction */
 	/* Step3: Calculate y, difference between a-priori state and measurement z */
