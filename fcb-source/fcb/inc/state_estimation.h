@@ -11,6 +11,8 @@
 #include "arm_math.h"
 #include "usbd_cdc_if.h"
 #include "flight_control.h"
+#include "fcb_retval.h"
+#include "common.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct KalmanFilter
@@ -28,20 +30,15 @@ typedef struct KalmanFilter
 	                // but it's useful for displaying variables.
 } KalmanFilterType;
 
-typedef struct StateVector
+/**
+ * This is used for roll, pitch & yaw attitude.
+ */
+typedef struct AttitudeStateVector
 {
-	float32_t roll;
-	float32_t rollRateBias;
-	float32_t pitch;
-	float32_t pitchRateBias;
-	float32_t yaw;
-	float32_t yawRateBias;
-} StateVectorType;
-
-typedef enum {
-	STATE_ERROR = 0, STATE_OK = !STATE_ERROR
-} StateErrorStatus;
-
+  float32_t angle; /* for yaw, think "heading" */
+  float32_t angleRate; /* not used */
+  float32_t angleRateBias;
+} AttitudeStateVectorType;
 
 /* Exported constants --------------------------------------------------------*/
 
@@ -64,10 +61,9 @@ float32_t GetHeading(void);
 void InitStatesXYZ(void);
 void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRatePitch, const float32_t sensorRateYaw);
 void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw);
-StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
-StateErrorStatus StopStateSamplingTask(void);
+FcbRetValType StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
+FcbRetValType StopStateSamplingTask(void);
 void SetStatePrintSamplingSerialization(const SerializationType serializationType);
-float32_t RadianToDegree(float32_t radian);
 void PrintStateValues(const SerializationType serializationType);
 
 #endif /* __SENSORS_H */

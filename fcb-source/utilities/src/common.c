@@ -148,6 +148,25 @@ void LEDsOff(void) {
 	BSP_LED_Off(LED10);
 }
 
+/*
+ * @brief   Converts radians to degrees
+ * @param   radian: The value in radians that should be converted.
+ * @return  degree: The converted value in degrees.
+ */
+#define RAD_TO_DEG                              180/PI
+float32_t Radian2Degree(float32_t radian) {
+    float32_t degree = radian*RAD_TO_DEG;
+
+    while(degree>180) {
+        degree -= 360;
+    }
+    while(degree<-180) {
+        degree += 360;
+    }
+
+    return degree;
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /**

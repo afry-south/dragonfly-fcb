@@ -22,15 +22,18 @@
 #include "math.h"
 #include "rotation_transformation.h"
 #include "fcb_accelerometer_magnetometer.h"
+#include "fcb_retval.h"
 
 /* Private define ------------------------------------------------------------*/
 #define STATE_PRINT_SAMPLING_TASK_PRIO			1
 #define STATE_PRINT_MINIMUM_SAMPLING_TIME		20	// updated every 2.5 ms
 #define STATE_PRINT_MAX_STRING_SIZE				256
-#define RAD_TO_DEG								180/PI
 
 /* Private variables ---------------------------------------------------------*/
-StateVectorType States;
+AttitudeStateVectorType rollState = { 0, 0 , 0 };
+AttitudeStateVectorType pitchState = { 0, 0 , 0 };
+AttitudeStateVectorType yawState = { 0, 0 , 0 };
+
 KalmanFilterType rollEstimator;
 KalmanFilterType pitchEstimator;
 KalmanFilterType yawEstimator;
@@ -42,9 +45,9 @@ xTaskHandle StatePrintSamplingTaskHandle = NULL;
 static SerializationType statePrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
-static void StateInit(KalmanFilterType * Estimator);
-static void StatePrediction(const float32_t sensorRate, KalmanFilterType* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
-static void StateCorrection(const float32_t sensorAngle, KalmanFilterType* Estimator, float32_t* stateAngle, float32_t* stateRateBias);
+static void StateInit(KalmanFilterType * pEstimator);
+static void PredictAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
+static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
 static void StatePrintSamplingTask(void const *argument);
 
 /* Exported functions --------------------------------------------------------*/
@@ -60,12 +63,13 @@ void InitStatesXYZ(void)
   StateInit(&pitchEstimator);
   StateInit(&yawEstimator);
 
-  States.roll = 0.0;
-  States.rollRateBias = 0.0;
-  States.pitch = 0.0;
-  States.pitchRateBias = 0.0;
-  States.yaw = 0.0;  // TODO ISSUE119 - our state for yaw is turn rate, not heading? No, we are estimating the yaw angle.
-  States.yawRateBias = 0.0;
+  rollState.angle = 0.0;
+  rollState.angleRateBias = 0.0;
+  pitchState.angle = 0.0;
+  pitchState.angleRateBias = 0.0;
+
+  yawState.angle = 0.0; /* should be initialised with current heading */
+  yawState.angleRateBias = 0.0;
 }
 
 /* PredictStatesXYZ
@@ -75,9 +79,9 @@ void InitStatesXYZ(void)
  */
 void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRatePitch, const float32_t sensorRateYaw)
 {
-	StatePrediction(sensorRateRoll, &rollEstimator, &(States.roll), &(States.rollRateBias));
-	StatePrediction(sensorRatePitch, &pitchEstimator, &(States.pitch), &(States.pitchRateBias));
-	StatePrediction(sensorRateYaw, &yawEstimator, &(States.yaw), &(States.yawRateBias));
+	PredictAttitudeState(sensorRateRoll, &rollEstimator, &rollState);
+	PredictAttitudeState(sensorRatePitch, &pitchEstimator, &pitchState);
+	PredictAttitudeState(sensorRateYaw, &yawEstimator, &yawState);
 }
 
 /* CorrectStatesXYZ
@@ -87,9 +91,9 @@ void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRate
  */
 void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw)
 {
-	StateCorrection(sensorAngleRoll, &rollEstimator, &(States.roll), &(States.rollRateBias));
-	StateCorrection(sensorAnglePitch, &pitchEstimator, &(States.pitch), &(States.pitchRateBias));
-	StateCorrection(sensorAngleYaw, &yawEstimator, &(States.yaw), &(States.yawRateBias));
+	CorrectAttitudeState(sensorAngleRoll, &rollEstimator, &rollState);
+	CorrectAttitudeState(sensorAnglePitch, &pitchEstimator, &pitchState);
+	CorrectAttitudeState(sensorAngleYaw, &yawEstimator, &yawState);
 }
 
 /* GetRoll
@@ -99,7 +103,7 @@ void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAng
  */
 float32_t GetRollAngle(void)
 {
-  return States.roll;
+  return rollState.angle;
 }
 
 /* GetPitch
@@ -109,7 +113,7 @@ float32_t GetRollAngle(void)
  */
 float32_t GetPitchAngle(void)
 {
-  return States.pitch;
+  return pitchState.angle;
 }
 
 /* GetYaw
@@ -119,7 +123,7 @@ float32_t GetPitchAngle(void)
  */
 float32_t GetYawAngle(void)
 {
-  return States.yaw;
+  return yawState.angle;
 }
 
 /*
@@ -128,7 +132,7 @@ float32_t GetYawAngle(void)
  * @param  sampleDuration : Sets for how long sampling should be performed.
  * @retval MOTORCTRL_OK if thread started, else MOTORCTRL_ERROR.
  */
-StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
+FcbRetValType StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
 
 	// TODO do not start a new task if one is already running, just update sampleTime/sampleDuration
 
@@ -152,9 +156,9 @@ StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_
 	if (pdPASS != xTaskCreate((pdTASK_CODE )StatePrintSamplingTask, (signed portCHAR*)"STATE_PRINT_SAMPL",
 			3*configMINIMAL_STACK_SIZE, NULL, STATE_PRINT_SAMPLING_TASK_PRIO, &StatePrintSamplingTaskHandle)) {
 		ErrorHandler();
-		return STATE_ERROR;
+		return FCB_ERR;
 	}
-	return STATE_OK;
+	return FCB_OK;
 }
 
 /*
@@ -162,13 +166,13 @@ StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_
  * @param  None.
  * @retval MOTORCTRL_OK if task deleted, MOTORCTRL_ERROR if not.
  */
-StateErrorStatus StopStateSamplingTask(void) {
+FcbRetValType StopStateSamplingTask(void) {
 	if(StatePrintSamplingTaskHandle != NULL) {
 		vTaskDelete(StatePrintSamplingTaskHandle);
 		StatePrintSamplingTaskHandle = NULL;
-		return STATE_OK;
+		return FCB_OK;
 	}
-	return STATE_ERROR;
+	return FCB_ERR;
 }
 
 /*
@@ -180,23 +184,6 @@ void SetStatePrintSamplingSerialization(const SerializationType serializationTyp
 	statePrintSerializationType = serializationType;
 }
 
-/*
- * @brief	Converts radians to degrees
- * @param	radian: The value in radians that should be converted.
- * @return	degree: The converted value in degrees.
- */
-float32_t RadianToDegree(float32_t radian) {
-	float32_t degree = radian*RAD_TO_DEG;
-
-	while(degree>180) {
-		degree -= 360;
-	}
-	while(degree<-180) {
-		degree += 360;
-	}
-
-	return degree;
-}
 
 /*
  * @brief Prints the state values
@@ -224,14 +211,14 @@ void PrintStateValues(const SerializationType serializationType) {
 		if (serializationType == NO_SERIALIZATION) {
 		  snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
 		      "States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\n\r\n",
-		      RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw),
-		      States.rollRateBias, States.pitchRateBias, States.yawRateBias,
+		      Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle), Radian2Degree(yawState.angle),
+		      rollState.angleRateBias, pitchState.angleRateBias, yawState.angleRateBias,
 		      sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
 		} else /* CALIBRATION_SERIALIZATION */ {
 		  usedLen = snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
 		      "States:\nAngle-RPY [deg]: %1.3f, %1.3f, %1.4f\n Bias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %f, %f, %f\n\r\n",
-		      RadianToDegree(States.roll), RadianToDegree(States.pitch), RadianToDegree(States.yaw),
-		      States.rollRateBias, States.pitchRateBias, States.yawRateBias,
+		      Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle), Radian2Degree(yawState.angle),
+		      rollState.angleRateBias, pitchState.angleRateBias, yawState.angleRateBias,
 		      sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
 
 		  if (usedLen < STATE_PRINT_MAX_STRING_SIZE) {
@@ -252,11 +239,11 @@ void PrintStateValues(const SerializationType serializationType) {
 
 		/* Add estimated attitude states to protobuffer type struct members */
 		stateValuesProto.has_rollAngle = true;
-		stateValuesProto.rollAngle = States.roll;
+		stateValuesProto.rollAngle = rollState.angle;
 		stateValuesProto.has_pitchAngle = true;
-		stateValuesProto.pitchAngle = States.pitch;
+		stateValuesProto.pitchAngle = pitchState.angle;
 		stateValuesProto.has_yawAngle = true;
-		stateValuesProto.yawAngle = States.yaw;
+		stateValuesProto.yawAngle = yawState.angle;
 
 		// TODO add attitude rates when available
 		stateValuesProto.has_rollRate = false;
@@ -325,58 +312,60 @@ static void StateInit(KalmanFilterType * Estimator)
 }
 
 /*
- * @brief	Performs the prediction part of the Kalman filtering.
- * @param 	newRate: Pointer to measured gyroscope rate (roll, pitch or yaw)
- * @param 	Estimator: Pointer to KalmanFilterType struct (roll pitch or yaw estimator)
- * @param 	stateAngle: Pointer to struct member of StateVectorType (roll, pitch or yaw)
- * @param 	stateRateBias: Pointer to struct member of StateVectorType (rollRateBias, pitchRateBias or yawRateBias)
+ * @brief	Performs the prediction step of the Kalman filtering.
+ *
+ * @param 	sensorRate: Pointer to measured gyroscope rate (roll, pitch or yaw)
+ * @param 	pEstimator: Pointer to KalmanFilterType struct (roll pitch or yaw estimator)
+ * @param 	pState: Pointer to struct member of AngleStateVectorType (roll, pitch or yaw)
+ *
  * @retval 	None
  */
-static void StatePrediction(const float32_t sensorRate, KalmanFilterType* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
+static void PredictAttitudeState(const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState)
 {
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
-	*stateAngle += STATE_ESTIMATION_SAMPLE_PERIOD * sensorRate - STATE_ESTIMATION_SAMPLE_PERIOD * (*stateRateBias);
+	pState->angle += STATE_ESTIMATION_SAMPLE_PERIOD * sensorRate - STATE_ESTIMATION_SAMPLE_PERIOD * (pState->angleRateBias);
+	/* angleRateBias not corrected, see equations in section "State Estimation Theory" */
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
-	Estimator->p11 += (STATE_ESTIMATION_SAMPLE_PERIOD*Estimator->p22 - Estimator->p12 - Estimator->p21 + Estimator->q1)*STATE_ESTIMATION_SAMPLE_PERIOD;
-	Estimator->p12 -= Estimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
-	Estimator->p21 -= Estimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
-	Estimator->p22 += Estimator->q2 * STATE_ESTIMATION_SAMPLE_PERIOD;
+	pEstimator->p11 += (STATE_ESTIMATION_SAMPLE_PERIOD*pEstimator->p22 - pEstimator->p12 - pEstimator->p21 + pEstimator->q1)*STATE_ESTIMATION_SAMPLE_PERIOD;
+	pEstimator->p12 -= pEstimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
+	pEstimator->p21 -= pEstimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
+	pEstimator->p22 += pEstimator->q2 * STATE_ESTIMATION_SAMPLE_PERIOD;
 }
 
 /*
  * @brief	Performs the correction part of the Kalman filtering.
  * @param 	newAngle: Pointer to measured angle using accelerometer or magnetometer (roll, pitch or yaw)
- * @param 	Estimator: Pointer to KalmanFilterType struct (roll pitch or yaw estimator)
+ * @param 	pEstimator: Pointer to KalmanFilterType struct (roll pitch or yaw estimator)
  * @param 	stateAngle: Pointer to struct member of StateVectorType (roll, pitch or yaw)
  * @param 	stateRateBias: Pointer to struct member of StateVectorType (rollRateBias, pitchRateBias or yawRateBias)
  * @retval 	None
  */
-static void StateCorrection(const float32_t sensorAngle, KalmanFilterType* Estimator, float32_t* stateAngle, float32_t* stateRateBias)
+static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState)
 {
 	/* Correction */
 	/* Step3: Calculate y, difference between a-priori state and measurement z */
-	float32_t y = sensorAngle - *stateAngle;
+	float32_t y = sensorAngle - pState->angle;
 
 	/* Step 4: Calculate innovation covariance matrix S*/
-	float32_t s = Estimator->p11 + Estimator->r1;
+	float32_t s = pEstimator->p11 + pEstimator->r1;
 
 	/* Step 5: Calculate Kalman gain*/
-	Estimator->k1 = Estimator->p11 /s;
-	Estimator->k2 = Estimator->p21 /s;
+	pEstimator->k1 = pEstimator->p11 /s;
+	pEstimator->k2 = pEstimator->p21 /s;
 
 	/* Step 6: Update a posteriori state estimation*/
-	*stateAngle += Estimator->k1 * y;
-	(void*) stateRateBias; // To avoid warnings
+	pState->angle += pEstimator->k1 * y;
+	/* angleRateBias deliberately not updated as per equations, see FCB PDF */
 
 	/* Step 7: Update a posteriori error covariance matrix P */
-	float32_t p11_tmp = Estimator->p11;
-	float32_t p12_tmp = Estimator->p12;
-	Estimator->p11 = p11_tmp - Estimator->k1*p11_tmp;
-	Estimator->p12 = p12_tmp - Estimator->k1*p12_tmp;
-	Estimator->p21 -= Estimator->k2*p11_tmp;
-	Estimator->p22 -= Estimator->k2*p12_tmp;
+	float32_t p11_tmp = pEstimator->p11;
+	float32_t p12_tmp = pEstimator->p12;
+	pEstimator->p11 = p11_tmp - pEstimator->k1*p11_tmp;
+	pEstimator->p12 = p12_tmp - pEstimator->k1*p12_tmp;
+	pEstimator->p21 -= pEstimator->k2*p11_tmp;
+	pEstimator->p22 -= pEstimator->k2*p12_tmp;
 }
 
 /**

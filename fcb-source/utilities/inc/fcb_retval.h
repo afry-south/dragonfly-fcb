@@ -5,10 +5,10 @@
  * These errors are supposed to be used
  *
  */
-enum fcb_retval {
+typedef enum FcbRetVal {
     FCB_OK = 0,
     FCB_ERR = 1,
     FCB_ERR_INIT = 2,
-};
+} FcbRetValType;
 
 #endif /* FCB_RETVAL_H */

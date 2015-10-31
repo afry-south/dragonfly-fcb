@@ -12,7 +12,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
-
+#include <arm_math.h>
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -29,6 +29,7 @@ uint16_t UInt16Mean(const uint16_t* buffer, const uint16_t length);
 void ConfigPVD(void);
 void InitLEDs(void);
 void LEDsOff(void);
+float32_t Radian2Degree(float32_t radian);
 
 #endif /* __COMMON_H */
 
