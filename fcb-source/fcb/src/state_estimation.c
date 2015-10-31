@@ -31,15 +31,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 StateVectorType States;
-KalmanFilterType RollEstimator;
-KalmanFilterType PitchEstimator;
-KalmanFilterType YawEstimator;
+KalmanFilterType rollEstimator;
+KalmanFilterType pitchEstimator;
+KalmanFilterType yawEstimator;
 
 /* Task handle for printing of sensor values task */
 static volatile uint16_t statePrintSampleTime;
 static volatile uint16_t statePrintSampleDuration;
 xTaskHandle StatePrintSamplingTaskHandle = NULL;
-static SerializationType_TypeDef statePrintSerializationType;
+static SerializationType statePrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static void StateInit(KalmanFilterType * Estimator);
@@ -56,9 +56,9 @@ static void StatePrintSamplingTask(void const *argument);
  */
 void InitStatesXYZ(void)
 {
-  StateInit(&RollEstimator);
-  StateInit(&PitchEstimator);
-  StateInit(&YawEstimator);
+  StateInit(&rollEstimator);
+  StateInit(&pitchEstimator);
+  StateInit(&yawEstimator);
 
   States.roll = 0.0;
   States.rollRateBias = 0.0;
@@ -75,9 +75,9 @@ void InitStatesXYZ(void)
  */
 void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRatePitch, const float32_t sensorRateYaw)
 {
-	StatePrediction(sensorRateRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
-	StatePrediction(sensorRatePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
-	StatePrediction(sensorRateYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
+	StatePrediction(sensorRateRoll, &rollEstimator, &(States.roll), &(States.rollRateBias));
+	StatePrediction(sensorRatePitch, &pitchEstimator, &(States.pitch), &(States.pitchRateBias));
+	StatePrediction(sensorRateYaw, &yawEstimator, &(States.yaw), &(States.yawRateBias));
 }
 
 /* CorrectStatesXYZ
@@ -87,9 +87,9 @@ void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRate
  */
 void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw)
 {
-	StateCorrection(sensorAngleRoll, &RollEstimator, &(States.roll), &(States.rollRateBias));
-	StateCorrection(sensorAnglePitch, &PitchEstimator, &(States.pitch), &(States.pitchRateBias));
-	StateCorrection(sensorAngleYaw, &YawEstimator, &(States.yaw), &(States.yawRateBias));
+	StateCorrection(sensorAngleRoll, &rollEstimator, &(States.roll), &(States.rollRateBias));
+	StateCorrection(sensorAnglePitch, &pitchEstimator, &(States.pitch), &(States.pitchRateBias));
+	StateCorrection(sensorAngleYaw, &yawEstimator, &(States.yaw), &(States.yawRateBias));
 }
 
 /* GetRoll
@@ -176,7 +176,7 @@ StateErrorStatus StopStateSamplingTask(void) {
  * @param  serializationType : Data serialization type enum
  * @retval None.
  */
-void SetStatePrintSamplingSerialization(const SerializationType_TypeDef serializationType) {
+void SetStatePrintSamplingSerialization(const SerializationType serializationType) {
 	statePrintSerializationType = serializationType;
 }
 
@@ -203,7 +203,7 @@ float32_t RadianToDegree(float32_t radian) {
  * @param serializationType: Data serialization type enum
  * @retval None
  */
-void PrintStateValues(const SerializationType_TypeDef serializationType) {
+void PrintStateValues(const SerializationType serializationType) {
 	static char stateString[STATE_PRINT_MAX_STRING_SIZE];
 	int usedLen = 0;
 
@@ -238,7 +238,7 @@ void PrintStateValues(const SerializationType_TypeDef serializationType) {
 		    usedLen = snprintf((char*) stateString+usedLen, STATE_PRINT_MAX_STRING_SIZE - usedLen,
 		        "KF: P11-RPY: %e, %e, %e\n"
 		        "KF: K1-RPY: %e, %e, %e\n\r\n",
-		        RollEstimator.p11, PitchEstimator.p11, YawEstimator.p11, RollEstimator.k1, PitchEstimator.k1, YawEstimator.k1);
+		        rollEstimator.p11, pitchEstimator.p11, yawEstimator.p11, rollEstimator.k1, pitchEstimator.k1, yawEstimator.k1);
 		  }
 		}
 

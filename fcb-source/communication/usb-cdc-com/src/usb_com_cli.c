@@ -875,7 +875,7 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
 	int8_t* pcParameter;
 	portBASE_TYPE xParameterStringLength, xReturn;
 	static portBASE_TYPE lParameterNumber = 0;
-	SerializationType_TypeDef serialisationType = NO_SERIALIZATION;
+	SerializationType serialisationType = NO_SERIALIZATION;
 	/* Check the write buffer is not NULL */
 	configASSERT(pcWriteBuffer);
 

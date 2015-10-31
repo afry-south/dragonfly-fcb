@@ -53,7 +53,7 @@ static xQueueHandle qFcbSensors = NULL;
 xTaskHandle SensorPrintSamplingTaskHandle = NULL;
 static volatile uint16_t sensorPrintSampleTime;
 static volatile uint16_t sensorPrintSampleDuration;
-static SerializationType_TypeDef sensorValuesPrintSerializationType;
+static SerializationType sensorValuesPrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static void ProcessSensorValues(void*);
@@ -167,7 +167,7 @@ SensorsReturnCode StopSensorSamplingTask(void) {
  * @param  none
  * @retval none
  */
-void PrintSensorValues(const SerializationType_TypeDef serializationType) {
+void PrintSensorValues(const SerializationType serializationType) {
   char sensorString[SENSOR_PRINT_MAX_STRING_SIZE];
   float32_t accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ;
 
@@ -244,7 +244,7 @@ void PrintSensorValues(const SerializationType_TypeDef serializationType) {
    * @param  serializationType : Data serialization type enum
    * @retval None.
  */
-void SetSensorPrintSamplingSerialization(const SerializationType_TypeDef serializationType) {
+void SetSensorPrintSamplingSerialization(const SerializationType serializationType) {
   sensorValuesPrintSerializationType = serializationType;
 }
 

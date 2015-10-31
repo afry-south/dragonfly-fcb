@@ -170,7 +170,7 @@ xTaskHandle ReceiverPrintSamplingTaskHandle = NULL;
 
 static volatile uint16_t receiverPrintSampleTime;
 static volatile uint16_t receiverPrintSampleDuration;
-static SerializationType_TypeDef receiverPrintSerializationType;
+static SerializationType receiverPrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static ReceiverErrorStatus InitReceiverCalibrationValues(void);
@@ -258,7 +258,7 @@ ReceiverErrorStatus StartReceiverSamplingTask(const uint16_t sampleTime, const u
  * @param  serializationType : Data serialization type enum
  * @retval None.
  */
-void SetReceiverPrintSamplingSerialization(const SerializationType_TypeDef serializationType) {
+void SetReceiverPrintSamplingSerialization(const SerializationType serializationType) {
 	receiverPrintSerializationType = serializationType;
 }
 
@@ -467,7 +467,7 @@ bool GetReceiverPIDFlightSet(void) {
  * @param  serialization type enum
  * @retval None.
  */
-void PrintReceiverValues(const SerializationType_TypeDef serializationType)
+void PrintReceiverValues(const SerializationType serializationType)
 {
 	char sampleString[RECEIVER_SAMPLING_MAX_STRING_SIZE];
 

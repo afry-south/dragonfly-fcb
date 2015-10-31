@@ -66,9 +66,9 @@ void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRate
 void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw);
 StateErrorStatus StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 StateErrorStatus StopStateSamplingTask(void);
-void SetStatePrintSamplingSerialization(const SerializationType_TypeDef serializationType);
+void SetStatePrintSamplingSerialization(const SerializationType serializationType);
 float32_t RadianToDegree(float32_t radian);
-void PrintStateValues(const SerializationType_TypeDef serializationType);
+void PrintStateValues(const SerializationType serializationType);
 
 #endif /* __SENSORS_H */
 

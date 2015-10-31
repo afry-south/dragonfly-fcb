@@ -73,7 +73,7 @@ static TIM_HandleTypeDef MotorControlTimHandle;
 xTaskHandle MotorControlPrintSamplingTaskHandle = NULL;
 static volatile uint16_t motorControlPrintSampleTime;
 static volatile uint16_t motorControlPrintSampleDuration;
-static SerializationType_TypeDef motorValuesPrintSerializationType;
+static SerializationType motorValuesPrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static void MotorControlPrintSamplingTask(void const *argument);
@@ -198,7 +198,7 @@ void SetMotors(uint16_t ctrlValMotor1, uint16_t ctrlValMotor2, uint16_t ctrlValM
  * @param  serializationType : Data serialization type enum
  * @retval None.
  */
-void SetMotorPrintSamplingSerialization(const SerializationType_TypeDef serializationType) {
+void SetMotorPrintSamplingSerialization(const SerializationType serializationType) {
 	motorValuesPrintSerializationType = serializationType;
 }
 
@@ -207,7 +207,7 @@ void SetMotorPrintSamplingSerialization(const SerializationType_TypeDef serializ
  * @param  None.
  * @retval None.
  */
-void PrintMotorControlValues(const SerializationType_TypeDef serializationType) {
+void PrintMotorControlValues(const SerializationType serializationType) {
 	char motorCtrlString[MOTOR_CONTROL_PRINT_MAX_STRING_SIZE];
 
 	if(serializationType == NO_SERIALIZATION) {

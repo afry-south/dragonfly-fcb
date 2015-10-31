@@ -64,10 +64,10 @@ int FcbSensorsConfig(void);
  */
 void FcbSendSensorMessageFromISR(uint8_t msg);
 
-void PrintSensorValues(const SerializationType_TypeDef serializationType);
+void PrintSensorValues(const SerializationType serializationType);
 SensorsReturnCode StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 SensorsReturnCode StopSensorSamplingTask(void);
-void SetSensorPrintSamplingSerialization(const SerializationType_TypeDef serializationType);
+void SetSensorPrintSamplingSerialization(const SerializationType serializationType);
 
 /**
  * Wrapper fcn for enabling GPIO pin with default settings for receiving
