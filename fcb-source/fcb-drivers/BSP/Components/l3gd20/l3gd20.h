@@ -273,6 +273,7 @@
   * @{
   */
 /* Sensor Configuration Functions */ 
+uint8_t   L3GD20_Config(void);
 void      L3GD20_Init(uint8_t ctrlreg1, uint8_t ctrlreg3, uint8_t ctrlreg4);
 uint8_t   L3GD20_ReadID(void);
 void      L3GD20_RebootCmd(void);

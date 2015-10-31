@@ -111,16 +111,73 @@ GYRO_DrvTypeDef L3gd20Drv =
   */
 
 /**
-  * @brief  Set L3GD20 Initialization.
-  * @param  L3GD20_InitStruct: pointer to a L3GD20_InitTypeDef structure 
-  *         that contains the configuration setting for the L3GD20.
+ * Configure the L3GD20 for FCB usage, bypassing BSP ...
+ *
+ * enables SPI as well
+ *
+ * @returns zero upon success, nonzero upon error
+ */
+uint8_t L3GD20_Config(void) {
+  uint8_t gyroId = 0;
+  uint8_t ctrlReg1 = 0;
+  uint8_t ctrlReg2 = 0;
+  uint8_t ctrlReg3 = 0;
+  uint8_t ctrlReg4 = 0;
+
+  GYRO_InitTypeDef L3GD20_InitStructure;
+  GYRO_FilterConfigTypeDef L3GD20_FilterStructure;
+
+  GYRO_IO_Init(); /* Configure the low level IO interface in this CPU */
+
+  L3GD20_RebootCmd();
+
+  gyroId = L3GD20_ReadID();
+
+  if ((I_AM_L3GD20 != gyroId) && (I_AM_L3GD20_TR != gyroId)) {
+    return 1; // error
+  }
+
+  /* Configure Mems : data rate, power mode, full scale and axes */
+  L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
+  L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_1; /* 96 Hz according to data sheet, 94.5 Hz according to oscilloscope */
+  L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
+  L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_4;
+  L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;
+  L3GD20_InitStructure.Endianness = L3GD20_BLE_LSB;
+  L3GD20_InitStructure.Full_Scale = L3GD20_FULLSCALE_500;
+
+  /* Configure MEMS: data rate, power mode, full scale and axes */
+  ctrlReg1 = (uint32_t) (L3GD20_InitStructure.Power_Mode | L3GD20_InitStructure.Output_DataRate | \
+                    L3GD20_InitStructure.Axes_Enable | L3GD20_InitStructure.Band_Width);
+
+  ctrlReg3 = L3GD20_INT2INTERRUPT_ENABLE;
+
+  ctrlReg4 = (uint8_t) (L3GD20_InitStructure.BlockData_Update | L3GD20_InitStructure.Endianness |
+                      L3GD20_InitStructure.Full_Scale);
+
+  L3GD20_Init(ctrlReg1, ctrlReg3, ctrlReg4);
+
+  L3GD20_FilterStructure.HighPassFilter_Mode_Selection = L3GD20_HPM_NORMAL_MODE_RES;
+  L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency = L3GD20_HPFCF_9;
+
+  ctrlReg2 = (uint8_t) ((L3GD20_FilterStructure.HighPassFilter_Mode_Selection |\
+                     L3GD20_FilterStructure.HighPassFilter_CutOff_Frequency));
+
+  L3GD20_FilterConfig(ctrlReg2);
+  L3GD20_FilterCmd(L3GD20_HIGHPASSFILTER_DISABLE);
+
+  return 0;
+}
+
+
+/**
+  * @brief  Sends initialisation parameters to L3GD20 gyroscope.
+  *
+  * @param ctrlReg 1, 3 and 4 see ST L3GD20 data sheet
   * @retval None
   */
 void L3GD20_Init(uint8_t ctrlreg1, uint8_t ctrlreg3, uint8_t ctrlreg4)
 {
-  /* Configure the low level interface ---------------------------------------*/
-  GYRO_IO_Init();
-
   /* Write value to MEMS CTRL_REG1 regsister */
   GYRO_IO_Write(&ctrlreg1, L3GD20_CTRL_REG1_ADDR, 1);
 

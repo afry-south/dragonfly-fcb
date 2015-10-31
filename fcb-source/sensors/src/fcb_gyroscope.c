@@ -11,6 +11,8 @@
 #include "fcb_gyroscope.h"
 
 #include "stm32f3_discovery_gyroscope.h"
+#include "l3gd20.h"
+
 
 #include "fcb_error.h"
 #include "FreeRTOS.h"
@@ -81,10 +83,8 @@ uint8_t InitialiseGyroscope(void) {
     HAL_NVIC_SetPriority(EXTI1_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
-    BSP_GYRO_Reset();
-
     /* sets full scale (and sensitivity) plus data rate of L3GD20 gyroscope */
-    if(BSP_GYRO_Init() != HAL_OK)
+    if(L3GD20_Config() != 0)
     {
         /* Initialization Error */
     	ErrorHandler();
@@ -108,7 +108,7 @@ void FetchDataFromGyroscope(void) {
     static uint16_t call_counter = 0;
 #endif
     /* returns rad/s */
-    BSP_GYRO_GetXYZ(gyroscopeData);
+    L3GD20_ReadXYZAngRate(gyroscopeData);
 
     /* see "Sensors" wiki page for gyroscope vs Quadcopter axes orientations */
     lGyroXYZAngleDot[XDOT_IDX] = - gyroscopeData[YDOT_IDX];
