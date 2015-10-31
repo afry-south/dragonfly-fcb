@@ -270,7 +270,7 @@ void LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState)
  */
 void LSM303DLHC_AccReadXYZ(float * pData)
 {
-  int status = 0;
+  HAL_StatusTypeDef status = 0;
   uint8_t buffer[6];
   uint8_t i = 0;
 
@@ -651,26 +651,38 @@ uint8_t LSM303DLHC_MagGetDataStatus(void)
  */
 void LSM303DLHC_MagReadXYZ(float* pfData)
 {
+  HAL_StatusTypeDef status = HAL_OK;
   float pnRawData[3];
   uint8_t buffer[6];
   uint8_t i = 0;
-  uint8_t addr = MAG_I2C_ADDRESS + 1;
+  uint8_t addr = MAG_I2C_ADDRESS + 1; // see section 5.1.3 of LSM303DLHC data sheet
 
   /* Read output register X, Y & Z acceleration */
-  buffer[1] = I2Cx_ReadData(addr, LSM303DLHC_OUT_X_H_M);
-  buffer[0] = I2Cx_ReadData(addr, LSM303DLHC_OUT_X_L_M);
-  buffer[5] = I2Cx_ReadData(addr, LSM303DLHC_OUT_Z_H_M);
-  buffer[4] = I2Cx_ReadData(addr, LSM303DLHC_OUT_Z_L_M);
-  buffer[3] = I2Cx_ReadData(addr, LSM303DLHC_OUT_Y_H_M);
-  buffer[2] = I2Cx_ReadData(addr, LSM303DLHC_OUT_Y_L_M);
+  if (HAL_OK != (status = I2Cx_ReadDataLen(addr,
+                                           LSM303DLHC_OUT_X_H_M | 0x80, /* see LSM303DLHC_MagReadXYZ comments */
+                                           buffer,
+                                           6))) {
+    ErrorHandler();
+  }
+
+  /*
+   * all 6 bytes were read in the order they are stored in the LSM303DLHC
+   * which is
+   * buffer content at index:
+   * 0: LSM303DLHC_OUT_X_H_M (0x03)
+   * 1: LSM303DLHC_OUT_X_L_M (0x04)
+   * 2: LSM303DLHC_OUT_Z_H_M (etc)
+   * 3: LSM303DLHC_OUT_Z_L_M (...)
+   * 4: LSM303DLHC_OUT_Y_H_M (...)
+   * 5: LSM303DLHC_OUT_Y_L_M (0x08)
+   */
 
   /* check in the control register4 the data alignment -
    * assume little endian (we never change it on the fly)
    */
-  for(i=0; i<3; i++)
-  {
-    pnRawData[i]=(float)((int16_t)(buffer[2*i+1] << 8) + (int16_t)buffer[2*i]);
-  }
+  pnRawData[0]=(float)((int16_t)(buffer[0] << 8) + (int16_t)buffer[1]); // X
+  pnRawData[1]=(float)((int16_t)(buffer[4] << 8) + (int16_t)buffer[5]); // Y
+  pnRawData[2]=(float)((int16_t)(buffer[2] << 8) + (int16_t)buffer[3]); // Z
 
   /* Obtain the Gauss value for the three axis */
   pfData[0] = (float) pnRawData[0]/magConfig.xySensitivity;

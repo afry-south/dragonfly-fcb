@@ -406,7 +406,7 @@ HAL_StatusTypeDef HAL_I2C_DeInit(I2C_HandleTypeDef *hi2c)
   *                the configuration information for the specified I2C.
   * @retval None
   */
- __weak void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
+ __weak void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c __attribute__((unused)))
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_I2C_MspInit could be implemented in the user file
@@ -419,7 +419,7 @@ HAL_StatusTypeDef HAL_I2C_DeInit(I2C_HandleTypeDef *hi2c)
   *                the configuration information for the specified I2C.
   * @retval None
   */
- __weak void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c)
+ __weak void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c __attribute__((unused)))
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_I2C_MspDeInit could be implemented in the user file
@@ -2480,7 +2480,7 @@ void HAL_I2C_ER_IRQHandler(I2C_HandleTypeDef *hi2c)
   *                the configuration information for the specified I2C.
   * @retval None
   */
- __weak void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
+ __weak void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c __attribute__((unused)))
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_I2C_TxCpltCallback could be implemented in the user file
@@ -2493,7 +2493,7 @@ void HAL_I2C_ER_IRQHandler(I2C_HandleTypeDef *hi2c)
   *                the configuration information for the specified I2C.
   * @retval None
   */
-__weak void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
+__weak void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c __attribute__((unused)))
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_I2C_TxCpltCallback could be implemented in the user file
@@ -2505,7 +2505,7 @@ __weak void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
   *                the configuration information for the specified I2C.
   * @retval None
   */
- __weak void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
+ __weak void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c __attribute__((unused)))
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_I2C_TxCpltCallback could be implemented in the user file
@@ -2518,7 +2518,7 @@ __weak void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
   *                the configuration information for the specified I2C.
   * @retval None
   */
-__weak void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
+__weak void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c __attribute__((unused)))
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_I2C_TxCpltCallback could be implemented in the user file
@@ -2531,7 +2531,7 @@ __weak void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
   *                the configuration information for the specified I2C.
   * @retval None
   */
- __weak void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
+ __weak void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c __attribute__((unused)))
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_I2C_TxCpltCallback could be implemented in the user file
@@ -2544,7 +2544,7 @@ __weak void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
   *                the configuration information for the specified I2C.
   * @retval None
   */
-__weak void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
+__weak void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c __attribute__((unused)))
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_I2C_TxCpltCallback could be implemented in the user file
@@ -2557,7 +2557,7 @@ __weak void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
   *                the configuration information for the specified I2C.
   * @retval None
   */
- __weak void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
+ __weak void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c __attribute__((unused)))
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_I2C_ErrorCallback could be implemented in the user file
