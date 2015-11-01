@@ -143,7 +143,7 @@ uint8_t L3GD20_Config(void) {
   L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
   L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_4;
   L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;
-  L3GD20_InitStructure.Endianness = L3GD20_BLE_LSB;
+  L3GD20_InitStructure.Endianness = L3GD20_BLE_LSB; /* if changed, modify L3GD20_ReadXYZAngRate as well */
   L3GD20_InitStructure.Full_Scale = L3GD20_FULLSCALE_500;
 
   /* Configure MEMS: data rate, power mode, full scale and axes */
@@ -399,19 +399,13 @@ void L3GD20_ReadXYZAngRate(float* pfData)
   GYRO_IO_Read(tmpbuffer,L3GD20_OUT_X_L_ADDR,6);
   
   /* check in the control register 4 the data alignment (Big Endian or Little Endian)*/
-  if(!(tmpreg & L3GD20_BLE_MSB))
+
+  for(i=0; i<3; i++)
   {
-    for(i=0; i<3; i++)
-    {
-      RawData[i]=(int16_t)(((uint16_t)tmpbuffer[2*i+1] << 8) + tmpbuffer[2*i]);
-    }
-  }
-  else
-  {
-    for(i=0; i<3; i++)
-    {
-      RawData[i]=(int16_t)(((uint16_t)tmpbuffer[2*i] << 8) + tmpbuffer[2*i+1]);
-    }
+    /* assume L3GD20_BLE_LSB endianness - this is configurable
+     * see L3GD20 data sheet
+     */
+    RawData[i]=(int16_t)(((uint16_t)tmpbuffer[2*i+1] << 8) + tmpbuffer[2*i]);
   }
   
   /* Switch the sensitivity value set in the CRTL4 */

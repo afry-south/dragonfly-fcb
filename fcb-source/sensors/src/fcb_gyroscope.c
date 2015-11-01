@@ -9,8 +9,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "fcb_gyroscope.h"
-
-#include "stm32f3_discovery_gyroscope.h"
 #include "l3gd20.h"
 
 
