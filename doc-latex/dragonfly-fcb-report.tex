@@ -578,6 +578,15 @@ L3DG20 Gyroscope over SPI. LSM303DLHC over I2C. Orientation with respect to quad
     \label{fig:sensor_hw_overview}
 \end{figure}
 
+	\subsection{Sensor axes orientation}
+The sensors are not aligned to the Quadcopter body frame by default, so they had to be adjusted. The adjusted axes are green in Figure \ref{fig:sensor_axes_orientation} on page \pageref{fig:sensor_axes_orientation}.
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{images/CoordinateFrames.png}
+   \caption{Sensor axes orientations}
+   \label{fig:sensor_axes_orientation}
+\end{figure}
+
 \chapter{Software}
 
 	\section{System Design Overview}
