@@ -479,7 +479,7 @@ The T-motor U3 motors have 12 stator coils and 14 rotor magnets. The motor theor
   \item Internal resistance: $50$ $m\Omega$
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[scale=0.6]{images/tmotoru3open.png}
     \caption{T-Motor U3 BLDC motors}
@@ -512,7 +512,7 @@ The battery drain is determined using MOSFET transistors. By feeding an ESC with
 
 The ESCs of choice for this project is the \emph{T-Motor ESC30A}, shown in Figure \ref{fig:esc_tmotor}. It takes a PWM input signal up to $400$ $Hz$ to drive the motors. Normally in RC applications, a $1$ $ms$ pulse width indicates $0$ \% throttle, whereas $2$ $ms$ is 100 \% throttle (with $50$ \% being approx. $1.5$ $ms$). The ESCs feature BEC (Battery eliminator circuit), which outputs a low-power $5$ $V$ source useful to power onboard electronics.
 
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[scale=0.8]{images/esc_tmotor.png}
     \caption{T-Motor ESC30A Electronic Speed Controller}
@@ -540,7 +540,7 @@ The Spektrum AR610 receiver, shown in Figure \ref{fig:ar610}, employs full-range
   \item AUX (Auxiliary) - Open to interpretation.
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[scale=0.8]{images/ar610.png}
     \caption{Spektrum AR610 receiver}
@@ -549,7 +549,7 @@ The Spektrum AR610 receiver, shown in Figure \ref{fig:ar610}, employs full-range
 
 The RC transmitter of choice is the Spektrum DX6i, which is a 6-channel transmitter using $2.4$ GHz Spektrum DSMX modulation. In Figure \ref{fig:dx6i_map}, the transmitter's stick and switch mapping and labeling is shown.
 
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[scale=0.6]{images/dx6i_map.png}
     \caption{Spektrum DX6i RC transmitter labels}
@@ -569,7 +569,14 @@ The battery used is of Lithium polymer type, containing Lithium ions to drive cu
 
 	\section{Sensors}
 
-L3DG20 Gyroscope over SPI. LSM303DLHC over I2C. Orientation with respect to quadrotor coordinate axes.
+L3DG20 Gyroscope over SPI. LSM303DLHC over I2C. Orientation with respect to quadrotor coordinate axes. The L3DG20 Gyroscope sensor communicates over SPI bus. The LSM303DLHC accelerometer/magnetometer combined MEMS, the Bosch BPM180 and the MaxBotix sonar communicate altimeter over I2C. Of the sensors communicating over I2C, the LSM303DLHC is integrated into the STM32F3-Discovery board and the latter two are mounted separately, see Figure \ref{fig:sensor_hw_overview}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{images/FcbSensorHWConfiguration.png}
+    \caption{Sensor overview}
+    \label{fig:sensor_hw_overview}
+\end{figure}
 
 \chapter{Software}
 
