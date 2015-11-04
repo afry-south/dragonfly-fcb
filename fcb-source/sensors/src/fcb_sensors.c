@@ -49,6 +49,34 @@ static uint32_t cbk_gyro_counter = 0;
 static xTaskHandle tFcbSensors;
 static xQueueHandle qFcbSensors = NULL;
 
+typedef enum FcbSensorIndex {
+  GYRO_IDX = 0,
+  ACC_IDX = 1,
+  MAG_IDX = 2,
+  FCB_SENSOR_NBR = 3 } FcbSensorIndexType;
+
+
+
+uint8_t sensorSampleRateDone = 0;
+
+
+typedef struct FcbSensorDataRateCalc {
+  uint32_t intervalStart;
+  float32_t samplePeriod; /* result */
+  uint8_t count;
+} FcbSensorDataRateCalcType;
+
+/* this is used to calculate sensor sample periods ...
+ * The true rate may not be the nominal value and the true
+ * rate is needed for filter constants in the Kalman Filter
+ * in state estimation.
+ */
+static FcbSensorDataRateCalcType sensorDrdyCalc[FCB_SENSOR_NBR] = { { 0, 0, 0.0f} };
+
+#ifdef FCB_SENSORS_DEBUG
+static float32_t sensorSampleRates[FCB_SENSOR_NBR] = { 0.0f };
+#endif
+
 /* Task handle for printing of sensor values task */
 xTaskHandle SensorPrintSamplingTaskHandle = NULL;
 static volatile uint16_t sensorPrintSampleTime;
@@ -57,7 +85,9 @@ static SerializationType sensorValuesPrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static void ProcessSensorValues(void*);
+static void CountSensorDrdy(uint8_t msg);
 static void SensorPrintSamplingTask(void const *argument);
+
 
 /* Exported functions --------------------------------------------------------*/
 /* global fcn definitions */
@@ -93,6 +123,12 @@ int FcbSensorsConfig(void) {
 }
 
 void FcbSendSensorMessageFromISR(uint8_t msg) {
+  /*
+   * this function counts incoming DRDY signals from the sensors
+   * during startup.
+   *
+   * Continuously it posts a message to the qFcbSensors queue.
+   */
   portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
 #ifdef FCB_SENSORS_DEBUG
   if ((cbk_gyro_counter % 48) == 0) {
@@ -100,6 +136,10 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
   }
   cbk_gyro_counter++;
 #endif
+
+  if (0 == sensorSampleRateDone) {
+    CountSensorDrdy(msg);
+  }
 
   if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
     ErrorHandler();
@@ -311,6 +351,63 @@ static void ProcessSensorValues(void* val __attribute__ ((unused))) {
   goto Exit;
 }
 
+
+static void CountSensorDrdy(uint8_t msg) {
+  /*
+   * When reading the values directly with debugger, it's apparent there's
+   * some fluctuation in the values for the accelerometer and magnetometer.
+   *
+   * Using an oscilloscope on PE2 it's evident there's a rate fluctuation of
+   * about 0.02 Hz, the fluctuation measured by this function is bigger, but the
+   * mean is still closer to the true rates than simply using the nominal sample
+   * value configured in the sensor code.
+   */
+  enum { DRDY_ENOUGH = 200 }; /* below 256 as sensorDrdyCalc.count is uint8_t */
+
+  uint8_t idx = 0;
+
+  switch(msg) {
+  case FCB_SENSOR_GYRO_DATA_READY:
+    idx = GYRO_IDX;
+    break;
+  case FCB_SENSOR_ACC_DATA_READY:
+    idx = ACC_IDX;
+    break;
+  case FCB_SENSOR_MAGNETO_DATA_READY:
+    idx = MAG_IDX;
+    break;
+  default:
+    /* do nothing */
+    break;
+  }
+
+  if (0 == sensorDrdyCalc[idx].intervalStart) {
+    sensorDrdyCalc[idx].intervalStart = HAL_GetTick();
+  } else if (DRDY_ENOUGH > sensorDrdyCalc[idx].count) {
+    sensorDrdyCalc[idx].count += 1;
+
+    if (DRDY_ENOUGH == sensorDrdyCalc[idx].count) {
+      uint32_t elapsedTime = HAL_GetTick() - sensorDrdyCalc[GYRO_IDX].intervalStart;
+
+      sensorDrdyCalc[idx].samplePeriod =
+          elapsedTime / (float) DRDY_ENOUGH / (float)configTICK_RATE_HZ;
+
+#ifdef FCB_SENSORS_DEBUG
+      sensorSampleRates[idx] = 1 / sensorDrdyCalc[idx].samplePeriod;
+#endif
+    }
+  }
+
+  if ((DRDY_ENOUGH == sensorDrdyCalc[GYRO_IDX].count) &&
+      (DRDY_ENOUGH == sensorDrdyCalc[ACC_IDX].count) &&
+      (DRDY_ENOUGH == sensorDrdyCalc[MAG_IDX].count)) {
+    sensorSampleRateDone = 1;
+
+    SetGyroMeasuredSamplePeriod(sensorDrdyCalc[GYRO_IDX].samplePeriod);
+    SetAccMagMeasuredSamplePeriod(sensorDrdyCalc[ACC_IDX].samplePeriod,
+                                  sensorDrdyCalc[MAG_IDX].samplePeriod);
+  }
+}
 
 /**
  * @brief  Task code handles sensor print sampling

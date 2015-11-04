@@ -37,7 +37,6 @@
  */
 /* Includes ------------------------------------------------------------------*/
 #include "lsm303dlhc.h"
-
 #include "fcb_error.h"
 /** @addtogroup BSP
  * @{
@@ -67,6 +66,12 @@
  * @{
  */
 
+struct AccelerometerConfig {
+  int16_t sensitivity; /* all three axes */
+  uint8_t dataRate;    /* nominal value - real value differs */
+};
+
+
 struct MagnetometerConfig {
   int16_t xySensitivity;
   int16_t zSensitivity;
@@ -75,9 +80,6 @@ struct MagnetometerConfig {
   uint8_t temperatureSensor;
 };
 
-struct AccelerometerConfig {
-  int16_t sensitivity; /* all three axes */
-};
 
 /**
  * @}
@@ -95,12 +97,9 @@ struct AccelerometerConfig {
  * @{
  */
 
-static struct MagnetometerConfig magConfig; /* initialised in LSM303DLHC_MagInit */
-static struct AccelerometerConfig accConfig; /* initialised in LSM303DLHC_AccInit */
+static struct AccelerometerConfig accConfig = { 0, 0 }; /* initialised in LSM303DLHC_AccInit */
+static struct MagnetometerConfig magConfig = {0, 0, 0, 0, 0}; /* initialised in LSM303DLHC_MagInit */
 
-uint8_t tmpreg2A[8] = {0x00};
-uint8_t tmpreg3A = 0x00;
-uint8_t tmpregcfgA = 0x00;
 
 /**
  * @}
@@ -122,10 +121,12 @@ void LSM303DLHC_AccConfig(void) {
   /*  Low level init */
   COMPASSACCELERO_IO_Init();
 
+  accConfig.dataRate = LSM303DLHC_ODR_50_HZ;
+
   /* set up accelerometer */
   uint8_t ctrlReg1 = 0x00 |
       LSM303DLHC_NORMAL_MODE |
-      LSM303DLHC_ODR_50_HZ |
+      accConfig.dataRate |
       LSM303DLHC_AXES_ENABLE;
 
   uint8_t ctrlReg3 = 0x00 | LSM303DLHC_IT1_DRY1 ;
@@ -591,6 +592,40 @@ void LSM303DLHC_AccZClickITConfig(void)
   LSM303DLHC_AccClickITEnable(LSM303DLHC_Z_SINGLE_CLICK);
 }
 
+/**
+ * @brief returns the Output Data Rate of accelerometer sensor in Hz
+ *
+ * If measuring the frequency of the DRDY interrupts on the PE4 pin,
+ * the rate will be slightly slower. There is code in fcb_sensors.c
+ * which measures & calculates a more accurate value.
+ *
+  * @return rate, or calls ErrorHandler if accelerometer is not initialised
+  */
+uint16_t LSM303DLHC_AccDataRateHz(void) {
+  switch (accConfig.dataRate) {
+  case LSM303DLHC_ODR_1_HZ:
+    return 1;
+  case LSM303DLHC_ODR_10_HZ:
+    return 10;
+  case LSM303DLHC_ODR_25_HZ:
+    return 25;
+  case LSM303DLHC_ODR_50_HZ:
+    return 50;
+  case LSM303DLHC_ODR_100_HZ:
+    return 100;
+  case LSM303DLHC_ODR_200_HZ:
+    return 200;
+  case LSM303DLHC_ODR_400_HZ:
+    return 400;
+  case LSM303DLHC_ODR_1620_HZ_LP:
+    return 1620;
+  case LSM303DLHC_ODR_1344_HZ:
+    return 1344;
+  default:
+    ErrorHandler();
+  }
+}
+
 #define MAGNET
 
 #ifdef MAGNET
@@ -688,6 +723,38 @@ void LSM303DLHC_MagReadXYZ(float* pfData)
   pfData[0] = (float) pnRawData[0]/magConfig.xySensitivity;
   pfData[1] = (float) pnRawData[1]/magConfig.xySensitivity;
   pfData[2] = (float) pnRawData[2]/magConfig.zSensitivity;
+}
+
+/**
+ * Returns configured magnetometer data rate in hertz.
+ *
+ * If measuring the frequency of the DRDY interrupts on the PE2 pin,
+ * the rate will be slightly slower. There is code in fcb_sensors.c
+ * which measures & calculates a more accurate value.
+ *
+ * @returns the data rate or calls ErrorHandler if Magnetometer has not been initialised
+ */
+float32_t LSM303DLHC_MagDataRateHz(void) {
+  switch (magConfig.dataRate) {
+  case LSM303DLHC_ODR_0_75_HZ:
+    return 0.75;
+  case LSM303DLHC_ODR_1_5_HZ:
+    return 1.5;
+  case LSM303DLHC_ODR_3_0_HZ:
+    return 3;
+  case LSM303DLHC_ODR_7_5_HZ:
+    return 7.5;
+  case LSM303DLHC_ODR_15_HZ:
+    return 15;
+  case LSM303DLHC_ODR_30_HZ:
+    return 30;
+  case LSM303DLHC_ODR_75_HZ:
+    return 75;
+  case LSM303DLHC_ODR_220_HZ:
+    return 220;
+  default:
+    ErrorHandler();
+  }
 }
 #endif
 /**

@@ -50,8 +50,9 @@
  */
 enum FcbAccMagMode {
   ACCMAGMTR_UNINITIALISED = 0,
-  ACCMAGMTR_FETCHING = 1, /** fetching data from sensor */
-  ACCMAGMTR_CALIBRATING = 2, /** fetching calibration samples */
+  ACCMAGMTR_PREFLIGHT = 1,
+  ACCMAGMTR_FETCHING = 2, /** fetching data from sensor */
+  ACCMAGMTR_CALIBRATING = 3, /** fetching calibration samples */
 };
 
 
@@ -73,6 +74,7 @@ uint8_t FcbInitialiseAccMagSensor(void);
  */
 void FetchDataFromAccelerometer(void);
 
+
 /**
  * When this function has been called, GetAcceleration and GetMagVector
  * will return uncalibrated values until the CPU has rebooted or
@@ -80,9 +82,12 @@ void FetchDataFromAccelerometer(void);
  *
  * @param samples ACCMAG_CALIBRATION_SAMPLES_N <= val <= 250 (data type limitation)
  *
+ * @note samples param is intended for future use
+ *
  * @see ACCMAG_CALIBRATION_SAMPLES_N
  */
 void StartAccMagMtrCalibration(uint8_t samples);
+
 
 /**
  * When this function has been called, GetAcceleration and GetMagVector
@@ -93,6 +98,7 @@ void StartAccMagMtrCalibration(uint8_t samples);
  * in SciLab.
  */
 void StopAccMagMtrCalibration(uint8_t samples);
+
 
 /*
  * get the current calibrated reading from the accelerometer.
@@ -130,10 +136,28 @@ void FetchDataFromMagnetometer(void);
  */
 void GetMagVector(float32_t * x, float32_t * y, float32_t * z);
 
+
 /**
  * Print accelerometer values to USB.
  */
 void PrintAccelerometerValues(void);
+
+
+/*
+ * Set an updated value of the samplePeriod. The true sample period is not
+ * exactly equal to the nominal value. Observed difference is about 2-3 Hz than
+ * for the accelerometer and magnetometer. The accelerometer and magnetometer
+ * have individual sample rates.
+ *
+ * @param measuredPeriod this value will be used as its sampling period henceforth
+ */
+void SetAccMagMeasuredSamplePeriod(float32_t accMeasuredPeriod, float32_t magMeasuredPeriod);
+
+/*
+ * This is the current gyro sample period used by the accelerometer and
+ * magnetometer code respectively.
+ */
+void GetAccMagMeasuredSamplePeriod(float32_t * accMeasuredPeriod, float32_t *magMeasuredPeriod);
 
 #endif /* FCB_ACCELEROMETER_H */
 

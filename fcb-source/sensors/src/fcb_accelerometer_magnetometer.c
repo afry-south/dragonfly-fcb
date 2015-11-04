@@ -55,6 +55,9 @@ static float32_t sXYZMagVector[] = { 0, 0 , 0 };
 static xSemaphoreHandle mutexAcc;
 static xSemaphoreHandle mutexMag;
 
+static float32_t sAccSamplePeriod = 0.0f;
+static float32_t sMagSamplePeriod = 0.0f;
+
 /**
  * Magnetometer calibration offset & scaling coefficients
  *
@@ -139,7 +142,10 @@ uint8_t FcbInitialiseAccMagSensor(void) {
   /* ISSUE2_TODO - fetch magnetometer calib from flash */
 
   LSM303DLHC_AccConfig();
+  sAccSamplePeriod = 1 / (float)LSM303DLHC_AccDataRateHz();
+
   LSM303DLHC_MagInit();
+  sMagSamplePeriod = 1 / (float)LSM303DLHC_MagDataRateHz();
 
   /* do a pre-read to get the DRDY interrupts going. Since we trig on
    * rising flank and the sensor has data from power-on, by the time we get
@@ -357,6 +363,16 @@ void PrintAccelerometerValues(void) {
   USBComSendString(sampleString);
 }
 
+
+void SetAccMagMeasuredSamplePeriod(float32_t accMeasuredPeriod, float32_t magMeasuredPeriod) {
+  sAccSamplePeriod = accMeasuredPeriod;
+  sMagSamplePeriod = magMeasuredPeriod;
+}
+
+void GetAccMagMeasuredSamplePeriod(float32_t *accMeasuredPeriod, float32_t *magMeasuredPeriod) {
+  *accMeasuredPeriod = sAccSamplePeriod;
+  *magMeasuredPeriod = sMagSamplePeriod;
+}
 
 #ifdef ACCMAG_TODO
 void GaussNewtonLeastSphereFit(void) {

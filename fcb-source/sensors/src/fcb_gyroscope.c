@@ -29,7 +29,7 @@
 
 /* static & local declarations */
 
-enum { GYROSCOPE_OFFSET_SAMPLES = 200 };
+enum { GYROSCOPE_OFFSET_SAMPLES = 100 };
 
 enum { XDOT_IDX = 0 }; /* index of sGyroXYZAngleDot & ditto Offset */
 enum { YDOT_IDX = 1 }; /* as above */
@@ -49,9 +49,9 @@ const float32_t GYRO_AXIS_VARIANCE_ROUGH = 0.000256;
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
-static volatile float sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 };
-static volatile float sGyroXYZAngleDotOffset[3] = { 0.0, 0.0, 0.0 };
-
+static volatile float32_t sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 };
+static volatile float32_t sGyroXYZAngleDotOffset[3] = { 0.0, 0.0, 0.0 };
+static float32_t sGyroSamplePeriod = 0.0f;
 static xSemaphoreHandle mutexGyro;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,7 +62,10 @@ static xSemaphoreHandle mutexGyro;
 uint8_t InitialiseGyroscope(void) {
     uint8_t retVal = FCB_OK;
 
+
+
     GPIO_InitTypeDef GPIO_InitStructure;
+
 
     if (NULL == (mutexGyro = xSemaphoreCreateMutex())) {
       return FCB_ERR_INIT;
@@ -87,6 +90,9 @@ uint8_t InitialiseGyroscope(void) {
         /* Initialization Error */
     	ErrorHandler();
     }
+
+    /* start with configured data rate */
+    sGyroSamplePeriod = 1 / (float) L3GD20_DataRateHz();
 
     FetchDataFromGyroscope(); /* necessary so a fresh DRDY can be triggered */
     return retVal;
@@ -175,6 +181,16 @@ void GetGyroAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngl
     ErrorHandler();
     return;
   }
+}
+
+
+void SetGyroMeasuredSamplePeriod(float32_t measuredPeriod) {
+  sGyroSamplePeriod = measuredPeriod;
+}
+
+
+float32_t GetGyroMeasuredSamplePeriod(void) {
+  return sGyroSamplePeriod;
 }
 
 /**

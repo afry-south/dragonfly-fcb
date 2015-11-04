@@ -94,6 +94,8 @@ GYRO_DrvTypeDef L3gd20Drv =
   L3GD20_ReadXYZAngRate
 };
 
+static uint8_t cfgL3GD20OutputDataRate = L3GD20_OUTPUT_DATARATE_1;
+
 /**
   * @}
   */
@@ -139,7 +141,7 @@ uint8_t L3GD20_Config(void) {
 
   /* Configure Mems : data rate, power mode, full scale and axes */
   L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
-  L3GD20_InitStructure.Output_DataRate = L3GD20_OUTPUT_DATARATE_1; /* 96 Hz according to data sheet, 94.5 Hz according to oscilloscope */
+  L3GD20_InitStructure.Output_DataRate = cfgL3GD20OutputDataRate; /* 96 Hz according to data sheet, 94.5 Hz according to oscilloscope */
   L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
   L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_4;
   L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;
@@ -429,6 +431,19 @@ void L3GD20_ReadXYZAngRate(float* pfData)
 	/* translate data from milli degreees/sec to rad/sec */
     pfData[i]=(float)(RawData[i] * sensitivity * M_PI / 180 / 1000);
   }
+}
+
+/**
+ * Note that the nominal rate might differ slightly from the actual data rate
+ * when measuring DRDY flanks on GPIO pin PE2.
+ *
+ * @return  nominal configured data rate in Hz
+ */
+uint16_t L3GD20_DataRateHz(void) {
+  uint16_t dataRate1 = 95; /* see L3GD20 datasheet, other data rates are multiples of this */
+  uint16_t conversion = 1 << ((cfgL3GD20OutputDataRate >> 4) / 4) ;
+
+  return dataRate1 * conversion;
 }
 
 /**

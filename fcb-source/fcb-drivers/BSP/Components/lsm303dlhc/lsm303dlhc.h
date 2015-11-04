@@ -47,7 +47,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "accelero.h"
-
+#include "arm_math.h"
 /** @addtogroup LSM303DLHC
   * @{
   */
@@ -459,13 +459,12 @@ void      LSM303DLHC_AccINT2InterruptDisable(uint8_t ITCombination, uint8_t ITAx
 void      LSM303DLHC_AccClickITEnable(uint8_t ITClick);
 void      LSM303DLHC_AccClickITDisable(uint8_t ITClick);
 void      LSM303DLHC_AccZClickITConfig(void);
-
+uint16_t  LSM303DLHC_AccDataRateHz(void); /* see source file fcn banner */
 
 /* Mag functions */
 
 /**
- *  @param cra_regm magnetometer control register A
- *  @param crb_regm magnetometer control register B
+ * see source file function banner
  */
 void LSM303DLHC_MagInit(void);
 
@@ -475,6 +474,8 @@ void LSM303DLHC_MagInit(void);
   * @retval None
   */
 void LSM303DLHC_MagReadXYZ(float* pfData);
+
+float32_t LSM303DLHC_MagDataRateHz(void); /* see source fcn banner */
 
 #if 0
 uint8_t LSM303DLHC_MagGetDataStatus(void);
