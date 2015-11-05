@@ -37,7 +37,9 @@ typedef struct
 }PIDController_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
-#define CONTROL_PERIOD	(float) FLIGHT_CONTROL_TASK_PERIOD/1000.0
+#define CONTROL_PERIOD			(float32_t) FLIGHT_CONTROL_TASK_PERIOD/1000.0
+
+#define PID_USE_PARALLEL_FORM
 
 /* Private macro -------------------------------------------------------------*/
 
@@ -155,14 +157,35 @@ static float UpdatePIDControl(PIDController_TypeDef* ctrlParams, float ctrlState
 	/* Calculate Proportional control part */
 	ctrlParams->P = ctrlParams->K*(ctrlParams->Beta*refSignal - ctrlState);
 
+#if defined(PID_USE_CLASSIC_FORM)
+	/* Classic form based on: u(t) = K*e(t) + K/Ti*integr(e(t)) + K*Td*deriv(e(t))
+	 * */
+
 	/* Calculate Integral control part */
-	if(ctrlParams->Ti > MIN_TI_VAL)
+	if(ctrlParams->Ti > 0.0) {
 		ctrlParams->I += ctrlParams->K*CONTROL_PERIOD/ctrlParams->Ti*(refSignal - ctrlState);
+	}
 
 	/* Calculate Derivative control part */
 	ctrlParams->D = ctrlParams->Td / (ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)*ctrlParams->D
 			+ ctrlParams->K * ctrlParams->Td * ctrlParams->N / (ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD )
 			* (ctrlParams->Gamma * (refSignal - ctrlParams->preRef) - (ctrlState - ctrlParams->preState));
+
+#elif defined(PID_USE_PARALLEL_FORM)
+	/* Parallel form based on: u(t) = K*e(t) + Ti*integr(e(t)) - Td*deriv(y(t))
+	 * */
+
+	/* Calculate Integral control part */
+	if(ctrlParams->Ti > 0.0) {
+		ctrlParams->I += ctrlParams->Ti*CONTROL_PERIOD*(refSignal - ctrlState);
+	}
+
+	/* Calculate Derivative control part */
+	ctrlParams->D = ctrlParams->Td/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)*ctrlParams->D
+			+ ctrlParams->Td*ctrlParams->N/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)
+			* (ctrlParams->Gamma*(refSignal - ctrlParams->preRef) - (ctrlState - ctrlParams->preState));
+
+#endif
 
 	/* Calculate sum of P-I-D parts to obtain the control signal and add offset part. Multiply with scaling factor. */
 	controlSignal = (ctrlParams->P + ctrlParams->I + ctrlParams->D + ctrlParams->ctrlSignalOffset) * ctrlParams->ctrlSignalScaling;
