@@ -136,7 +136,6 @@ void InitPIDControllers(void) {
  */
 void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
 // ctrlSignals->Thrust = UpdatePIDControl(&AltCtrl, GetZVelocity(), GetZVelocityReferenceSignal()); // TODO control altitude later
-	ctrlSignals->Thrust = (GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/UINT16_MAX;
 	ctrlSignals->RollMoment = UpdatePIDControl(&RollCtrl, GetRollAngle(), GetRollAngleReferenceSignal());
 	ctrlSignals->PitchMoment = UpdatePIDControl(&PitchCtrl, GetPitchAngle(), GetPitchAngleReferenceSignal());
 	ctrlSignals->YawMoment = UpdatePIDControl(&YawCtrl, GetYawAngle(), GetYawAngularRateReferenceSignal()); // TODO should be GetYawRate()

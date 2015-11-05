@@ -41,7 +41,7 @@ typedef struct
 
 /* Private variables ---------------------------------------------------------*/
 static RefSignals_TypeDef RefSignals; // Control reference signals
-static CtrlSignals_TypeDef CtrlSignals; // Physical control signals
+static CtrlSignals_TypeDef ctrlSignals; // Physical control signals
 
 /* Flight mode */
 static enum FlightControlMode flightControlMode = FLIGHT_CONTROL_IDLE;
@@ -155,10 +155,11 @@ static void UpdateFlightControl(void) {
 		SetReferenceSignals();
 
 		/* Update PID control output */
-		UpdatePIDControlSignals(&CtrlSignals);
+		ctrlSignals->Thrust = (GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/UINT16_MAX; // NOTE: Raw throttle control fow now until control developed for Z velocity
+		UpdatePIDControlSignals(&ctrlSignals);
 
 		/* Allocate control signal action to motors */
-		MotorAllocationPhysical(CtrlSignals.Thrust, CtrlSignals.RollMoment, CtrlSignals.PitchMoment, CtrlSignals.YawMoment);
+		MotorAllocationPhysical(ctrlSignals.Thrust, ctrlSignals.RollMoment, ctrlSignals.PitchMoment, ctrlSignals.YawMoment);
 		return;
 
 	default:
