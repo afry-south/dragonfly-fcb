@@ -46,16 +46,8 @@ static uint32_t cbk_gyro_counter = 0;
 /* Private variables ---------------------------------------------------------*/
 /* static data declarations */
 
-static xTaskHandle tFcbSensors;
+static xTaskHandle hSensorsTask;
 static xQueueHandle qFcbSensors = NULL;
-
-typedef enum FcbSensorIndex {
-  GYRO_IDX = 0,
-  ACC_IDX = 1,
-  MAG_IDX = 2,
-  FCB_SENSOR_NBR = 3 } FcbSensorIndexType;
-
-
 
 uint8_t sensorSampleRateDone = 0;
 
@@ -72,6 +64,8 @@ typedef struct FcbSensorDataRateCalc {
  * in state estimation.
  */
 static FcbSensorDataRateCalcType sensorDrdyCalc[FCB_SENSOR_NBR] = { { 0, 0, 0.0f} };
+
+static FcbSensorCbk sClientCbk = NULL;
 
 #ifdef FCB_SENSORS_DEBUG
 static float32_t sensorSampleRates[FCB_SENSOR_NBR] = { 0.0f };
@@ -104,11 +98,11 @@ int FcbSensorsConfig(void) {
 
   if (pdPASS != (rtosRetVal =
       xTaskCreate((pdTASK_CODE)ProcessSensorValues,
-          (signed portCHAR*)"tFcbSensors",
+          (signed portCHAR*)"SENSORS",
           4 * configMINIMAL_STACK_SIZE,
           NULL /* parameter */,
           PROCESS_SENSORS_TASK_PRIO /* priority */,
-          &tFcbSensors))) {
+          &hSensorsTask))) {
     ErrorHandler();
     goto Error;
   }
@@ -121,6 +115,22 @@ int FcbSensorsConfig(void) {
   retVal = FCB_ERR_INIT;
   goto Exit;
 }
+
+uint8_t FcbSensorRegisterClientCallback(FcbSensorCbk cbk) {
+  if (NULL != sClientCbk) {
+    return FCB_ERR;
+  }
+
+  sClientCbk = cbk;
+}
+
+
+void FcbPush2Client(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * xyz) {
+  if (NULL != sClientCbk) {
+    sClientCbk(sensorType, samplePeriod, xyz);
+  }
+}
+
 
 void FcbSendSensorMessageFromISR(uint8_t msg) {
   /*

@@ -11,6 +11,7 @@
 
 #include "stm32f3xx.h"
 
+#include "fcb_sensors.h"
 #include "fcb_gyroscope.h"
 #include "string.h"
 #include "FreeRTOS.h"
@@ -45,10 +46,14 @@ xTaskHandle StatePrintSamplingTaskHandle = NULL;
 static SerializationType statePrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
+static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * xyz); /* type FcbSensorCbk  */
 static void StateInit(KalmanFilterType * pEstimator);
-static void PredictAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
+
+static void PredictAttitudeState(float32_t const samplePeriod, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
 static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
 static void StatePrintSamplingTask(void const *argument);
+
+
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -70,31 +75,47 @@ void InitStatesXYZ(void)
 
   yawState.angle = 0.0; /* should be initialised with current heading */
   yawState.angleRateBias = 0.0;
+
+  FcbSensorRegisterClientCallback(StateReceiveSensorsCbk);
 }
 
-/* PredictStatesXYZ
- * @brief  Updates the state estimates for X, Y, Z (roll, pitch, yaw)
- * @param  newRatesXYZ: Pointer to measured gyroscope rates, X,Y,Z
- * @retval None
- */
-void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRatePitch, const float32_t sensorRateYaw)
-{
-	PredictAttitudeState(sensorRateRoll, &rollEstimator, &rollState);
-	PredictAttitudeState(sensorRatePitch, &pitchEstimator, &pitchState);
-	PredictAttitudeState(sensorRateYaw, &yawEstimator, &yawState);
+static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * pXYZ) {
+  /* keep these around because yaw calculations need data already calculated
+   * when accelerometer data was available
+   */
+  static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f }; /* as angle in RPY in radians */
+
+  switch (sensorType) {   /* interpret values according to sensor type */
+  case GYRO_IDX: {
+    /* run estimation step */
+    float32_t const * pSensorAngleRate = pXYZ;
+    PredictAttitudeState(samplePeriod, pSensorAngleRate[ROLL_IDX], &rollEstimator, &rollState);
+    PredictAttitudeState(samplePeriod, pSensorAngleRate[PITCH_IDX], &pitchEstimator, &pitchState);
+    PredictAttitudeState(samplePeriod, pSensorAngleRate[YAW_IDX], &yawEstimator, &yawState);
+  }
+  break;
+  case ACC_IDX: {
+    /* run correction step */
+    float32_t const * pAccMeterXYZ = pXYZ; /* interpret values as accelerations */
+
+    GetAttitudeFromAccelerometer(sensorAttitudeRPY, pAccMeterXYZ);
+    CorrectAttitudeState(sensorAttitudeRPY[ROLL_IDX], &rollEstimator, &rollState);
+    CorrectAttitudeState(sensorAttitudeRPY[PITCH_IDX], &pitchEstimator, &pitchState);
+  }
+  break;
+  case MAG_IDX: {
+    /* run correction step */
+    float32_t const * pMagMeter = pXYZ;
+
+    sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle(pMagMeter, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
+    CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
+  }
+  break;
+  default:
+    ErrorHandler();
+  }
 }
 
-/* CorrectStatesXYZ
- * @brief  Updates the state estimates
- * @param  None
- * @retval None
- */
-void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw)
-{
-	CorrectAttitudeState(sensorAngleRoll, &rollEstimator, &rollState);
-	CorrectAttitudeState(sensorAnglePitch, &pitchEstimator, &pitchState);
-	CorrectAttitudeState(sensorAngleYaw, &yawEstimator, &yawState);
-}
 
 /* GetRoll
  * @brief  Gets the roll angle
@@ -297,6 +318,8 @@ void PrintStateValues(const SerializationType serializationType) {
  */
 static void StateInit(KalmanFilterType * Estimator)
 {
+  float32_t samplePeriod = GetGyroMeasuredSamplePeriod();
+
   /* P matrix init is the Identity matrix*/
   Estimator->p11 = 0.1;
   Estimator->p12 = 0.0;
@@ -306,7 +329,7 @@ static void StateInit(KalmanFilterType * Estimator)
   /* q1 = sqrt(var(rate))*STATE_ESTIMATION_SAMPLE_PERIOD^2
    * q2 = sqrt(var(rateBias))
    * r1 = sqrt(var(angle)) */
-  Estimator->q1 = GYRO_AXIS_VARIANCE_ROUGH * STATE_ESTIMATION_SAMPLE_PERIOD * STATE_ESTIMATION_SAMPLE_PERIOD; /* Q1_CAL */
+  Estimator->q1 = GYRO_AXIS_VARIANCE_ROUGH * samplePeriod * samplePeriod; /* Q1_CAL */
   Estimator->q2 = Q2_CAL;
   Estimator->r1 = R1_CAL; /* TODO_ISSUE119 - accelerometer based angle variance */
 }
@@ -320,18 +343,18 @@ static void StateInit(KalmanFilterType * Estimator)
  *
  * @retval 	None
  */
-static void PredictAttitudeState(const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState)
+static void PredictAttitudeState(float32_t const samplePeriod, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState)
 {
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
-	pState->angle += STATE_ESTIMATION_SAMPLE_PERIOD * sensorRate - STATE_ESTIMATION_SAMPLE_PERIOD * (pState->angleRateBias);
+	pState->angle += samplePeriod * sensorRate - samplePeriod * (pState->angleRateBias);
 	/* angleRateBias not corrected, see equations in section "State Estimation Theory" */
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
-	pEstimator->p11 += (STATE_ESTIMATION_SAMPLE_PERIOD*pEstimator->p22 - pEstimator->p12 - pEstimator->p21 + pEstimator->q1)*STATE_ESTIMATION_SAMPLE_PERIOD;
-	pEstimator->p12 -= pEstimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
-	pEstimator->p21 -= pEstimator->p22 * STATE_ESTIMATION_SAMPLE_PERIOD;
-	pEstimator->p22 += pEstimator->q2 * STATE_ESTIMATION_SAMPLE_PERIOD;
+	pEstimator->p11 += (samplePeriod*pEstimator->p22 - pEstimator->p12 - pEstimator->p21 + pEstimator->q1)*samplePeriod;
+	pEstimator->p12 -= pEstimator->p22 * samplePeriod;
+	pEstimator->p21 -= pEstimator->p22 * samplePeriod;
+	pEstimator->p22 += pEstimator->q2 * samplePeriod;
 }
 
 /*

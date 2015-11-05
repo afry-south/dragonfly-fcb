@@ -114,6 +114,14 @@ void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotD
 
 
 /**
+ * As GetAcceleration bus does not take/release mutex. This function
+ * is OK to use from the tFcbThread context like inside a FcbSensorCbk
+ * function
+  */
+void GetAccelerationNoMutex(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot);
+
+
+/**
  * Fetches data (rotation speed, or angle dot) from accelerometer
  * sensor.
  */
@@ -138,6 +146,14 @@ void GetMagVector(float32_t * x, float32_t * y, float32_t * z);
 
 
 /**
+ * As GetMagVector bus does not take/release mutex. This function
+ * is OK to use from the tFcbThread context like inside a FcbSensorCbk
+ * function
+  */
+void GetMagVectorNoMutex(float32_t * x, float32_t * y, float32_t * z);
+
+
+/**
  * Print accelerometer values to USB.
  */
 void PrintAccelerometerValues(void);
@@ -152,6 +168,7 @@ void PrintAccelerometerValues(void);
  * @param measuredPeriod this value will be used as its sampling period henceforth
  */
 void SetAccMagMeasuredSamplePeriod(float32_t accMeasuredPeriod, float32_t magMeasuredPeriod);
+
 
 /*
  * This is the current gyro sample period used by the accelerometer and

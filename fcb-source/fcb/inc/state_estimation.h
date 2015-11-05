@@ -15,6 +15,21 @@
 #include "common.h"
 
 /* Exported types ------------------------------------------------------------*/
+
+/**
+ * This type is to make indexing into arrays of Roll-Pitch-Yaw values have
+ * fewer magic numbers.
+ *
+ * This index is interchangeable with the X, Y, Z axes based index but
+ * we use different indices depending on application context.
+ */
+typedef enum FcbRPYIndex {
+  ROLL_IDX = 0,
+  PITCH_IDX = 1,
+  YAW_IDX = 2,
+  AXES_NPR
+} FcbRPYIndexType;
+
 typedef struct KalmanFilter
 {
 	float32_t q1;	// Process noise covariance matrix components

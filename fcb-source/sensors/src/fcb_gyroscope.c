@@ -9,6 +9,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "fcb_gyroscope.h"
+#include "fcb_sensors.h"
 #include "l3gd20.h"
 
 
@@ -165,7 +166,10 @@ void FetchDataFromGyroscope(void) {
       ErrorHandler();
       return;
     }
+
+    FcbPush2Client(GYRO_IDX, sGyroSamplePeriod, sGyroXYZAngleDot);
 }
+
 
 void GetGyroAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngleDot) {
   if (pdTRUE != xSemaphoreTake(mutexGyro,  portMAX_DELAY /* wait forever */)) {
@@ -181,6 +185,13 @@ void GetGyroAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngl
     ErrorHandler();
     return;
   }
+}
+
+
+void GetGyroAngleDotNoMutex(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngleDot) {
+  *xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
+  *yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
+  *zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
 }
 
 

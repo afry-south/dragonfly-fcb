@@ -50,6 +50,13 @@ void FetchDataFromGyroscope(void);
 void GetGyroAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float32_t * zAngleDot);
 
 /*
+ * As GetGyroAngleDot but does not take/release mutex, OK to use in
+ * FcbSensorCbk functions which are called in the SENSRS task context
+ */
+void GetGyroAngleDotNoMutex(float32_t * xAngleDot, float32_t * yAngleDot, float32_t * zAngleDot);
+
+
+/*
  * Set an updated value of the samplePeriod. The true sample period is not
  * exactly equal to the nominal value. Observed difference is less than
  * 1Hz for the gyro.
@@ -61,6 +68,6 @@ void SetGyroMeasuredSamplePeriod(float32_t measuredPeriod);
 /*
  * This is the current gyro sample period used by the sensors code.
  */
-float32_t GetGyroSamplePeriod(void);
+float32_t GetGyroMeasuredSamplePeriod(void);
 
 #endif /* GYROSCOPE_H */

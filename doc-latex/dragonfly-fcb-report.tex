@@ -609,12 +609,18 @@ As can be viewed in the digram in Figure \ref{fig:fcb-sw-hw-arch}, the Flight Co
 \end{figure}
 
 	\section{Real-time Design}
+Tasks in FreeRTOS have capital names when viewed in the usb COM port console, this convention is retained for this section. The \texttt{SENSORS} task is pended upon the empty \texttt{qFcbSensors} queue, see Figure \ref{fig:freertos-threads-queues-diag} on page \pageref{fig:freertos-threads-queues-diag}. 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{images/FcbThreadsOverview.png}
+    \includegraphics[scale=0.29]{images/FcbThreadsOverview.png}
     \caption{FCB FreeRTOS threads \& queue diagram}
     \label{fig:freertos-threads-queues-diag}
 \end{figure}
+Whenever one of the sensosr has data ready, an interrupt service routine (ISR) is triggered. The ISR posts a message to the \texttt{qFcbSensors} with the ID of the sensors. The \texttt{SENSORS} task is then released and selects a sensor for reading based on the ID in the queue. Since the sensors have different data rates, the \texttt{SENSORS} task runs at irregular intervals. The task then reads the sensor synchronously and pushes the data to the client, which is the state estimation code. The state estimation code then runs in the \texttt{SENSORS} task context and calculates estimated states.
+
+The \texttt{FLIGHT\_CTRL} task runs in a timed loop every 20 ms. It reads the state estimates and the pilot inputs, runs the PID control code and converts the control signal to motor power signals via the mixer, then starts over.
+
+There are two tasks which do USB communication, one handles reading and the other writing. From the console an operator may request that samples of for instance estimated states or sensor values be printed for analysis for a operator-specified duration. This sampling is done in a temporary tasks that is deleted when either stopped by the operator or until duration has expired.
 
 	\section{Code Documentation}
 
@@ -628,7 +634,7 @@ STMicroelectronics provides an extensive library simplifying application interac
 		\subsection{STM32F3Discovery Board-specific Package}
 
 		\subsection{FreeRTOS}
-
+FreeRTOS is configured with the \texttt{FreeRTOSConfig.h} file.
 		\subsection{FreeRTOS Plus CLI}
 
 		\subsection{FCB Control}

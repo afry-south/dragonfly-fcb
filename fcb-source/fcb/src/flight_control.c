@@ -298,9 +298,6 @@ static void FlightControlTask(void const *argument) {
 	for (;;) {
 		vTaskDelayUntil(&xLastWakeTime, FLIGHT_CONTROL_TASK_PERIOD);
 
-		/* Perform flight state estimation update */
-		UpdateFlightStates();
-
 		/* Perform flight control activities */
 		UpdateFlightControl();
 

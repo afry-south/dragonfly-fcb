@@ -37,9 +37,6 @@
 #endif
 
 enum { ACCMAG_AXES_N = 3 };
-enum { X_IDX = 0 }; /* index into sGyroXYZDotDot & ditto Offset sXYZMagVectors */
-enum { Y_IDX = 1 }; /* as above */
-enum { Z_IDX = 2 }; /* as above */
 
 enum { ACCMAG_SAMPLING_MAX_STRING_SIZE = 128 }; /* print-to-usb com port sampling */
 
@@ -201,6 +198,7 @@ void FetchDataFromAccelerometer(void) {
       return;
     }
 
+    /* all 3 updated simultaneously */
     sXYZDotDot[X_IDX] = acceleroMeterData[X_IDX];
     sXYZDotDot[Y_IDX] = acceleroMeterData[Y_IDX];
     sXYZDotDot[Z_IDX] = acceleroMeterData[Z_IDX];
@@ -209,6 +207,8 @@ void FetchDataFromAccelerometer(void) {
       ErrorHandler();
       return;
     }
+
+    FcbPush2Client(ACC_IDX, sAccSamplePeriod, sXYZDotDot);
   }
 
 
@@ -281,6 +281,7 @@ void FetchDataFromMagnetometer(void) {
       return;
     }
 
+    FcbPush2Client(MAG_IDX, sMagSamplePeriod, sXYZMagVector);
   }
 
 
@@ -333,6 +334,14 @@ void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotD
   }
 }
 
+void GetAccelerationNoMutex(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot) {
+  *xDotDot = sXYZDotDot[X_IDX];
+  *yDotDot = sXYZDotDot[Y_IDX];
+  *zDotDot = sXYZDotDot[Z_IDX];
+}
+
+
+
 void GetMagVector(float32_t * x, float32_t * y, float32_t * z) {
   if (pdTRUE != xSemaphoreTake(mutexMag,  portMAX_DELAY /* wait forever */)) {
     ErrorHandler();
@@ -348,6 +357,13 @@ void GetMagVector(float32_t * x, float32_t * y, float32_t * z) {
     return;
   }
 }
+
+void GetMagVectorNoMutex(float32_t * x, float32_t * y, float32_t * z) {
+  *x = sXYZMagVector[X_IDX];
+  *y = sXYZMagVector[Y_IDX];
+  *z = sXYZMagVector[Z_IDX];
+}
+
 
 
 void PrintAccelerometerValues(void) {
