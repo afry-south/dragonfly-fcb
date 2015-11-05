@@ -155,7 +155,7 @@ static void UpdateFlightControl(void) {
 		SetReferenceSignals();
 
 		/* Update PID control output */
-		ctrlSignals->Thrust = (GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/UINT16_MAX; // NOTE: Raw throttle control fow now until control developed for Z velocity
+		ctrlSignals.Thrust = (GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/UINT16_MAX; // NOTE: Raw throttle control fow now until control developed for Z velocity
 		UpdatePIDControlSignals(&ctrlSignals);
 
 		/* Allocate control signal action to motors */
@@ -229,7 +229,7 @@ static void UpdateFlightMode(void) {
 static void SetReferenceSignals(void) {
 	int32_t throttle, aileron, elevator, rudder;
 
-	// throttle = GetThrottleReceiverChannel();
+	throttle = GetThrottleReceiverChannel();
 	aileron = GetAileronReceiverChannel();
 	elevator = GetElevatorReceiverChannel();
 	rudder = GetRudderReceiverChannel();

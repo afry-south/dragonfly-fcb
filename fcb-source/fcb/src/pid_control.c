@@ -39,8 +39,6 @@ typedef struct
 /* Private define ------------------------------------------------------------*/
 #define CONTROL_PERIOD			(float32_t) FLIGHT_CONTROL_TASK_PERIOD/1000.0
 
-#define PID_USE_PARALLEL_FORM
-
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
