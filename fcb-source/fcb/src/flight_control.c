@@ -73,9 +73,8 @@ void CreateFlightControlTask(void) {
 	 * Priority: FLIGHT_CONTROL_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: FlightControlTaskHandle
 	 * */
-	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )FlightControlTask, (signed portCHAR*)"FLIGHT_CTRL", 2*configMINIMAL_STACK_SIZE,
-					NULL, FLIGHT_CONTROL_TASK_PRIO, &FlightControlTaskHandle)) {
+	if (pdPASS != xTaskCreate((pdTASK_CODE )FlightControlTask, (signed portCHAR*)"FLIGHT_CTRL",
+			2*configMINIMAL_STACK_SIZE, NULL, FLIGHT_CONTROL_TASK_PRIO, &FlightControlTaskHandle)) {
 		ErrorHandler();
 	}
 }
@@ -227,34 +226,56 @@ static void SetFlightMode(void) {
  * @retval None
  */
 static void SetReferenceSignals(void) {
+	int32_t throttle, aileron, elevator, rudder;
 
-	if(GetThrottleReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetThrottleReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+	throttle = GetThrottleReceiverChannel();
+	aileron = GetAileronReceiverChannel();
+	elevator = GetElevatorReceiverChannel();
+	rudder = GetRudderReceiverChannel();
+
+	/* Set Z velocity reference depending on receiver throttle channel */
+	if (throttle <= RECEIVER_TO_REFERENCE_ZERO_PADDING && throttle >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
 		RefSignals.ZVelocity = 0.0;
-	else if(GetThrottleReceiverChannel() >= 0)
-		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(GetThrottleReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
-	else
-		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(GetThrottleReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+	} else if (throttle >= 0) {
+		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+	} else {
+		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+	}
 
-	if(GetAileronReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetAileronReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+	/* Set roll angle reference depending on receiver aileron channel */
+	if (aileron <= RECEIVER_TO_REFERENCE_ZERO_PADDING && aileron >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
 		RefSignals.RollAngle = 0.0;
-	else if(GetAileronReceiverChannel() >= 0)
-		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(GetAileronReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING);
-	else
-		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(GetAileronReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	} else if (aileron >= 0) {
+		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(aileron - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	} else {
+		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(aileron + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	}
 
-	if(GetElevatorReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetElevatorReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+	/* Set pitch angle reference depending on receiver elevator channel */
+	if (elevator <= RECEIVER_TO_REFERENCE_ZERO_PADDING && elevator >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
 		RefSignals.PitchAngle = 0.0;
-	else if(GetElevatorReceiverChannel() >= 0)
-		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(GetElevatorReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING);
-	else
-		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(GetElevatorReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	} else if (elevator >= 0) {
+		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(elevator - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	} else {
+		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(elevator + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	}
 
-	if(GetRudderReceiverChannel() <= RECEIVER_TO_REFERENCE_ZERO_PADDING && GetRudderReceiverChannel() >= -RECEIVER_TO_REFERENCE_ZERO_PADDING)
+	/* Set yaw rate reference depending on receiver rudder channel */
+	if (rudder <= RECEIVER_TO_REFERENCE_ZERO_PADDING && rudder >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
 		RefSignals.YawAngleRate = 0.0;
-	else if(GetRudderReceiverChannel() >= 0)
-		RefSignals.YawAngleRate = -MAX_YAW_RATE*(GetRudderReceiverChannel()-RECEIVER_TO_REFERENCE_ZERO_PADDING)/(INT16_MAX-RECEIVER_TO_REFERENCE_ZERO_PADDING);
-	else
-		RefSignals.YawAngleRate = -MAX_YAW_RATE*(GetRudderReceiverChannel()+RECEIVER_TO_REFERENCE_ZERO_PADDING)/(-INT16_MIN-RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	} else if (rudder >= 0) {
+		RefSignals.YawAngleRate = -MAX_YAW_RATE*(rudder - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	} else {
+		RefSignals.YawAngleRate = -MAX_YAW_RATE*(rudder + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING);
+	}
 }
 
 /**
