@@ -16,24 +16,28 @@
 #include "flight_control.h"
 #include "motor_control.h"
 
+#include <stdbool.h>
+
 /* Private typedef -----------------------------------------------------------*/
 typedef struct
 {
-  float K;					// PID gain parameter
-  float Ti;					// PID integration time parameter
-  float Td;					// PID derivative time parameter
-  float Beta;				// Set-point weighting 0-1
-  float Gamma;				// Derivative set-point weighting 0-1
-  float N;					// Derivative action filter constant
-  float P;					// Proportional control part
-  float I;					// Integration control part
-  float D;					// Derivative control part
-  float preState;			// Previous control state value
-  float preRef;				// Previous reference signal value
-  float upperSatLimit;		// Upper saturation limit of control signal
-  float lowerSatLimit;		// Lower saturation limit of control signal
-  float ctrlSignalScaling;	// Scaling of PID control signal
-  float ctrlSignalOffset;	// Static offset of PID control signal
+  float32_t K;					// PID gain parameter
+  float32_t Ti;					// PID integration time parameter
+  float32_t Td;					// PID derivative time parameter
+  float32_t Tt;					// Anti-windup tracking parameter
+  float32_t Beta;				// Set-point weighting 0-1
+  float32_t Gamma;				// Derivative set-point weighting 0-1
+  float32_t N;					// Derivative action filter constant
+  float32_t P;					// Proportional control part
+  float32_t I;					// Integration control part
+  float32_t D;					// Derivative control part
+  float32_t preState;			// Previous control state value
+  float32_t preRef;				// Previous reference signal value
+  float32_t upperSatLimit;		// Upper saturation limit of control signal
+  float32_t lowerSatLimit;		// Lower saturation limit of control signal
+  float32_t ctrlSignalScaling;	// Scaling of PID control signal
+  float32_t ctrlSignalOffset;	// Static offset of PID control signal
+  bool useIntegralAction;		// Sets if intergral action should be used or not
 }PIDController_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
@@ -48,7 +52,7 @@ static PIDController_TypeDef PitchCtrl;
 static PIDController_TypeDef YawCtrl;
 
 /* Private function prototypes -----------------------------------------------*/
-static float UpdatePIDControl(PIDController_TypeDef* ctrlParams, float ctrlState, float refSignal);
+static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t ctrlState, float32_t refSignal);
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -62,6 +66,7 @@ void InitPIDControllers(void) {
 	AltCtrl.K = K_VZ;
 	AltCtrl.Ti = TI_VZ;
 	AltCtrl.Td = TD_VZ;
+	arm_sqrt_f32(AltCtrl.Ti*AltCtrl.Td, &AltCtrl.Tt); // Rule of thumb method to set this
 	AltCtrl.Beta = BETA_VZ;
 	AltCtrl.Gamma = GAMMA_VZ;
 	AltCtrl.N = N_VZ;
@@ -74,11 +79,13 @@ void InitPIDControllers(void) {
 	AltCtrl.lowerSatLimit = -MAX_THRUST;	// Negative lower limit since Z points to earth
 	AltCtrl.ctrlSignalScaling = MASS;		// Scale with mass to obtain thrust force
 	AltCtrl.ctrlSignalOffset = -G_ACC;		// Gravity offset
+	AltCtrl.useIntegralAction = false;
 
 	/* Initialize Roll Controller */
 	RollCtrl.K = K_RP;
 	RollCtrl.Ti = TI_RP;
 	RollCtrl.Td = TD_RP;
+	arm_sqrt_f32(RollCtrl.Ti*RollCtrl.Td, &RollCtrl.Tt); // Rule of thumb method to set this
 	RollCtrl.Beta = BETA_RP;
 	RollCtrl.Gamma = GAMMA_RP;
 	RollCtrl.N = N_RP;
@@ -91,11 +98,13 @@ void InitPIDControllers(void) {
 	RollCtrl.lowerSatLimit = -MAX_ROLLPITCH_MOM;
 	RollCtrl.ctrlSignalScaling = IXX;
 	RollCtrl.ctrlSignalOffset = 0.0;
+	RollCtrl.useIntegralAction = false;
 
 	/* Initialize Pitch Controller */
 	PitchCtrl.K = K_RP;
 	PitchCtrl.Ti = TI_RP;
 	PitchCtrl.Td = TD_RP;
+	arm_sqrt_f32(PitchCtrl.Ti*PitchCtrl.Td, &PitchCtrl.Tt); // Rule of thumb method to set this
 	PitchCtrl.Beta = BETA_RP;
 	PitchCtrl.Gamma = GAMMA_RP;
 	PitchCtrl.N = N_RP;
@@ -108,11 +117,13 @@ void InitPIDControllers(void) {
 	PitchCtrl.lowerSatLimit = -MAX_ROLLPITCH_MOM;
 	PitchCtrl.ctrlSignalScaling = IYY;
 	PitchCtrl.ctrlSignalOffset = 0.0;
+	PitchCtrl.useIntegralAction = false;
 
 	/* Initialize Yaw Controller */
 	YawCtrl.K = K_YR;
 	YawCtrl.Ti = TI_YR;
 	YawCtrl.Td = TD_YR;
+	arm_sqrt_f32(YawCtrl.Ti*YawCtrl.Td, &YawCtrl.Tt); // Rule of thumb method to set this
 	YawCtrl.Beta = BETA_YR;
 	YawCtrl.Gamma = GAMMA_YR;
 	YawCtrl.N = N_YR;
@@ -125,12 +136,13 @@ void InitPIDControllers(void) {
 	YawCtrl.lowerSatLimit = -MAX_YAW_MOM;
 	YawCtrl.ctrlSignalScaling = IZZ;
 	YawCtrl.ctrlSignalOffset = 0.0;
+	YawCtrl.useIntegralAction = false;
 }
 
 /*
- * @brief	Update PID control and set control signals
- * @param	None.
- * @retval	None.
+ * @brief  Update PID control and set control signals
+ * @param  None.
+ * @retval None.
  */
 void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
 // ctrlSignals->Thrust = UpdatePIDControl(&AltCtrl, GetZVelocity(), GetZVelocityReferenceSignal()); // TODO control altitude later
@@ -148,8 +160,8 @@ void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
  * @param	refSignal : The control reference signal value
  * @retval	PID control signal value
  */
-static float UpdatePIDControl(PIDController_TypeDef* ctrlParams, float ctrlState, float refSignal) {
-	float controlSignal;
+static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t ctrlState, float32_t refSignal) {
+	float32_t controlSignal, tmpControlSignal;
 
 	/* Calculate Proportional control part */
 	ctrlParams->P = ctrlParams->K*(ctrlParams->Beta*refSignal - ctrlState);
@@ -173,7 +185,7 @@ static float UpdatePIDControl(PIDController_TypeDef* ctrlParams, float ctrlState
 	 * */
 
 	/* Calculate Integral control part */
-	if(ctrlParams->Ti > 0.0) {
+	if(ctrlParams->useIntegralAction) {
 		ctrlParams->I += ctrlParams->Ti*CONTROL_PERIOD*(refSignal - ctrlState);
 	}
 
@@ -188,10 +200,17 @@ static float UpdatePIDControl(PIDController_TypeDef* ctrlParams, float ctrlState
 	controlSignal = (ctrlParams->P + ctrlParams->I + ctrlParams->D + ctrlParams->ctrlSignalOffset) * ctrlParams->ctrlSignalScaling;
 
 	/* Saturate controller output */
-	if (controlSignal < ctrlParams->lowerSatLimit)
+	tmpControlSignal = controlSignal;
+	if (controlSignal < ctrlParams->lowerSatLimit) {
 		controlSignal = ctrlParams->lowerSatLimit;
-	else if (controlSignal > ctrlParams->upperSatLimit)
+	} else if (controlSignal > ctrlParams->upperSatLimit) {
 		controlSignal = ctrlParams->upperSatLimit;
+	}
+
+	/* Perform back calculation anti-windup scheme to avoid integral part windup */
+	if(ctrlParams->useIntegralAction) {
+		ctrlParams->I += CONTROL_PERIOD/ctrlParams->Tt*(tmpControlSignal-controlSignal);
+	}
 
 	/* Update previous control state and reference signal variables */
 	ctrlParams->preState = ctrlState;

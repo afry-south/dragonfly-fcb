@@ -17,31 +17,31 @@
 #define PID_USE_PARALLEL_FORM
 
 /* Vertical control parameters */
-#define K_VZ 				2.0
-#define TI_VZ				0.0
-#define TD_VZ				0.5
-#define BETA_VZ				1.0			// Proportional set-point weighting
-#define GAMMA_VZ			0.0
-#define N_VZ				15.0		// Max derivative gain (often 10-20)
-#define MAX_THRUST			4*AT*UINT16_MAX + 4*BT	// Maximal upward thrust from all four motors combined [N]
+#define K_VZ 				(float32_t) 2.0
+#define TI_VZ				(float32_t) 0.0
+#define TD_VZ				(float32_t) 0.5
+#define BETA_VZ				(float32_t) 1.0			// Proportional set-point weighting
+#define GAMMA_VZ			(float32_t) 0.0
+#define N_VZ				(float32_t) 15.0		// Max derivative gain (often 10-20)
+#define MAX_THRUST			(float32_t) 4*AT*UINT16_MAX + 4*BT	// Maximal upward thrust from all four motors combined [N]
 
 /* Roll/pitch angle control parameters */
-#define K_RP				100.0
-#define TI_RP				0.0
-#define TD_RP				20.0
-#define BETA_RP				1.0			// Proportional set-point weighting
-#define GAMMA_RP			0.0
-#define N_RP				15.0		// Max derivative gain (often 10-20)
-#define MAX_ROLLPITCH_MOM	MAX_THRUST/2*LENGTH_ARM/M_SQRT2	// Two motors full thrust, two motors no thrust [Nm]
+#define K_RP				(float32_t) 100.0
+#define TI_RP				(float32_t) 0.0
+#define TD_RP				(float32_t) 20.0
+#define BETA_RP				(float32_t) 1.0			// Proportional set-point weighting
+#define GAMMA_RP			(float32_t) 0.0
+#define N_RP				(float32_t) 15.0		// Max derivative gain (often 10-20)
+#define MAX_ROLLPITCH_MOM	(float32_t) MAX_THRUST/2*LENGTH_ARM/M_SQRT2	// Two motors full thrust, two motors no thrust [Nm]
 
 /* Yaw angular rate control parameters */
-#define K_YR 				5.0
-#define TI_YR 				0.0
-#define TD_YR				0.0
-#define BETA_YR				1.0			// Proportional set-point weighting
-#define GAMMA_YR			0.0
-#define N_YR				15.0		// Max derivative gain (often 10-20)
-#define MAX_YAW_MOM			AQ*2*UINT16_MAX		// Two motors with same rot dir full thrust, other two motors no thrust [Nm]
+#define K_YR 				(float32_t) 5.0
+#define TI_YR 				(float32_t) 0.0
+#define TD_YR				(float32_t) 0.0
+#define BETA_YR				(float32_t) 1.0			// Proportional set-point weighting
+#define GAMMA_YR			(float32_t) 0.0
+#define N_YR				(float32_t) 15.0		// Max derivative gain (often 10-20)
+#define MAX_YAW_MOM			(float32_t) AQ*2*UINT16_MAX		// Two motors with same rot dir full thrust, other two motors no thrust [Nm]
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct
