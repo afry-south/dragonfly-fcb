@@ -52,7 +52,7 @@ xTaskHandle FlightControlTaskHandle; // Task handle for flight control task
 static void UpdateFlightControl(void);
 static void UpdateFlightStates(void);
 
-static void SetFlightMode(void);
+static void UpdateFlightMode(void);
 static void SetReferenceSignals(void);
 
 static void FlightControlTask(void const *argument);
@@ -134,7 +134,7 @@ float GetYawAngularRateReferenceSignal(void) {
 static void UpdateFlightControl(void) {
 
 	/* Updates the current flight mode */
-	SetFlightMode();
+	UpdateFlightMode();
 
 	switch (flightControlMode) {
 
@@ -209,7 +209,7 @@ static void UpdateFlightStates(void) {
  * @param  None.
  * @retval None.
  */
-static void SetFlightMode(void) {
+static void UpdateFlightMode(void) {
 	if (!IsReceiverActive())
 		flightControlMode = FLIGHT_CONTROL_IDLE;
 	else if (GetReceiverRawFlightSet())
@@ -228,21 +228,22 @@ static void SetFlightMode(void) {
 static void SetReferenceSignals(void) {
 	int32_t throttle, aileron, elevator, rudder;
 
-	throttle = GetThrottleReceiverChannel();
+	// throttle = GetThrottleReceiverChannel();
 	aileron = GetAileronReceiverChannel();
 	elevator = GetElevatorReceiverChannel();
 	rudder = GetRudderReceiverChannel();
 
 	/* Set Z velocity reference depending on receiver throttle channel */
-	if (throttle <= RECEIVER_TO_REFERENCE_ZERO_PADDING && throttle >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
-		RefSignals.ZVelocity = 0.0;
-	} else if (throttle >= 0) {
-		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle - RECEIVER_TO_REFERENCE_ZERO_PADDING)
-				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
-	} else {
-		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle + RECEIVER_TO_REFERENCE_ZERO_PADDING)
-				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
-	}
+	// TODO set Z velocity reference to control altitude when such a controller is available
+//	if (throttle <= RECEIVER_TO_REFERENCE_ZERO_PADDING && throttle >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
+//		RefSignals.ZVelocity = 0.0;
+//	} else if (throttle >= 0) {
+//		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+//				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+//	} else {
+//		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+//				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+//	}
 
 	/* Set roll angle reference depending on receiver aileron channel */
 	if (aileron <= RECEIVER_TO_REFERENCE_ZERO_PADDING && aileron >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
