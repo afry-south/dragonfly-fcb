@@ -66,7 +66,7 @@ void InitPIDControllers(void) {
 	AltCtrl.K = K_VZ;
 	AltCtrl.Ti = TI_VZ;
 	AltCtrl.Td = TD_VZ;
-	arm_sqrt_f32(AltCtrl.Ti*AltCtrl.Td, &AltCtrl.Tt); // Rule of thumb method to set this
+	AltCtrl.Tt = 0.0;
 	AltCtrl.Beta = BETA_VZ;
 	AltCtrl.Gamma = GAMMA_VZ;
 	AltCtrl.N = N_VZ;
@@ -81,11 +81,18 @@ void InitPIDControllers(void) {
 	AltCtrl.ctrlSignalOffset = -G_ACC;		// Gravity offset
 	AltCtrl.useIntegralAction = false;
 
+	/* Rule of thumb method to set this: sqrt(Ti*Td) in classic PID form
+	 * TODO If Td==0 (PI control), a different value needs to be set to Tt
+	 * */
+	if(AltCtrl.useIntegralAction && AltCtrl.Ti >= 0.0) {
+		arm_sqrt_f32(AltCtrl.Td/AltCtrl.Ti, &AltCtrl.Tt); // Rule of thumb method to set this (sqrt(Ti*Td) in classic PID form)
+	}
+
 	/* Initialize Roll Controller */
 	RollCtrl.K = K_RP;
 	RollCtrl.Ti = TI_RP;
 	RollCtrl.Td = TD_RP;
-	arm_sqrt_f32(RollCtrl.Ti*RollCtrl.Td, &RollCtrl.Tt); // Rule of thumb method to set this
+	RollCtrl.Tt = 0.0;
 	RollCtrl.Beta = BETA_RP;
 	RollCtrl.Gamma = GAMMA_RP;
 	RollCtrl.N = N_RP;
@@ -100,11 +107,15 @@ void InitPIDControllers(void) {
 	RollCtrl.ctrlSignalOffset = 0.0;
 	RollCtrl.useIntegralAction = false;
 
+	if(RollCtrl.useIntegralAction && RollCtrl.Ti >= 0.0) {
+		arm_sqrt_f32(RollCtrl.Td/RollCtrl.Ti, &RollCtrl.Tt); // Rule of thumb method to set this (sqrt(Ti*Td) in classic PID form)
+	}
+
 	/* Initialize Pitch Controller */
 	PitchCtrl.K = K_RP;
 	PitchCtrl.Ti = TI_RP;
 	PitchCtrl.Td = TD_RP;
-	arm_sqrt_f32(PitchCtrl.Ti*PitchCtrl.Td, &PitchCtrl.Tt); // Rule of thumb method to set this
+	PitchCtrl.Tt = 0.0;
 	PitchCtrl.Beta = BETA_RP;
 	PitchCtrl.Gamma = GAMMA_RP;
 	PitchCtrl.N = N_RP;
@@ -119,11 +130,15 @@ void InitPIDControllers(void) {
 	PitchCtrl.ctrlSignalOffset = 0.0;
 	PitchCtrl.useIntegralAction = false;
 
+	if(PitchCtrl.useIntegralAction && PitchCtrl.Ti >= 0.0) {
+		arm_sqrt_f32(PitchCtrl.Td/PitchCtrl.Ti, &PitchCtrl.Tt); // Rule of thumb method to set this (sqrt(Ti*Td) in classic PID form)
+	}
+
 	/* Initialize Yaw Controller */
 	YawCtrl.K = K_YR;
 	YawCtrl.Ti = TI_YR;
 	YawCtrl.Td = TD_YR;
-	arm_sqrt_f32(YawCtrl.Ti*YawCtrl.Td, &YawCtrl.Tt); // Rule of thumb method to set this
+	YawCtrl.Tt = 0.0;
 	YawCtrl.Beta = BETA_YR;
 	YawCtrl.Gamma = GAMMA_YR;
 	YawCtrl.N = N_YR;
@@ -137,6 +152,10 @@ void InitPIDControllers(void) {
 	YawCtrl.ctrlSignalScaling = IZZ;
 	YawCtrl.ctrlSignalOffset = 0.0;
 	YawCtrl.useIntegralAction = false;
+
+	if(YawCtrl.useIntegralAction && YawCtrl.Ti >= 0.0) {
+		arm_sqrt_f32(YawCtrl.Td/YawCtrl.Ti, &YawCtrl.Tt); // Rule of thumb method to set this (sqrt(Ti*Td) in classic PID form)
+	}
 }
 
 /*
