@@ -1,8 +1,7 @@
 /******************************************************************************
- * @file    gyroscope.c
+ * @file    fcb_gyroscope.c
  * @author  Dragonfly
- * @version v. 1.0.0
- * @date    2015-08-26
+ *
  * @brief   File contains functionality to handle and read the STM32F3-Discovery
  * 			on-board gyroscope sensor L3DG20.
  ******************************************************************************/

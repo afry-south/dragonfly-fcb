@@ -107,10 +107,10 @@ int FcbSensorsConfig(void) {
     goto Error;
   }
 
-  Exit:
+Exit:
   return retVal;
 
-  Error:
+Error:
   /* clean up */
   retVal = FCB_ERR_INIT;
   goto Exit;
@@ -122,6 +122,8 @@ uint8_t FcbSensorRegisterClientCallback(FcbSensorCbk cbk) {
   }
 
   sClientCbk = cbk;
+
+  return FCB_OK;
 }
 
 
@@ -171,9 +173,9 @@ void FcbSensorsInitGpioPinForInterrupt(GPIO_TypeDef  *GPIOx, uint32_t pin) {
  * @brief  Creates a task to sample print sensor values over USB
  * @param  sampleTime : Sets how often samples should be printed
  * @param  sampleDuration : Sets for how long sampling should be performed
- * @retval SENSORS_OK if thread started, else SENSORS_ERROR
+ * @retval FCB_OK if thread started, else FCB_ERR
  */
-SensorsReturnCode StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
+FcbRetValType StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration) {
   if(sampleTime < SENSOR_PRINT_MINIMUM_SAMPLING_TIME)
     sensorPrintSampleTime = SENSOR_PRINT_MINIMUM_SAMPLING_TIME;
   else
@@ -192,24 +194,24 @@ SensorsReturnCode StartSensorSamplingTask(const uint16_t sampleTime, const uint3
   if (pdPASS != xTaskCreate((pdTASK_CODE )SensorPrintSamplingTask, (signed portCHAR*)"SENS_PRINT_SAMPL",
       3*configMINIMAL_STACK_SIZE, NULL, SENSOR_PRINT_SAMPLING_TASK_PRIO, &SensorPrintSamplingTaskHandle)) {
     ErrorHandler();
-    return SENSORS_ERROR;
+    return FCB_ERR;
   }
 
-  return SENSORS_OK;
+  return FCB_OK;
 }
 
 /*
  * @brief  Stops sensor print sampling by deleting the task
  * @param  None
- * @retval SENSORS_OK if task deleted, SENSORS_ERROR if not
+ * @retval FCB_OK if task deleted, FCB_ERR if not
  */
-SensorsReturnCode StopSensorSamplingTask(void) {
+FcbRetValType StopSensorSamplingTask(void) {
   if(SensorPrintSamplingTaskHandle != NULL) {
     vTaskDelete(SensorPrintSamplingTaskHandle);
     SensorPrintSamplingTaskHandle = NULL;
-    return SENSORS_OK;
+    return FCB_OK;
   }
-  return SENSORS_ERROR;
+  return FCB_ERR;
 }
 
 /**

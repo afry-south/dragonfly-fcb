@@ -104,8 +104,9 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\subsection{Magnetometer}
 
 \chapter{State Estimation Theory}
-The state vector for the attitude is the attitude angle and the angular rate bias. The latter is due to gyroscope having a drift in its measured angular velocity, that is, taking a number of samples and averaging the value and using this as an offset.
 	\section{Attitude Estimation}
+Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The state vector for the attitude is the attitude angle and the angular rate bias. The latter is due to gyroscope having a drift in its measured angular velocity, that is, taking a number of samples and averaging the value and using this as an offset. in the below equations, steps 1-2 are the prediction step of the Kalman filter and 3-7 the correction step. The estimation step for roll, pitch and yaw is run when the gyroscope values  are updated, these are angular velocities in rad/s. The correction step for roll and pitch is run when the accelerometer values are available. The correction step for yaw is run when magnetometer values are available.
+
 		Step 1: Predict the estimated states $\hat{x}_{k|k-1}$
 		\begin{equation}
 		\hat{x}_{k|k-1}=A\hat{x}_{k-1|k-1}+Bu_{k}
@@ -577,6 +578,7 @@ L3DG20 Gyroscope over SPI. LSM303DLHC over I2C. Orientation with respect to quad
     \caption{Sensor overview}
     \label{fig:sensor_hw_overview}
 \end{figure}
+Since the sensors have no common clock, they send DRDY interrupts to the \texttt{SENSORS} thread independently, see section {sec:real-time-design} on \pageref{sec:real-time-design}. That means that DRDY interrupts arrive at regular intervals with respect to each sensor, but may arrive in any order. All 3 current sensors have differing data rate frequencies.
 
 	\subsection{Sensor axes orientation}
 The sensors are not aligned to the Quadcopter body frame by default, so they had to be adjusted. The adjusted axes are green in Figure \ref{fig:sensor_axes_orientation} on page \pageref{fig:sensor_axes_orientation}.
@@ -609,6 +611,7 @@ As can be viewed in the digram in Figure \ref{fig:fcb-sw-hw-arch}, the Flight Co
 \end{figure}
 
 	\section{Real-time Design}
+	\label{sec:real-time-design}
 Tasks in FreeRTOS have capital names when viewed in the usb COM port console, this convention is retained for this section. The \texttt{SENSORS} task is pended upon the empty \texttt{qFcbSensors} queue, see Figure \ref{fig:freertos-threads-queues-diag} on page \pageref{fig:freertos-threads-queues-diag}. 
 \begin{figure}[h]
     \centering
@@ -642,7 +645,7 @@ FreeRTOS is configured with the \texttt{FreeRTOSConfig.h} file.
 		\subsection{FCB Communication}
 
 		\subsection{FCB Sensors}
-
+The FCB sensors code is implemented in files i the \texttt{fcb-source/sensors} directory. These file call STM32Cube HAL subroutines for configuring and reading sensors. For the gyroscope, accelerometer and magnetometer the subroutines have been modified to suit the needs of Dragonfly. Most of these modified files are in the \texttt{fcb-source/fcb-drivers}
 		\subsection{FCB Utilities}
 
 		\subsection{NanoPB Protocol Buffer}

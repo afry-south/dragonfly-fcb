@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 /**
- * @file fcb_retval.h
+ * @file fcb_sensors.h
  *
  * The sensors send Data Ready interrupts and when they are received,
  * the ISRs send a message to the qFcbSensors queue. The SENSORS
@@ -61,10 +61,6 @@ enum FcbSensorMessage {
     FCB_SENSOR_MAGNETO_DATA_READY = 0x2A,
     FCB_SENSOR_MAGNETO_CALIBRATE = 0x2B,
 };
-
-typedef enum {
-	SENSORS_ERROR = 0, SENSORS_OK = !SENSORS_ERROR
-} SensorsReturnCode;
 
 
 /**
@@ -123,8 +119,8 @@ void FcbPush2Client(FcbSensorIndexType sensorType, float32_t samplePeriod, float
 void FcbSendSensorMessageFromISR(uint8_t msg);
 
 void PrintSensorValues(const SerializationType serializationType);
-SensorsReturnCode StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
-SensorsReturnCode StopSensorSamplingTask(void);
+FcbRetValType StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
+FcbRetValType StopSensorSamplingTask(void);
 void SetSensorPrintSamplingSerialization(const SerializationType serializationType);
 
 

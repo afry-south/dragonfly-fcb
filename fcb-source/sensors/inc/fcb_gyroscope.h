@@ -1,7 +1,7 @@
 #ifndef GYROSCOPE_H
 #define GYROSCOPE_H
 /**
- * @file gyroscope.h
+ * @file fcb_gyroscope.h
  *
  * This file exports the API to the L3GD20 gyroscope.
  */

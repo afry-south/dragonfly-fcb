@@ -1,5 +1,5 @@
 /**
- * @file fcb_accelerometer.c
+ * @file fcb_accelerometer_magnetometer.c
  *
  * Implements fcb_accelerometer_magnetometer.h API
  *
