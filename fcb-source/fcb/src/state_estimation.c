@@ -46,10 +46,12 @@ xTaskHandle StatePrintSamplingTaskHandle = NULL;
 static SerializationType statePrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
-static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * xyz); /* type FcbSensorCbk  */
+
 static void StateInit(KalmanFilterType * pEstimator);
 
-static void PredictAttitudeState(float32_t const samplePeriod, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
+/* see ST Microelectronics application note AN4296 for the section attribute */
+static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * xyz)   __attribute__ ((section (".ccmram"))); /* type FcbSensorCbk  */
+static void PredictAttitudeState(float32_t const samplePeriod, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState)    __attribute__ ((section (".ccmram")));
 static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
 static void StatePrintSamplingTask(void const *argument);
 
