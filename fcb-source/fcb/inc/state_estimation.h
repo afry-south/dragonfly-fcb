@@ -50,7 +50,7 @@ typedef struct KalmanFilter
  */
 typedef struct AttitudeStateVector
 {
-  float32_t angle; /* for yaw, think "heading" */
+  float32_t volatile angle; /* for yaw, aka "heading" */
   float32_t angleRate; /* not used */
   float32_t angleRateBias;
 } AttitudeStateVectorType;
