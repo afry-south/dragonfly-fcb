@@ -104,6 +104,7 @@ The BLM motors used for this project have an “outrunner” architecture, which
 		\subsection{Magnetometer}
 
 \chapter{State Estimation Theory}
+\label{chap:state-estimation-theory}
 	\section{Attitude Estimation}
 Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The state vector for the attitude is the attitude angle and the angular rate bias. The latter is due to gyroscope having a drift in its measured angular velocity, that is, taking a number of samples and averaging the value and using this as an offset. in the below equations, steps 1-2 are the prediction step of the Kalman filter and 3-7 the correction step. The estimation step for roll, pitch and yaw is run when the gyroscope values  are updated, these are angular velocities in rad/s. The correction step for roll and pitch is run when the accelerometer values are available. The correction step for yaw is run when magnetometer values are available.
 
@@ -642,10 +643,13 @@ FreeRTOS is configured with the \texttt{FreeRTOSConfig.h} file.
 
 		\subsection{FCB Control}
 
+		\subsection{FCB Kalman Filter}
+The state estimation code measures the variances of the gyroscope which are then used as initial values for the $Q$ and $R$ matrices in chapter \ref{chap:state-estimation-theory}.
+
 		\subsection{FCB Communication}
 
 		\subsection{FCB Sensors}
-The FCB sensors code is implemented in files i the \texttt{fcb-source/sensors} directory. These file call STM32Cube HAL subroutines for configuring and reading sensors. For the gyroscope, accelerometer and magnetometer the subroutines have been modified to suit the needs of Dragonfly. Most of these modified files are in the \texttt{fcb-source/fcb-drivers}
+The FCB sensors code is implemented in files i the \texttt{fcb-source/sensors} directory. These file call STM32Cube HAL subroutines for configuring and reading sensors. For the gyroscope, accelerometer and magnetometer the subroutines have been modified to suit the needs of Dragonfly. Most of these modified files are in the \texttt{fcb-source/fcb-drivers} directory. The sensors code also estimates the sensor data rate to be used as $\Delta T$ in the state estimation equations in chapter \ref{chap:state-estimation-theory}.
 		\subsection{FCB Utilities}
 
 		\subsection{NanoPB Protocol Buffer}
