@@ -228,7 +228,7 @@ static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t c
 
 	/* Perform back calculation anti-windup scheme to avoid integral part windup */
 	if(ctrlParams->useIntegralAction) {
-		ctrlParams->I += CONTROL_PERIOD/ctrlParams->Tt*(tmpControlSignal-controlSignal);
+		ctrlParams->I += CONTROL_PERIOD/ctrlParams->Tt*(controlSignal-tmpControlSignal);
 	}
 
 	/* Update previous control state and reference signal variables */
