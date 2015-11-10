@@ -218,6 +218,7 @@ static int8_t CDCItfReceive(uint8_t* rxData, uint32_t* rxDataLen) {
 			if (FIFOBufferPutData(&USBCOMRxFIFOBuffer, rxData, *rxDataLen)) {
 				/* # Signal RX task that new USB CDC data has arrived #### */
 				xSemaphoreGiveFromISR(USBCOMRxDataSem, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 			} else {
 				result = USBD_FAIL;
 			}
@@ -516,4 +517,3 @@ void CreateUSBComSemaphores(void) {
  */
 
 /*****END OF FILE****/
-

@@ -82,7 +82,7 @@ void UpdateRotationMatrix(const float32_t roll, const float32_t pitch, const flo
  * @param  bodyAccelerometerReadings : The accelerometer sensor readings in the UAV body-frame
  * @retval None
  */
-void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t* bodyAccelerometerReadings) {
+void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t const * bodyAccelerometerReadings) {
   float32_t accNormalized[3];
 
   /* Get unit length normalized version of accelerometer readings vector */

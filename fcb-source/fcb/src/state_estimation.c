@@ -26,18 +26,26 @@
 #include "fcb_retval.h"
 
 /* Private define ------------------------------------------------------------*/
+enum { VAR_SAMPLE_MAX = 100 }; /* number of samples for variance - max 256 */
+typedef struct FcbSensorVarianceCalc {
+  float32_t samples[3][VAR_SAMPLE_MAX];
+} FcbSensorVarianceCalcType;
+
+static FcbSensorVarianceCalcType * pSampleData = NULL;
+
 #define STATE_PRINT_SAMPLING_TASK_PRIO			1
 #define STATE_PRINT_MINIMUM_SAMPLING_TIME		20	// updated every 2.5 ms
 #define STATE_PRINT_MAX_STRING_SIZE				256
 
-/* Private variables ---------------------------------------------------------*/
-AttitudeStateVectorType rollState = { 0, 0 , 0 };
-AttitudeStateVectorType pitchState = { 0, 0 , 0 };
-AttitudeStateVectorType yawState = { 0, 0 , 0 };
 
-KalmanFilterType rollEstimator;
-KalmanFilterType pitchEstimator;
-KalmanFilterType yawEstimator;
+/* Private variables ---------------------------------------------------------*/
+static AttitudeStateVectorType rollState = { 0, 0 , 0 };
+static AttitudeStateVectorType pitchState = { 0, 0 , 0 };
+static AttitudeStateVectorType yawState = { 0, 0 , 0 };
+
+static KalmanFilterType rollEstimator;
+static KalmanFilterType pitchEstimator;
+static KalmanFilterType yawEstimator;
 
 /* Task handle for printing of sensor values task */
 static volatile uint16_t statePrintSampleTime;
@@ -45,9 +53,12 @@ static volatile uint16_t statePrintSampleDuration;
 xTaskHandle StatePrintSamplingTaskHandle = NULL;
 static SerializationType statePrintSerializationType;
 
+static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f };
+
 /* Private function prototypes -----------------------------------------------*/
 static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * xyz); /* type FcbSensorCbk  */
 static void StateInit(KalmanFilterType * pEstimator);
+static uint8_t ProfileSensorVariance(FcbSensorIndexType sensorType, float32_t const * pXYZData);
 
 static void PredictAttitudeState(float32_t const samplePeriod, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
 static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
@@ -80,10 +91,15 @@ void InitStatesXYZ(void)
 }
 
 static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * pXYZ) {
+  static uint8_t varianceCalcDone = 0;
   /* keep these around because yaw calculations need data already calculated
    * when accelerometer data was available
    */
-  static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f }; /* as angle in RPY in radians */
+
+  if (0 == varianceCalcDone) {
+    varianceCalcDone = ProfileSensorVariance(sensorType, pXYZ);
+    return;
+  }
 
   switch (sensorType) {   /* interpret values according to sensor type */
   case GYRO_IDX: {
@@ -390,6 +406,90 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
 	pEstimator->p21 -= pEstimator->k2*p11_tmp;
 	pEstimator->p22 -= pEstimator->k2*p12_tmp;
 }
+
+/**
+ * gathers VAR_SAMPLE_MAX and calculates variance to be used in
+ * estimator.
+ */
+static uint8_t ProfileSensorVariance(FcbSensorIndexType sensorType, float32_t const * pXYZData) {
+  enum {
+    PROC,  /* process samples, measurement samples, in this case gyroscope */
+    MEAS   /* measurement samples, angles from accelero & magnetometer */
+  };
+
+  static uint8_t sCount[FCB_SENSOR_NBR] = { 0 };
+
+  uint8_t done = 0;
+
+  if (NULL == pSampleData) {
+    /*
+     * one set of measurements in rpy for
+     */
+    if (NULL == (pSampleData = malloc(2 * sizeof(FcbSensorVarianceCalcType)))) {
+      ErrorHandler();
+    }
+  }
+
+
+  switch (sensorType) {
+    case GYRO_IDX: {
+      pSampleData[PROC].samples[ROLL_IDX][sCount[GYRO_IDX]] = pXYZData[X_IDX];
+      pSampleData[PROC].samples[PITCH_IDX][sCount[GYRO_IDX]] = pXYZData[Y_IDX];
+      pSampleData[PROC].samples[YAW_IDX][sCount[GYRO_IDX]] = pXYZData[Z_IDX];
+
+    } break;
+    case ACC_IDX:
+      GetAttitudeFromAccelerometer(sensorAttitudeRPY, pXYZData);
+      /* sample pitch measurement */
+      pSampleData[MEAS].samples[ROLL_IDX][sCount[ACC_IDX]] = sensorAttitudeRPY[ROLL_IDX];
+      /* sample roll measurement */
+      pSampleData[MEAS].samples[PITCH_IDX][sCount[ACC_IDX]] = sensorAttitudeRPY[PITCH_IDX];
+      break;
+    case MAG_IDX:
+      sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle(pXYZData, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
+      pSampleData[MEAS].samples[YAW_IDX][sCount[MAG_IDX]] = sensorAttitudeRPY[YAW_IDX];
+      break;
+    default:
+      ErrorHandler();
+  }
+
+  sCount[sensorType] += 1;
+
+  if (VAR_SAMPLE_MAX == sCount[sensorType]) {
+    switch (sensorType) {
+      case GYRO_IDX: {
+        float32_t gyroSamplePeriod = GetGyroMeasuredSamplePeriod();
+        float32_t variance = 0.0f;
+        arm_var_f32(pSampleData[PROC].samples[ROLL_IDX], VAR_SAMPLE_MAX, &variance);
+        rollEstimator.q1 = variance * gyroSamplePeriod * gyroSamplePeriod;
+        arm_var_f32(pSampleData[PROC].samples[PITCH_IDX], VAR_SAMPLE_MAX, &variance);
+        pitchEstimator.q1 = variance * gyroSamplePeriod * gyroSamplePeriod;
+        arm_var_f32(pSampleData[PROC].samples[YAW_IDX], VAR_SAMPLE_MAX, &variance);
+        yawEstimator.q1 = variance * gyroSamplePeriod * gyroSamplePeriod;
+      } break;
+      case ACC_IDX:
+        arm_var_f32(pSampleData[MEAS].samples[ROLL_IDX], VAR_SAMPLE_MAX, &(rollEstimator.r1));
+        arm_var_f32(pSampleData[MEAS].samples[PITCH_IDX], VAR_SAMPLE_MAX, &(pitchEstimator.r1));
+        break;
+      case MAG_IDX:
+        arm_var_f32(pSampleData[MEAS].samples[PITCH_IDX], VAR_SAMPLE_MAX, &(yawEstimator.r1));
+        break;
+      default:
+        ErrorHandler();
+    }
+  }
+
+  if ((VAR_SAMPLE_MAX <= sCount[GYRO_IDX]) &&
+      (VAR_SAMPLE_MAX <= sCount[ACC_IDX]) &&
+      (VAR_SAMPLE_MAX <= sCount[MAG_IDX])){
+    done = 1;
+    free(pSampleData);
+    pSampleData = NULL;
+  }
+
+  return done;
+}
+
 
 /**
  * @brief  Task code handles state (angle, rate, ratebias) print sampling
