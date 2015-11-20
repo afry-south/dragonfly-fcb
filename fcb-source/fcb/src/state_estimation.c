@@ -472,7 +472,7 @@ static uint8_t ProfileSensorVariance(FcbSensorIndexType sensorType, float32_t co
         arm_var_f32(pSampleData[MEAS].samples[PITCH_IDX], VAR_SAMPLE_MAX, &(pitchEstimator.r1));
         break;
       case MAG_IDX:
-        arm_var_f32(pSampleData[MEAS].samples[PITCH_IDX], VAR_SAMPLE_MAX, &(yawEstimator.r1));
+      arm_var_f32(pSampleData[MEAS].samples[YAW_IDX], VAR_SAMPLE_MAX, &(yawEstimator.r1));
         break;
       default:
         ErrorHandler();
@@ -481,7 +481,7 @@ static uint8_t ProfileSensorVariance(FcbSensorIndexType sensorType, float32_t co
 
   if ((VAR_SAMPLE_MAX <= sCount[GYRO_IDX]) &&
       (VAR_SAMPLE_MAX <= sCount[ACC_IDX]) &&
-      (VAR_SAMPLE_MAX <= sCount[MAG_IDX])){
+      (VAR_SAMPLE_MAX <= sCount[MAG_IDX])) {
     done = 1;
     free(pSampleData);
     pSampleData = NULL;
