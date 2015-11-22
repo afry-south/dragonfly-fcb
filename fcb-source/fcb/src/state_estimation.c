@@ -350,7 +350,7 @@ static void StateInit(KalmanFilterType * Estimator)
    * r1 = sqrt(var(angle)) */
   Estimator->q1Variance = GYRO_AXIS_VARIANCE_ROUGH;
   Estimator->q2 = Q2_CAL;
-  Estimator->r1 = R1_CAL; /* TODO_ISSUE119 - accelerometer based angle variance */
+  Estimator->r1 = R1_CAL; /* accelerometer based angle variance */
 }
 
 /*
@@ -440,7 +440,6 @@ static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_
       pSampleData[PROC].samples[ROLL_IDX][sCount[GYRO_IDX]] = pXYZData[X_IDX];
       pSampleData[PROC].samples[PITCH_IDX][sCount[GYRO_IDX]] = pXYZData[Y_IDX];
       pSampleData[PROC].samples[YAW_IDX][sCount[GYRO_IDX]] = pXYZData[Z_IDX];
-
     } break;
     case ACC_IDX:
       GetAttitudeFromAccelerometer(sensorAttitudeRPY, pXYZData);
@@ -460,22 +459,40 @@ static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_
   sCount[sensorType] += 1;
 
   if (VAR_SAMPLE_MAX == sCount[sensorType]) {
+    float32_t variance = 0.0f;
+    float32_t mean = 0.0f;
     switch (sensorType) {
       case GYRO_IDX: {
-        float32_t variance = 0.0f;
+        arm_mean_f32(pSampleData[PROC].samples[ROLL_IDX], VAR_SAMPLE_MAX, &mean);
         arm_var_f32(pSampleData[PROC].samples[ROLL_IDX], VAR_SAMPLE_MAX, &variance);
+        rollState.angleRateBias = mean;
         rollEstimator.q1Variance = variance;
+        rollEstimator.p22 = variance;
+
+        arm_mean_f32(pSampleData[PROC].samples[PITCH_IDX], VAR_SAMPLE_MAX, &mean);
         arm_var_f32(pSampleData[PROC].samples[PITCH_IDX], VAR_SAMPLE_MAX, &variance);
+        pitchState.angleRateBias = mean;
         pitchEstimator.q1Variance = variance;
+        pitchEstimator.p22 = variance;
+
+        arm_mean_f32(pSampleData[PROC].samples[YAW_IDX], VAR_SAMPLE_MAX, &mean);
         arm_var_f32(pSampleData[PROC].samples[YAW_IDX], VAR_SAMPLE_MAX, &variance);
+        yawState.angleRateBias = mean;
         yawEstimator.q1Variance = variance;
+        yawEstimator.p22 = variance;
       } break;
-      case ACC_IDX:
-        arm_var_f32(pSampleData[MEAS].samples[ROLL_IDX], VAR_SAMPLE_MAX, &(rollEstimator.r1));
-        arm_var_f32(pSampleData[MEAS].samples[PITCH_IDX], VAR_SAMPLE_MAX, &(pitchEstimator.r1));
+      case ACC_IDX :
+        arm_var_f32(pSampleData[MEAS].samples[ROLL_IDX], VAR_SAMPLE_MAX, &variance);
+        rollEstimator.r1 = variance;
+        rollEstimator.p11 = variance;
+        arm_var_f32(pSampleData[MEAS].samples[PITCH_IDX], VAR_SAMPLE_MAX, &variance);
+        pitchEstimator.r1 = variance;
+        pitchEstimator.p11 = variance;
         break;
       case MAG_IDX:
-      arm_var_f32(pSampleData[MEAS].samples[YAW_IDX], VAR_SAMPLE_MAX, &(yawEstimator.r1));
+        arm_var_f32(pSampleData[MEAS].samples[YAW_IDX], VAR_SAMPLE_MAX, &variance);
+        yawEstimator.r1 = variance;
+        yawEstimator.p11 = variance;
         break;
       default:
         ErrorHandler();

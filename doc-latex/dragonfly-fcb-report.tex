@@ -647,8 +647,7 @@ FreeRTOS is configured with the \texttt{FreeRTOSConfig.h} file.
 		\subsection{FCB Control}
 
 		\subsection{FCB Kalman Filter}
-The state estimation code measures the variances of the gyroscope which are then used as initial values for the $Q$ and $R$ matrices in chapter \ref{chap:state-estimation-theory}.
-
+The state estimation code measures the variances of the gyroscope which are then used as initial values for the $Q$ matrix in chapter \ref{chap:state-estimation-theory}. The variance of the measured angle outputs from the rotation matrix which are calculated from the accelerometer and magnetometer readings code is also measured and is used to initialise the $R$ matrix  as well as the diagonal values of the $P$ matrix. The mean of the gyroscope measured angular rates are used to initialise $\dot{\theta_{b}}$.
 
 The $\Delta T$ in equation \ref{eq:state-equation-detailed} is not a constant but is calculated as the interval since the previously received DRDY signal. The reasons are: 
 \begin{enumerate}
@@ -656,7 +655,6 @@ The $\Delta T$ in equation \ref{eq:state-equation-detailed} is not a constant bu
 \item the estimate is a dead-reckoning or prediction of the current value plus the first derivative multiplied by time. The current value was previously estimated or corrected, hence the time period is since the last DRDY from any sensor. 
 \end{enumerate}
 This applies to both $\Delta T$ in Eq \ref{eq:state-equation-detailed} and $\Delta T$ in Eq \ref{eq:error-covariance-prediction-detailed}.
-
 		\subsection{FCB Communication}
 
 		\subsection{FCB Sensors}
