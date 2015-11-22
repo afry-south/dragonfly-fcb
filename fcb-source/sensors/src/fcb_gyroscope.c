@@ -49,8 +49,8 @@ const float32_t GYRO_AXIS_VARIANCE_ROUGH = 0.000256;
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
-static volatile float32_t sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 };
-static volatile float32_t sGyroXYZAngleDotOffset[3] = { 0.0, 0.0, 0.0 };
+static float32_t sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 }; /* not volatile - only print thread reads */
+static float32_t sGyroXYZAngleDotOffset[3] = { 0.0, 0.0, 0.0 };
 static float32_t sGyroSamplePeriod = 0.0f;
 static xSemaphoreHandle mutexGyro;
 
@@ -94,12 +94,12 @@ uint8_t InitialiseGyroscope(void) {
     /* start with configured data rate */
     sGyroSamplePeriod = 1 / (float) L3GD20_DataRateHz();
 
-    FetchDataFromGyroscope(); /* necessary so a fresh DRDY can be triggered */
+    FetchDataFromGyroscope(1 /* dummy value */); /* necessary so a fresh DRDY can be triggered */
     return retVal;
 }
 
 
-void FetchDataFromGyroscope(void) {
+void FetchDataFromGyroscope(uint8_t deltaTms) {
   float gyroscopeData[3] = { 0.0f, 0.0f, 0.0f };
 
   /* paranoia - this is used for calculations to reduce the time this function
@@ -166,7 +166,7 @@ void FetchDataFromGyroscope(void) {
       return;
     }
 
-    FcbPush2Client(GYRO_IDX, sGyroSamplePeriod, sGyroXYZAngleDot);
+    FcbSensorPush2Client(GYRO_IDX, deltaTms, sGyroXYZAngleDot);
 }
 
 

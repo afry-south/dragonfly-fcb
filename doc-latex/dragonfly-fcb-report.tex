@@ -114,6 +114,7 @@ Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The s
 		\end{equation}
 
 		\begin{equation}
+		\label{eq:state-equation-detailed}
 		\left[
       		\begin{array}{c}
       		\hat{\theta}\\
@@ -645,6 +646,13 @@ FreeRTOS is configured with the \texttt{FreeRTOSConfig.h} file.
 
 		\subsection{FCB Kalman Filter}
 The state estimation code measures the variances of the gyroscope which are then used as initial values for the $Q$ and $R$ matrices in chapter \ref{chap:state-estimation-theory}.
+
+
+The $\Delta T$ in equation \ref{eq:state-equation-detailed} is not a constant but is calculated as the interval since the previously received DRDY signal. The reasons are: 
+\begin{enumerate}
+\item The sensors are not syncronised but DRDY interrupts from the 3 different sensors, although inidividually periodic, will still arrive at variable intervals.
+\item the estimate is a dead-reckoning or prediction of the current value plus the first derivative multiplied by time. The current value was previously estimated or corrected, hence the time period is since the last DRDY from any sensor. 
+\end{enumerate}
 
 		\subsection{FCB Communication}
 

@@ -56,7 +56,7 @@ static SerializationType statePrintSerializationType;
 static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f };
 
 /* Private function prototypes -----------------------------------------------*/
-static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * xyz); /* type FcbSensorCbk  */
+static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * xyz); /* type FcbSensorCbk  */
 static void StateInit(KalmanFilterType * pEstimator);
 static uint8_t ProfileSensorVariance(FcbSensorIndexType sensorType, float32_t const * pXYZData);
 
@@ -90,6 +90,9 @@ void InitStatesXYZ(void)
   FcbSensorRegisterClientCallback(StateReceiveSensorsCbk);
 }
 
+/**
+ * @param sensorType, see FcbSensorIndexType
+ */
 static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * pXYZ) {
   static uint8_t varianceCalcDone = 0;
   /* keep these around because yaw calculations need data already calculated

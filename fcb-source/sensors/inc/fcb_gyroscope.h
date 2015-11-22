@@ -39,8 +39,9 @@ uint8_t InitialiseGyroscope(void);
 /**
  * Fetches data (rotation speed, or angle dot) from gyroscope
  * sensor.
+ * @param deltaTms time in ms since previous DRDY
  */
-void FetchDataFromGyroscope(void);
+void FetchDataFromGyroscope(uint8_t deltaTms);
 
 /*
  * get the current reading from the gyroscope.

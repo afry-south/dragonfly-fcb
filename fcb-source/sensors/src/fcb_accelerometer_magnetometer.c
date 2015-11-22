@@ -46,8 +46,8 @@ static uint32_t sampleIndex = 0;
 #ifndef FCB_SENSORS_SCILAB_CALIB
 static float32_t calibrationSamples[ACCMAG_CALIBRATION_SAMPLES_N][ACCMAG_AXES_N];
 #endif // FCB_SENSORS_SCILAB_CALIB
-static float32_t sXYZDotDot[] = { 0, 0 , 0 };
-static float32_t sXYZMagVector[] = { 0, 0 , 0 };
+static float32_t sXYZDotDot[] = { 0, 0 , 0 }; /* not volatile - only print thread reads */
+static float32_t sXYZMagVector[] = { 0, 0 , 0 };  /* not volatile - only print thread reads */
 
 static xSemaphoreHandle mutexAcc;
 static xSemaphoreHandle mutexMag;
@@ -208,7 +208,7 @@ void FetchDataFromAccelerometer(void) {
       return;
     }
 
-    FcbPush2Client(ACC_IDX, sAccSamplePeriod, sXYZDotDot);
+    FcbSensorPush2Client(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
   }
 
 
@@ -281,7 +281,7 @@ void FetchDataFromMagnetometer(void) {
       return;
     }
 
-    FcbPush2Client(MAG_IDX, sMagSamplePeriod, sXYZMagVector);
+    FcbSensorPush2Client(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
   }
 
 

@@ -46,22 +46,35 @@ typedef enum FcbAxleIndex {
  */
 enum { FCB_SENSORS_QUEUE_SIZE = 5 };
 
-/**
- * The messages are sent as uin8_t under the assumption that
- * less than 255 different kinds of messages will ever be
- * needed.
- */
-enum { FCB_SENSORS_Q_MSG_SIZE = 1 };
+#define FCB_SENSORS_Q_MSG_SIZE (sizeof(FcbSensorMsgType))
 
-enum FcbSensorMessage {
+/**
+ * Enumeration must fit in uint8_t
+ *
+ * @see FcbSensorMsg
+ */
+typedef enum FcbSensorEvent {
     FCB_SENSOR_GYRO_DATA_READY = 0x0A,
     FCB_SENSOR_GYRO_CALIBRATE = 0x0B,
     FCB_SENSOR_ACC_DATA_READY = 0x1A,
     FCB_SENSOR_ACC_CALIBRATE = 0x1B,
     FCB_SENSOR_MAGNETO_DATA_READY = 0x2A,
     FCB_SENSOR_MAGNETO_CALIBRATE = 0x2B,
-};
+} FcbSensorEventType;
 
+/**
+ * Messages sent to the SENSORS queue
+ *
+ * The messages are sent as uin8_t under the assumption that
+ * less than 255 different kinds of messages will ever be
+ * needed.
+ *
+ * @see FcbSensorEvent
+ */
+typedef struct FcbSensorMsg {
+  uint8_t event;
+  uint8_t deltaTime;
+} FcbSensorMsgType;
 
 /**
  * This is a callback client code registers with a sensor.
@@ -108,15 +121,20 @@ uint8_t FcbSensorRegisterClientCallback(FcbSensorCbk cbk);
 /**
  * This function is intended to be called from the various sensors to
  * give sensor values to our one client callback.
+ * @param sensorType see FcbSensorIndexType
+ * @param deltaTms time period to previous sensor drdy in ms
+ * @param xyz pointer to 3-array of XYZ sensor readings. See wiki page "Sensors"
  */
-void FcbPush2Client(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * xyz);
+void FcbSensorPush2Client(FcbSensorIndexType sensorType, uint8_t delltaTms, float32_t const * xyz);
 
 
 /**
  * posts a FcbSensorMessage to the queue which is
  * polled by SENSORS task.
+ *
+ * @param event see FcbSensorEventType
  */
-void FcbSendSensorMessageFromISR(uint8_t msg);
+void FcbSendSensorMessageFromISR(uint8_t event);
 
 void PrintSensorValues(const SerializationType serializationType);
 FcbRetValType StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);

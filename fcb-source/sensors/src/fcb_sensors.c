@@ -78,9 +78,10 @@ static volatile uint16_t sensorPrintSampleDuration;
 static SerializationType sensorValuesPrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
-static void ProcessSensorValues(void*);
-static void CountSensorDrdy(uint8_t msg);
-static void SensorPrintSamplingTask(void const *argument);
+static void _ProcessSensorValues(void*);
+static uint8_t _CountSensorDrdy(uint8_t msg); /* not used */
+static uint8_t _CalculateDrdyDeltaT(void);
+static void _SensorPrintSamplingTask(void const *argument);
 
 
 /* Exported functions --------------------------------------------------------*/
@@ -97,7 +98,7 @@ int FcbSensorsConfig(void) {
 
 
   if (pdPASS != (rtosRetVal =
-      xTaskCreate((pdTASK_CODE)ProcessSensorValues,
+      xTaskCreate((pdTASK_CODE)_ProcessSensorValues,
           (signed portCHAR*)"SENSORS",
           4 * configMINIMAL_STACK_SIZE,
           NULL /* parameter */,
@@ -127,22 +128,21 @@ uint8_t FcbSensorRegisterClientCallback(FcbSensorCbk cbk) {
 }
 
 
-void FcbPush2Client(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * xyz) {
+void FcbSensorPush2Client(FcbSensorIndexType sensorType, uint8_t deltaTms, float32_t const * xyz) {
+  float32_t deltaT = (float) (deltaTms) / 1000; /* from ms to s */
   if (NULL != sClientCbk) {
-    sClientCbk(sensorType, samplePeriod, xyz);
+    sClientCbk(sensorType, deltaT, xyz);
   }
 }
 
 
-void FcbSendSensorMessageFromISR(uint8_t msg) {
-  /*
-   * this function counts incoming DRDY signals from the sensors
-   * during startup.
-   *
-   * Continuously it posts a message to the qFcbSensors queue.
-   */
+void FcbSendSensorMessageFromISR(uint8_t event) {
+  FcbSensorMsgType msg = { 0 , 0 };
   portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
+
 #ifdef FCB_SENSORS_DEBUG
+  /* this function counts incoming DRDY signals from the sensors */
+
   if ((cbk_gyro_counter % 48) == 0) {
     BSP_LED_Toggle(LED5);
   }
@@ -150,8 +150,11 @@ void FcbSendSensorMessageFromISR(uint8_t msg) {
 #endif
 
   if (0 == sensorSampleRateDone) {
-    CountSensorDrdy(msg);
+    sensorSampleRateDone = _CountSensorDrdy(event);
   }
+
+  msg.event = event;
+  msg.deltaTime = _CalculateDrdyDeltaT();
 
   if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
     ErrorHandler();
@@ -191,7 +194,7 @@ FcbRetValType StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t 
    * Priority: SENSOR_PRINT_SAMPLING_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
    * Handle: SensorPrintSamplingTaskHandle
    * */
-  if (pdPASS != xTaskCreate((pdTASK_CODE )SensorPrintSamplingTask, (signed portCHAR*)"SENS_PRINT_SAMPL",
+  if (pdPASS != xTaskCreate((pdTASK_CODE )_SensorPrintSamplingTask, (signed portCHAR*)"SENS_PRINT_SAMPL",
       3*configMINIMAL_STACK_SIZE, NULL, SENSOR_PRINT_SAMPLING_TASK_PRIO, &SensorPrintSamplingTaskHandle)) {
     ErrorHandler();
     return FCB_ERR;
@@ -302,12 +305,12 @@ void SetSensorPrintSamplingSerialization(const SerializationType serializationTy
 
 /* Private functions ---------------------------------------------------------*/
 
-static void ProcessSensorValues(void* val __attribute__ ((unused))) {
+static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
   /*
    * configures the sensors to start giving Data Ready interrupts
    * and then polls the queue in an infinite loop
    */
-  uint8_t msg;
+  FcbSensorMsgType msg;
 
   if (FCB_OK != InitialiseGyroscope()) {
     ErrorHandler();
@@ -329,13 +332,13 @@ static void ProcessSensorValues(void* val __attribute__ ((unused))) {
       goto Error;
     }
 
-    switch (msg) {
+    switch (msg.event) {
     case FCB_SENSOR_GYRO_DATA_READY:
       /*
        * As settings are in BSP_GYRO_Init, the callback is called with a frequency
        * of 94.5 Hz according to oscilloscope.
        */
-      FetchDataFromGyroscope();
+      FetchDataFromGyroscope(msg.deltaTime);
       break;
     case FCB_SENSOR_GYRO_CALIBRATE:
       break;
@@ -364,7 +367,7 @@ static void ProcessSensorValues(void* val __attribute__ ((unused))) {
 }
 
 
-static void CountSensorDrdy(uint8_t msg) {
+static uint8_t _CountSensorDrdy(uint8_t msg) {
   /*
    * When reading the values directly with debugger, it's apparent there's
    * some fluctuation in the values for the accelerometer and magnetometer.
@@ -373,10 +376,15 @@ static void CountSensorDrdy(uint8_t msg) {
    * about 0.02 Hz, the fluctuation measured by this function is bigger, but the
    * mean is still closer to the true rates than simply using the nominal sample
    * value configured in the sensor code.
+   *
+   * the function returns 1 when samples have been collected.
+   *
+   * At the time of writing, only the gyroscope period is used.
    */
   enum { DRDY_ENOUGH = 200 }; /* below 256 as sensorDrdyCalc.count is uint8_t */
 
   uint8_t idx = 0;
+  uint8_t done = 0;
 
   switch(msg) {
   case FCB_SENSOR_GYRO_DATA_READY:
@@ -413,20 +421,52 @@ static void CountSensorDrdy(uint8_t msg) {
   if ((DRDY_ENOUGH == sensorDrdyCalc[GYRO_IDX].count) &&
       (DRDY_ENOUGH == sensorDrdyCalc[ACC_IDX].count) &&
       (DRDY_ENOUGH == sensorDrdyCalc[MAG_IDX].count)) {
-    sensorSampleRateDone = 1;
+    done= 1;
 
     SetGyroMeasuredSamplePeriod(sensorDrdyCalc[GYRO_IDX].samplePeriod);
     SetAccMagMeasuredSamplePeriod(sensorDrdyCalc[ACC_IDX].samplePeriod,
                                   sensorDrdyCalc[MAG_IDX].samplePeriod);
   }
-}
 
+  return done;
+}
+static uint8_t _CalculateDrdyDeltaT(void) {
+  static volatile uint32_t previousDrdyTick = 0;
+  static volatile uint32_t previousDifference = 0;
+  uint32_t nowTick = HAL_GetTick();
+  uint8_t deltaT = 0;
+  uint32_t difference = 0;
+
+    if (previousDrdyTick == nowTick) /* two interrupts within same tick .. */ {
+      difference = previousDifference; /* so re-use the previous diff */
+    } else if (previousDrdyTick < nowTick) {
+      difference = nowTick - previousDrdyTick;
+    } else  /* wraparound */ {
+      difference = nowTick + (UINT32_MAX - previousDrdyTick);
+    }
+
+    if (difference > 255) {
+      static uint8_t first = 1;
+      if (--first) {
+        /* ignore first time b/c SENSORS thread needs time to start */
+        previousDrdyTick = nowTick;
+        difference = 10; /* use a dummy value */
+      } else {
+        ErrorHandler(); /* sanity check */
+      }
+    }
+
+    previousDrdyTick = nowTick;
+    previousDifference = difference;
+
+    return deltaT = (uint8_t) difference;
+}
 /**
  * @brief  Task code handles sensor print sampling
  * @param  argument : Unused parameter
  * @retval None
  */
-static void SensorPrintSamplingTask(void const *argument) {
+static void _SensorPrintSamplingTask(void const *argument) {
   (void) argument;
 
   portTickType xLastWakeTime;
