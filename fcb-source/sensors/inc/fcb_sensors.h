@@ -76,6 +76,7 @@ typedef struct FcbSensorMsg {
   uint8_t deltaTime;
 } FcbSensorMsgType;
 
+
 /**
  * This is a callback client code registers with a sensor.
  *
@@ -87,12 +88,12 @@ typedef struct FcbSensorMsg {
  * for magnetometer, the xyz are the magnetic vector along FCB axes.
  *
  * @param sensorType: type of sensor
- * @param samplePeriod: sample period for sensor
+ * @param deltaT time period to previous sensor drdy in s
  * @param xyz pointer-to-array with XYZ reading for this sensor. Use FcbAxleIndexType to index into array.
  *
  * @see FcbSensorIndexType
  */
-typedef void (*FcbSensorCbk)(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * xyz);
+typedef void (*FcbSensorCbk)(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * xyz);
 
 
 /**
@@ -121,11 +122,12 @@ uint8_t FcbSensorRegisterClientCallback(FcbSensorCbk cbk);
 /**
  * This function is intended to be called from the various sensors to
  * give sensor values to our one client callback.
+ *
  * @param sensorType see FcbSensorIndexType
- * @param deltaTms time period to previous sensor drdy in ms
+ * @param deltaT time period to previous sensor drdy in s
  * @param xyz pointer to 3-array of XYZ sensor readings. See wiki page "Sensors"
  */
-void FcbSensorPush2Client(FcbSensorIndexType sensorType, uint8_t delltaTms, float32_t const * xyz);
+void FcbSensorPush2Client(FcbSensorIndexType sensorType, uint8_t deltaT, float32_t const * xyz);
 
 
 /**

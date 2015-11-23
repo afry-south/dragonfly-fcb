@@ -58,9 +58,9 @@ static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f };
 /* Private function prototypes -----------------------------------------------*/
 static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * xyz); /* type FcbSensorCbk  */
 static void StateInit(KalmanFilterType * pEstimator);
-static uint8_t ProfileSensorVariance(FcbSensorIndexType sensorType, float32_t const * pXYZData);
+static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_t const * pXYZData);
 
-static void PredictAttitudeState(float32_t const samplePeriod, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
+static void PredictAttitudeState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
 static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
 static void StatePrintSamplingTask(void const *argument);
 
@@ -93,14 +93,14 @@ void InitStatesXYZ(void)
 /**
  * @param sensorType, see FcbSensorIndexType
  */
-static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samplePeriod, float32_t const * pXYZ) {
+static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ) {
   static uint8_t varianceCalcDone = 0;
   /* keep these around because yaw calculations need data already calculated
    * when accelerometer data was available
    */
 
   if (0 == varianceCalcDone) {
-    varianceCalcDone = ProfileSensorVariance(sensorType, pXYZ);
+    varianceCalcDone = ProfileSensorMeasurements(sensorType, pXYZ);
     return;
   }
 
@@ -108,9 +108,9 @@ static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t samp
   case GYRO_IDX: {
     /* run estimation step */
     float32_t const * pSensorAngleRate = pXYZ;
-    PredictAttitudeState(samplePeriod, pSensorAngleRate[ROLL_IDX], &rollEstimator, &rollState);
-    PredictAttitudeState(samplePeriod, pSensorAngleRate[PITCH_IDX], &pitchEstimator, &pitchState);
-    PredictAttitudeState(samplePeriod, pSensorAngleRate[YAW_IDX], &yawEstimator, &yawState);
+    PredictAttitudeState(deltaT, pSensorAngleRate[ROLL_IDX], &rollEstimator, &rollState);
+    PredictAttitudeState(deltaT, pSensorAngleRate[PITCH_IDX], &pitchEstimator, &pitchState);
+    PredictAttitudeState(deltaT, pSensorAngleRate[YAW_IDX], &yawEstimator, &yawState);
   }
   break;
   case ACC_IDX: {
@@ -348,7 +348,7 @@ static void StateInit(KalmanFilterType * Estimator)
   /* q1 = sqrt(var(rate))*STATE_ESTIMATION_SAMPLE_PERIOD^2
    * q2 = sqrt(var(rateBias))
    * r1 = sqrt(var(angle)) */
-  Estimator->q1 = GYRO_AXIS_VARIANCE_ROUGH * samplePeriod * samplePeriod; /* Q1_CAL */
+  Estimator->q1Variance = GYRO_AXIS_VARIANCE_ROUGH;
   Estimator->q2 = Q2_CAL;
   Estimator->r1 = R1_CAL; /* TODO_ISSUE119 - accelerometer based angle variance */
 }
@@ -356,24 +356,25 @@ static void StateInit(KalmanFilterType * Estimator)
 /*
  * @brief	Performs the prediction step of the Kalman filtering.
  *
- * @param 	sensorRate: Pointer to measured gyroscope rate (roll, pitch or yaw)
+ * @param 	deltaT: time passed in s since last correction or estimate
+ * @param   sensorRate: angular rate of gyroscope
  * @param 	pEstimator: Pointer to KalmanFilterType struct (roll pitch or yaw estimator)
  * @param 	pState: Pointer to struct member of AngleStateVectorType (roll, pitch or yaw)
  *
  * @retval 	None
  */
-static void PredictAttitudeState(float32_t const samplePeriod, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState)
+static void PredictAttitudeState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState)
 {
 	/* Prediction */
 	/* Step 1: Calculate a priori state estimation*/
-	pState->angle += samplePeriod * sensorRate - samplePeriod * (pState->angleRateBias);
+	pState->angle += deltaT * sensorRate - deltaT * (pState->angleRateBias);
 	/* angleRateBias not corrected, see equations in section "State Estimation Theory" */
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
-	pEstimator->p11 += (samplePeriod*pEstimator->p22 - pEstimator->p12 - pEstimator->p21 + pEstimator->q1)*samplePeriod;
-	pEstimator->p12 -= pEstimator->p22 * samplePeriod;
-	pEstimator->p21 -= pEstimator->p22 * samplePeriod;
-	pEstimator->p22 += pEstimator->q2 * samplePeriod;
+	pEstimator->p11 += (deltaT*pEstimator->p22 - pEstimator->p12 - pEstimator->p21 + (pEstimator->q1Variance * deltaT * deltaT))*deltaT;
+	pEstimator->p12 -= pEstimator->p22 * deltaT;
+	pEstimator->p21 -= pEstimator->p22 * deltaT;
+	pEstimator->p22 += pEstimator->q2 * deltaT;
 }
 
 /*
@@ -412,9 +413,9 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
 
 /**
  * gathers VAR_SAMPLE_MAX and calculates variance to be used in
- * estimator.
+ * estimation equations.
  */
-static uint8_t ProfileSensorVariance(FcbSensorIndexType sensorType, float32_t const * pXYZData) {
+static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_t const * pXYZData) {
   enum {
     PROC,  /* process samples, measurement samples, in this case gyroscope */
     MEAS   /* measurement samples, angles from accelero & magnetometer */
@@ -461,14 +462,13 @@ static uint8_t ProfileSensorVariance(FcbSensorIndexType sensorType, float32_t co
   if (VAR_SAMPLE_MAX == sCount[sensorType]) {
     switch (sensorType) {
       case GYRO_IDX: {
-        float32_t gyroSamplePeriod = GetGyroMeasuredSamplePeriod();
         float32_t variance = 0.0f;
         arm_var_f32(pSampleData[PROC].samples[ROLL_IDX], VAR_SAMPLE_MAX, &variance);
-        rollEstimator.q1 = variance * gyroSamplePeriod * gyroSamplePeriod;
+        rollEstimator.q1Variance = variance;
         arm_var_f32(pSampleData[PROC].samples[PITCH_IDX], VAR_SAMPLE_MAX, &variance);
-        pitchEstimator.q1 = variance * gyroSamplePeriod * gyroSamplePeriod;
+        pitchEstimator.q1Variance = variance;
         arm_var_f32(pSampleData[PROC].samples[YAW_IDX], VAR_SAMPLE_MAX, &variance);
-        yawEstimator.q1 = variance * gyroSamplePeriod * gyroSamplePeriod;
+        yawEstimator.q1Variance = variance;
       } break;
       case ACC_IDX:
         arm_var_f32(pSampleData[MEAS].samples[ROLL_IDX], VAR_SAMPLE_MAX, &(rollEstimator.r1));

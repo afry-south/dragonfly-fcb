@@ -42,7 +42,9 @@ enum { ACCMAG_SAMPLING_MAX_STRING_SIZE = 128 }; /* print-to-usb com port samplin
 
 
 static uint8_t sampleMax = ACCMAG_CALIBRATION_SAMPLES_N;
+#ifndef FCB_SENSORS_SCILAB_CALIB
 static uint32_t sampleIndex = 0;
+#endif
 #ifndef FCB_SENSORS_SCILAB_CALIB
 static float32_t calibrationSamples[ACCMAG_CALIBRATION_SAMPLES_N][ACCMAG_AXES_N];
 #endif // FCB_SENSORS_SCILAB_CALIB
@@ -226,6 +228,7 @@ void StartAccMagMtrCalibration(uint8_t samples) {
 }
 
 void StopAccMagMtrCalibration(uint8_t samples) {
+  (void)samples;
   accMagMode = ACCMAGMTR_FETCHING;
 }
 

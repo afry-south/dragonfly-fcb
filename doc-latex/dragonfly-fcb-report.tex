@@ -160,12 +160,14 @@ Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The s
 
 		Step 2: Predict the error covariance matrix $P_{k|k-1}$,
 		\begin{equation}
+		\label{eq:error-covariance-prediction}
 		P_{k|k-1}=AP_{k-1|k-1}A^{T}+Q
 		\end{equation}
 
 		where $Q$ is the process noise covariance matrix, in this application, $q_{00}$ this is the measured gyroscope error variance.
 
-		\begin{equation*}
+		\begin{equation}
+		\label{eq:error-covariance-prediction-detailed}
 		\left[
 		\begin{array}{c c}
 		P_{11}	&	P_{12}\\
@@ -188,7 +190,7 @@ Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The s
 		- \Delta T & 1
 		\end{array} \right]
 		+
-		\end{equation*}
+		\end{equation}
 		\begin{equation}
 		+
 		\left[
@@ -653,6 +655,7 @@ The $\Delta T$ in equation \ref{eq:state-equation-detailed} is not a constant bu
 \item The sensors are not syncronised but DRDY interrupts from the 3 different sensors, although inidividually periodic, will still arrive at variable intervals.
 \item the estimate is a dead-reckoning or prediction of the current value plus the first derivative multiplied by time. The current value was previously estimated or corrected, hence the time period is since the last DRDY from any sensor. 
 \end{enumerate}
+This applies to both $\Delta T$ in Eq \ref{eq:state-equation-detailed} and $\Delta T$ in Eq \ref{eq:error-covariance-prediction-detailed}.
 
 		\subsection{FCB Communication}
 

@@ -32,7 +32,8 @@ typedef enum FcbRPYIndex {
 
 typedef struct KalmanFilter
 {
-	float32_t q1;	// Process noise covariance matrix components
+    /* process noise covariance matrix components */
+	float32_t q1Variance; /* multiply with deltaT^2 to get q1 */
 	float32_t q2;
 	float32_t r1;	// Measurement noise covariance matrix component
 	float32_t p11;	// Error covariance matrix component
