@@ -6,6 +6,7 @@ import os
 import serial
 import threading
 from serial.tools.list_ports import comports
+from __builtin__ import str
 
 
 print "imports successful, Captain!"
@@ -47,9 +48,18 @@ def ask_for_port():
 def comReader():
     print "comReader ready, Captain!!"
     print "comReader is executing in: " + threading.currentThread().name
+
     while 1:
-        data = mySerial.read(1);
-        sys.stdout.write(data);
+        line = ""
+        data = ' '
+        while data != '\n':
+            data = mySerial.read(1);
+            line += str(data)
+        sys.stdout.write(line);
+    print "exiting while loop"
+
+interval_ms = 1000
+duration_s = 20
 
 # use "import optparse" in future - see miniterm.py in Python installation for example.
 # this will allow sophisticaed CLI args parsing
@@ -58,4 +68,6 @@ myComReaderThread = threading.Thread(target=comReader, name="tComReader")
 myComReaderThread.daemon = True
 myComReaderThread.start()
 mySerial.write("about\n".encode())
-time.sleep(5)
+time.sleep(2)
+mySerial.write("start-state-sampling %d %d c" % (interval_ms, duration_s))
+myComReaderThread.join(duration_s + 1)
