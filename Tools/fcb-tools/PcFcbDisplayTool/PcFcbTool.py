@@ -6,6 +6,7 @@ import os
 import serial
 import threading
 from serial.tools.list_ports import comports
+import dragonfly_fcb_pb2 
 from __builtin__ import str
 
 
@@ -55,6 +56,9 @@ def comReader():
         while data != '\n':
             data = mySerial.read(1);
             line += str(data)
+        
+        # CONTINUE HERE
+        # http://stackoverflow.com/questions/2293780/how-to-detect-a-floating-point-number-using-a-regular-expression
         sys.stdout.write(line);
     print "exiting while loop"
 

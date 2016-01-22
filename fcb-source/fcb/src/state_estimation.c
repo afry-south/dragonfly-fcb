@@ -250,13 +250,13 @@ void PrintStateValues(const SerializationType serializationType) {
 
 		if (serializationType == NO_SERIALIZATION) {
 		  snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-		      "States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\n\r\n",
+		      "States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.3f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\n\r\n",
 		      Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle), Radian2Degree(yawState.angle),
 		      rollState.angleRateBias, pitchState.angleRateBias, yawState.angleRateBias,
 		      sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
 		} else /* CALIBRATION_SERIALIZATION */ {
 		  usedLen = snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-		      "States:\nAngle-RPY [deg]: %1.3f, %1.3f, %1.4f\n Bias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %f, %f, %f\n\r\n",
+		      "States:\nAngle-RPY[deg]: %1.3f, %1.3f, %1.3f\nBias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %1.3f, %1.3f, %1.3f\n\r\n",
 		      Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle), Radian2Degree(yawState.angle),
 		      rollState.angleRateBias, pitchState.angleRateBias, yawState.angleRateBias,
 		      sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);

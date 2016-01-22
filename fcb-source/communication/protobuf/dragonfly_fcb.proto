@@ -1,6 +1,8 @@
 // Declaration of protobuffer messages supported by the Dragonfly
 // Flight Control Board (FCB) Command Line Interface (CLI)
 
+syntax = "proto2";
+
 // Receiver signal values normalized to [-32768, 32767]
 message ReceiverSignalValuesProto {
 	optional int32 throttle = 1;
