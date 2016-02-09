@@ -8,6 +8,7 @@
 #define __UART_H
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f3xx.h"
 
 /* Exported types ------------------------------------------------------------*/
 
@@ -38,11 +39,16 @@
 #define UART_DMA_TX_IRQHandler          DMA1_Channel4_IRQHandler
 #define UART_DMA_RX_IRQHandler          DMA1_Channel5_IRQHandler
 
+/* UART Setup values */
+#define UART_BAUDRATE					115200
+#define UART_WORDLENGTH					UART_WORDLENGTH_8B
+#define UART_STOPBITS					UART_STOPBITS_1
+#define UART_PARITY						UART_PARITY_NONE
+
 /* Exported macro ------------------------------------------------------------*/
 
-
 /* Exported functions ------------------------------------------------------- */
-
+void UartConfig(void);
 
 #endif /* __UART_H */
 
