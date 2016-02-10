@@ -8,7 +8,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
 
-#include "main.h"
 #include "fifo_buffer.h"
 #include "usb_com_cli.h"
 #include "usbd_cdc.h"
@@ -32,13 +31,14 @@ typedef struct {
 } UsbComPortTxQueueItem_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
-#define USB_COM_TX_BUFFER_SIZE          1024
-#define USB_COM_RX_BUFFER_SIZE          1024
+#define USB_COM_TX_BUFFER_SIZE          512
+#define USB_COM_RX_BUFFER_SIZE          512
 
 #define USB_COM_RX_TASK_PRIO          	1
 #define USB_COM_TX_TASK_PRIO          	2 // Prioritize sending over receiving so that buffers are emptied faster
 
 #define USB_COM_TX_QUEUE_ITEMS          16
+#define USB_RX_MAX_SEM_COUNT			4
 
 /* Private function prototypes -----------------------------------------------*/
 static void InitUSBCom(void);
@@ -210,7 +210,7 @@ static int8_t CDCItfControl(uint8_t cmd, uint8_t* pbuf, uint16_t length) {
  */
 static int8_t CDCItfReceive(uint8_t* rxData, uint32_t* rxDataLen) {
 	uint8_t result = USBD_OK;
-	static portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE; // We have not woken a task at the start of the ISR.
+	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
 	if (hUSBDDevice.dev_state == USBD_STATE_CONFIGURED) {
 		result = USBD_CDC_ReceivePacket(&hUSBDDevice);
@@ -218,13 +218,14 @@ static int8_t CDCItfReceive(uint8_t* rxData, uint32_t* rxDataLen) {
 			if (FIFOBufferPutData(&USBCOMRxFIFOBuffer, rxData, *rxDataLen)) {
 				/* # Signal RX task that new USB CDC data has arrived #### */
 				xSemaphoreGiveFromISR(USBCOMRxDataSem, &xHigherPriorityTaskWoken);
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+				portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 			} else {
 				result = USBD_FAIL;
 			}
 		}
-	} else
+	} else {
 		result = USBD_FAIL;
+	}
 
 	return result;
 }
@@ -249,31 +250,33 @@ static void USBComPortRXTask(void const *argument) {
 
 	for (;;) {
 		bufferStatus = SUCCESS;
-		/* Wait forever for incoming data over USB by pending on the USB Rx queue */
+		/* Wait forever for incoming data over USB by pending on the USB Rx semaphore */
 		if (pdPASS == xSemaphoreTake(USBCOMRxDataSem, portMAX_DELAY)) {
-			// Empty buffer
+			// Read out the FIFO buffer
 			while (bufferStatus == SUCCESS && (i < MAX_CLI_COMMAND_SIZE || getByte != '\n')) {
 				bufferStatus = FIFOBufferGetByte(&USBCOMRxFIFOBuffer, &getByte);
 
-				if (bufferStatus == SUCCESS)
+				if (bufferStatus == SUCCESS) {
 					cliInBuffer[i] = getByte;
+				}
 
 				i++;
 			}
 
 			// End of command assumed found ('\n')
 			if (getByte == '\n') {
+				TakeCLIMutex();
 				do {
 					/* Send the command string to the command interpreter. Any output generated
 					 * by the command interpreter will be placed in the cliOutBuffer buffer. */
 					xMoreDataToFollow = FreeRTOS_CLIProcessCommand((int8_t*) cliInBuffer, /* The command string.*/
-					(int8_t*) cliOutBuffer, /* The output buffer. */
-					MAX_CLI_OUTPUT_SIZE /* The size of the output buffer. */
+							(int8_t*) cliOutBuffer, /* The output buffer. */
+							MAX_CLI_OUTPUT_SIZE /* The size of the output buffer. */
 					);
-
 					USBComSendString((char*) cliOutBuffer);
 
 				} while (xMoreDataToFollow != pdFALSE);
+				GiveCLIMutex();
 
 				i = 0;
 				memset(cliInBuffer, 0x00, sizeof(cliInBuffer));
@@ -303,8 +306,7 @@ static void USBComPortTXTask(void const *argument) {
 	for (;;) {
 		/* Wait forever for incoming data over USB by pending on the USB Tx queue */
 		if (pdPASS == xQueueReceive(usbComTxQueue, &CompPortTxQueueItem, portMAX_DELAY)) {
-			if (xSemaphoreTake(USBTxMutex, USB_COM_MAX_DELAY) == pdPASS) // Pend on USB mutex while previous transmission is in progress
-			{
+			if (xSemaphoreTake(USBTxMutex, USB_COM_MAX_DELAY) == pdPASS) { // Pend on USB mutex while previous transmission is in progress
 				/* Take the buffer mutex (if it has one) */
 				if ((*CompPortTxQueueItem.BufferMutex == NULL
 						|| xSemaphoreTake(*CompPortTxQueueItem.BufferMutex, portMAX_DELAY) == pdPASS)) {
@@ -332,8 +334,9 @@ static void USBComPortTXTask(void const *argument) {
 						ErrorHandler();
 						break;
 					}
-					if (*CompPortTxQueueItem.BufferMutex != NULL)
+					if (*CompPortTxQueueItem.BufferMutex != NULL) {
 						xSemaphoreGive(*CompPortTxQueueItem.BufferMutex); // Give buffer mutex
+					}
 				}
 				xSemaphoreGive(USBTxMutex); // Give USB mutex when transmission completed
 			}
@@ -445,7 +448,7 @@ void CreateUSBComTasks(void) {
 	/* USB Virtual Com Port Rx handler task creation
 	 * Task function pointer: USBComPortRXTask
 	 * Task name: USB_COM_RX
-	 * Stack depth: configMINIMAL_STACK_SIZE
+	 * Stack depth: 3*configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: USB_COM_RX_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: USBComPortRxTaskHandle
@@ -457,9 +460,9 @@ void CreateUSBComTasks(void) {
 	}
 
 	/* USB Virtual Com Port Tx handler task creation
-	 * Task function pointer: USBComPortRXTask
+	 * Task function pointer: USBComPortTXTask
 	 * Task name: USB_COM_TX
-	 * Stack depth: 3*configMINIMAL_STACK_SIZE
+	 * Stack depth: configMINIMAL_STACK_SIZE
 	 * Parameter: NULL
 	 * Priority: USB_COM_TX_THREAD_PRIO (0 to configMAX_PRIORITIES-1 possible)
 	 * Handle: USBComPortTxTaskHandle
@@ -490,7 +493,7 @@ void CreateUSBComQueues(void) {
  * @retval None
  */
 void CreateUSBComSemaphores(void) {
-	USBCOMRxDataSem = xSemaphoreCreateBinary();
+	USBCOMRxDataSem = xSemaphoreCreateCounting(USB_RX_MAX_SEM_COUNT, 0);
 	if (USBCOMRxDataSem == NULL) {
 		ErrorHandler();
 	}

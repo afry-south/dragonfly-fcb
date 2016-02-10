@@ -50,6 +50,8 @@
 /* Exported functions ------------------------------------------------------- */
 void UartConfig(void);
 
+void HandleUartRxCallback(void);
+
 #endif /* __UART_H */
 
 /**

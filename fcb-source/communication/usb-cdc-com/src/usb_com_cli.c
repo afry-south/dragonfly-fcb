@@ -4,6 +4,11 @@
  *          Command Line Interface (CLI). Each command is associated with
  *          number of command parameters and a function which executes command
  *          activities. The CLI used is based on the FreeRTOS Plus CLI API.
+ *
+ *          Note that multiple communication tasks may access the CLI parser.
+ *          Thus, it is important that the CLI mutex is taken/given when
+ *          accessing it. Do this using the CLIMutexTake() and CLIMutexGive()
+ *          functions.
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
@@ -112,55 +117,15 @@ static portBASE_TYPE CLIStartAccMagMtrCalibration(int8_t *pcWriteBuffer, size_t 
  * Function implements the "get-motors" command.
  */
 static portBASE_TYPE CLIGetMotorValues(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "start-motor-sampling" command.
- */
 static portBASE_TYPE CLIStartMotorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "stop-motor-sampling" command.
- */
 static portBASE_TYPE CLIStopMotorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "about" command.
- */
 static portBASE_TYPE CLIAbout(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "systime" command.
- */
 static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
-
-/*
- * Function implements the "get-flight-mode" command.
- */
 static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
-
-/*
- * Function implements the "get-ref-signals" command.
- */
 static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
-
-/*
- * Function implements the "task-status" command.
- */
 static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
-
-/*
- * Function implements the "get-states" command.
- */
 static portBASE_TYPE CLIGetStateValues(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "start-state-sampling" command.
- */
 static portBASE_TYPE CLIStartStateSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
-
-/*
- * Function implements the "stop-state-sampling" command.
- */
 static portBASE_TYPE CLIStopStateSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 
 /* Private variables ---------------------------------------------------------*/
@@ -336,6 +301,8 @@ static const CLI_Command_Definition_t stopStateSamplingCommand = { (const int8_t
 extern volatile FIFOBuffer_TypeDef USBCOMRxFIFOBuffer;
 extern xSemaphoreHandle USBCOMRxDataSem;
 
+xSemaphoreHandle CLIMutex;
+
 /* Exported functions --------------------------------------------------------*/
 
 /**
@@ -382,6 +349,36 @@ void RegisterCLICommands(void) {
 	FreeRTOS_CLIRegisterCommand(&getStatesCommand);
 	FreeRTOS_CLIRegisterCommand(&startStateSamplingCommand);
 	FreeRTOS_CLIRegisterCommand(&stopStateSamplingCommand);
+}
+
+/**
+ * @brief  Creates semaphores used for accessing CLI
+ * @param  None
+ * @retval None
+ */
+void CreateCLISemaphores(void) {
+	CLIMutex = xSemaphoreCreateMutex();
+	if (CLIMutex == NULL) {
+		ErrorHandler();
+	}
+}
+
+/**
+ * @brief  Takes the CLI mutex
+ * @param  None
+ * @retval None
+ */
+uint32_t TakeCLIMutex(void) {
+	return xSemaphoreTake(CLIMutex, portMAX_DELAY);
+}
+
+/**
+ * @brief  Gives the CLI mutex
+ * @param  None
+ * @retval None
+ */
+void GiveCLIMutex(void) {
+	xSemaphoreGive(CLIMutex);
 }
 
 /* Private functions ---------------------------------------------------------*/

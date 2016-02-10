@@ -9,6 +9,8 @@
 #define __USB_COM_CLI_H
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f3xx.h"
+
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported constants --------------------------------------------------------*/
@@ -29,6 +31,9 @@ enum ProtoMessageTypeEnum {
 
 /* Exported functions ------------------------------------------------------- */
 void RegisterCLICommands(void);
+void CreateCLISemaphores(void);
+uint32_t TakeCLIMutex(void);
+void GiveCLIMutex(void);
 
 #endif /* __USB_COM_CLI_H */
 

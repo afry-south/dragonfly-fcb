@@ -21,6 +21,7 @@
 #include "fcb_sensors.h"
 #include "fcb_gyroscope.h"
 #include "state_estimation.h"
+#include "uart.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -132,17 +133,26 @@ static void InitSystem(void) {
 static void InitRTOS(void) {
 	/* # CREATE THREADS ####################################################### */
 	CreateFlightControlTask();
+	CreateUARTComTasks();
+#if defined(USE_USB_COM)
 	CreateUSBComTasks();
+#endif
 
 	/* # CREATE QUEUES ######################################################## */
+#if defined(USE_USB_COM)
 	CreateUSBComQueues();
+#endif
+	CreateUARTComQueues();
 
 	/* # CREATE SEMAPHORES #################################################### */
+	CreateCLISemaphores();
+#if defined(USE_USB_COM)
 	CreateUSBComSemaphores();
+#endif
+	CreateUARTComSemaphores();
 
 	/* # Start the RTOS scheduler #############################################
-	 *
-	 * since we use heap1.c, we must create all tasks and queues before the OS kernel
+	 * Since we use heap1.c, we must create all tasks and queues before the OS kernel
 	 * is started according to ST UM1722 manual section 1.6.
 	 */
 	vTaskStartScheduler();

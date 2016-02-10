@@ -15,6 +15,7 @@
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_error.h"
 #include "usbd_cdc_if.h"
+#include "uart.h"
 
 #include "stm32f3_discovery.h"
 
@@ -136,6 +137,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
   */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
+// TODO send semaphore to UART TX thread
   /* Set transmission flag: transfer complete*/
   //UartReady = SET;
 
@@ -150,11 +152,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-  /* Set transmission flag: transfer complete*/
-  //UartReady = SET;
-
-  /* Turn LED4 on: Transfer in reception process is correct */
-  //BSP_LED_On(LED4);
+	HandleUartRxCallback();
 }
 
 /**
