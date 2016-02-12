@@ -15,7 +15,7 @@
 #include "receiver.h"
 #include "task_status.h"
 #include "usbd_cdc_if.h"
-#include "usb_com_cli.h"
+#include "com_cli.h"
 #include "fcb_error.h"
 #include "fcb_retval.h"
 #include "fcb_sensors.h"
@@ -133,10 +133,10 @@ static void InitSystem(void) {
 static void InitRTOS(void) {
 	/* # CREATE THREADS ####################################################### */
 	CreateFlightControlTask();
-	CreateUARTComTasks();
 #if defined(USE_USB_COM)
 	CreateUSBComTasks();
 #endif
+	CreateUARTComTasks();
 
 	/* # CREATE QUEUES ######################################################## */
 #if defined(USE_USB_COM)

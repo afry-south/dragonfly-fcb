@@ -1,5 +1,4 @@
 /******************************************************************************
- * @file    usb_com_cli.c
  * @brief   File contains functionality to use the USB CDC class with a
  *          Command Line Interface (CLI). Each command is associated with
  *          number of command parameters and a function which executes command
@@ -12,7 +11,7 @@
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include "usb_com_cli.h"
+#include "com_cli.h"
 
 #include "main.h"
 #include "dragonfly_fcb.pb.h"
@@ -25,6 +24,7 @@
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_sensors.h"
 #include "state_estimation.h"
+#include "fcb_error.h"
 
 #include <stdlib.h>
 #include <string.h>

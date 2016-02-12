@@ -137,12 +137,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
   */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-// TODO send semaphore to UART TX thread
-  /* Set transmission flag: transfer complete*/
-  //UartReady = SET;
-
-  /* Turn LED6 on: Transfer in transmission process is correct */
-  //BSP_LED_On(LED6);
+    if(UartHandle->Instance == UART) {
+        HandleUartTxCallback(UartHandle);
+    }
 }
 
 /**
@@ -152,7 +149,9 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-	HandleUartRxCallback();
+    if(UartHandle->Instance == UART) {
+        HandleUartRxCallback(UartHandle);
+    }
 }
 
 /**
@@ -164,8 +163,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
   */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 {
-  /* Turn LED3 on: Transfer error in reception/transmission process */
-  //BSP_LED_On(LED3);
+    if(UartHandle->Instance == UART) {
+        HandleUartErrorCallback(UartHandle);
+    }
 }
 
 /* Private functions ---------------------------------------------------------*/

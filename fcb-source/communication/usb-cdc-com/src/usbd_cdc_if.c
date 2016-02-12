@@ -9,9 +9,10 @@
 #include "usbd_cdc_if.h"
 
 #include "fifo_buffer.h"
-#include "usb_com_cli.h"
+#include "com_cli.h"
 #include "usbd_cdc.h"
 #include "fcb_error.h"
+#include "communication.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -23,12 +24,6 @@
 #include "FreeRTOS_CLI.h"
 
 /* Private typedef -----------------------------------------------------------*/
-typedef struct {
-	BufferType_TypeDef bufferType;
-	uint16_t dataSize;
-	void* bufferPtr;
-	xSemaphoreHandle* BufferMutex;
-} UsbComPortTxQueueItem_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
 #define USB_COM_TX_BUFFER_SIZE          512
@@ -39,6 +34,8 @@ typedef struct {
 
 #define USB_COM_TX_QUEUE_ITEMS          16
 #define USB_RX_MAX_SEM_COUNT			4
+
+#define USB_COM_MAX_DELAY               1000 // [ms]
 
 /* Private function prototypes -----------------------------------------------*/
 static void InitUSBCom(void);
@@ -198,7 +195,7 @@ static int8_t CDCItfControl(uint8_t cmd, uint8_t* pbuf, uint16_t length) {
 		break;
 	}
 
-	return (USBD_OK);
+	return USBD_OK;
 }
 
 /**
@@ -299,7 +296,7 @@ static void USBComPortRXTask(void const *argument) {
 static void USBComPortTXTask(void const *argument) {
 	(void) argument;
 
-	static UsbComPortTxQueueItem_TypeDef CompPortTxQueueItem;
+	static ComTxQueueItem_TypeDef CompPortTxQueueItem;
 	uint8_t* txDataPtr;
 	uint16_t tmpSize;
 
@@ -347,7 +344,8 @@ static void USBComPortTXTask(void const *argument) {
 /* Exported functions --------------------------------------------------------*/
 
 /**
- * @brief  Data transmit over USB IN endpoint sent over CDC interface through this function.
+ * @brief  Data transmit over USB IN endpoint sent over CDC interface through this function. The data is entered into an output FIFO buffer which is then entered is
+ *         then referred to into a queue. Both the FIFO buffer and the queue are protected by semaphore which needs to pended on.
  * @param  Buf: Buffer of data
  * @param  Len: Number of data received (in bytes)
  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
@@ -390,8 +388,7 @@ USBD_StatusTypeDef CDCTransmitFS(uint8_t* data, uint16_t size) {
 }
 
 /**
- * @brief  Send a string over the USB IN endpoint CDC com port interface. The data is entered into an output FIFO buffer which is then entered is
- *         then refered to into a queue. Both the FIFO buffer and the queue are protected by semaphore which needs to pended on.
+ * @brief  Send a string over the USB IN endpoint CDC com port interface.
  * @param  sendString : Reference to the string to be sent
  * @param  maxMutexWaitTicks : Max ticks to wait for the FIFO buffer mutex
  * @param  maxQueueWaitTicks : Max ticks to wait for the queue
@@ -410,7 +407,7 @@ USBD_StatusTypeDef USBComSendString(const char* sendString) {
  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
  */
 USBD_StatusTypeDef USBComSendData(const uint8_t* sendData, const uint16_t sendDataSize) {
-	UsbComPortTxQueueItem_TypeDef CompPortTxQueueItem;
+    ComTxQueueItem_TypeDef CompPortTxQueueItem;
 	USBD_StatusTypeDef result = USBD_OK;
 
 	if (xSemaphoreTake(USBCOMTxBufferMutex, USB_COM_MAX_DELAY) == pdPASS) {
@@ -481,7 +478,7 @@ void CreateUSBComTasks(void) {
  */
 void CreateUSBComQueues(void) {
 	/* # Create queue for outgoing data ####################################### */
-	usbComTxQueue = xQueueCreate(USB_COM_TX_QUEUE_ITEMS, sizeof(UsbComPortTxQueueItem_TypeDef));
+	usbComTxQueue = xQueueCreate(USB_COM_TX_QUEUE_ITEMS, sizeof(ComTxQueueItem_TypeDef));
 
 	/* We want this queue to be viewable in a RTOS kernel aware debugger, so register it. */
 	vQueueAddToRegistry(usbComTxQueue, (signed portCHAR*) "usbComTxQueue");
@@ -503,9 +500,9 @@ void CreateUSBComSemaphores(void) {
 		ErrorHandler();
 	}
 
-	/* Create binary semaphore to synchronize USB CDC class output. The semaphore is taken when device is
+	/* Create mutex to protect USB CDC class output. The semaphore is taken when device is
 	 * transmitting (USB CDC busy) and given when transfer has completed. */
-	USBTxMutex = xSemaphoreCreateMutex();
+	USBTxMutex = xSemaphoreCreateBinary();
 	if (USBTxMutex == NULL) {
 		ErrorHandler();
 	}

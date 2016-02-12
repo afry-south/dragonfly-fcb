@@ -43,8 +43,8 @@
 #include "common.h"
 #include "fcb_error.h"
 #include "dragonfly_fcb.pb.h"
-#include "usb_com_cli.h"
 #include "pb_encode.h"
+#include "usbd_cdc_if.h"
 
 #include <string.h>
 #include <stdio.h>

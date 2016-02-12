@@ -1,7 +1,7 @@
 #ifndef FCB_SENSORS_H
 #define FCB_SENSORS_H
 
-#include "usbd_cdc_if.h"
+#include "communication.h"
 
 #include "fcb_retval.h"
 #include "arm_math.h"

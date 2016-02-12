@@ -20,8 +20,8 @@
 #include "receiver.h"
 #include "common.h"
 #include "dragonfly_fcb.pb.h"
-#include "usb_com_cli.h"
 #include "pb_encode.h"
+#include "usbd_cdc_if.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

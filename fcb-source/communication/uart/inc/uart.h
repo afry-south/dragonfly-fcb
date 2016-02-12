@@ -1,5 +1,4 @@
 /*****************************************************************************
- * @file    motor_control.h
  * @brief   Header file for UART handling module
  ******************************************************************************/
 
@@ -11,13 +10,16 @@
 #include "stm32f3xx.h"
 
 /* Exported types ------------------------------------------------------------*/
+typedef enum {
+    UART_FAIL = 0, UART_OK = !UART_FAIL
+} UartStatus;
 
 /* Exported constants --------------------------------------------------------*/
 
 /* Definition for USARTx clock resources */
-#define UART                           	USART1
+#define UART                           	USART2
 #define UART_CLK_ENABLE()             	__USART2_CLK_ENABLE();
-#define DMA_CLK_ENABLE()				__DMA1_CLK_ENABLE()
+#define UART_DMA_CLK_ENABLE()			__DMA1_CLK_ENABLE()
 #define UART_RX_GPIO_CLK_ENABLE()		__GPIOA_CLK_ENABLE()
 #define UART_TX_GPIO_CLK_ENABLE()		__GPIOA_CLK_ENABLE()
 
@@ -45,12 +47,21 @@
 #define UART_STOPBITS					UART_STOPBITS_1
 #define UART_PARITY						UART_PARITY_NONE
 
+#define UART_FORCE_RESET()             __USART2_FORCE_RESET()
+#define UART_RELEASE_RESET()           __USART2_RELEASE_RESET()
+
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported functions ------------------------------------------------------- */
 void UartConfig(void);
-
-void HandleUartRxCallback(void);
+void CreateUARTComTasks(void);
+void CreateUARTComQueues(void);
+void CreateUARTComSemaphores(void);
+UartStatus UartSendData(const uint8_t* sendData, const uint16_t sendDataSize);
+UartStatus UartSendString(const char* sendString);
+void HandleUartRxCallback(UART_HandleTypeDef* UartHandle);
+void HandleUartTxCallback(UART_HandleTypeDef* UartHandle);
+void HandleUartErrorCallback(UART_HandleTypeDef* UartHandle);
 
 #endif /* __UART_H */
 

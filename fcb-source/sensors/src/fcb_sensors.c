@@ -13,7 +13,7 @@
 #include "fcb_retval.h"
 #include "dragonfly_fcb.pb.h"
 #include "pb_encode.h"
-#include "usb_com_cli.h"
+#include "usbd_cdc_if.h"
 
 #include "arm_math.h"
 

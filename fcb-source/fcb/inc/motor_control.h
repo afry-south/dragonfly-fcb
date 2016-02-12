@@ -11,7 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
-#include "usbd_cdc_if.h"
+#include "communication.h"
 #include "flight_control.h"
 
 #include "arm_math.h"

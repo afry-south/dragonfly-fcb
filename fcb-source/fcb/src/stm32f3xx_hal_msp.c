@@ -369,7 +369,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
   UART_CLK_ENABLE();
 
   /* Enable DMA clock */
-  DMA_CLK_ENABLE();
+  UART_DMA_CLK_ENABLE();
 
   /*##-2- Configure peripheral GPIO ##########################################*/
   /* UART TX GPIO pin configuration  */
@@ -440,13 +440,9 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
   */
 void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 {
-
-  static DMA_HandleTypeDef hdma_tx;
-  static DMA_HandleTypeDef hdma_rx;
-
   /*##-1- Reset peripherals ##################################################*/
-  USARTx_FORCE_RESET();
-  USARTx_RELEASE_RESET();
+  UART_FORCE_RESET();
+  UART_RELEASE_RESET();
 
   /*##-2- Disable peripherals and GPIO Clocks #################################*/
   /* Configure UART Tx as alternate function  */
