@@ -347,6 +347,9 @@ static void UartTxTask(void const *argument) {
     uint8_t* txDataPtr;
     uint16_t tmpSize;
 
+    /* Make sure semaphore can be taken the first time */
+    xSemaphoreGive(UartTxBinarySem);
+
     for (;;) {
         /* Wait forever for incoming data over UART by pending on the UART Tx queue */
         if (pdPASS == xQueueReceive(UartTxQueue, &UartTxQueueItem, portMAX_DELAY)) {
@@ -389,6 +392,9 @@ static void UartTxTask(void const *argument) {
                         xSemaphoreGive(*UartTxQueueItem.BufferMutex); // Give buffer mutex
                     }
                 }
+            } else {
+                /* Give Semaphore if timed out to regain access to UART DMA transmission */
+                xSemaphoreGive(UartTxBinarySem);
             }
         }
     }

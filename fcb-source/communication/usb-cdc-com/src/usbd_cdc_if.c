@@ -502,7 +502,7 @@ void CreateUSBComSemaphores(void) {
 
 	/* Create mutex to protect USB CDC class output. The semaphore is taken when device is
 	 * transmitting (USB CDC busy) and given when transfer has completed. */
-	USBTxMutex = xSemaphoreCreateBinary();
+	USBTxMutex = xSemaphoreCreateMutex();
 	if (USBTxMutex == NULL) {
 		ErrorHandler();
 	}
