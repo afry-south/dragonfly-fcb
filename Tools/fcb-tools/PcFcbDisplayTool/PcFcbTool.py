@@ -6,7 +6,9 @@ import os
 import serial
 import threading
 from serial.tools.list_ports import comports
-import dragonfly_fcb_pb2 
+import dragonfly_fcb_pb2
+import PcFcbDisplayPlot
+import google.protobuf.message
 from __builtin__ import str, int
 
 
@@ -59,30 +61,24 @@ def comReader():
             if (data != '\n') and (data != '\r'):
                 line += str(data)
 
-        # CONTINUE HERE
-        # http://stackoverflow.com/questions/2293780/how-to-detect-a-floating-point-number-using-a-regular-expression
-        
-        # sys.stdout.write(line);
-        firstbyte = bytearray(line[0])
-
-        print len(line)
         hexified = ':'.join(x.encode('hex') for x in line)
-        print hexified[:2]
         if hexified[:2] == "04":
-            print "HUBBA"
-            state.ParseFromString(line[4:]);
-            print "posX:%f" % (state.posX)
-            sys.stdout.write(state.__str__());
-        
-            continue
+            try:
+                state.ParseFromString(line[4:]);
+            except google.protobuf.message.DecodeError as de:
+                print de
+                continue
+            # sys.stdout.write(state.__str__());
+            PcFcbDisplayPlot.add_plot_data(state.rollAngle, state.pitchAngle, state.yawAngle)
         else:
-            print line
+            pass
+            # print line
 
         
     print "exiting while loop"
 
-interval_ms = 1000
-duration_s = 5
+interval_ms = 500
+duration_s = 20
 
 # use "import optparse" in future - see miniterm.py in Python installation for example.
 # this will allow sophisticaed CLI args parsing
@@ -90,7 +86,8 @@ mySerial = serial.serial_for_url("\\.\COM8", 115200, parity='N', rtscts=False, x
 myComReaderThread = threading.Thread(target=comReader, name="tComReader")
 myComReaderThread.daemon = True
 myComReaderThread.start()
-mySerial.write("about\n".encode())
+mySerial.write("about\n".encode()) # todo
+PcFcbDisplayPlot.runPlot()
 time.sleep(1)
 mySerial.write("start-state-sampling %d %d p" % (interval_ms, duration_s))
 myComReaderThread.join(duration_s + 1)
