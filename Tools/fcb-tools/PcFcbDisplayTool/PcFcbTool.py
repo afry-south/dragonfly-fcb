@@ -7,7 +7,7 @@ import serial
 import threading
 from serial.tools.list_ports import comports
 import dragonfly_fcb_pb2 
-from __builtin__ import str
+from __builtin__ import str, int
 
 
 print "imports successful, Captain!"
@@ -49,21 +49,40 @@ def ask_for_port():
 def comReader():
     print "comReader ready, Captain!!"
     print "comReader is executing in: " + threading.currentThread().name
+    state = dragonfly_fcb_pb2.FlightStatesProto()
 
     while 1:
         line = ""
         data = ' '
-        while data != '\n':
+        while (data != '\r'):
             data = mySerial.read(1);
-            line += str(data)
-        
+            if (data != '\n') and (data != '\r'):
+                line += str(data)
+
         # CONTINUE HERE
         # http://stackoverflow.com/questions/2293780/how-to-detect-a-floating-point-number-using-a-regular-expression
-        sys.stdout.write(line);
+        
+        # sys.stdout.write(line);
+        firstbyte = bytearray(line[0])
+
+        print len(line)
+        hexified = ':'.join(x.encode('hex') for x in line)
+        print hexified[:2]
+        if hexified[:2] == "04":
+            print "HUBBA"
+            state.ParseFromString(line[4:]);
+            print "posX:%f" % (state.posX)
+            sys.stdout.write(state.__str__());
+        
+            continue
+        else:
+            print line
+
+        
     print "exiting while loop"
 
 interval_ms = 1000
-duration_s = 20
+duration_s = 5
 
 # use "import optparse" in future - see miniterm.py in Python installation for example.
 # this will allow sophisticaed CLI args parsing
@@ -72,6 +91,6 @@ myComReaderThread = threading.Thread(target=comReader, name="tComReader")
 myComReaderThread.daemon = True
 myComReaderThread.start()
 mySerial.write("about\n".encode())
-time.sleep(2)
-mySerial.write("start-state-sampling %d %d c" % (interval_ms, duration_s))
+time.sleep(1)
+mySerial.write("start-state-sampling %d %d p" % (interval_ms, duration_s))
 myComReaderThread.join(duration_s + 1)
