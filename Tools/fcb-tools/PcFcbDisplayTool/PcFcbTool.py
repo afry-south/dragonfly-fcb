@@ -2,6 +2,7 @@
 
 import sys
 import os
+import argparse
 import time
 import serial
 import threading
@@ -25,7 +26,14 @@ def dprint(format, *args):
     string_to_print = script_name + ": " + format % args
     if debug_print:
         pprint(string_to_print)
-        
+
+tool_description="Sample the estimated RPY angles from the FCB card. Also see README.md."
+
+arg_parser = argparse.ArgumentParser(description=tool_description)
+arg_parser.add_argument("interval_ms", help="[100 ...] nbr of milliseconds between each state sample", type=int)
+arg_parser.add_argument("duration_s", help="[2 ..] state will be sampled for a duration of seconds", type=int)
+cli_args = arg_parser.parse_args()
+
 pprint("starting ...")
 
 dprint("imports successful, Captain!")
@@ -127,11 +135,8 @@ timer.start(25)
 
 # use "import argparse" in future - this will allow sophisticaed CLI args parsing
 
-interval_ms = 100
-duration_s = 20
-
-interval_s = interval_ms/float(1000)
-sample_nbr = int(float(duration_s / interval_s))
+interval_s = cli_args.interval_ms/float(1000)
+sample_nbr = int(float(cli_args.duration_s / interval_s))
 
 # use "import optparse" in future - see miniterm.py in Python installation for example.
 # this will allow sophisticaed CLI args parsing
@@ -143,7 +148,7 @@ fcb_serial.write("about\n") # data does not show up when removing this line ...
 time.sleep(1)
 
 try:
-    fcb_serial.write("start-state-sampling %d %d p" % (interval_ms, duration_s))
+    fcb_serial.write("start-state-sampling %d %d p" % (cli_args.interval_ms, cli_args.duration_s))
 except serial.SerialTimeoutException as ste:
     fcb_serial.close()
     pprint(ste.__str__())
@@ -157,7 +162,7 @@ if __name__ == '__main__':
         QtGui.QApplication.instance().exec_()
         do_exit = True
 
-myComReaderThread.join(duration_s + 1)
+myComReaderThread.join(cli_args.duration_s + 1)
 if myComReaderThread.isAlive():
     do_exit = True
     fcb_serial.close()
