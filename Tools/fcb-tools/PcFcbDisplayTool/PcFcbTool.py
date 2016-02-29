@@ -30,12 +30,14 @@ def dprint(format, *args):
 tool_description="Sample the estimated RPY angles from the FCB card. Also see README.md."
 
 arg_parser = argparse.ArgumentParser(description=tool_description)
-arg_parser.add_argument("interval_ms", help="[100 ...] nbr of milliseconds between each state sample", type=int)
-arg_parser.add_argument("duration_s", help="[2 ..] state will be sampled for a duration of seconds", type=int)
+arg_parser.add_argument("interval_ms", type=int, help="[100 ...] nbr of milliseconds between each state sample")
+arg_parser.add_argument("duration_s", type=int, help="[2 ..] state will be sampled for a duration of seconds")
+arg_parser.add_argument("--com", type=int, default=8, help="give the number of the COM port for STM32 Virtual Com Port (default 8)")
 cli_args = arg_parser.parse_args()
 
 pprint("starting ...")
-
+dprint("given args: interval_ms:%d duration_s:%d com:%d" 
+       % (cli_args.interval_ms, cli_args.duration_s, cli_args.com))
 dprint("imports successful, Captain!")
 
 fcb_serial = 0;
@@ -133,18 +135,16 @@ timer = QtCore.QTimer()
 timer.timeout.connect(plotUpdate)
 timer.start(25)
 
-# use "import argparse" in future - this will allow sophisticaed CLI args parsing
-
 interval_s = cli_args.interval_ms/float(1000)
 sample_nbr = int(float(cli_args.duration_s / interval_s))
 
 # use "import optparse" in future - see miniterm.py in Python installation for example.
 # this will allow sophisticaed CLI args parsing
-fcb_serial = serial.Serial("\\.\COM8", 115200, parity=serial.PARITY_NONE, rtscts=False, xonxoff=False, timeout=1, write_timeout=1)
+com_port_url = "\\.\COM%d" % (cli_args.com) # yep, that's how a COM port syntax must be written in Python
+fcb_serial = serial.Serial(com_port_url, 115200, parity=serial.PARITY_NONE, rtscts=False, xonxoff=False, timeout=1, write_timeout=1)
 myComReaderThread = threading.Thread(target=comReader, name="tComReader", args=(sample_nbr,))
 myComReaderThread.daemon = True
 myComReaderThread.start()
-fcb_serial.write("about\n") # data does not show up when removing this line ...
 time.sleep(1)
 
 try:

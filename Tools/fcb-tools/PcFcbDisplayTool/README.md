@@ -10,15 +10,13 @@
 * now it should be possible to run `C:\INSTALLATION_PATH\python.exe PcFcbTool.py 100 60` in `cmd.exe`.
 
 ## PcFcbTool usage
-* Connect the FCB to the Windows 7 PC using a micro USB cable.
+* Connect the FCB to the Windows 7 PC using a micro USB cable, it is assumed that COM8 is the port.
 * run `python PcFcbTool.py 200 30` to receive a graph which is sampled every 200 ms for 30 seconds.
 * Close the graph window to exit the program.
-* use the `--help` option to get usage instructions.
+* use the `--help` option to get usage instructions
+* use the `--com N` to use COM port N for STM32 Virtual COM port.
 
 ## Developing PcFcbDisplayTool
 * In order to regenerate `dragonfly_fcb_pb2.py`:
  * Download `protoc-3.0.0-beta-2-win32.zip` from: https://github.com/google/protobuf/releases extract `protoc.exe` and make sure it is in the `Path` of `cmd.exe`
  * Then run: `protoc --plugin=generator\protoc-gen-nanopb.bat --proto_path=REPO_PATH\fcb-source\communication\protobuf\ REPO_PATH\fcb-source\communication\protobuf\dragonfly_fcb.proto  --python_out=REPO_PATH\Tools\fcb-tools\PcFcbDisplayTool
-
-## To Do
- * use `argparse` for CLI options parsing
