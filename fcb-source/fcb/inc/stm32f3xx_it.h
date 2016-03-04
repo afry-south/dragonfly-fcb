@@ -17,6 +17,7 @@ extern "C" {
 #endif
 /* Includes ------------------------------------------------------------------*/
 #include "receiver.h"
+#include "uart.h"
 #include "task_status.h"
 
 /* Exported types ------------------------------------------------------------*/
@@ -39,6 +40,8 @@ void PVD_IRQHandler(void);
 void PRIMARY_RECEIVER_TIM_IRQHandler(void);
 void AUX_RECEIVER_TIM_IRQHandler(void);
 void TASK_STATUS_TIM_IRQHandler(void);
+void UART_DMA_RX_IRQHandler(void);
+void UART_DMA_TX_IRQHandler(void);
 
 #if defined (USE_USB_INTERRUPT_DEFAULT)
 void USB_LP_CAN_RX0_IRQHandler(void);

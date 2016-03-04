@@ -95,12 +95,16 @@ static void InitSystem(void) {
 	/* Initialize Command Line Interface for USB communication */
 	RegisterCLICommands();
 
+	/* Configure UART */
+	UartConfig();
+
 	/* Init on-board LEDs */
 	InitLEDs();
 
 	/* Init User button */
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
+	/* TODO I2C reading hangs system */
 	if (FCB_OK != FcbSensorsConfig()) {
 		ErrorHandler();
 	}

@@ -69,8 +69,6 @@ static void UartTxTask(void const *argument);
  * @retval None.
  */
 void UartConfig(void) {
-    UART_HandleTypeDef UartHandle;
-
     /*##-1- Configure the UART peripheral ######################################*/
     /* Put the USART peripheral in the Asynchronous mode (UART Mode) */
     /* UART configured as defined by header file definitions
@@ -101,7 +99,7 @@ void HandleUartRxCallback(UART_HandleTypeDef* UartHandle) {
 
     (void) UartHandle; // To avoid warnings
 
-    if (FIFOBufferPutByte(&UartRxFIFOBuffer, rxByte)) {
+    if (FIFOBufferPutByte(&UartRxFIFOBuffer, rxByte) == SUCCESS) {
         /* # Signal UART RX task that new data has arrived #### */
         xSemaphoreGiveFromISR(UartRxDataSem, &xHigherPriorityTaskWoken);
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -188,7 +186,8 @@ void CreateUARTComQueues(void) {
  * @retval None.
  */
 void CreateUARTComSemaphores(void) {
-    UartRxDataSem = xSemaphoreCreateCounting(UART_RX_MAX_SEM_COUNT, 0);
+    //UartRxDataSem = xSemaphoreCreateCounting(UART_RX_MAX_SEM_COUNT, 0);
+	UartRxDataSem = xSemaphoreCreateBinary();
     if (UartRxDataSem == NULL) {
         ErrorHandler();
     }
@@ -269,9 +268,6 @@ static void InitUartCom(void) {
 
     /* Create UART TX FIFO Buffer */
     FIFOBufferInit(&UartTxFIFOBuffer, UartTxBufferArray, sizeof(UartTxBufferArray));
-
-    /* Start receiving data over UART, 1 byte at a time */
-    HAL_UART_Receive_DMA(&UartHandle, &rxByte, 1);
 }
 
 /**
@@ -283,6 +279,7 @@ static void UartRxTask(void const *argument) {
     (void) argument;
 
     uint16_t i = 0;
+    uint16_t j = 0;
     portBASE_TYPE xMoreDataToFollow;
     ErrorStatus bufferStatus = SUCCESS;
     uint8_t getByte;
@@ -293,6 +290,9 @@ static void UartRxTask(void const *argument) {
     InitUartCom();
 
     for (;;) {
+    	/* Start receiving data over UART, 1 byte at a time */
+    	HAL_UART_Receive_DMA(&UartHandle, &rxByte, 1);
+
         bufferStatus = SUCCESS;
         /* Wait forever for incoming data over Uart by pending on the Uart Rx semaphore */
         if (pdPASS == xSemaphoreTake(UartRxDataSem, portMAX_DELAY)) {
@@ -301,14 +301,15 @@ static void UartRxTask(void const *argument) {
                 bufferStatus = FIFOBufferGetByte(&UartRxFIFOBuffer, &getByte);
 
                 if (bufferStatus == SUCCESS) {
-                    cliInBuffer[i] = getByte;
+                    cliInBuffer[j] = getByte;
+                    j++;
                 }
 
                 i++;
             }
 
             /* End of command assumed found ('\n') */
-            if (getByte == '\n') {
+            if (((char)getByte) == '\n') {
                 TakeCLIMutex();
                 do {
                     /* Send the command string to the command interpreter. Any output generated
@@ -323,12 +324,14 @@ static void UartRxTask(void const *argument) {
                 GiveCLIMutex();
 
                 i = 0;
+                j = 0;
                 memset(cliInBuffer, 0x00, sizeof(cliInBuffer));
             }
 
             /* If rxTempBuffer full without found command */
             if (i >= MAX_CLI_COMMAND_SIZE) {
                 i = 0;
+                j = 0;
                 memset(cliInBuffer, 0x00, sizeof(cliInBuffer));
             }
         }
@@ -377,7 +380,7 @@ static void UartTxTask(void const *argument) {
                             tmpSize = FIFOBufferGetData((volatile FIFOBuffer_TypeDef*) UartTxQueueItem.bufferPtr,
                                     &txDataPtr, UartTxQueueItem.dataSize - tmpSize);
 
-                            if(HAL_UART_Transmit_DMA(&UartHandle, txDataPtr, tmpSize)!= HAL_OK) {
+                            if(HAL_UART_Transmit_DMA(&UartHandle, txDataPtr, tmpSize) != HAL_OK) {
                                 ErrorHandler();
                             }
                         }

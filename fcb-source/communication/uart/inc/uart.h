@@ -18,7 +18,7 @@ typedef enum {
 
 /* Definition for USARTx clock resources */
 #define UART                           	USART2
-#define UART_CLK_ENABLE()             	__USART2_CLK_ENABLE();
+#define UART_CLK_ENABLE()             	__USART2_CLK_ENABLE()
 #define UART_DMA_CLK_ENABLE()			__DMA1_CLK_ENABLE()
 #define UART_RX_GPIO_CLK_ENABLE()		__GPIOA_CLK_ENABLE()
 #define UART_TX_GPIO_CLK_ENABLE()		__GPIOA_CLK_ENABLE()
@@ -32,14 +32,14 @@ typedef enum {
 #define UART_RX_AF                     	GPIO_AF7_USART2
 
 /* Definition for UART's DMA */
-#define UART_TX_DMA_STREAM            	DMA1_Channel4
-#define UART_RX_DMA_STREAM              DMA1_Channel5
+#define UART_TX_DMA_STREAM            	DMA1_Channel7
+#define UART_RX_DMA_STREAM              DMA1_Channel6
 
 /* Definition for UART's NVIC */
-#define UART_DMA_TX_IRQn               	DMA1_Channel4_IRQn
-#define UART_DMA_RX_IRQn                DMA1_Channel5_IRQn
-#define UART_DMA_TX_IRQHandler          DMA1_Channel4_IRQHandler
-#define UART_DMA_RX_IRQHandler          DMA1_Channel5_IRQHandler
+#define UART_DMA_TX_IRQn               	DMA1_Channel7_IRQn
+#define UART_DMA_RX_IRQn                DMA1_Channel6_IRQn
+#define UART_DMA_TX_IRQHandler          DMA1_Channel7_IRQHandler
+#define UART_DMA_RX_IRQHandler          DMA1_Channel6_IRQHandler
 
 /* UART Setup values */
 #define UART_BAUDRATE					115200

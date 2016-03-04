@@ -390,7 +390,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
   /*##-3- Configure the DMA channels ##########################################*/
   /* Configure the DMA handler for Transmission process */
   hdma_tx.Instance                 = UART_TX_DMA_STREAM;
-
   hdma_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
   hdma_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
   hdma_tx.Init.MemInc              = DMA_MINC_ENABLE;
@@ -406,14 +405,13 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
   /* Configure the DMA handler for reception process */
   hdma_rx.Instance                 = UART_RX_DMA_STREAM;
-
   hdma_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
   hdma_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
-  hdma_rx.Init.MemInc              = DMA_MINC_ENABLE;
+  hdma_rx.Init.MemInc              = DMA_MINC_DISABLE;
   hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
   hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
   hdma_rx.Init.Mode                = DMA_CIRCULAR;
-  hdma_rx.Init.Priority            = DMA_PRIORITY_HIGH;
+  hdma_rx.Init.Priority            = DMA_PRIORITY_LOW;
 
   HAL_DMA_Init(&hdma_rx);
 
@@ -422,11 +420,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
   /*##-4- Configure the NVIC for DMA #########################################*/
   /* NVIC configuration for DMA transfer complete interrupt (USARTx_TX) */
-  HAL_NVIC_SetPriority(UART_DMA_TX_IRQn, 0, 1);
+  HAL_NVIC_SetPriority(UART_DMA_TX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0); // TODO define prio
   HAL_NVIC_EnableIRQ(UART_DMA_TX_IRQn);
 
   /* NVIC configuration for DMA transfer complete interrupt (USARTx_RX) */
-  HAL_NVIC_SetPriority(UART_DMA_RX_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(UART_DMA_RX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0); // TODO define prio
   HAL_NVIC_EnableIRQ(UART_DMA_RX_IRQn);
 }
 
