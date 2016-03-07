@@ -29,7 +29,7 @@
 #define UART_COM_TX_QUEUE_ITEMS     16
 #define UART_RX_MAX_SEM_COUNT       32
 
-#define UART_COM_MAX_DELAY                 1000 // [ms]
+#define UART_COM_MAX_DELAY          1000 // [ms]
 
 /* Private macro -------------------------------------------------------------*/
 

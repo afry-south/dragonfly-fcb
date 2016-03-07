@@ -508,7 +508,7 @@ void PrintReceiverValues(const SerializationType serializationType)
 		protoStatus = pb_encode(&protoStream, ReceiverSignalValuesProto_fields, &receiverSignalsProto);
 
 		/* Insert header to the sample string, then copy the data after that */
-		snprintf(sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE, "%c %c ", RC_VALUES_MSG_ENUM, protoStream.bytes_written);
+		snprintf(sampleString, RECEIVER_SAMPLING_MAX_STRING_SIZE, "%c %u ", RC_VALUES_MSG_ENUM, protoStream.bytes_written);
 		strLen = strlen(sampleString);
 		if(strLen + protoStream.bytes_written + strlen("\r\n") < RECEIVER_SAMPLING_MAX_STRING_SIZE) {
 			memcpy(&sampleString[strLen], serializedReceiverData, protoStream.bytes_written);

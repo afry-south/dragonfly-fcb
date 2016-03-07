@@ -25,11 +25,13 @@
 #include "fcb_sensors.h"
 #include "state_estimation.h"
 #include "fcb_error.h"
+#include "pb_encode.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -626,12 +628,16 @@ static portBASE_TYPE CLIResetReceiverCalibration(int8_t* pcWriteBuffer, size_t x
  */
 static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString) {
 	int8_t* pcParameter;
+	static uint16_t outCnt = 0;
 	portBASE_TYPE xParameterStringLength;
 	portBASE_TYPE lParameterNumber = 0;
 
+	bool protoStatus;
+	uint8_t serializedReceiverData[ReceiverSignalValuesProto_size];
+	ReceiverSignalValuesProto receiverSignalsProto;
+
 	/* Empty pcWriteBuffer so no strange output is sent as command response */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
-
 	lParameterNumber++;
 
 	/* Obtain the parameter string. */
@@ -644,13 +650,73 @@ static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLe
 	configASSERT(pcParameter);
 
 	/* Get the current receiver values */
-	if(pcParameter[0] == 'n')
-		PrintReceiverValues(NO_SERIALIZATION);
-	else if(pcParameter[0] == 'p')
-		PrintReceiverValues(PROTOBUFFER_SERIALIZATION);
+	switch (pcParameter[0]) {
+	case 'n':
+		if(outCnt == 0) {
+			strncpy((char*) pcWriteBuffer, "Receiver:\nStatus: ", xWriteBufferLen);
+			if (IsReceiverActive()) {
+				strncat((char*) pcWriteBuffer, "ACTIVE\n", xWriteBufferLen - strlen((char*)pcWriteBuffer) - 1);
+			}
+			else {
+				strncat((char*) pcWriteBuffer, "INACTIVE\n", xWriteBufferLen - strlen((char*)pcWriteBuffer) - 1);
+			}
+			outCnt = 2;
+		}
+		else {
+			snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+					"Throttle: %d\nAileron: %d\nElevator: %d\nRudder: %d\nGear: %d\nAux1: %d\n\r\n",
+					GetThrottleReceiverChannel(), GetAileronReceiverChannel(), GetElevatorReceiverChannel(),
+					GetRudderReceiverChannel(), GetGearReceiverChannel(), GetAux1ReceiverChannel());
+		}
 
-	/* Return false to indicate command activity finished */
-	return pdFALSE;
+		break;
+	case 'p': {
+		uint32_t len;
+		receiverSignalsProto.has_throttle = true;
+		receiverSignalsProto.has_aileron = true;
+		receiverSignalsProto.has_elevator = true;
+		receiverSignalsProto.has_rudder = true;
+		receiverSignalsProto.has_gear = true;
+		receiverSignalsProto.has_aux1 = true;
+		receiverSignalsProto.throttle = GetThrottleReceiverChannel();
+		receiverSignalsProto.aileron = GetAileronReceiverChannel();
+		receiverSignalsProto.elevator = GetElevatorReceiverChannel();
+		receiverSignalsProto.rudder = GetRudderReceiverChannel();
+		receiverSignalsProto.gear = GetGearReceiverChannel();
+		receiverSignalsProto.aux1 = GetAux1ReceiverChannel();
+
+		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
+		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedReceiverData, ReceiverSignalValuesProto_size);
+		protoStatus = pb_encode(&protoStream, ReceiverSignalValuesProto_fields, &receiverSignalsProto);
+
+		/* Insert header to the sample string, then copy the data after that */
+		len = snprintf((char*) pcWriteBuffer, xWriteBufferLen, "%c\n%u\n", RC_VALUES_MSG_ENUM, protoStream.bytes_written);
+		if(len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+			memcpy(&pcWriteBuffer[len], serializedReceiverData, protoStream.bytes_written);
+			memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+		}
+
+		if(!protoStatus) {
+			ErrorHandler();
+		}
+
+		break;
+	}
+	default:
+		strncpy((char*) pcWriteBuffer, "Invalid parameter\r\n", xWriteBufferLen);
+		break;
+	}
+
+	if(outCnt > 0) {
+		outCnt--;
+	}
+
+	if(outCnt == 0) {
+		return pdFALSE; /* Return false to indicate command activity finished */
+	} else {
+		return pdTRUE; /* Return true to indicate more command activity to follow */
+	}
+
 }
 
 /**
