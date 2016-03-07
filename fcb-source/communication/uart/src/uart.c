@@ -308,13 +308,18 @@ static void UartRxTask(void const *argument) {
                 i++;
             }
 
-            /* End of command assumed found ('\n') */
-            if (((char)getByte) == '\n') {
+            /* End of command assumed found ('\r') */
+            if (((char)getByte) == '\r') {
+            	uint16_t k = 0;
+            	while((((char)cliInBuffer[k]) == ' ' || ((char)cliInBuffer[k]) == '\n' || ((char)cliInBuffer[k]) == '\r') && k < j-1) {
+            		k++;
+            	}
+
                 TakeCLIMutex();
                 do {
                     /* Send the command string to the command interpreter. Any output generated
                      * by the command interpreter will be placed in the cliOutBuffer buffer. */
-                    xMoreDataToFollow = FreeRTOS_CLIProcessCommand( (int8_t*) cliInBuffer, /* The command string.*/
+                    xMoreDataToFollow = FreeRTOS_CLIProcessCommand( (int8_t*) (&cliInBuffer[k]), /* The command string.*/
                                                                     (int8_t*) cliOutBuffer, /* The output buffer. */
                                                                     MAX_CLI_OUTPUT_SIZE); /* The size of the output buffer. */
 

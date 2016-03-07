@@ -260,8 +260,8 @@ static void USBComPortRXTask(void const *argument) {
 				i++;
 			}
 
-			// End of command assumed found ('\n')
-			if (getByte == '\n') {
+			// End of command assumed found ('\r')
+			if (getByte == '\r') {
 				TakeCLIMutex();
 				do {
 					/* Send the command string to the command interpreter. Any output generated
