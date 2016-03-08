@@ -148,7 +148,7 @@ void CreateUARTComTasks(void) {
      * Priority: UART_RX_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
      * Handle: UartRxTaskHandle
      * */
-    if (pdPASS != xTaskCreate((pdTASK_CODE )UartRxTask, (signed portCHAR*)"UART_RX", 3*configMINIMAL_STACK_SIZE, NULL,
+    if (pdPASS != xTaskCreate((pdTASK_CODE )UartRxTask, (signed portCHAR*)"UART_RX", 2*configMINIMAL_STACK_SIZE, NULL,
             UART_RX_TASK_PRIO, &UartRxTaskHandle)) {
         ErrorHandler();
     }
@@ -187,7 +187,7 @@ void CreateUARTComQueues(void) {
  */
 void CreateUARTComSemaphores(void) {
     //UartRxDataSem = xSemaphoreCreateCounting(UART_RX_MAX_SEM_COUNT, 0);
-	UartRxDataSem = xSemaphoreCreateBinary();
+    UartRxDataSem = xSemaphoreCreateBinary();
     if (UartRxDataSem == NULL) {
         ErrorHandler();
     }
@@ -280,7 +280,8 @@ static void UartRxTask(void const *argument) {
 
     uint16_t i = 0;
     uint16_t j = 0;
-    portBASE_TYPE xMoreDataToFollow;
+    uint16_t datalen = 0;
+    portBASE_TYPE moreDataToFollow;
     ErrorStatus bufferStatus = SUCCESS;
     uint8_t getByte;
     static uint8_t cliInBuffer[MAX_CLI_COMMAND_SIZE];
@@ -290,14 +291,15 @@ static void UartRxTask(void const *argument) {
     InitUartCom();
 
     for (;;) {
-    	/* Start receiving data over UART, 1 byte at a time */
-    	HAL_UART_Receive_DMA(&UartHandle, &rxByte, 1);
+        /* Start receiving data over UART, 1 byte at a time */
+        HAL_UART_Receive_DMA(&UartHandle, &rxByte, 1);
 
         bufferStatus = SUCCESS;
         /* Wait forever for incoming data over Uart by pending on the Uart Rx semaphore */
         if (pdPASS == xSemaphoreTake(UartRxDataSem, portMAX_DELAY)) {
-            /* Read out the buffer until '\n' */
-            while (bufferStatus == SUCCESS && (i < MAX_CLI_COMMAND_SIZE || getByte != '\n')) {
+            /* Read out the buffer until '\r' */
+            getByte = 0;
+            while (bufferStatus == SUCCESS && i < MAX_CLI_COMMAND_SIZE && ((char)getByte) != '\r') {
                 bufferStatus = FIFOBufferGetByte(&UartRxFIFOBuffer, &getByte);
 
                 if (bufferStatus == SUCCESS) {
@@ -310,22 +312,22 @@ static void UartRxTask(void const *argument) {
 
             /* End of command assumed found ('\r') */
             if (((char)getByte) == '\r') {
-            	uint16_t k = 0;
-            	while((((char)cliInBuffer[k]) == ' ' || ((char)cliInBuffer[k]) == '\n' || ((char)cliInBuffer[k]) == '\r') && k < j-1) {
-            		k++;
-            	}
+                uint16_t k = 0;
+                while((((char)cliInBuffer[k]) == ' ' || ((char)cliInBuffer[k]) == '\n' || ((char)cliInBuffer[k]) == '\r') && k < j-1) {
+                    k++;
+                }
 
                 TakeCLIMutex();
                 do {
                     /* Send the command string to the command interpreter. Any output generated
                      * by the command interpreter will be placed in the cliOutBuffer buffer. */
-                    xMoreDataToFollow = FreeRTOS_CLIProcessCommand( (int8_t*) (&cliInBuffer[k]), /* The command string.*/
-                                                                    (int8_t*) cliOutBuffer, /* The output buffer. */
-                                                                    MAX_CLI_OUTPUT_SIZE); /* The size of the output buffer. */
-
-                    UartSendString((char*) cliOutBuffer);
-
-                } while (xMoreDataToFollow != pdFALSE);
+                    moreDataToFollow = CLIParser(&(cliInBuffer[k]), cliOutBuffer, &datalen);
+                    if(datalen > 0) {
+                        UartSendData(cliOutBuffer, datalen);
+                    } else {
+                        UartSendString((char*) cliOutBuffer);
+                    }
+                } while (moreDataToFollow != pdFALSE);
                 GiveCLIMutex();
 
                 i = 0;
@@ -349,65 +351,65 @@ static void UartRxTask(void const *argument) {
  * @retval None
  */
 static void UartTxTask(void const *argument) {
-	(void) argument;
+    (void) argument;
 
-	static ComTxQueueItem_TypeDef UartTxQueueItem;
-	uint8_t* txDataPtr;
-	uint16_t tmpSize;
+    static ComTxQueueItem_TypeDef UartTxQueueItem;
+    uint8_t* txDataPtr;
+    uint16_t tmpSize;
 
-	/* Make sure semaphore can be taken the first time */
-	xSemaphoreGive(UartTxBinarySem);
+    /* Make sure semaphore can be taken the first time */
+    xSemaphoreGive(UartTxBinarySem);
 
-	for (;;) {
-		/* Wait forever for incoming data over UART by pending on the UART Tx queue */
-		if (pdPASS == xQueueReceive(UartTxQueue, &UartTxQueueItem, portMAX_DELAY)) {
-			/* Take the buffer mutex (if it has one) */
-			if ((*UartTxQueueItem.BufferMutex == NULL || xSemaphoreTake(*UartTxQueueItem.BufferMutex, portMAX_DELAY) == pdPASS)) {
-				switch (UartTxQueueItem.bufferType) {
-				case ARRAY_BUFFER:
-					// Tx buffer is just a good ol' array of data;
-					if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*) UartTxQueueItem.bufferPtr, UartTxQueueItem.dataSize)!= HAL_OK) {
-						ErrorHandler();
-					}
-					break;
-				case FIFO_BUFFER:
-					// Tx buffer is a FIFO ring buffer that wraps around its zero index
-					tmpSize = FIFOBufferGetData((volatile FIFOBuffer_TypeDef*) UartTxQueueItem.bufferPtr,
-							&txDataPtr, UartTxQueueItem.dataSize);
+    for (;;) {
+        /* Wait forever for incoming data over UART by pending on the UART Tx queue */
+        if (pdPASS == xQueueReceive(UartTxQueue, &UartTxQueueItem, portMAX_DELAY)) {
+            /* Take the buffer mutex (if it has one) */
+            if ((*UartTxQueueItem.BufferMutex == NULL || xSemaphoreTake(*UartTxQueueItem.BufferMutex, portMAX_DELAY) == pdPASS)) {
+                switch (UartTxQueueItem.bufferType) {
+                case ARRAY_BUFFER:
+                    // Tx buffer is just a good ol' array of data;
+                    if(HAL_UART_Transmit_DMA(&UartHandle, (uint8_t*) UartTxQueueItem.bufferPtr, UartTxQueueItem.dataSize)!= HAL_OK) {
+                        ErrorHandler();
+                    }
+                    break;
+                case FIFO_BUFFER:
+                    // Tx buffer is a FIFO ring buffer that wraps around its zero index
+                    tmpSize = FIFOBufferGetData((volatile FIFOBuffer_TypeDef*) UartTxQueueItem.bufferPtr,
+                            &txDataPtr, UartTxQueueItem.dataSize);
 
-					if (xSemaphoreTake(UartTxBinarySem, UART_COM_MAX_DELAY) == pdPASS) { // Pend on UART Binary Semaphore while previous transmission is in progress
-						if(HAL_UART_Transmit_DMA(&UartHandle, txDataPtr, tmpSize) != HAL_OK) {
-							ErrorHandler();
-						}
-					}
+                    if (xSemaphoreTake(UartTxBinarySem, UART_COM_MAX_DELAY) == pdPASS) { // Pend on UART Binary Semaphore while previous transmission is in progress
+                        if(HAL_UART_Transmit_DMA(&UartHandle, txDataPtr, tmpSize) != HAL_OK) {
+                            ErrorHandler();
+                        }
+                    }
 
-					// If not all data received from buffer (due to FIFO wrap-around), get the rest
-					if (tmpSize < UartTxQueueItem.dataSize) {
-						tmpSize = FIFOBufferGetData((volatile FIFOBuffer_TypeDef*) UartTxQueueItem.bufferPtr,
-								&txDataPtr, UartTxQueueItem.dataSize - tmpSize);
+                    // If not all data received from buffer (due to FIFO wrap-around), get the rest
+                    if (tmpSize < UartTxQueueItem.dataSize) {
+                        tmpSize = FIFOBufferGetData((volatile FIFOBuffer_TypeDef*) UartTxQueueItem.bufferPtr,
+                                &txDataPtr, UartTxQueueItem.dataSize - tmpSize);
 
-						if (xSemaphoreTake(UartTxBinarySem, UART_COM_MAX_DELAY) == pdPASS) { // Pend on UART Binary Semaphore while previous transmission is in progress
-							if(HAL_UART_Transmit_DMA(&UartHandle, txDataPtr, tmpSize) != HAL_OK) {
-								ErrorHandler();
-							}
-						}
-					}
-					break;
-				default:
-					/* Unspecified buffer type, indicate error */
-					ErrorHandler();
-					break;
-				}
+                        if (xSemaphoreTake(UartTxBinarySem, UART_COM_MAX_DELAY) == pdPASS) { // Pend on UART Binary Semaphore while previous transmission is in progress
+                            if(HAL_UART_Transmit_DMA(&UartHandle, txDataPtr, tmpSize) != HAL_OK) {
+                                ErrorHandler();
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    /* Unspecified buffer type, indicate error */
+                    ErrorHandler();
+                    break;
+                }
 
-				if (*UartTxQueueItem.BufferMutex != NULL) {
-					xSemaphoreGive(*UartTxQueueItem.BufferMutex); // Give buffer mutex
-				}
-			}
-		} else {
-			/* Give Semaphore if timed out to regain access to UART DMA transmission */
-			xSemaphoreGive(UartTxBinarySem);
-		}
-	}
+                if (*UartTxQueueItem.BufferMutex != NULL) {
+                    xSemaphoreGive(*UartTxQueueItem.BufferMutex); // Give buffer mutex
+                }
+            }
+        } else {
+            /* Give Semaphore if timed out to regain access to UART DMA transmission */
+            xSemaphoreGive(UartTxBinarySem);
+        }
+    }
 }
 
 /**

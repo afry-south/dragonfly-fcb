@@ -10,6 +10,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+#include "FreeRTOS_CLI.h"
+
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported constants --------------------------------------------------------*/
@@ -20,6 +25,7 @@
 
 /* Exported functions ------------------------------------------------------- */
 void RegisterCLICommands(void);
+portBASE_TYPE CLIParser(uint8_t* cliIn, uint8_t* cliOut, uint16_t* len);
 void CreateCLISemaphores(void);
 uint32_t TakeCLIMutex(void);
 void GiveCLIMutex(void);

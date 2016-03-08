@@ -375,6 +375,26 @@ MotorControlErrorStatus StopMotorControlSamplingTask(void) {
 	return MOTORCTRL_ERROR;
 }
 
+/*
+ * @brief  Gets motor control value of specified motor
+ * @param  motorNumber : Which motor (number 1 to 4)
+ * @retval Motor control value (0 to 65535)
+ */
+uint16_t GetMotorValue(uint8_t motorNumber) {
+    switch(motorNumber) {
+    case 1:
+        return MotorControlValues.Motor1;
+    case 2:
+        return MotorControlValues.Motor2;
+    case 3:
+        return MotorControlValues.Motor3;
+    case 4:
+        return MotorControlValues.Motor4;
+    default:
+        return 0;
+    }
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /**

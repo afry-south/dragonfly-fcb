@@ -3,12 +3,13 @@
 
 // Receiver signal values normalized to [-32768, 32767]
 message ReceiverSignalValuesProto {
-	optional int32 throttle = 1;
-	optional int32 aileron = 2;
-	optional int32 elevator = 3;
-	optional int32 rudder = 4;
-	optional int32 gear = 5;
-	optional int32 aux1 = 6;
+    optional bool is_active = 1;
+	optional int32 throttle = 2;
+	optional int32 aileron = 3;
+	optional int32 elevator = 4;
+	optional int32 rudder = 5;
+	optional int32 gear = 6;
+	optional int32 aux1 = 7;
 }
 
 // Motor signal values normalized to [0, 65535]

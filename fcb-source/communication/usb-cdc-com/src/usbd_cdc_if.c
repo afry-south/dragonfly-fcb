@@ -236,7 +236,8 @@ static void USBComPortRXTask(void const *argument) {
 	(void) argument;
 
 	uint16_t i = 0;
-	portBASE_TYPE xMoreDataToFollow;
+	uint16_t datalen = 0;
+	portBASE_TYPE moreDataToFollow;
 	ErrorStatus bufferStatus = SUCCESS;
 	uint8_t getByte;
 	static uint8_t cliInBuffer[MAX_CLI_COMMAND_SIZE];
@@ -250,7 +251,8 @@ static void USBComPortRXTask(void const *argument) {
 		/* Wait forever for incoming data over USB by pending on the USB Rx semaphore */
 		if (pdPASS == xSemaphoreTake(USBCOMRxDataSem, portMAX_DELAY)) {
 			// Read out the FIFO buffer
-			while (bufferStatus == SUCCESS && (i < MAX_CLI_COMMAND_SIZE || getByte != '\n')) {
+			getByte = 0;
+			while (bufferStatus == SUCCESS && i < MAX_CLI_COMMAND_SIZE && ((char)getByte) != '\r') {
 				bufferStatus = FIFOBufferGetByte(&USBCOMRxFIFOBuffer, &getByte);
 
 				if (bufferStatus == SUCCESS) {
@@ -261,18 +263,24 @@ static void USBComPortRXTask(void const *argument) {
 			}
 
 			// End of command assumed found ('\r')
-			if (getByte == '\r') {
+			if (((char)getByte) == '\r') {
+				uint16_t k = 0;
+				while((((char)cliInBuffer[k]) == ' ' || ((char)cliInBuffer[k]) == '\n' || ((char)cliInBuffer[k]) == '\r') && k < i-1) {
+					k++;
+				}
+
 				TakeCLIMutex();
 				do {
 					/* Send the command string to the command interpreter. Any output generated
 					 * by the command interpreter will be placed in the cliOutBuffer buffer. */
-					xMoreDataToFollow = FreeRTOS_CLIProcessCommand((int8_t*) cliInBuffer, /* The command string.*/
-							(int8_t*) cliOutBuffer, /* The output buffer. */
-							MAX_CLI_OUTPUT_SIZE /* The size of the output buffer. */
-					);
-					USBComSendString((char*) cliOutBuffer);
+				    moreDataToFollow = CLIParser(&(cliInBuffer[k]), cliOutBuffer, &datalen);
+				    if(datalen > 0) {
+				        USBComSendData(cliOutBuffer, datalen);
+				    } else {
+				        USBComSendString((char*) cliOutBuffer);
+				    }
 
-				} while (xMoreDataToFollow != pdFALSE);
+				} while (moreDataToFollow != pdFALSE);
 				GiveCLIMutex();
 
 				i = 0;
@@ -451,7 +459,7 @@ void CreateUSBComTasks(void) {
 	 * Handle: USBComPortRxTaskHandle
 	 * */
 	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask, (signed portCHAR*)"USB_COM_RX", 3*configMINIMAL_STACK_SIZE,
+			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask, (signed portCHAR*)"USB_COM_RX", 2*configMINIMAL_STACK_SIZE,
 					NULL, USB_COM_RX_TASK_PRIO, &USBComPortRxTaskHandle)) {
 		ErrorHandler();
 	}
