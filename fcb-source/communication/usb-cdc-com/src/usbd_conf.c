@@ -30,6 +30,8 @@
 #include "usbd_core.h"
 #include "usbd_cdc.h"
 
+#include "FreeRTOS.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #define USB_DISCONNECT_PORT                 GPIOB  
@@ -87,14 +89,14 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd) {
 #if defined (USE_USB_INTERRUPT_DEFAULT)
 
 	/* Set USB Default FS Interrupt priority */
-	HAL_NVIC_SetPriority(USB_LP_CAN_RX0_IRQn, 5, 0);
+	HAL_NVIC_SetPriority(USB_LP_CAN_RX0_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
 
 	/* Enable USB FS Interrupt */
 	HAL_NVIC_EnableIRQ(USB_LP_CAN_RX0_IRQn);
 
 #elif defined (USE_USB_INTERRUPT_REMAPPED)
 	/* Set USB Remapped FS Interrupt priority */
-	HAL_NVIC_SetPriority(USB_LP_IRQn, 5, 0);
+	HAL_NVIC_SetPriority(USB_LP_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
 
 	/* Enable USB FS Interrupt */
 	HAL_NVIC_EnableIRQ(USB_LP_IRQn);

@@ -104,10 +104,10 @@ static void InitSystem(void) {
 	/* Init User button */
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
-	/* TODO I2C reading hangs system */
-//	if (FCB_OK != FcbSensorsConfig()) {
-//		ErrorHandler();
-//	}
+	/* Init sensor reading */
+	if (FCB_OK != FcbSensorsConfig()) {
+		ErrorHandler();
+	}
 
 	/* Init the states for the Kalman filter */
 	InitStatesXYZ();

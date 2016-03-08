@@ -226,14 +226,14 @@ static const CLI_Command_Definition_t getMotorsCommand = { (const int8_t * const
 
 /* Structure that defines the "start-motor-sampling" command line command. */
 static const CLI_Command_Definition_t startMotorSamplingCommand = { (const int8_t * const ) "start-motor-sampling",
-        (const int8_t * const ) "\r\nstart-motor-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints motor control values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nstart-motor-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints motor values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
         CLIStartMotorSampling, /* The function to run. */
         3 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-motor-sampling" command line command. */
 static const CLI_Command_Definition_t stopMotorSamplingCommand = { (const int8_t * const ) "stop-motor-sampling",
-        (const int8_t * const ) "\r\nstop-motor-sampling:\r\n Stops printing of motor control sample values\r\n",
+        (const int8_t * const ) "\r\nstop-motor-sampling:\r\n Stops printing of motor values\r\n",
         CLIStopMotorSampling, /* The function to run. */
         0 /* Number of parameters expected */
 };
@@ -254,14 +254,14 @@ static const CLI_Command_Definition_t systimeCommand = { (const int8_t * const )
 
 /* Structure that defines the "get-flight-mode" command line command. */
 static const CLI_Command_Definition_t getFlightModeCommand = { (const int8_t * const ) "get-flight-mode",
-        (const int8_t * const ) "\r\nget-flight-mode:\r\n Prints the current flight mode\r\n",
+        (const int8_t * const ) "\r\nget-flight-mode:\r\n Prints current flight mode\r\n",
         CLIGetFlightMode, /* The function to run. */
         0 /* Number of parameters expected */
 };
 
 /* Structure that defines the "get-ref-signals" command line command. */
 static const CLI_Command_Definition_t getRefSignalsCommand = { (const int8_t * const ) "get-ref-signals",
-        (const int8_t * const ) "\r\nget-ref-signals:\r\n Prints the current reference signal\r\n",
+        (const int8_t * const ) "\r\nget-ref-signals:\r\n Prints current reference signals\r\n",
         CLIGetRefSignals, /* The function to run. */
         0 /* Number of parameters expected */
 };
@@ -283,7 +283,7 @@ static const CLI_Command_Definition_t getStatesCommand = { (const int8_t * const
 /* Structure that defines the "start-motor-sampling" command line command. */
 static const CLI_Command_Definition_t startStateSamplingCommand = { (const int8_t * const ) "start-state-sampling",
         (const int8_t * const ) "\r\nstart-state-sampling <sampletime> <sampleduration> <encoding>:\r\n"
-        " Prints state values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto, c=calibration)\r\n",
+        "Prints state values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto, c=calibration)\r\n",
         CLIStartStateSampling, /* The function to run. */
         3 /* Number of parameters expected */
 };

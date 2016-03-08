@@ -44,6 +44,7 @@ extern void xPortSysTickHandler(void);
  * @retval None
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    // TODO Needs debouncing?
 	if (GPIO_Pin == USER_BUTTON_PIN) {
 		UserButtonPressed++;
 		if (UserButtonPressed > 0x7) {
