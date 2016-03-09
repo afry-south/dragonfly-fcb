@@ -925,6 +925,12 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
     portBASE_TYPE xParameterStringLength;
     portBASE_TYPE lParameterNumber = 0;
 
+    float32_t accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ;
+    uint32_t len;
+    bool protoStatus;
+    uint8_t serializedSensorData[SensorSamplesProto_size];
+    SensorSamplesProto sensorProto;
+
     /* Empty pcWriteBuffer so no strange output is sent as command response */
     configASSERT(pcWriteBuffer);
     memset(pcWriteBuffer, 0x00, xWriteBufferLen);
@@ -937,13 +943,86 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
             &xParameterStringLength /* Store the parameter string length. */
     );
 
-    /* Get the current sensor values */
-    if(pcParameter[0] == 'n')
-        PrintSensorValues(NO_SERIALIZATION);
-    else if(pcParameter[0] == 'p')
-        PrintSensorValues(PROTOBUFFER_SERIALIZATION);
+    /* Sanity check something was returned. */
+    configASSERT(pcParameter);
 
-    return pdFALSE;
+    /* Get the current sensor values */
+    switch (pcParameter[0]) {
+    case 'n':
+        if (outCnt == 0) {
+            /* Get the latest sensor values */
+            GetAcceleration(&accX, &accY, &accZ);
+            snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+                    "Accelerometer [m/s^2]\nAccX: %1.3f\nAccY: %1.3f\nAccZ: %1.3f\r\n", accX, accY, accZ);
+            outCnt = 3;
+        } else if (outCnt == 2) {
+            GetGyroAngleDot(&gyroX, &gyroY, &gyroZ);
+            snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+                    "Gyroscope [rad/s]\nGyroX: %1.3f\nGyroY: %1.3f\nGyroZ: %1.3f\r\n", gyroX, gyroY, gyroZ);
+        } else {
+            GetMagVector(&magX, &magY, &magZ);
+            snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+                    "Magnetometer [G]\nMagX: %1.3f\nMagY: %1.3f\nMagZ: %1.3f\r\n", magX, magY, magZ);
+        }
+
+        break;
+    case 'p':
+        GetAcceleration(&accX, &accY, &accZ);
+        GetGyroAngleDot(&gyroX, &gyroY, &gyroZ);
+        GetMagVector(&magX, &magY, &magZ);
+
+        sensorProto.has_accX = true;
+        sensorProto.has_accY = true;
+        sensorProto.has_accZ = true;
+        sensorProto.has_gyroAngRateXb = true;
+        sensorProto.has_gyroAngRateYb = true;
+        sensorProto.has_gyroAngRateZb = true;
+        sensorProto.has_magX = true;
+        sensorProto.has_magY = true;
+        sensorProto.has_magZ = true;
+        sensorProto.accX = accX;
+        sensorProto.accY = accY;
+        sensorProto.accZ = accZ;
+        sensorProto.gyroAngRateXb = gyroX;
+        sensorProto.gyroAngRateYb = gyroY;
+        sensorProto.gyroAngRateZb = gyroZ;
+        sensorProto.magX = magX;
+        sensorProto.magY = magY;
+        sensorProto.magZ = magZ;
+
+        /* Create a stream that will write to our buffer and encode the data with protocol buffer */
+        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedSensorData, SensorSamplesProto_size);
+        protoStatus = pb_encode(&protoStream, SensorSamplesProto_fields, &sensorProto);
+
+        /* Insert header to the sample string, then copy the data after that */
+        len = snprintf((char*) pcWriteBuffer, xWriteBufferLen, "%u\n%u\n", SENSOR_SAMPLES_MSG_ENUM,
+                protoStream.bytes_written);
+        if (len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+            memcpy(&pcWriteBuffer[len], serializedSensorData, protoStream.bytes_written);
+            memcpy(&pcWriteBuffer[len + protoStream.bytes_written], "\r\n", strlen("\r\n"));
+        }
+
+        if (!protoStatus) {
+            ErrorHandler();
+        }
+
+        dataOutLength = len + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+
+        break;
+    default:
+        strncpy((char*) pcWriteBuffer, "Invalid parameter\r\n", xWriteBufferLen);
+        break;
+    }
+
+    if (outCnt > 0) {
+        outCnt--;
+    }
+
+    if (outCnt == 0) {
+        return pdFALSE; /* Return false to indicate command activity finished */
+    } else {
+        return pdTRUE; /* Return true to indicate more command activity to follow */
+    }
 }
 
 /**
@@ -1408,6 +1487,11 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
     portBASE_TYPE xParameterStringLength;
     portBASE_TYPE lParameterNumber = 0;
 
+    uint32_t len;
+    bool protoStatus;
+    uint8_t serializedStateData[FlightStatesProto_size];
+    FlightStatesProto stateValuesProto;
+
     configASSERT(pcWriteBuffer);
 
     /* Empty pcWriteBuffer so no strange output is sent as command response */
@@ -1425,12 +1509,67 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
     configASSERT(pcParameter);
 
     /* Get the current state values */
-    if(pcParameter[0] == 'n')
-        PrintStateValues(NO_SERIALIZATION);
-    else if(pcParameter[0] == 'p')
-        PrintStateValues(PROTOBUFFER_SERIALIZATION);
+    switch (pcParameter[0]) {
+    case 'n':
+        snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+                "Flight states [deg]\nrollAngle: %1.3f\npitchAngle: %1.3f\nyawAngle: %1.3f\r\n",
+                Radian2Degree(GetRollAngle()), Radian2Degree(GetPitchAngle()), Radian2Degree(GetYawAngle()));
+        break;
+    case 'p':
+        /* Add estimated attitude states to protobuffer type struct members */
+        stateValuesProto.has_rollAngle = true;
+        stateValuesProto.rollAngle = GetRollAngle();
+        stateValuesProto.has_pitchAngle = true;
+        stateValuesProto.pitchAngle = GetPitchAngle();
+        stateValuesProto.has_yawAngle = true;
+        stateValuesProto.yawAngle = GetYawAngle();
 
-    return pdFALSE;
+        // TODO add attitude rates when available
+        stateValuesProto.has_rollRate = false;
+        stateValuesProto.rollRate = 0.0;
+        stateValuesProto.has_pitchRate = false;
+        stateValuesProto.pitchRate = 0.0;
+        stateValuesProto.has_yawRate = false;
+        stateValuesProto.yawRate = 0.0;
+
+        // TODO add position estimates when available
+        stateValuesProto.has_posX = false;
+        stateValuesProto.posX = 0.0;
+        stateValuesProto.has_posY = false;
+        stateValuesProto.posY = 0.0;
+        stateValuesProto.has_posZ = false;
+        stateValuesProto.posZ = 0.0;
+
+        // TODO add velocity estimates when available
+        stateValuesProto.has_velX = false;
+        stateValuesProto.velX = 0.0;
+        stateValuesProto.has_velY = false;
+        stateValuesProto.velY = 0.0;
+        stateValuesProto.has_velZ = false;
+        stateValuesProto.velZ = 0.0;
+
+        /* Create a stream that will write to our buffer and encode the data with protocol buffer */
+        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedStateData, FlightStatesProto_size);
+        protoStatus = pb_encode(&protoStream, FlightStatesProto_fields, &stateValuesProto);
+
+        /* Insert header to the sample string, then copy the data after that */
+        len = snprintf((char*) pcWriteBuffer, xWriteBufferLen, "%u\n%u\n", FLIGHT_STATE_MSG_ENUM, protoStream.bytes_written);
+        if(len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+            memcpy(&pcWriteBuffer[len], serializedStateData, protoStream.bytes_written);
+            memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+        }
+
+        if (!protoStatus) {
+            ErrorHandler();
+        }
+
+        dataOutLength = len + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+
+        break;
+    default:
+        strncpy((char*) pcWriteBuffer, "Invalid parameter\r\n", xWriteBufferLen);
+        break;
+    }
 }
 
 /**
