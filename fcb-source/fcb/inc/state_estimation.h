@@ -9,7 +9,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "arm_math.h"
-#include "usbd_cdc_if.h"
+#include "communication.h"
 #include "flight_control.h"
 #include "fcb_retval.h"
 #include "common.h"

@@ -18,12 +18,12 @@
 #include "task.h"
 #include "fcb_error.h"
 #include "dragonfly_fcb.pb.h"
-#include "usb_com_cli.h"
 #include "pb_encode.h"
 #include "math.h"
 #include "rotation_transformation.h"
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_retval.h"
+#include "usbd_cdc_if.h"
 
 /* Private define ------------------------------------------------------------*/
 enum { VAR_SAMPLE_MAX = 100 }; /* number of samples for variance - max 256 */

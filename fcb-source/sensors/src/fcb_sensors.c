@@ -13,7 +13,7 @@
 #include "fcb_retval.h"
 #include "dragonfly_fcb.pb.h"
 #include "pb_encode.h"
-#include "usb_com_cli.h"
+#include "usbd_cdc_if.h"
 
 #include "arm_math.h"
 
@@ -137,37 +137,61 @@ void FcbSensorPush2Client(FcbSensorIndexType sensorType, uint8_t deltaTms, float
 
 
 void FcbSendSensorMessageFromISR(uint8_t event) {
-  FcbSensorMsgType msg = { 0 , 0 };
-  portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
+    FcbSensorMsgType msg = { 0, 0 };
+    portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
 
 #ifdef FCB_SENSORS_DEBUG
-  /* this function counts incoming DRDY signals from the sensors */
+    /* this function counts incoming DRDY signals from the sensors */
 
-  if ((cbk_gyro_counter % 48) == 0) {
-    BSP_LED_Toggle(LED5);
-  }
-  cbk_gyro_counter++;
+    if ((cbk_gyro_counter % 48) == 0) {
+        BSP_LED_Toggle(LED5);
+    }
+    cbk_gyro_counter++;
 #endif
 
-  if (0 == sensorSampleRateDone) {
-    sensorSampleRateDone = _CountSensorDrdy(event);
-  }
+    if (0 == sensorSampleRateDone) {
+        sensorSampleRateDone = _CountSensorDrdy(event);
+    }
 
-  msg.event = event;
-  msg.deltaTime = _CalculateDrdyDeltaT();
+    msg.event = event;
+    msg.deltaTime = _CalculateDrdyDeltaT();
 
-  if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
-    ErrorHandler();
-  }
+    if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
+        ErrorHandler();
+    }
 
-  portYIELD_FROM_ISR(higherPriorityTaskWoken);
+    portYIELD_FROM_ISR(higherPriorityTaskWoken);
+}
+
+void FcbSendSensorMessage(uint8_t event) {
+    FcbSensorMsgType msg = { 0, 0 };
+
+#ifdef FCB_SENSORS_DEBUG
+    /* this function counts incoming DRDY signals from the sensors */
+
+    if ((cbk_gyro_counter % 48) == 0) {
+        BSP_LED_Toggle(LED5);
+    }
+    cbk_gyro_counter++;
+#endif
+
+    if (0 == sensorSampleRateDone) {
+        sensorSampleRateDone = _CountSensorDrdy(event);
+    }
+
+    msg.event = event;
+    msg.deltaTime = _CalculateDrdyDeltaT();
+
+    if (pdTRUE != xQueueSend(qFcbSensors, &msg, 0)) {
+        ErrorHandler();
+    }
 }
 
 void FcbSensorsInitGpioPinForInterrupt(GPIO_TypeDef  *GPIOx, uint32_t pin) {
   GPIO_InitTypeDef GPIO_InitStructure;
   GPIO_InitStructure.Pin = pin;
   GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
   HAL_GPIO_Init(GPIOx, &GPIO_InitStructure);
 }

@@ -15,6 +15,7 @@
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_error.h"
 #include "usbd_cdc_if.h"
+#include "uart.h"
 
 #include "stm32f3_discovery.h"
 
@@ -43,6 +44,7 @@ extern void xPortSysTickHandler(void);
  * @retval None
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    // TODO Needs debouncing?
 	if (GPIO_Pin == USER_BUTTON_PIN) {
 		UserButtonPressed++;
 		if (UserButtonPressed > 0x7) {
@@ -127,6 +129,44 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 		else if (htim->Channel == AUX_RECEIVER_AUX1_ACTIVE_CHANNEL)
 			UpdateReceiverAux1Channel();
 	}
+}
+
+/**
+  * @brief  Tx Transfer completed callback
+  * @param  UartHandle: UART handle.
+  * @retval None
+  */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+    if(UartHandle->Instance == UART) {
+        HandleUartTxCallback(UartHandle);
+    }
+}
+
+/**
+  * @brief  Rx Transfer completed callback
+  * @param  UartHandle: UART handle
+  * @retval None
+  */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+    if(UartHandle->Instance == UART) {
+        HandleUartRxCallback(UartHandle);
+    }
+}
+
+/**
+  * @brief  UART error callbacks
+  * @param  UartHandle: UART handle
+  * @note   This example shows a simple way to report transfer error, and you can
+  *         add your own implementation.
+  * @retval None
+  */
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
+{
+    if(UartHandle->Instance == UART) {
+        HandleUartErrorCallback(UartHandle);
+    }
 }
 
 /* Private functions ---------------------------------------------------------*/

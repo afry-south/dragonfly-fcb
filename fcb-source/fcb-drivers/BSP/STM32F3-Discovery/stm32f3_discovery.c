@@ -341,7 +341,7 @@ uint32_t BSP_PB_GetState(Button_TypeDef Button)
   */
 static void I2Cx_MspInit(I2C_HandleTypeDef *hi2c)
 {
-
+  (void) hi2c;
   GPIO_InitTypeDef GPIO_InitStructure;
 
   /* Enable SCK and SDA GPIO clocks */
@@ -349,8 +349,8 @@ static void I2Cx_MspInit(I2C_HandleTypeDef *hi2c)
 
   /* I2Cx SD1 & SCK pin configuration */
   GPIO_InitStructure.Pin = (DISCOVERY_I2Cx_SDA_PIN | DISCOVERY_I2Cx_SCL_PIN);
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
   GPIO_InitStructure.Alternate = DISCOVERY_I2Cx_AF;
   HAL_GPIO_Init(DISCOVERY_I2Cx_GPIO_PORT, &GPIO_InitStructure);
@@ -706,7 +706,7 @@ void COMPASSACCELERO_IO_ITConfig(void)
   HAL_GPIO_Init(ACCELERO_INT_GPIO_PORT, &GPIO_InitStructure);
 
   /* Enable and set Button EXTI Interrupt to the lowest priority */
-  HAL_NVIC_SetPriority(ACCELERO_INT1_EXTI_IRQn, 0x00, 0x00);
+  HAL_NVIC_SetPriority(ACCELERO_INT1_EXTI_IRQn, 5, 0x00);
   HAL_NVIC_EnableIRQ(ACCELERO_INT1_EXTI_IRQn);
 }
 

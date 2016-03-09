@@ -1,7 +1,8 @@
 #ifndef FCB_SENSORS_H
 #define FCB_SENSORS_H
 
-#include "usbd_cdc_if.h"
+#include "communication.h"
+#include "stm32f3xx_hal.h"
 
 #include "fcb_retval.h"
 #include "arm_math.h"
@@ -44,7 +45,7 @@ typedef enum FcbAxleIndex {
  *
  * @todo tune size
  */
-enum { FCB_SENSORS_QUEUE_SIZE = 5 };
+enum { FCB_SENSORS_QUEUE_SIZE = 32 };
 
 #define FCB_SENSORS_Q_MSG_SIZE (sizeof(FcbSensorMsgType))
 
@@ -137,6 +138,9 @@ void FcbSensorPush2Client(FcbSensorIndexType sensorType, uint8_t deltaT, float32
  * @param event see FcbSensorEventType
  */
 void FcbSendSensorMessageFromISR(uint8_t event);
+
+// TODO Description
+void FcbSendSensorMessage(uint8_t event);
 
 void PrintSensorValues(const SerializationType serializationType);
 FcbRetValType StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
