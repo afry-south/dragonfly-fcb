@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @file    stm32f3_discovery.c
-  * @author  MCD Application Team
+  * @author  MCD Application Team (Modified by AF Consult)
   * @version V2.1.0
   * @date    18-June-2014
   * @brief   This file provides set of firmware functions to manage Leds and
@@ -141,7 +141,7 @@ static void     SPIx_MspInit(SPI_HandleTypeDef *hspi);
 /* Link function for GYRO peripheral */
 void            GYRO_IO_Init(void);
 void            GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite);
-void            GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead);
+uint8_t         GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead);
 #endif
 
 #ifdef HAL_I2C_MODULE_ENABLED
@@ -512,7 +512,6 @@ static void SPIx_Init(void)
   */
 static uint8_t SPIx_WriteRead(uint8_t Byte)
 {
-
   uint8_t receivedbyte = 0;
 
   /* Send a Byte through the SPI peripheral */
@@ -549,6 +548,7 @@ static void SPIx_Error (void)
 static void SPIx_MspInit(SPI_HandleTypeDef *hspi)
 {
   GPIO_InitTypeDef   GPIO_InitStructure;
+  (void) hspi;
 
   /* Enable SPI1 clock  */
   DISCOVERY_SPIx_CLK_ENABLE();
@@ -644,8 +644,10 @@ void GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
   * @param  NumByteToRead : number of bytes to read from the GYROSCOPE.
   * @retval None
   */
-void GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
+uint8_t GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
 {
+  uint8_t bytesRead = 0;
+
   if(NumByteToRead > 0x01)
   {
     ReadAddr |= (uint8_t)(READWRITE_CMD | MULTIPLEBYTE_CMD);
@@ -654,11 +656,12 @@ void GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
   {
     ReadAddr |= (uint8_t)READWRITE_CMD;
   }
+
   /* Set chip select Low at the start of the transmission */
   GYRO_CS_LOW();
 
   /* Send the Address of the indexed register */
-  SPIx_WriteRead(ReadAddr);
+  bytesRead = SPIx_WriteRead(ReadAddr);
 
   /* Receive the data that will be read from the device (MSB First) */
   while(NumByteToRead > 0x00)
@@ -671,6 +674,8 @@ void GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
 
   /* Set chip select High at the end of the transmission */
   GYRO_CS_HIGH();
+
+  return bytesRead;
 }
 #endif /* HAL_SPI_MODULE_ENABLED */
 

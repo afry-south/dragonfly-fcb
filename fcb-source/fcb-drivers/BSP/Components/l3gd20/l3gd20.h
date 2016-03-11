@@ -46,6 +46,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "..\Common\gyro.h"
+#include "stm32f3xx_hal.h"
 
 /** @addtogroup BSP
   * @{
@@ -284,7 +285,7 @@ void      L3GD20_DisableIT(uint8_t IntSel);
 /* High Pass Filter Configuration Functions */
 void      L3GD20_FilterConfig(uint8_t FilterStruct);
 void      L3GD20_FilterCmd(uint8_t HighPassFilterState);
-void      L3GD20_ReadXYZAngRate(float* pfData);
+HAL_StatusTypeDef L3GD20_ReadXYZAngRate(float* pfData);
 uint8_t   L3GD20_GetDataStatus(void);
 uint16_t  L3GD20_DataRateHz(void);
 
@@ -295,7 +296,7 @@ extern GYRO_DrvTypeDef L3gd20Drv;
 void      GYRO_IO_Init(void);
 void      GYRO_IO_DeInit(void);
 void      GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite);
-void      GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead);
+uint8_t   GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead);
 
 /**
   * @}

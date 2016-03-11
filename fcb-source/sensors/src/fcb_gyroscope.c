@@ -61,16 +61,11 @@ static xSemaphoreHandle mutexGyro;
 /* global fcn definitions */
 uint8_t InitialiseGyroscope(void) {
     uint8_t retVal = FCB_OK;
-
-
-
     GPIO_InitTypeDef GPIO_InitStructure;
-
 
     if (NULL == (mutexGyro = xSemaphoreCreateMutex())) {
       return FCB_ERR_INIT;
     }
-
 
     /* configure GYRO DRDY (data ready) interrupt */
     GYRO_CS_GPIO_CLK_ENABLE(); /* happens to be GPIOE */
@@ -98,9 +93,9 @@ uint8_t InitialiseGyroscope(void) {
     return retVal;
 }
 
-
 void FetchDataFromGyroscope(uint8_t deltaTms) {
   float gyroscopeData[3] = { 0.0f, 0.0f, 0.0f };
+  HAL_StatusTypeDef status = HAL_OK;
 
   /* paranoia - this is used for calculations to reduce the time this function
    * needs to hold the mutexMag
@@ -112,7 +107,16 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
     static uint16_t call_counter = 0;
 #endif
     /* returns rad/s */
-    L3GD20_ReadXYZAngRate(gyroscopeData);
+    status = L3GD20_ReadXYZAngRate(gyroscopeData);
+    if (status != HAL_OK) {
+        if (status == HAL_TIMEOUT) {
+            FcbSendSensorMessage(FCB_SENSOR_GYRO_DATA_READY); // Re-send data ready read request if read fails
+            return;
+        } else {
+            ErrorHandler();
+            return;
+        }
+    }
 
     /* see "Sensors" wiki page for gyroscope vs Quadcopter axes orientations */
     lGyroXYZAngleDot[XDOT_IDX] = - gyroscopeData[YDOT_IDX];

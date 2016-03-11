@@ -116,7 +116,6 @@ static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t delt
   case ACC_IDX: {
     /* run correction step */
     float32_t const * pAccMeterXYZ = pXYZ; /* interpret values as accelerations */
-
     GetAttitudeFromAccelerometer(sensorAttitudeRPY, pAccMeterXYZ);
     CorrectAttitudeState(sensorAttitudeRPY[ROLL_IDX], &rollEstimator, &rollState);
     CorrectAttitudeState(sensorAttitudeRPY[PITCH_IDX], &pitchEstimator, &pitchState);
@@ -125,7 +124,6 @@ static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t delt
   case MAG_IDX: {
     /* run correction step */
     float32_t const * pMagMeter = pXYZ;
-
     sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle(pMagMeter, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
     CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
   }
