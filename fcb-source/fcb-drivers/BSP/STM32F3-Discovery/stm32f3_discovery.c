@@ -109,7 +109,7 @@ static SPI_HandleTypeDef SpiHandle;
 #ifdef HAL_I2C_MODULE_ENABLED
 static I2C_HandleTypeDef I2cHandle;
 // uint32_t I2cxTimeout = I2Cx_TIMEOUT_MAX;    /*<! Value of Timeout when I2C communication fails */
-uint32_t I2cxTimeout = 0x1;    /*<! Value of Timeout when I2C communication fails */
+uint32_t I2cxTimeout = 0x2;    /*<! Value of Timeout when I2C communication fails */
 #endif
 
 /**
@@ -123,8 +123,6 @@ uint32_t I2cxTimeout = 0x1;    /*<! Value of Timeout when I2C communication fail
 #ifdef HAL_I2C_MODULE_ENABLED
 /* I2Cx bus function */
 static void     I2Cx_Init(void);
-extern void     I2Cx_WriteData(uint16_t Addr, uint8_t Reg, uint8_t Value);
-extern uint8_t  I2Cx_ReadData(uint16_t Addr, uint8_t Reg);
 static void     I2Cx_Error (void);
 static void     I2Cx_MspInit(I2C_HandleTypeDef *hi2c);
 #endif
@@ -132,7 +130,7 @@ static void     I2Cx_MspInit(I2C_HandleTypeDef *hi2c);
 #ifdef HAL_SPI_MODULE_ENABLED
 /* SPIx bus function */
 static void     SPIx_Init(void);
-static uint8_t  SPIx_WriteRead(uint8_t byte);
+static HAL_StatusTypeDef SPIx_WriteRead(uint8_t txByte, uint8_t* rxByte);
 static void     SPIx_Error (void);
 static void     SPIx_MspInit(SPI_HandleTypeDef *hspi);
 #endif
@@ -507,21 +505,22 @@ static void SPIx_Init(void)
 /**
   * @brief  Sends a Byte through the SPI interface and return the Byte received
   *         from the SPI bus.
-  * @param  Byte : Byte send.
-  * @retval The received byte value
+  * @param  txByte : Byte send.
+  * @param  rxByte : Receive byte.
+  * @retval Number of received bytes
   */
-static uint8_t SPIx_WriteRead(uint8_t Byte)
+static HAL_StatusTypeDef SPIx_WriteRead(uint8_t txByte, uint8_t* rxByte)
 {
-  uint8_t receivedbyte = 0;
+  HAL_StatusTypeDef status = HAL_OK;
 
   /* Send a Byte through the SPI peripheral */
   /* Read byte from the SPI bus */
-  if(HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t*) &Byte, (uint8_t*) &receivedbyte, 1, SpixTimeout) != HAL_OK)
+  if((status = HAL_SPI_TransmitReceive(&SpiHandle, &txByte, rxByte, 1, SpixTimeout)) != HAL_OK)
   {
     SPIx_Error();
   }
 
-  return receivedbyte;
+  return status;
 }
 
 
@@ -611,6 +610,7 @@ void GYRO_IO_Init(void)
   */
 void GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
 {
+  uint8_t readByte = 0;
   /* Configure the MS bit:
        - When 0, the address will remain unchanged in multiple read/write commands.
        - When 1, the address will be auto incremented in multiple read/write commands.
@@ -623,12 +623,12 @@ void GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
   GYRO_CS_LOW();
 
   /* Send the Address of the indexed register */
-  SPIx_WriteRead(WriteAddr);
+  SPIx_WriteRead(WriteAddr, &readByte);
 
   /* Send the data that will be written into the device (MSB First) */
   while(NumByteToWrite >= 0x01)
   {
-    SPIx_WriteRead(*pBuffer);
+    SPIx_WriteRead(*pBuffer, &readByte);
     NumByteToWrite--;
     pBuffer++;
   }
@@ -644,9 +644,10 @@ void GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
   * @param  NumByteToRead : number of bytes to read from the GYROSCOPE.
   * @retval None
   */
-uint8_t GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
+HAL_StatusTypeDef GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
 {
-  uint8_t bytesRead = 0;
+  HAL_StatusTypeDef status = HAL_OK;
+  uint8_t readByte = 0;
 
   if(NumByteToRead > 0x01)
   {
@@ -661,13 +662,13 @@ uint8_t GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
   GYRO_CS_LOW();
 
   /* Send the Address of the indexed register */
-  bytesRead = SPIx_WriteRead(ReadAddr);
+  status = SPIx_WriteRead(ReadAddr, &readByte);
 
   /* Receive the data that will be read from the device (MSB First) */
-  while(NumByteToRead > 0x00)
+  while(NumByteToRead > 0x00 && status == HAL_OK)
   {
     /* Send dummy byte (0x00) to generate the SPI clock to GYROSCOPE (Slave device) */
-    *pBuffer = SPIx_WriteRead(DUMMY_BYTE);
+    status = SPIx_WriteRead(DUMMY_BYTE, pBuffer);
     NumByteToRead--;
     pBuffer++;
   }
@@ -675,7 +676,7 @@ uint8_t GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
   /* Set chip select High at the end of the transmission */
   GYRO_CS_HIGH();
 
-  return bytesRead;
+  return status;
 }
 #endif /* HAL_SPI_MODULE_ENABLED */
 

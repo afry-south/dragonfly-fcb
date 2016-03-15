@@ -95,8 +95,9 @@ void HAL_SYSTICK_Callback(void) {
 #endif
 	HAL_IncTick();
 
-	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
 		xPortSysTickHandler();
+	}
 }
 
 /**

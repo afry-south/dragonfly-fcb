@@ -30,7 +30,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define FCB_ACCMAG_DEBUG
+//#define FCB_ACCMAG_DEBUG
 
 #ifdef FCB_ACCMAG_DEBUG
 #include "stm32f3xx_hal.h"
@@ -239,8 +239,8 @@ void StopAccMagMtrCalibration(uint8_t samples) {
 }
 
 void FetchDataFromMagnetometer(void) {
-    float magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
     HAL_StatusTypeDef status = HAL_OK;
+    float magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
 
 #ifdef FCB_ACCMAG_DEBUG
     static uint32_t call_counter = 0;

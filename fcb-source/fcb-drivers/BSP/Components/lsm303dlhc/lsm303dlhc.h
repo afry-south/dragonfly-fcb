@@ -46,9 +46,9 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f3_discovery.h"
 #include "accelero.h"
 #include "arm_math.h"
-#include "stm32f3_discovery.h"
 /** @addtogroup LSM303DLHC
   * @{
   */

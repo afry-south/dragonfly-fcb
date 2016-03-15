@@ -79,7 +79,7 @@ static void _ProcessSensorValues(void*);
 static bool _CountSensorDrdy(uint8_t msg); /* not used */
 static uint32_t _CalculateDrdyDeltaT(uint8_t msg);
 static void _SensorPrintSamplingTask(void const *argument);
-
+static void SensorQueueFullHandler(void);
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -150,7 +150,11 @@ void FcbSendSensorMessageFromISR(uint8_t event) {
     msg.deltaTime = _CalculateDrdyDeltaT(event);
 
     if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
-        ErrorHandler();
+        if(pdFALSE != xQueueIsQueueFullFromISR(qFcbSensors)) {
+            SensorQueueFullHandler();
+        } else {
+            ErrorHandler();
+        }
     }
 
     portYIELD_FROM_ISR(higherPriorityTaskWoken);
@@ -163,6 +167,7 @@ void FcbSendSensorMessageFromISR(uint8_t event) {
  */
 void FcbSendSensorMessage(uint8_t event) {
     FcbSensorMsgType msg = { 0, 0 };
+    uint8_t status;
     uint8_t idx = 0;
 
     if (0 == sensorSampleRateDone) {
@@ -187,7 +192,7 @@ void FcbSendSensorMessage(uint8_t event) {
     msg.event = event;
     msg.deltaTime = sensorDrdyCalc[idx].drdyDeltaTime; // Use last DeltaTime
 
-    if (pdTRUE != xQueueSend(qFcbSensors, &msg, 0)) {
+    if (pdTRUE != (status = xQueueSend(qFcbSensors, &msg, portMAX_DELAY))) {
         ErrorHandler();
     }
 }
@@ -335,64 +340,61 @@ void SetSensorPrintSamplingSerialization(const SerializationType serializationTy
 /* Private functions ---------------------------------------------------------*/
 
 static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
-  /*
-   * configures the sensors to start giving Data Ready interrupts
-   * and then polls the queue in an infinite loop
-   */
-  FcbSensorMsgType msg;
-
-  if (FCB_OK != InitialiseGyroscope()) {
-    ErrorHandler();
-  }
-
-  if (FCB_OK != FcbInitialiseAccMagSensor()) {
-    ErrorHandler();
-  }
-
-  while (1) {
-    if (pdFALSE == xQueueReceive (qFcbSensors,
-        &msg,
-        portMAX_DELAY /* 1000 *//* configTICK_RATE_HZ is 1000 */)) {
-      /*
-       * if no message was received, no interrupts from the sensors
-       * aren't arriving and this is a serious error.
-       */
-      ErrorHandler();
-      goto Error;
-    }
-
-    switch (msg.event) {
-    case FCB_SENSOR_GYRO_DATA_READY:
-      /*
-       * As settings are in BSP_GYRO_Init, the callback is called with a frequency
-       * of 94.5 Hz according to oscilloscope.
-       */
-      FetchDataFromGyroscope(msg.deltaTime);
-      break;
-    case FCB_SENSOR_GYRO_CALIBRATE:
-      break;
-    case FCB_SENSOR_ACC_DATA_READY:
-      FetchDataFromAccelerometer();
-      break;
-    case FCB_SENSOR_ACC_CALIBRATE:
-      break;
-    case FCB_SENSOR_MAGNETO_DATA_READY:
-      FetchDataFromMagnetometer();
-      break;
-    case FCB_SENSOR_MAGNETO_CALIBRATE:
-      break;
-    }
-
-    /* todo: call the state correction part of the Kalman Filter every time
-     * we get new sensor values.
-     *
-     * Either from this function or the separate gyro / acc / magnetometer functions.
+    /*
+     * configures the sensors to start giving Data Ready interrupts
+     * and then polls the queue in an infinite loop
      */
-  }
-  Exit:
-  return;
-  Error:
-  goto Exit;
+    FcbSensorMsgType msg;
+
+    if (FCB_OK != InitialiseGyroscope()) {
+        ErrorHandler();
+    }
+
+    if (FCB_OK != FcbInitialiseAccMagSensor()) {
+        ErrorHandler();
+    }
+
+    while (1) {
+        if (pdFALSE == xQueueReceive(qFcbSensors, &msg,  1000 /* configTICK_RATE_HZ is 1000 */)) {
+            /*
+             * if no message was received, interrupts from the sensors
+             * aren't arriving and this is a serious error.
+             */
+            ErrorHandler();
+            goto Exit;
+        }
+
+        switch (msg.event) {
+        case FCB_SENSOR_GYRO_DATA_READY:
+            /*
+             * As settings are in BSP_GYRO_Init, the callback is called with a frequency
+             * of 94.5 Hz according to oscilloscope.
+             */
+            FetchDataFromGyroscope(msg.deltaTime);
+            break;
+        case FCB_SENSOR_GYRO_CALIBRATE:
+            break;
+        case FCB_SENSOR_ACC_DATA_READY:
+            FetchDataFromAccelerometer();
+            break;
+        case FCB_SENSOR_ACC_CALIBRATE:
+            break;
+        case FCB_SENSOR_MAGNETO_DATA_READY:
+            FetchDataFromMagnetometer();
+            break;
+        case FCB_SENSOR_MAGNETO_CALIBRATE:
+            break;
+        }
+
+        /* todo: call the state correction part of the Kalman Filter every time
+         * we get new sensor values.
+         *
+         * Either from this function or the separate gyro / acc / magnetometer functions.
+         */
+    }
+
+Exit:
+    return;
 }
 
 static bool _CountSensorDrdy(uint8_t msg) {
@@ -437,8 +439,7 @@ static bool _CountSensorDrdy(uint8_t msg) {
     if (DRDY_ENOUGH == sensorDrdyCalc[idx].count) {
       uint32_t elapsedTime = HAL_GetTick() - sensorDrdyCalc[GYRO_IDX].intervalStart;
 
-      sensorDrdyCalc[idx].samplePeriod =
-          elapsedTime / (float) DRDY_ENOUGH / (float)configTICK_RATE_HZ;
+      sensorDrdyCalc[idx].samplePeriod = elapsedTime / (float) DRDY_ENOUGH / (float)configTICK_RATE_HZ;
 
 #ifdef FCB_SENSORS_DEBUG
       sensorSampleRates[idx] = 1 / sensorDrdyCalc[idx].samplePeriod;
@@ -488,6 +489,14 @@ static uint32_t _CalculateDrdyDeltaT(uint8_t event) {
     sensorDrdyCalc[idx].drdyDeltaTime = difference;
 
     return difference;
+}
+
+static void SensorQueueFullHandler(void) {
+    xQueueReset(qFcbSensors);
+
+    FetchDataFromGyroscope(sensorDrdyCalc[GYRO_IDX].lastDrdyTime);
+    FetchDataFromAccelerometer();
+    FetchDataFromMagnetometer();
 }
 
 /**
