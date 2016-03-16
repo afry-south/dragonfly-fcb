@@ -93,11 +93,11 @@ void HAL_SYSTICK_Callback(void) {
 		BSP_LED_Toggle(LED9);
 	}
 #endif
-	HAL_IncTick();
-
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
 		xPortSysTickHandler();
 	}
+
+	HAL_IncTick();
 }
 
 /**

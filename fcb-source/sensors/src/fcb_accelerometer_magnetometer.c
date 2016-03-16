@@ -173,13 +173,8 @@ void FetchDataFromAccelerometer(void) {
     if ((ACCMAGMTR_FETCHING == accMagMode) || (ACCMAGMTR_CALIBRATING == accMagMode)) {
         status = LSM303DLHC_AccReadXYZ(acceleroMeterData);
         if (status != HAL_OK) { // Handle accelerometer read timeout error
-            if (status == HAL_TIMEOUT) {
-                FcbSendSensorMessage(FCB_SENSOR_ACC_DATA_READY);
-                return;
-            } else {
-                ErrorHandler();
-                return;
-            }
+            FcbSendSensorMessage(FCB_SENSOR_ACC_DATA_READY);
+            return;
         }
     }
 
@@ -261,13 +256,8 @@ void FetchDataFromMagnetometer(void) {
     if ((ACCMAGMTR_FETCHING == accMagMode) || (ACCMAGMTR_CALIBRATING == accMagMode)) {
         status = LSM303DLHC_MagReadXYZ(magnetoMeterData);
         if (status != HAL_OK) {
-            if (status == HAL_TIMEOUT) {
-                FcbSendSensorMessage(FCB_SENSOR_MAGNETO_DATA_READY);
-                return;
-            } else {
-                ErrorHandler();
-                return;
-            }
+            FcbSendSensorMessage(FCB_SENSOR_MAGNETO_DATA_READY);
+            return;
         }
     }
 

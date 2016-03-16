@@ -156,8 +156,8 @@ static void InitRTOS(void) {
 	CreateUARTComSemaphores();
 
 	/* # Start the RTOS scheduler #############################################
-	 * Since we use heap1.c, we must create all tasks and queues before the OS kernel
-	 * is started according to ST UM1722 manual section 1.6.
+	 * Currently using heap2.c
+	 * See ST UM1722 manual section 1.6 for more information.
 	 */
 	vTaskStartScheduler();
 }

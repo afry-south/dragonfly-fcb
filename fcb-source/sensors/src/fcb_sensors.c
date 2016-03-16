@@ -33,6 +33,7 @@
 
 #define SENSOR_PRINT_SAMPLING_TASK_PRIO				1
 #define SENSOR_PRINT_MINIMUM_SAMPLING_TIME			10 // [ms]
+#define SENSOR_DRDY_TIMEOUT                         500 // [ms]
 
 #define	SENSOR_PRINT_MAX_STRING_SIZE				192
 
@@ -79,7 +80,6 @@ static void _ProcessSensorValues(void*);
 static bool _CountSensorDrdy(uint8_t msg); /* not used */
 static uint32_t _CalculateDrdyDeltaT(uint8_t msg);
 static void _SensorPrintSamplingTask(void const *argument);
-static void SensorQueueFullHandler(void);
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -151,7 +151,27 @@ void FcbSendSensorMessageFromISR(uint8_t event) {
 
     if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
         if(pdFALSE != xQueueIsQueueFullFromISR(qFcbSensors)) {
-            SensorQueueFullHandler();
+            // If the queue is full, empty it
+            xQueueReset(qFcbSensors);
+
+            // Then add a message of each event type
+            msg.event = FCB_SENSOR_GYRO_DATA_READY;
+            msg.deltaTime = sensorDrdyCalc[GYRO_IDX].drdyDeltaTime;
+            if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
+                ErrorHandler();
+            }
+
+            msg.event = FCB_SENSOR_ACC_DATA_READY;
+            msg.deltaTime = sensorDrdyCalc[ACC_IDX].drdyDeltaTime;
+            if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
+                ErrorHandler();
+            }
+
+            msg.event = FCB_SENSOR_MAGNETO_DATA_READY;
+            msg.deltaTime = sensorDrdyCalc[MAG_IDX].drdyDeltaTime;
+            if (pdTRUE != xQueueSendFromISR(qFcbSensors, &msg, &higherPriorityTaskWoken)) {
+                ErrorHandler();
+            }
         } else {
             ErrorHandler();
         }
@@ -191,6 +211,7 @@ void FcbSendSensorMessage(uint8_t event) {
 
     msg.event = event;
     msg.deltaTime = sensorDrdyCalc[idx].drdyDeltaTime; // Use last DeltaTime
+    sensorDrdyCalc[idx].lastDrdyTime = HAL_GetTick();
 
     if (pdTRUE != (status = xQueueSend(qFcbSensors, &msg, portMAX_DELAY))) {
         ErrorHandler();
@@ -386,11 +407,18 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
             break;
         }
 
-        /* todo: call the state correction part of the Kalman Filter every time
-         * we get new sensor values.
-         *
-         * Either from this function or the separate gyro / acc / magnetometer functions.
-         */
+        /* Check for sensor read timeouts */
+        if (msg.event != FCB_SENSOR_GYRO_DATA_READY && HAL_GetTick() - sensorDrdyCalc[GYRO_IDX].lastDrdyTime > SENSOR_DRDY_TIMEOUT) {
+            FetchDataFromGyroscope(sensorDrdyCalc[GYRO_IDX].lastDrdyTime);
+        }
+
+        if (msg.event != FCB_SENSOR_ACC_DATA_READY && HAL_GetTick() - sensorDrdyCalc[ACC_IDX].lastDrdyTime > SENSOR_DRDY_TIMEOUT) {
+            FetchDataFromAccelerometer();
+        }
+
+        if (msg.event != FCB_SENSOR_MAGNETO_DATA_READY && HAL_GetTick() - sensorDrdyCalc[MAG_IDX].lastDrdyTime > SENSOR_DRDY_TIMEOUT) {
+            FetchDataFromMagnetometer();
+        }
     }
 
 Exit:
@@ -489,14 +517,6 @@ static uint32_t _CalculateDrdyDeltaT(uint8_t event) {
     sensorDrdyCalc[idx].drdyDeltaTime = difference;
 
     return difference;
-}
-
-static void SensorQueueFullHandler(void) {
-    xQueueReset(qFcbSensors);
-
-    FetchDataFromGyroscope(sensorDrdyCalc[GYRO_IDX].lastDrdyTime);
-    FetchDataFromAccelerometer();
-    FetchDataFromMagnetometer();
 }
 
 /**
