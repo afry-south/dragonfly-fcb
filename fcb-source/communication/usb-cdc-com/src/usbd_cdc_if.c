@@ -459,7 +459,7 @@ void CreateUSBComTasks(void) {
 	 * Handle: USBComPortRxTaskHandle
 	 * */
 	if (pdPASS
-			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask, (signed portCHAR*)"USB_COM_RX", 2*configMINIMAL_STACK_SIZE,
+			!= xTaskCreate((pdTASK_CODE )USBComPortRXTask, (signed portCHAR*)"USB_COM_RX", 3*configMINIMAL_STACK_SIZE,
 					NULL, USB_COM_RX_TASK_PRIO, &USBComPortRxTaskHandle)) {
 		ErrorHandler();
 	}

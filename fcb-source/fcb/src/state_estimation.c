@@ -116,7 +116,6 @@ static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t delt
   case ACC_IDX: {
     /* run correction step */
     float32_t const * pAccMeterXYZ = pXYZ; /* interpret values as accelerations */
-
     GetAttitudeFromAccelerometer(sensorAttitudeRPY, pAccMeterXYZ);
     CorrectAttitudeState(sensorAttitudeRPY[ROLL_IDX], &rollEstimator, &rollState);
     CorrectAttitudeState(sensorAttitudeRPY[PITCH_IDX], &pitchEstimator, &pitchState);
@@ -125,10 +124,9 @@ static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t delt
   case MAG_IDX: {
     /* run correction step */
     float32_t const * pMagMeter = pXYZ;
-
-    sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle(pMagMeter, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
-    CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
-  }
+        sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pMagMeter, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
+        CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
+    }
   break;
   default:
     ErrorHandler();
@@ -449,7 +447,7 @@ static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_
       pSampleData[MEAS].samples[PITCH_IDX][sCount[ACC_IDX]] = sensorAttitudeRPY[PITCH_IDX];
       break;
     case MAG_IDX:
-      sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle(pXYZData, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
+        sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pXYZData, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
       pSampleData[MEAS].samples[YAW_IDX][sCount[MAG_IDX]] = sensorAttitudeRPY[YAW_IDX];
       break;
     default:

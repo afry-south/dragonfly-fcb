@@ -420,11 +420,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
   /*##-4- Configure the NVIC for DMA #########################################*/
   /* NVIC configuration for DMA transfer complete interrupt (USARTx_TX) */
-  HAL_NVIC_SetPriority(UART_DMA_TX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0); // TODO define prio
+  HAL_NVIC_SetPriority(UART_DMA_TX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
   HAL_NVIC_EnableIRQ(UART_DMA_TX_IRQn);
 
   /* NVIC configuration for DMA transfer complete interrupt (USARTx_RX) */
-  HAL_NVIC_SetPriority(UART_DMA_RX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0); // TODO define prio
+  HAL_NVIC_SetPriority(UART_DMA_RX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
   HAL_NVIC_EnableIRQ(UART_DMA_RX_IRQn);
 }
 

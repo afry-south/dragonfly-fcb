@@ -388,17 +388,23 @@ uint8_t L3GD20_GetDataStatus(void)
 * @param  pfData : Data out pointer
 * @retval None
 */
-void L3GD20_ReadXYZAngRate(float* pfData)
+HAL_StatusTypeDef L3GD20_ReadXYZAngRate(float* pfData)
 {
+  HAL_StatusTypeDef status = HAL_OK;
   uint8_t tmpbuffer[6] ={0};
   int16_t RawData[3] = {0};
   uint8_t tmpreg = 0;
   float sensitivity = 0;
-  int i =0;
+  int i = 0;
   
-  GYRO_IO_Read(&tmpreg,L3GD20_CTRL_REG4_ADDR,1);
-  
-  GYRO_IO_Read(tmpbuffer,L3GD20_OUT_X_L_ADDR,6);
+  status = GYRO_IO_Read(&tmpreg, L3GD20_CTRL_REG4_ADDR, 1);
+  if(status != HAL_OK) {
+      goto Exit;
+  }
+  status = GYRO_IO_Read(tmpbuffer, L3GD20_OUT_X_L_ADDR, 6);
+  if(status != HAL_OK) {
+      goto Exit;
+  }
   
   /* check in the control register 4 the data alignment (Big Endian or Little Endian)*/
 
@@ -431,6 +437,9 @@ void L3GD20_ReadXYZAngRate(float* pfData)
 	/* translate data from milli degreees/sec to rad/sec */
     pfData[i]=(float)(RawData[i] * sensitivity * M_PI / 180 / 1000);
   }
+
+Exit:
+  return status;
 }
 
 /**

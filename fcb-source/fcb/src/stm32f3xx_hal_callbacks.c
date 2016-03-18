@@ -44,20 +44,26 @@ extern void xPortSysTickHandler(void);
  * @retval None
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-    // TODO Needs debouncing?
-	if (GPIO_Pin == USER_BUTTON_PIN) {
-		UserButtonPressed++;
-		if (UserButtonPressed > 0x7) {
-			BSP_LED_Toggle(LED7);
-			UserButtonPressed = 0x0;
-		}
-	} else if (GPIO_Pin == GPIO_GYRO_DRDY) {
-	  FcbSendSensorMessageFromISR(FCB_SENSOR_GYRO_DATA_READY);
-	} else if (GPIO_Pin == GPIO_ACCELEROMETER_DRDY) {
-	  FcbSendSensorMessageFromISR(FCB_SENSOR_ACC_DATA_READY);
-	} else if (GPIO_Pin == GPIO_MAGNETOMETER_DRDY) {
-	  FcbSendSensorMessageFromISR(FCB_SENSOR_MAGNETO_DATA_READY);
-	}
+    switch(GPIO_Pin) {
+    case USER_BUTTON_PIN:
+        UserButtonPressed++;
+        if (UserButtonPressed > 0x7) {
+            BSP_LED_Toggle(LED7);
+            UserButtonPressed = 0x0;
+        }
+        break;
+    case GPIO_GYRO_DRDY:
+        FcbSendSensorMessageFromISR(FCB_SENSOR_GYRO_DATA_READY);
+        break;
+    case GPIO_ACCELEROMETER_DRDY:
+        FcbSendSensorMessageFromISR(FCB_SENSOR_ACC_DATA_READY);
+        break;
+    case GPIO_MAGNETOMETER_DRDY:
+        FcbSendSensorMessageFromISR(FCB_SENSOR_MAGNETO_DATA_READY);
+        break;
+    default:
+        break;
+    }
 }
 
 /**
@@ -87,10 +93,11 @@ void HAL_SYSTICK_Callback(void) {
 		BSP_LED_Toggle(LED9);
 	}
 #endif
-	HAL_IncTick();
-
-	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
 		xPortSysTickHandler();
+	}
+
+	HAL_IncTick();
 }
 
 /**

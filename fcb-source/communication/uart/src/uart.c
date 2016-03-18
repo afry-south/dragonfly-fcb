@@ -148,7 +148,7 @@ void CreateUARTComTasks(void) {
      * Priority: UART_RX_TASK_PRIO (0 to configMAX_PRIORITIES-1 possible)
      * Handle: UartRxTaskHandle
      * */
-    if (pdPASS != xTaskCreate((pdTASK_CODE )UartRxTask, (signed portCHAR*)"UART_RX", 2*configMINIMAL_STACK_SIZE, NULL,
+    if (pdPASS != xTaskCreate((pdTASK_CODE )UartRxTask, (signed portCHAR*)"UART_RX", 3*configMINIMAL_STACK_SIZE, NULL,
             UART_RX_TASK_PRIO, &UartRxTaskHandle)) {
         ErrorHandler();
     }

@@ -86,7 +86,7 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t const * body
   float32_t accNormalized[3];
 
   /* Get unit length normalized version of accelerometer readings vector */
-  Vector3DNormalize(accNormalized, bodyAccelerometerReadings);
+  Vector3DNormalize(accNormalized, (float32_t*) bodyAccelerometerReadings);
 
   /* Calculate roll and pitch Euler angles  */
   dstAttitude[0] = atan2f(-accNormalized[1], -accNormalized[2]); // Roll-Phi need sign on both params to get right section of unit circle

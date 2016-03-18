@@ -330,6 +330,10 @@ void      BSP_LED_Toggle(Led_TypeDef Led);
 void      BSP_PB_Init(Button_TypeDef Button, ButtonMode_TypeDef ButtonMode);
 uint32_t  BSP_PB_GetState(Button_TypeDef Button);
 
+void      I2Cx_WriteData(uint16_t Addr, uint8_t Reg, uint8_t Value);
+uint8_t   I2Cx_ReadData(uint16_t Addr, uint8_t Reg);
+HAL_StatusTypeDef I2Cx_ReadDataLen(uint16_t Addr, uint8_t Reg, uint8_t * pData, uint16_t Len);
+
 /**
   * @}
   */

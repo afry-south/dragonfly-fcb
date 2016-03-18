@@ -36,7 +36,7 @@ typedef enum FcbAxleIndex {
   X_IDX = 0,
   Y_IDX = 1,
   Z_IDX = 2
-} FcbAxleIndexType; /* as above */
+} FcbAxisIndexType; /* as above */
 
 
 /**
@@ -45,7 +45,7 @@ typedef enum FcbAxleIndex {
  *
  * @todo tune size
  */
-enum { FCB_SENSORS_QUEUE_SIZE = 32 };
+enum { FCB_SENSORS_QUEUE_SIZE = FCB_SENSOR_NBR*4 };
 
 #define FCB_SENSORS_Q_MSG_SIZE (sizeof(FcbSensorMsgType))
 
@@ -73,8 +73,8 @@ typedef enum FcbSensorEvent {
  * @see FcbSensorEvent
  */
 typedef struct FcbSensorMsg {
-  uint8_t event;
-  uint8_t deltaTime;
+    uint32_t deltaTime;
+    uint8_t event;
 } FcbSensorMsgType;
 
 
