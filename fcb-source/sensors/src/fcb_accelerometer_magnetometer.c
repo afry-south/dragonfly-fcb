@@ -30,11 +30,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-//#define FCB_ACCMAG_DEBUG
-
-#ifdef FCB_ACCMAG_DEBUG
-#include "stm32f3xx_hal.h"
-#endif
+#define FCB_ACCMAG_DEBUG
 
 enum {
     ACCMAG_AXES_N = 3
@@ -114,17 +110,6 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     /* STM32F3 doc UM1570 page 27/36. Magnetometer interrupt */
     FcbSensorsInitGpioPinForInterrupt(GPIOE, GPIO_PIN_2);
 
-#ifdef FCB_ACCMAG_DEBUG
-    {
-        GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-        GPIO_InitStruct.Pin = GPIO_PIN_9 | GPIO_PIN_11;
-        GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-        GPIO_InitStruct.Pull = GPIO_PULLUP;
-        GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-        HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-    }
-#endif
-
     /* set up interrupt DRDY for accelerometer - see HAL_GPIO_EXTI_Callback fcn */
     HAL_NVIC_SetPriority(EXTI4_IRQn,
     configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
@@ -160,19 +145,12 @@ void FetchDataFromAccelerometer(void) {
     float32_t acceleroMeterData[3] = { 0.0f, 0.0f, 0.0f };
     HAL_StatusTypeDef status = HAL_OK;
 
-#ifdef FCB_ACCMAG_DEBUG
-    static uint32_t call_counter = 0;
-    if ((call_counter % 50) == 0) {
-        BSP_LED_Toggle(LED8);
-    }
-    call_counter++;
-    /* measure duration with oscilloscope on pin PD9 */
-    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_9);
-#endif
-
     if ((ACCMAGMTR_FETCHING == accMagMode) || (ACCMAGMTR_CALIBRATING == accMagMode)) {
         status = LSM303DLHC_AccReadXYZ(acceleroMeterData);
         if (status != HAL_OK) { // Handle accelerometer read timeout error
+#ifdef FCB_ACCMAG_DEBUG
+            USBComSendString("ERROR: LSM303DLHC_AccReadXYZ\n");
+#endif
             FcbSendSensorMessage(FCB_SENSOR_ACC_DATA_READY);
             return;
         }
@@ -214,10 +192,6 @@ void FetchDataFromAccelerometer(void) {
     }
 
     FcbSensorPush2Client(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
-
-#ifdef FCB_ACCMAG_DEBUG
-    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_9);
-#endif
 }
 
 void StartAccMagMtrCalibration(uint8_t samples) {
@@ -237,25 +211,12 @@ void FetchDataFromMagnetometer(void) {
     HAL_StatusTypeDef status = HAL_OK;
     float magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
 
-#ifdef FCB_ACCMAG_DEBUG
-    static uint32_t call_counter = 0;
-
-    {
-        if ((call_counter % 75) == 0) {
-            if (ACCMAGMTR_FETCHING == accMagMode) {
-                BSP_LED_Toggle(LED6);
-            }
-        }
-        call_counter++;
-    }
-
-    /* measure duration with oscilloscope on pin PD11 */
-    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
-#endif
-
     if ((ACCMAGMTR_FETCHING == accMagMode) || (ACCMAGMTR_CALIBRATING == accMagMode)) {
         status = LSM303DLHC_MagReadXYZ(magnetoMeterData);
         if (status != HAL_OK) {
+#ifdef FCB_ACCMAG_DEBUG
+            USBComSendString("ERROR: LSM303DLHC_MagReadXYZ\n");
+#endif
             FcbSendSensorMessage(FCB_SENSOR_MAGNETO_DATA_READY);
             return;
         }
@@ -295,10 +256,6 @@ void FetchDataFromMagnetometer(void) {
     }
 
     FcbSensorPush2Client(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
-
-#ifdef FCB_ACCMAG_DEBUG
-    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_11);
-#endif
 
 #ifdef FCB_SENSORS_SCILAB_CALIB
     /* - copy values from CLI to SciLab data file

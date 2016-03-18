@@ -25,7 +25,7 @@
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
-// #define FCB_GYRO_DEBUG
+#define FCB_GYRO_DEBUG
 
 /* static & local declarations */
 
@@ -94,66 +94,50 @@ uint8_t InitialiseGyroscope(void) {
 }
 
 void FetchDataFromGyroscope(uint8_t deltaTms) {
-  float gyroscopeData[3] = { 0.0f, 0.0f, 0.0f };
-  HAL_StatusTypeDef status = HAL_OK;
+    float gyroscopeData[3] = { 0.0f, 0.0f, 0.0f };
+    HAL_StatusTypeDef status = HAL_OK;
 
-  /* paranoia - this is used for calculations to reduce the time this function
-   * needs to hold the mutexMag
-   */
-  float lGyroXYZAngleDot[3] = { 0.0f, 0.0f, 0.0f };
-#ifdef FCB_GYRO_DEBUG
+    /* paranoia - this is used for calculations to reduce the time this function
+     * needs to hold the mutexMag
+     */
+    float lGyroXYZAngleDot[3] = { 0.0f, 0.0f, 0.0f };
     static uint32_t call_counter = 0;
-#else
-    static uint16_t call_counter = 0;
-#endif
+
     /* returns rad/s */
     status = L3GD20_ReadXYZAngRate(gyroscopeData);
     if (status != HAL_OK) {
-        if (status == HAL_TIMEOUT) {
-            FcbSendSensorMessage(FCB_SENSOR_GYRO_DATA_READY); // Re-send data ready read request if read fails
-            return;
-        } else {
-            ErrorHandler();
-            return;
-        }
+#ifdef FCB_GYRO_DEBUG
+        USBComSendString("ERROR: L3GD20_ReadXYZAngRate\n");
+#endif
+        FcbSendSensorMessage(FCB_SENSOR_GYRO_DATA_READY); // Re-send data ready read request if read fails
+        return;
     }
 
     /* see "Sensors" wiki page for gyroscope vs Quadcopter axes orientations */
-    lGyroXYZAngleDot[XDOT_IDX] = - gyroscopeData[YDOT_IDX];
-    lGyroXYZAngleDot[YDOT_IDX] = - gyroscopeData[XDOT_IDX];
-    lGyroXYZAngleDot[ZDOT_IDX] = - gyroscopeData[ZDOT_IDX];
+    lGyroXYZAngleDot[XDOT_IDX] = -gyroscopeData[YDOT_IDX];
+    lGyroXYZAngleDot[YDOT_IDX] = -gyroscopeData[XDOT_IDX];
+    lGyroXYZAngleDot[ZDOT_IDX] = -gyroscopeData[ZDOT_IDX];
 
     if (GYROSCOPE_OFFSET_SAMPLES > call_counter) {
-    	sGyroXYZAngleDotOffset[XDOT_IDX] += lGyroXYZAngleDot[XDOT_IDX];
-    	sGyroXYZAngleDotOffset[YDOT_IDX] += lGyroXYZAngleDot[YDOT_IDX];
-    	sGyroXYZAngleDotOffset[ZDOT_IDX] += lGyroXYZAngleDot[ZDOT_IDX];
+        sGyroXYZAngleDotOffset[XDOT_IDX] += lGyroXYZAngleDot[XDOT_IDX];
+        sGyroXYZAngleDotOffset[YDOT_IDX] += lGyroXYZAngleDot[YDOT_IDX];
+        sGyroXYZAngleDotOffset[ZDOT_IDX] += lGyroXYZAngleDot[ZDOT_IDX];
         call_counter++;
-    } else if (GYROSCOPE_OFFSET_SAMPLES  == call_counter) {
-    	sGyroXYZAngleDotOffset[XDOT_IDX] = sGyroXYZAngleDotOffset[XDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
-    	sGyroXYZAngleDotOffset[YDOT_IDX] = sGyroXYZAngleDotOffset[YDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
-    	sGyroXYZAngleDotOffset[ZDOT_IDX] = sGyroXYZAngleDotOffset[ZDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
+    } else if (GYROSCOPE_OFFSET_SAMPLES == call_counter) {
+        sGyroXYZAngleDotOffset[XDOT_IDX] = sGyroXYZAngleDotOffset[XDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
+        sGyroXYZAngleDotOffset[YDOT_IDX] = sGyroXYZAngleDotOffset[YDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
+        sGyroXYZAngleDotOffset[ZDOT_IDX] = sGyroXYZAngleDotOffset[ZDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
         call_counter++;
     } else {
-      /* TODO apply calibration
-       *
-       * as things are, the gyroscope drifts in time. Even taking 200 samples
-       * at startup and then using this to calculate an offset will not
-       * produce zero drift.
-       */
-    	lGyroXYZAngleDot[XDOT_IDX] = lGyroXYZAngleDot[XDOT_IDX] - sGyroXYZAngleDotOffset[XDOT_IDX];
-    	lGyroXYZAngleDot[YDOT_IDX] = lGyroXYZAngleDot[YDOT_IDX] - sGyroXYZAngleDotOffset[YDOT_IDX];
-    	lGyroXYZAngleDot[ZDOT_IDX] = lGyroXYZAngleDot[ZDOT_IDX] - sGyroXYZAngleDotOffset[ZDOT_IDX];
-
-#ifdef FCB_GYRO_DEBUG
-    	if (call_counter % 200) {
-    		TRACE_SYNC("tim:%u sum xyzdot:%1.1f, %1.1f, %1.1f\n",
-    				(uint32_t) call_counter,
-    				sGyroXYZAngleDot[XDOT_IDX],
-    				sGyroXYZAngleDot[YDOT_IDX],
-    				sGyroXYZAngleDot[ZDOT_IDX]);
-    	}
-    	call_counter++;
-#endif
+        /* TODO apply calibration
+         *
+         * as things are, the gyroscope drifts in time. Even taking 200 samples
+         * at startup and then using this to calculate an offset will not
+         * produce zero drift.
+         */
+        lGyroXYZAngleDot[XDOT_IDX] = lGyroXYZAngleDot[XDOT_IDX] - sGyroXYZAngleDotOffset[XDOT_IDX];
+        lGyroXYZAngleDot[YDOT_IDX] = lGyroXYZAngleDot[YDOT_IDX] - sGyroXYZAngleDotOffset[YDOT_IDX];
+        lGyroXYZAngleDot[ZDOT_IDX] = lGyroXYZAngleDot[ZDOT_IDX] - sGyroXYZAngleDotOffset[ZDOT_IDX];
     }
 
     if (pdTRUE != xSemaphoreTake(mutexGyro,  portMAX_DELAY /* wait forever */)) {

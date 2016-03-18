@@ -34,6 +34,7 @@
 #define SENSOR_PRINT_SAMPLING_TASK_PRIO				1
 #define SENSOR_PRINT_MINIMUM_SAMPLING_TIME			10 // [ms]
 #define SENSOR_DRDY_TIMEOUT                         500 // [ms]
+#define SENSOR_ERROR_TIMEOUT                        2000 // [ms]
 
 #define	SENSOR_PRINT_MAX_STRING_SIZE				192
 
@@ -211,7 +212,6 @@ void FcbSendSensorMessage(uint8_t event) {
 
     msg.event = event;
     msg.deltaTime = sensorDrdyCalc[idx].drdyDeltaTime; // Use last DeltaTime
-    sensorDrdyCalc[idx].lastDrdyTime = HAL_GetTick();
 
     if (pdTRUE != (status = xQueueSend(qFcbSensors, &msg, portMAX_DELAY))) {
         ErrorHandler();
@@ -366,6 +366,7 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
      * and then polls the queue in an infinite loop
      */
     FcbSensorMsgType msg;
+    uint32_t timeSinceDrdy;
 
     if (FCB_OK != InitialiseGyroscope()) {
         ErrorHandler();
@@ -376,7 +377,7 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
     }
 
     while (1) {
-        if (pdFALSE == xQueueReceive(qFcbSensors, &msg,  1000 /* configTICK_RATE_HZ is 1000 */)) {
+        if (pdFALSE == xQueueReceive(qFcbSensors, &msg,  SENSOR_ERROR_TIMEOUT)) {
             /*
              * if no message was received, interrupts from the sensors
              * aren't arriving and this is a serious error.
@@ -407,16 +408,25 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
             break;
         }
 
-        /* Check for sensor read timeouts */
-        if (msg.event != FCB_SENSOR_GYRO_DATA_READY && HAL_GetTick() - sensorDrdyCalc[GYRO_IDX].lastDrdyTime > SENSOR_DRDY_TIMEOUT) {
+        /* Check for sensor data ready read timeouts */
+        timeSinceDrdy = HAL_GetTick() - sensorDrdyCalc[GYRO_IDX].lastDrdyTime;
+        if (msg.event != FCB_SENSOR_GYRO_DATA_READY && timeSinceDrdy > SENSOR_ERROR_TIMEOUT) {
+            ErrorHandler();
+        } else if (msg.event != FCB_SENSOR_GYRO_DATA_READY && timeSinceDrdy > SENSOR_DRDY_TIMEOUT) {
             FetchDataFromGyroscope(sensorDrdyCalc[GYRO_IDX].lastDrdyTime);
         }
 
-        if (msg.event != FCB_SENSOR_ACC_DATA_READY && HAL_GetTick() - sensorDrdyCalc[ACC_IDX].lastDrdyTime > SENSOR_DRDY_TIMEOUT) {
+        timeSinceDrdy = HAL_GetTick() - sensorDrdyCalc[ACC_IDX].lastDrdyTime;
+        if (msg.event != FCB_SENSOR_ACC_DATA_READY && timeSinceDrdy > SENSOR_ERROR_TIMEOUT) {
+            ErrorHandler();
+        } else if (msg.event != FCB_SENSOR_ACC_DATA_READY && timeSinceDrdy > SENSOR_DRDY_TIMEOUT) {
             FetchDataFromAccelerometer();
         }
 
-        if (msg.event != FCB_SENSOR_MAGNETO_DATA_READY && HAL_GetTick() - sensorDrdyCalc[MAG_IDX].lastDrdyTime > SENSOR_DRDY_TIMEOUT) {
+        timeSinceDrdy = HAL_GetTick() - sensorDrdyCalc[MAG_IDX].lastDrdyTime;
+        if (msg.event != FCB_SENSOR_MAGNETO_DATA_READY && timeSinceDrdy > SENSOR_ERROR_TIMEOUT) {
+            ErrorHandler();
+        } else if (msg.event != FCB_SENSOR_MAGNETO_DATA_READY && timeSinceDrdy > SENSOR_DRDY_TIMEOUT) {
             FetchDataFromMagnetometer();
         }
     }
