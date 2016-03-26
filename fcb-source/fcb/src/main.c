@@ -15,12 +15,13 @@
 #include "receiver.h"
 #include "task_status.h"
 #include "usbd_cdc_if.h"
-#include "usb_com_cli.h"
+#include "com_cli.h"
 #include "fcb_error.h"
 #include "fcb_retval.h"
 #include "fcb_sensors.h"
 #include "fcb_gyroscope.h"
 #include "state_estimation.h"
+#include "uart.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -94,12 +95,16 @@ static void InitSystem(void) {
 	/* Initialize Command Line Interface for USB communication */
 	RegisterCLICommands();
 
+	/* Configure UART */
+	UartConfig();
+
 	/* Init on-board LEDs */
 	InitLEDs();
 
 	/* Init User button */
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
+	/* Init sensor reading */
 	if (FCB_OK != FcbSensorsConfig()) {
 		ErrorHandler();
 	}
@@ -132,18 +137,27 @@ static void InitSystem(void) {
 static void InitRTOS(void) {
 	/* # CREATE THREADS ####################################################### */
 	CreateFlightControlTask();
+#if defined(USE_USB_COM)
 	CreateUSBComTasks();
+#endif
+	CreateUARTComTasks();
 
 	/* # CREATE QUEUES ######################################################## */
+#if defined(USE_USB_COM)
 	CreateUSBComQueues();
+#endif
+	CreateUARTComQueues();
 
 	/* # CREATE SEMAPHORES #################################################### */
+	CreateCLISemaphores();
+#if defined(USE_USB_COM)
 	CreateUSBComSemaphores();
+#endif
+	CreateUARTComSemaphores();
 
 	/* # Start the RTOS scheduler #############################################
-	 *
-	 * since we use heap1.c, we must create all tasks and queues before the OS kernel
-	 * is started according to ST UM1722 manual section 1.6.
+	 * Currently using heap2.c
+	 * See ST UM1722 manual section 1.6 for more information.
 	 */
 	vTaskStartScheduler();
 }

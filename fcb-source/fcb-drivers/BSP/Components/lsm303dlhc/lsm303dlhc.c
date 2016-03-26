@@ -1,11 +1,11 @@
 /**
  ******************************************************************************
  * @file    lsm303dlhc.c
- * @author  MCD Application Team
+ * @author  MCD Application Team (Modified by AF Consult)
  * @version V1.0.0
  * @date    18-February-2014
  * @brief   This file provides a set of functions needed to manage the lsm303dlhc
- *          MEMS accelerometer available on STM32F401-Discovery Kit.
+ *          MEMS accelerometer available on STM32F3-Discovery Kit.
  ******************************************************************************
  * @attention
  *
@@ -37,7 +37,9 @@
  */
 /* Includes ------------------------------------------------------------------*/
 #include "lsm303dlhc.h"
+#include "fcb_sensors.h"
 #include "fcb_error.h"
+
 /** @addtogroup BSP
  * @{
  */
@@ -265,46 +267,43 @@ void LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState)
 }
 
 /**
- * @brief  Read X, Y & Z Accelration values
+ * @brief  Read X, Y & Z Acceleration values
  * @param  pfData : Data out pointer
  * @retval None
  */
-void LSM303DLHC_AccReadXYZ(float * pData)
-{
-  HAL_StatusTypeDef status = 0;
-  uint8_t buffer[6];
-  uint8_t i = 0;
+HAL_StatusTypeDef LSM303DLHC_AccReadXYZ(float * pData) {
+    HAL_StatusTypeDef status = 0;
+    uint8_t buffer[6];
+    uint8_t i = 0;
 
-  /* Read output register X, Y & Z acceleration
-   *
-   * note: set MSB of the SUB address (the 2nd argument) to allow reading
-   * multiple bytes ... see LSM303DLHC data sheet section 5.1.1.
-   *
-   * This means that the SUB address is auto-incremented.
-   *
-   * It also means that we only send the slave address once for 6 bytes
-   * instead of once for every byte read, this makes reading go faster.
-   */
-  if (HAL_OK != (status = I2Cx_ReadDataLen(ACC_I2C_ADDRESS,
-                                           LSM303DLHC_OUT_X_L_A | 0x80,
-                                           buffer,
-                                           6))) {
-    ErrorHandler();
-  }
+    /* Read output register X, Y & Z acceleration
+     *
+     * note: set MSB of the SUB address (the 2nd argument) to allow reading
+     * multiple bytes ... see LSM303DLHC data sheet section 5.1.1.
+     *
+     * This means that the SUB address is auto-incremented.
+     *
+     * It also means that we only send the slave address once for 6 bytes
+     * instead of once for every byte read, this makes reading go faster.
+     */
+    status = I2Cx_ReadDataLen(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A | 0x80, buffer, 6);
 
-  /* check in the control register4 the data alignment
-   *
-   * We use LSM303DLHC_BLE_LSB convention.
-   */
-  for (i=0; i<3; i++)
-  {
-    int16_t rawData = (int16_t)((int16_t)(buffer[2*i + 1] << 8) + buffer[2*i]); /* convert to int16_t */
-    float asFloat = (float)rawData;            /* convert to float (int16_t & float are two's complement) */
-    asFloat = asFloat / 16;                    /* handle 12-bit value alignment ("shift 4 right") */
-    asFloat = asFloat * accConfig.sensitivity; /* apply sensitivity convert from LSB to milli-G */
-    asFloat = asFloat * 9.82 / 1000;           /* convert from milli-G to m/(s * s)       */
-    pData[i] = asFloat;   /* store output */
-  }
+    /* check in the control register4 the data alignment
+     *
+     * We use LSM303DLHC_BLE_LSB convention.
+     */
+    if(status == HAL_OK) {
+        for (i = 0; i < 3; i++) {
+            int16_t rawData = (int16_t) ((int16_t) (buffer[2 * i + 1] << 8) + buffer[2 * i]); /* convert to int16_t */
+            float asFloat = (float) rawData; /* convert to float (int16_t & float are two's complement) */
+            asFloat = asFloat / 16; /* handle 12-bit value alignment ("shift 4 right") */
+            asFloat = asFloat * accConfig.sensitivity; /* apply sensitivity convert from LSB to milli-G */
+            asFloat = asFloat * 9.82 / 1000; /* convert from milli-G to m/(s * s)       */
+            pData[i] = asFloat; /* store output */
+        }
+    }
+
+    return status;
 }
 
 /**
@@ -624,6 +623,8 @@ uint16_t LSM303DLHC_AccDataRateHz(void) {
   default:
     ErrorHandler();
   }
+
+  return 0;
 }
 
 #define MAGNET
@@ -684,45 +685,44 @@ uint8_t LSM303DLHC_MagGetDataStatus(void)
  * @param  pfData : Data out pointer
  * @retval None
  */
-void LSM303DLHC_MagReadXYZ(float* pfData)
-{
-  HAL_StatusTypeDef status = HAL_OK;
-  float pnRawData[3];
-  uint8_t buffer[6];
-  uint8_t i = 0;
-  uint8_t addr = MAG_I2C_ADDRESS + 1; // see section 5.1.3 of LSM303DLHC data sheet
+HAL_StatusTypeDef LSM303DLHC_MagReadXYZ(float* pfData) {
+    HAL_StatusTypeDef status = HAL_OK;
+    float pnRawData[3];
+    uint8_t buffer[6];
+    uint8_t addr = MAG_I2C_ADDRESS + 1; // see section 5.1.3 of LSM303DLHC data sheet
 
-  /* Read output register X, Y & Z acceleration */
-  if (HAL_OK != (status = I2Cx_ReadDataLen(addr,
-                                           LSM303DLHC_OUT_X_H_M | 0x80, /* see LSM303DLHC_MagReadXYZ comments */
-                                           buffer,
-                                           6))) {
-    ErrorHandler();
-  }
+    /* Read output register X, Y & Z acceleration */
+    status = I2Cx_ReadDataLen(addr,
+            LSM303DLHC_OUT_X_H_M | 0x80, /* see LSM303DLHC_MagReadXYZ comments */
+            buffer, 6);
 
-  /*
-   * all 6 bytes were read in the order they are stored in the LSM303DLHC
-   * which is
-   * buffer content at index:
-   * 0: LSM303DLHC_OUT_X_H_M (0x03)
-   * 1: LSM303DLHC_OUT_X_L_M (0x04)
-   * 2: LSM303DLHC_OUT_Z_H_M (etc)
-   * 3: LSM303DLHC_OUT_Z_L_M (...)
-   * 4: LSM303DLHC_OUT_Y_H_M (...)
-   * 5: LSM303DLHC_OUT_Y_L_M (0x08)
-   */
+    /*
+     * all 6 bytes were read in the order they are stored in the LSM303DLHC
+     * which is
+     * buffer content at index:
+     * 0: LSM303DLHC_OUT_X_H_M (0x03)
+     * 1: LSM303DLHC_OUT_X_L_M (0x04)
+     * 2: LSM303DLHC_OUT_Z_H_M (etc)
+     * 3: LSM303DLHC_OUT_Z_L_M (...)
+     * 4: LSM303DLHC_OUT_Y_H_M (...)
+     * 5: LSM303DLHC_OUT_Y_L_M (0x08)
+     */
 
-  /* check in the control register4 the data alignment -
-   * assume little endian (we never change it on the fly)
-   */
-  pnRawData[0]=(float)((int16_t)(buffer[0] << 8) + (int16_t)buffer[1]); // X
-  pnRawData[1]=(float)((int16_t)(buffer[4] << 8) + (int16_t)buffer[5]); // Y
-  pnRawData[2]=(float)((int16_t)(buffer[2] << 8) + (int16_t)buffer[3]); // Z
+    /* check in the control register4 the data alignment -
+     * assume little endian (we never change it on the fly)
+     */
+    if(status == HAL_OK) {
+        pnRawData[0] = (float) ((int16_t) (buffer[0] << 8) + (int16_t) buffer[1]); // X
+        pnRawData[1] = (float) ((int16_t) (buffer[4] << 8) + (int16_t) buffer[5]); // Y
+        pnRawData[2] = (float) ((int16_t) (buffer[2] << 8) + (int16_t) buffer[3]); // Z
 
-  /* Obtain the Gauss value for the three axis */
-  pfData[0] = (float) pnRawData[0]/magConfig.xySensitivity;
-  pfData[1] = (float) pnRawData[1]/magConfig.xySensitivity;
-  pfData[2] = (float) pnRawData[2]/magConfig.zSensitivity;
+        /* Obtain the Gauss value for the three axis */
+        pfData[0] = (float) pnRawData[0] / magConfig.xySensitivity;
+        pfData[1] = (float) pnRawData[1] / magConfig.xySensitivity;
+        pfData[2] = (float) pnRawData[2] / magConfig.zSensitivity;
+    }
+
+    return status;
 }
 
 /**
@@ -754,6 +754,7 @@ float32_t LSM303DLHC_MagDataRateHz(void) {
     return 220;
   default:
     ErrorHandler();
+    return 0;
   }
 }
 #endif

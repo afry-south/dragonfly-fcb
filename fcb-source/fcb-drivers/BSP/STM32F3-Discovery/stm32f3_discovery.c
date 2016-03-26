@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @file    stm32f3_discovery.c
-  * @author  MCD Application Team
+  * @author  MCD Application Team (Modified by AF Consult)
   * @version V2.1.0
   * @date    18-June-2014
   * @brief   This file provides set of firmware functions to manage Leds and
@@ -109,7 +109,7 @@ static SPI_HandleTypeDef SpiHandle;
 #ifdef HAL_I2C_MODULE_ENABLED
 static I2C_HandleTypeDef I2cHandle;
 // uint32_t I2cxTimeout = I2Cx_TIMEOUT_MAX;    /*<! Value of Timeout when I2C communication fails */
-uint32_t I2cxTimeout = 0x1;    /*<! Value of Timeout when I2C communication fails */
+uint32_t I2cxTimeout = 0x2;    /*<! Value of Timeout when I2C communication fails */
 #endif
 
 /**
@@ -123,8 +123,6 @@ uint32_t I2cxTimeout = 0x1;    /*<! Value of Timeout when I2C communication fail
 #ifdef HAL_I2C_MODULE_ENABLED
 /* I2Cx bus function */
 static void     I2Cx_Init(void);
-extern void     I2Cx_WriteData(uint16_t Addr, uint8_t Reg, uint8_t Value);
-extern uint8_t  I2Cx_ReadData(uint16_t Addr, uint8_t Reg);
 static void     I2Cx_Error (void);
 static void     I2Cx_MspInit(I2C_HandleTypeDef *hi2c);
 #endif
@@ -132,7 +130,7 @@ static void     I2Cx_MspInit(I2C_HandleTypeDef *hi2c);
 #ifdef HAL_SPI_MODULE_ENABLED
 /* SPIx bus function */
 static void     SPIx_Init(void);
-static uint8_t  SPIx_WriteRead(uint8_t byte);
+static HAL_StatusTypeDef SPIx_WriteRead(uint8_t txByte, uint8_t* rxByte);
 static void     SPIx_Error (void);
 static void     SPIx_MspInit(SPI_HandleTypeDef *hspi);
 #endif
@@ -141,7 +139,7 @@ static void     SPIx_MspInit(SPI_HandleTypeDef *hspi);
 /* Link function for GYRO peripheral */
 void            GYRO_IO_Init(void);
 void            GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite);
-void            GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead);
+uint8_t         GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead);
 #endif
 
 #ifdef HAL_I2C_MODULE_ENABLED
@@ -341,7 +339,7 @@ uint32_t BSP_PB_GetState(Button_TypeDef Button)
   */
 static void I2Cx_MspInit(I2C_HandleTypeDef *hi2c)
 {
-
+  (void) hi2c;
   GPIO_InitTypeDef GPIO_InitStructure;
 
   /* Enable SCK and SDA GPIO clocks */
@@ -349,8 +347,8 @@ static void I2Cx_MspInit(I2C_HandleTypeDef *hi2c)
 
   /* I2Cx SD1 & SCK pin configuration */
   GPIO_InitStructure.Pin = (DISCOVERY_I2Cx_SDA_PIN | DISCOVERY_I2Cx_SCL_PIN);
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
   GPIO_InitStructure.Alternate = DISCOVERY_I2Cx_AF;
   HAL_GPIO_Init(DISCOVERY_I2Cx_GPIO_PORT, &GPIO_InitStructure);
@@ -507,22 +505,22 @@ static void SPIx_Init(void)
 /**
   * @brief  Sends a Byte through the SPI interface and return the Byte received
   *         from the SPI bus.
-  * @param  Byte : Byte send.
-  * @retval The received byte value
+  * @param  txByte : Byte send.
+  * @param  rxByte : Receive byte.
+  * @retval Number of received bytes
   */
-static uint8_t SPIx_WriteRead(uint8_t Byte)
+static HAL_StatusTypeDef SPIx_WriteRead(uint8_t txByte, uint8_t* rxByte)
 {
-
-  uint8_t receivedbyte = 0;
+  HAL_StatusTypeDef status = HAL_OK;
 
   /* Send a Byte through the SPI peripheral */
   /* Read byte from the SPI bus */
-  if(HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t*) &Byte, (uint8_t*) &receivedbyte, 1, SpixTimeout) != HAL_OK)
+  if((status = HAL_SPI_TransmitReceive(&SpiHandle, &txByte, rxByte, 1, SpixTimeout)) != HAL_OK)
   {
     SPIx_Error();
   }
 
-  return receivedbyte;
+  return status;
 }
 
 
@@ -549,6 +547,7 @@ static void SPIx_Error (void)
 static void SPIx_MspInit(SPI_HandleTypeDef *hspi)
 {
   GPIO_InitTypeDef   GPIO_InitStructure;
+  (void) hspi;
 
   /* Enable SPI1 clock  */
   DISCOVERY_SPIx_CLK_ENABLE();
@@ -611,6 +610,7 @@ void GYRO_IO_Init(void)
   */
 void GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
 {
+  uint8_t readByte = 0;
   /* Configure the MS bit:
        - When 0, the address will remain unchanged in multiple read/write commands.
        - When 1, the address will be auto incremented in multiple read/write commands.
@@ -623,12 +623,12 @@ void GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
   GYRO_CS_LOW();
 
   /* Send the Address of the indexed register */
-  SPIx_WriteRead(WriteAddr);
+  SPIx_WriteRead(WriteAddr, &readByte);
 
   /* Send the data that will be written into the device (MSB First) */
   while(NumByteToWrite >= 0x01)
   {
-    SPIx_WriteRead(*pBuffer);
+    SPIx_WriteRead(*pBuffer, &readByte);
     NumByteToWrite--;
     pBuffer++;
   }
@@ -644,8 +644,11 @@ void GYRO_IO_Write(uint8_t* pBuffer, uint8_t WriteAddr, uint16_t NumByteToWrite)
   * @param  NumByteToRead : number of bytes to read from the GYROSCOPE.
   * @retval None
   */
-void GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
+HAL_StatusTypeDef GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
 {
+  HAL_StatusTypeDef status = HAL_OK;
+  uint8_t readByte = 0;
+
   if(NumByteToRead > 0x01)
   {
     ReadAddr |= (uint8_t)(READWRITE_CMD | MULTIPLEBYTE_CMD);
@@ -654,23 +657,26 @@ void GYRO_IO_Read(uint8_t* pBuffer, uint8_t ReadAddr, uint16_t NumByteToRead)
   {
     ReadAddr |= (uint8_t)READWRITE_CMD;
   }
+
   /* Set chip select Low at the start of the transmission */
   GYRO_CS_LOW();
 
   /* Send the Address of the indexed register */
-  SPIx_WriteRead(ReadAddr);
+  status = SPIx_WriteRead(ReadAddr, &readByte);
 
   /* Receive the data that will be read from the device (MSB First) */
-  while(NumByteToRead > 0x00)
+  while(NumByteToRead > 0x00 && status == HAL_OK)
   {
     /* Send dummy byte (0x00) to generate the SPI clock to GYROSCOPE (Slave device) */
-    *pBuffer = SPIx_WriteRead(DUMMY_BYTE);
+    status = SPIx_WriteRead(DUMMY_BYTE, pBuffer);
     NumByteToRead--;
     pBuffer++;
   }
 
   /* Set chip select High at the end of the transmission */
   GYRO_CS_HIGH();
+
+  return status;
 }
 #endif /* HAL_SPI_MODULE_ENABLED */
 
@@ -706,7 +712,7 @@ void COMPASSACCELERO_IO_ITConfig(void)
   HAL_GPIO_Init(ACCELERO_INT_GPIO_PORT, &GPIO_InitStructure);
 
   /* Enable and set Button EXTI Interrupt to the lowest priority */
-  HAL_NVIC_SetPriority(ACCELERO_INT1_EXTI_IRQn, 0x00, 0x00);
+  HAL_NVIC_SetPriority(ACCELERO_INT1_EXTI_IRQn, 5, 0x00);
   HAL_NVIC_EnableIRQ(ACCELERO_INT1_EXTI_IRQn);
 }
 

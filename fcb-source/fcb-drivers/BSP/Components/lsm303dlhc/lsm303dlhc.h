@@ -46,6 +46,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f3_discovery.h"
 #include "accelero.h"
 #include "arm_math.h"
 /** @addtogroup LSM303DLHC
@@ -446,7 +447,7 @@ uint8_t   LSM303DLHC_AccReadID(void); /* initialises IO and reads ID of sensor *
 void      LSM303DLHC_AccRebootCmd(void);
 void      LSM303DLHC_AccFilterConfig(uint8_t FilterStruct);
 void      LSM303DLHC_AccFilterCmd(uint8_t HighPassFilterState);
-void      LSM303DLHC_AccReadXYZ(float* pData);
+HAL_StatusTypeDef LSM303DLHC_AccReadXYZ(float* pData);
 void      LSM303DLHC_AccFilterClickCmd(uint8_t HighPassFilterClickState);
 void      LSM303DLHC_AccIT1Enable(uint8_t LSM303DLHC_IT);
 void      LSM303DLHC_AccIT1Disable(uint8_t LSM303DLHC_IT);
@@ -473,7 +474,7 @@ void LSM303DLHC_MagInit(void);
   * @param  pfData : Data out pointer (size 3)
   * @retval None
   */
-void LSM303DLHC_MagReadXYZ(float* pfData);
+HAL_StatusTypeDef LSM303DLHC_MagReadXYZ(float* pfData);
 
 float32_t LSM303DLHC_MagDataRateHz(void); /* see source fcn banner */
 

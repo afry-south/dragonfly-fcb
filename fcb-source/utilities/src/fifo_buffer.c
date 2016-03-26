@@ -158,11 +158,6 @@ uint16_t FIFOBufferGetData(volatile FIFOBuffer_TypeDef* buffer,
  * @retval None
  */
 void FIFOBufferDeleteLastEnteredBytes(volatile FIFOBuffer_TypeDef* buffer, const uint16_t dataSize) {
-	if (buffer->count == dataSize) {
-		buffer->count = 0;
-		buffer->last = buffer->first;
-	}
-
 	if (buffer->last >= dataSize) {
 		buffer->last = buffer->last - dataSize;
 	} else {

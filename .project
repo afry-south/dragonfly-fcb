@@ -6,6 +6,11 @@
 	</projects>
 	<buildSpec>
 		<buildCommand>
+			<name>org.python.pydev.PyDevBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
 			<name>org.eclipse.cdt.managedbuilder.core.genmakebuilder</name>
 			<triggers>clean,full,incremental,</triggers>
 			<arguments>
@@ -23,5 +28,18 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 		<nature>org.eclipse.cdt.core.ccnature</nature>
+		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>nanopb-0.3.5-windows-x86</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/dragonfly/tools/nanopb-0.3.5-windows-x86</locationURI>
+		</link>
+		<link>
+			<name>protobuf</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/dragonfly/sw/comms/protobuf</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>

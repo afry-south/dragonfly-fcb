@@ -53,6 +53,7 @@
 
 #include "motor_control.h"
 #include "receiver.h"
+#include "uart.h"
 
 #include "task_status.h"
 
@@ -340,6 +341,128 @@ void HAL_TIM_IC_MspDeInit(TIM_HandleTypeDef *htim) {
 		/* Aux receiver TIM Peripheral clock disable */
 		AUX_RECEIVER_TIM_CLK_DISABLE();
 	}
+}
+
+/**
+  * @brief UART MSP Initialization
+  *        This function configures the hardware resources used in this example:
+  *           - Peripheral's clock enable
+  *           - Peripheral's GPIO Configuration
+  *           - DMA configuration for transmission request by peripheral
+  *           - NVIC configuration for DMA interrupt request enable
+  * @param huart: UART handle pointer
+  * @retval None
+  */
+void HAL_UART_MspInit(UART_HandleTypeDef *huart)
+{
+  static DMA_HandleTypeDef hdma_tx;
+  static DMA_HandleTypeDef hdma_rx;
+
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+  /*##-1- Enable peripherals and GPIO Clocks #################################*/
+  /* Enable GPIO TX/RX clock */
+  UART_TX_GPIO_CLK_ENABLE();
+  UART_RX_GPIO_CLK_ENABLE();
+
+  /* Enable UART clock */
+  UART_CLK_ENABLE();
+
+  /* Enable DMA clock */
+  UART_DMA_CLK_ENABLE();
+
+  /*##-2- Configure peripheral GPIO ##########################################*/
+  /* UART TX GPIO pin configuration  */
+  GPIO_InitStruct.Pin       = UART_TX_PIN;
+  GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull      = GPIO_PULLUP;
+  GPIO_InitStruct.Speed     = GPIO_SPEED_HIGH;
+  GPIO_InitStruct.Alternate = UART_TX_AF;
+
+  HAL_GPIO_Init(UART_TX_GPIO_PORT, &GPIO_InitStruct);
+
+  /* UART RX GPIO pin configuration  */
+  GPIO_InitStruct.Pin = UART_RX_PIN;
+  GPIO_InitStruct.Alternate = UART_RX_AF;
+
+  HAL_GPIO_Init(UART_RX_GPIO_PORT, &GPIO_InitStruct);
+
+  /*##-3- Configure the DMA channels ##########################################*/
+  /* Configure the DMA handler for Transmission process */
+  hdma_tx.Instance                 = UART_TX_DMA_STREAM;
+  hdma_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
+  hdma_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
+  hdma_tx.Init.MemInc              = DMA_MINC_ENABLE;
+  hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+  hdma_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+  hdma_tx.Init.Mode                = DMA_NORMAL;
+  hdma_tx.Init.Priority            = DMA_PRIORITY_LOW;
+
+  HAL_DMA_Init(&hdma_tx);
+
+  /* Associate the initialized DMA handle to the UART handle */
+  __HAL_LINKDMA(huart, hdmatx, hdma_tx);
+
+  /* Configure the DMA handler for reception process */
+  hdma_rx.Instance                 = UART_RX_DMA_STREAM;
+  hdma_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+  hdma_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
+  hdma_rx.Init.MemInc              = DMA_MINC_DISABLE;
+  hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+  hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+  hdma_rx.Init.Mode                = DMA_CIRCULAR;
+  hdma_rx.Init.Priority            = DMA_PRIORITY_LOW;
+
+  HAL_DMA_Init(&hdma_rx);
+
+  /* Associate the initialized DMA handle to the the UART handle */
+  __HAL_LINKDMA(huart, hdmarx, hdma_rx);
+
+  /*##-4- Configure the NVIC for DMA #########################################*/
+  /* NVIC configuration for DMA transfer complete interrupt (USARTx_TX) */
+  HAL_NVIC_SetPriority(UART_DMA_TX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
+  HAL_NVIC_EnableIRQ(UART_DMA_TX_IRQn);
+
+  /* NVIC configuration for DMA transfer complete interrupt (USARTx_RX) */
+  HAL_NVIC_SetPriority(UART_DMA_RX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
+  HAL_NVIC_EnableIRQ(UART_DMA_RX_IRQn);
+}
+
+/**
+  * @brief UART MSP De-Initialization
+  *        This function frees the hardware resources used in this example:
+  *          - Disable the Peripheral's clock
+  *          - Revert GPIO, DMA and NVIC configuration to their default state
+  * @param huart: UART handle pointer
+  * @retval None
+  */
+void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
+{
+  /*##-1- Reset peripherals ##################################################*/
+  UART_FORCE_RESET();
+  UART_RELEASE_RESET();
+
+  /*##-2- Disable peripherals and GPIO Clocks #################################*/
+  /* Configure UART Tx as alternate function  */
+  HAL_GPIO_DeInit(UART_TX_GPIO_PORT, UART_TX_PIN);
+  /* Configure UART Rx as alternate function  */
+  HAL_GPIO_DeInit(UART_RX_GPIO_PORT, UART_RX_PIN);
+
+  /*##-3- Disable the DMA channels ############################################*/
+  /* De-Initialize the DMA channel associated to reception process */
+  if(huart->hdmarx != 0)
+  {
+    HAL_DMA_DeInit(huart->hdmarx);
+  }
+  /* De-Initialize the DMA channel associated to transmission process */
+  if(huart->hdmatx != 0)
+  {
+    HAL_DMA_DeInit(huart->hdmatx);
+  }
+
+  /*##-4- Disable the NVIC for DMA ###########################################*/
+  HAL_NVIC_DisableIRQ(UART_DMA_TX_IRQn);
+  HAL_NVIC_DisableIRQ(UART_DMA_RX_IRQn);
 }
 
 /**

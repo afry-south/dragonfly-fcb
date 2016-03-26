@@ -40,6 +40,8 @@
 #ifndef __GYRO_H
 #define __GIRO_H
 
+#include "stm32f3xx_hal.h"
+
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -77,7 +79,7 @@ typedef struct
   void       (*ClearIT)(uint16_t, uint16_t); 
   void       (*FilterConfig)(uint8_t);  
   void       (*FilterCmd)(uint8_t);  
-  void       (*GetXYZ)(float *);
+  HAL_StatusTypeDef (*GetXYZ)(float *);
 }GYRO_DrvTypeDef;
 
 typedef struct

@@ -19,20 +19,6 @@
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported constants --------------------------------------------------------*/
-typedef enum {
-	ARRAY_BUFFER,
-	FIFO_BUFFER
-} BufferType_TypeDef;
-
-typedef enum {
-  NO_SERIALIZATION,
-  CALIBRATION_SERIALIZATION,
-  PROTOBUFFER_SERIALIZATION
-} SerializationType;
-
-extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
-
-#define USB_COM_MAX_DELAY			1000
 
 /* Exported macro ------------------------------------------------------------*/
 

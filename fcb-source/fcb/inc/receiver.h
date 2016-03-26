@@ -11,7 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
-#include "usbd_cdc_if.h"
+#include "communication.h"
 
 #include <stdbool.h>
 
@@ -172,7 +172,7 @@ uint16_t GetGearReceiverCalibrationMaxValue(void);
 uint16_t GetGearReceiverCalibrationMidValue(void);
 uint16_t GetGearReceiverCalibrationMinValue(void);
 uint16_t GetAux1ReceiverCalibrationMaxValue(void);
-uint16_t GetAuxReceiverCalibrationMidValue(void);
+uint16_t GetAux1ReceiverCalibrationMidValue(void);
 uint16_t GetAux1ReceiverCalibrationMinValue(void);
 
 uint16_t GetThrottleReceiverChannelPulseTicks(void);

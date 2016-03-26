@@ -15,6 +15,7 @@
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_error.h"
 #include "usbd_cdc_if.h"
+#include "uart.h"
 
 #include "stm32f3_discovery.h"
 
@@ -43,19 +44,26 @@ extern void xPortSysTickHandler(void);
  * @retval None
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == USER_BUTTON_PIN) {
-		UserButtonPressed++;
-		if (UserButtonPressed > 0x7) {
-			BSP_LED_Toggle(LED7);
-			UserButtonPressed = 0x0;
-		}
-	} else if (GPIO_Pin == GPIO_GYRO_DRDY) {
-	  FcbSendSensorMessageFromISR(FCB_SENSOR_GYRO_DATA_READY);
-	} else if (GPIO_Pin == GPIO_ACCELEROMETER_DRDY) {
-	  FcbSendSensorMessageFromISR(FCB_SENSOR_ACC_DATA_READY);
-	} else if (GPIO_Pin == GPIO_MAGNETOMETER_DRDY) {
-	  FcbSendSensorMessageFromISR(FCB_SENSOR_MAGNETO_DATA_READY);
-	}
+    switch(GPIO_Pin) {
+    case USER_BUTTON_PIN:
+        UserButtonPressed++;
+        if (UserButtonPressed > 0x7) {
+            BSP_LED_Toggle(LED7);
+            UserButtonPressed = 0x0;
+        }
+        break;
+    case GPIO_GYRO_DRDY:
+        FcbSendSensorMessageFromISR(FCB_SENSOR_GYRO_DATA_READY);
+        break;
+    case GPIO_ACCELEROMETER_DRDY:
+        FcbSendSensorMessageFromISR(FCB_SENSOR_ACC_DATA_READY);
+        break;
+    case GPIO_MAGNETOMETER_DRDY:
+        FcbSendSensorMessageFromISR(FCB_SENSOR_MAGNETO_DATA_READY);
+        break;
+    default:
+        break;
+    }
 }
 
 /**
@@ -85,10 +93,11 @@ void HAL_SYSTICK_Callback(void) {
 		BSP_LED_Toggle(LED9);
 	}
 #endif
-	HAL_IncTick();
-
-	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
 		xPortSysTickHandler();
+	}
+
+	HAL_IncTick();
 }
 
 /**
@@ -127,6 +136,44 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 		else if (htim->Channel == AUX_RECEIVER_AUX1_ACTIVE_CHANNEL)
 			UpdateReceiverAux1Channel();
 	}
+}
+
+/**
+  * @brief  Tx Transfer completed callback
+  * @param  UartHandle: UART handle.
+  * @retval None
+  */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+    if(UartHandle->Instance == UART) {
+        HandleUartTxCallback(UartHandle);
+    }
+}
+
+/**
+  * @brief  Rx Transfer completed callback
+  * @param  UartHandle: UART handle
+  * @retval None
+  */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+    if(UartHandle->Instance == UART) {
+        HandleUartRxCallback(UartHandle);
+    }
+}
+
+/**
+  * @brief  UART error callbacks
+  * @param  UartHandle: UART handle
+  * @note   This example shows a simple way to report transfer error, and you can
+  *         add your own implementation.
+  * @retval None
+  */
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
+{
+    if(UartHandle->Instance == UART) {
+        HandleUartErrorCallback(UartHandle);
+    }
 }
 
 /* Private functions ---------------------------------------------------------*/

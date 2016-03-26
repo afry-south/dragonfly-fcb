@@ -81,8 +81,8 @@
 #define HAL_SPI_MODULE_ENABLED
 #define HAL_TIM_MODULE_ENABLED
 // #define HAL_TSC_MODULE_ENABLED
-// #define HAL_UART_MODULE_ENABLED
-// #define HAL_USART_MODULE_ENABLED
+#define HAL_UART_MODULE_ENABLED
+#define HAL_USART_MODULE_ENABLED
 // #define HAL_WWDG_MODULE_ENABLED
 
 /* ########################## HSE/HSI Values adaptation ##################### */
@@ -155,7 +155,7 @@
   */     
 #define  VDD_VALUE                    ((uint32_t)3300) /*!< Value of VDD in mv */
 #define  TICK_INT_PRIORITY            ((uint32_t)(1<<__NVIC_PRIO_BITS) - 1)   /*!< tick interrupt priority (lowest by default) */
-#define  USE_RTOS                     0
+#define  USE_RTOS                     0 // Should be 0 in current HAL release (regardless of RTOS)
 #define  PREFETCH_ENABLE              1
 #define  INSTRUCTION_CACHE_ENABLE     0
 #define  DATA_CACHE_ENABLE            0

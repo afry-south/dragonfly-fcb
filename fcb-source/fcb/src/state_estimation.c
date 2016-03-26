@@ -18,12 +18,12 @@
 #include "task.h"
 #include "fcb_error.h"
 #include "dragonfly_fcb.pb.h"
-#include "usb_com_cli.h"
 #include "pb_encode.h"
 #include "math.h"
 #include "rotation_transformation.h"
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_retval.h"
+#include "usbd_cdc_if.h"
 
 /* Private define ------------------------------------------------------------*/
 enum { VAR_SAMPLE_MAX = 100 }; /* number of samples for variance - max 256 */
@@ -116,7 +116,6 @@ static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t delt
   case ACC_IDX: {
     /* run correction step */
     float32_t const * pAccMeterXYZ = pXYZ; /* interpret values as accelerations */
-
     GetAttitudeFromAccelerometer(sensorAttitudeRPY, pAccMeterXYZ);
     CorrectAttitudeState(sensorAttitudeRPY[ROLL_IDX], &rollEstimator, &rollState);
     CorrectAttitudeState(sensorAttitudeRPY[PITCH_IDX], &pitchEstimator, &pitchState);
@@ -125,10 +124,9 @@ static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t delt
   case MAG_IDX: {
     /* run correction step */
     float32_t const * pMagMeter = pXYZ;
-
-    sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle(pMagMeter, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
-    CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
-  }
+        sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pMagMeter, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
+        CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
+    }
   break;
   default:
     ErrorHandler();
@@ -250,13 +248,13 @@ void PrintStateValues(const SerializationType serializationType) {
 
 		if (serializationType == NO_SERIALIZATION) {
 		  snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-		      "States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.4f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\n\r\n",
+		      "States:\nrollAngle: %1.3f deg\npitchAngle: %1.3f deg\nyawAngle: %1.3f deg\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\n\r\n",
 		      Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle), Radian2Degree(yawState.angle),
 		      rollState.angleRateBias, pitchState.angleRateBias, yawState.angleRateBias,
 		      sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
 		} else /* CALIBRATION_SERIALIZATION */ {
 		  usedLen = snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-		      "States:\nAngle-RPY [deg]: %1.3f, %1.3f, %1.4f\n Bias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %f, %f, %f\n\r\n",
+		      "States:\nAngle-RPY[deg]: %1.3f, %1.3f, %1.3f\nBias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %1.3f, %1.3f, %1.3f\n\r\n",
 		      Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle), Radian2Degree(yawState.angle),
 		      rollState.angleRateBias, pitchState.angleRateBias, yawState.angleRateBias,
 		      sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
@@ -449,7 +447,7 @@ static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_
       pSampleData[MEAS].samples[PITCH_IDX][sCount[ACC_IDX]] = sensorAttitudeRPY[PITCH_IDX];
       break;
     case MAG_IDX:
-      sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle(pXYZData, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
+        sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pXYZData, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
       pSampleData[MEAS].samples[YAW_IDX][sCount[MAG_IDX]] = sensorAttitudeRPY[YAW_IDX];
       break;
     default:

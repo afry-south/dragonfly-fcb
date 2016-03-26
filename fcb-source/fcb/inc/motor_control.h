@@ -11,7 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx.h"
 
-#include "usbd_cdc_if.h"
+#include "communication.h"
 #include "flight_control.h"
 
 #include "arm_math.h"
@@ -79,6 +79,7 @@ MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime,
 MotorControlErrorStatus StopMotorControlSamplingTask(void);
 void SetMotorPrintSamplingSerialization(const SerializationType serializationType);
 void PrintMotorControlValues(const SerializationType serializationType);
+uint16_t GetMotorValue(uint8_t motorNumber);
 
 #endif /* __MOTOR_CONTROL_H */
 
