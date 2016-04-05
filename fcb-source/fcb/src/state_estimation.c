@@ -409,8 +409,7 @@ static void StateSensorsEventCallback(FcbSensorIndexType sensorType, float32_t d
     case MAG_IDX: {
         /* run correction step */
         float32_t const * pMagMeter = pXYZ;
-        sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pMagMeter, sensorAttitudeRPY[ROLL_IDX],
-                sensorAttitudeRPY[PITCH_IDX]);
+        sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pMagMeter, GetRollAngle(), GetPitchAngle);
         CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
     }
         break;
