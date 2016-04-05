@@ -11,15 +11,19 @@
 
 #include "stm32f3xx.h"
 
-#include "fcb_sensors.h"
-#include "fcb_gyroscope.h"
 #include "string.h"
+#include "math.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
-#include "fcb_error.h"
+#include "semphr.h"
+
 #include "dragonfly_fcb.pb.h"
 #include "pb_encode.h"
-#include "math.h"
+
+#include "fcb_sensors.h"
+#include "fcb_gyroscope.h"
+#include "fcb_error.h"
 #include "rotation_transformation.h"
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_retval.h"
@@ -56,20 +60,23 @@ static SerializationType statePrintSerializationType;
 static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f };
 
 /* Private function prototypes -----------------------------------------------*/
-static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * xyz); /* type FcbSensorCbk  */
+static void StateSensorsEventCallback(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * xyz); /* type FcbSensorCbk  */
 static void StateInit(KalmanFilterType * pEstimator);
 static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_t const * pXYZData);
 
 static void PredictAttitudeState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
 static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
+static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState);
 static void StatePrintSamplingTask(void const *argument);
 
-
+// TODO Need mutex between sensors between each sensor as well?) and time update events...? Shared resources P-matrix
+// TODO Need RTOS task with queue pending on each sensor and time-event and handling it accordingly
+// TODO Also need mutex protecting states when written/read
 
 /* Exported functions --------------------------------------------------------*/
 
-/* InitEstimator
- * @brief  Initializes the roll state Kalman estimator
+/*
+ * @brief  Initializes the Kalman state estimator
  * @param  None
  * @retval None
  */
@@ -87,52 +94,65 @@ void InitStatesXYZ(void)
   yawState.angle = 0.0; /* should be initialised with current heading */
   yawState.angleRateBias = 0.0;
 
-  FcbSensorRegisterClientCallback(StateReceiveSensorsCbk);
+  FcbSensorRegisterClientCallback(StateSensorsEventCallback);
 }
 
-/**
- * @param sensorType, see FcbSensorIndexType
+/*
+ * @brief  Initializes state estimation time-event generation timer
+ * @param  None
+ * @retval None
  */
-static void StateReceiveSensorsCbk(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ) {
-  static uint8_t varianceCalcDone = 0;
-  /* keep these around because yaw calculations need data already calculated
-   * when accelerometer data was available
-   */
+StateEstimationStatus InitStateEstimationTimeEvent(void)
+{
+    StateEstimationStatus status = STATE_EST_OK;
 
-  if (0 == varianceCalcDone) {
-    varianceCalcDone = ProfileSensorMeasurements(sensorType, pXYZ);
-    return;
-  }
+    /*##-1- Configure the TIM peripheral #######################################*/
 
-  switch (sensorType) {   /* interpret values according to sensor type */
-  case GYRO_IDX: {
-    /* run estimation step */
-    float32_t const * pSensorAngleRate = pXYZ;
-    PredictAttitudeState(deltaT, pSensorAngleRate[ROLL_IDX], &rollEstimator, &rollState);
-    PredictAttitudeState(deltaT, pSensorAngleRate[PITCH_IDX], &pitchEstimator, &pitchState);
-    PredictAttitudeState(deltaT, pSensorAngleRate[YAW_IDX], &yawEstimator, &yawState);
-  }
-  break;
-  case ACC_IDX: {
-    /* run correction step */
-    float32_t const * pAccMeterXYZ = pXYZ; /* interpret values as accelerations */
-    GetAttitudeFromAccelerometer(sensorAttitudeRPY, pAccMeterXYZ);
-    CorrectAttitudeState(sensorAttitudeRPY[ROLL_IDX], &rollEstimator, &rollState);
-    CorrectAttitudeState(sensorAttitudeRPY[PITCH_IDX], &pitchEstimator, &pitchState);
-  }
-  break;
-  case MAG_IDX: {
-    /* run correction step */
-    float32_t const * pMagMeter = pXYZ;
-        sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pMagMeter, sensorAttitudeRPY[ROLL_IDX], sensorAttitudeRPY[PITCH_IDX]);
-        CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
+    /* Set TIMx instance */
+    StateEstimationTimHandle.Instance = STATE_ESTIMATION_UPDATE_TIM;
+
+    /* Initialize TIM3 peripheral as follows:
+         + Period = 10000 - 1
+         + Prescaler = (SystemCoreClock/10000) - 1
+         + ClockDivision = 0
+         + Counter direction = Up
+     */
+    StateEstimationTimHandle.Init.Period = 60000 - 1;
+    StateEstimationTimHandle.Init.Prescaler = 12;
+    StateEstimationTimHandle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    StateEstimationTimHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
+    if(HAL_TIM_Base_Init(&StateEstimationTimHandle) != HAL_OK)
+    {
+        /* Initialization Error */
+        status = STATE_EST_ERROR;
+        ErrorHandler();
     }
-  break;
-  default:
-    ErrorHandler();
-  }
+
+    /*##-2- Start the TIM Base generation in interrupt mode ####################*/
+    /* Start Channel1 */
+    if(HAL_TIM_Base_Start_IT(&StateEstimationTimHandle) != HAL_OK)
+    {
+        /* Starting Error */
+        status = STATE_EST_ERROR;
+        ErrorHandler();
+    }
+
+    return status;
 }
 
+/*
+ * @brief  State estimation time-update callback
+ * @param  None
+ * @retval None
+ */
+void StateEstimationTimeEventCallback(void)
+{
+    /* run prediction step */
+//    float32_t const * pSensorAngleRate = pXYZ;
+//    PredictAttitudeState(deltaT, pSensorAngleRate[ROLL_IDX], &rollEstimator, &rollState);
+//    PredictAttitudeState(deltaT, pSensorAngleRate[PITCH_IDX], &pitchEstimator, &pitchState);
+//    PredictAttitudeState(deltaT, pSensorAngleRate[YAW_IDX], &yawEstimator, &yawState);
+}
 
 /* GetRoll
  * @brief  Gets the roll angle
@@ -263,7 +283,7 @@ void PrintStateValues(const SerializationType serializationType) {
 		    usedLen = snprintf((char*) stateString+usedLen, STATE_PRINT_MAX_STRING_SIZE - usedLen,
 		        "KF: P11-RPY: %e, %e, %e\n"
 		        "KF: K1-RPY: %e, %e, %e\n\r\n",
-		        rollEstimator.p11, pitchEstimator.p11, yawEstimator.p11, rollEstimator.k1, pitchEstimator.k1, yawEstimator.k1);
+		        rollEstimator.p11, pitchEstimator.p11, yawEstimator.p11, rollEstimator.k11, pitchEstimator.k11, yawEstimator.k11);
 		  }
 		}
 
@@ -346,9 +366,57 @@ static void StateInit(KalmanFilterType * Estimator)
   /* q1 = sqrt(var(rate))*STATE_ESTIMATION_SAMPLE_PERIOD^2
    * q2 = sqrt(var(rateBias))
    * r1 = sqrt(var(angle)) */
-  Estimator->q1Variance = GYRO_AXIS_VARIANCE_ROUGH;
+  Estimator->q1 = GYRO_AXIS_VARIANCE_ROUGH;
   Estimator->q2 = Q2_CAL;
   Estimator->r1 = R1_CAL; /* accelerometer based angle variance */
+}
+
+/*
+ * @brief  State estimation sensor value update callback
+ * @param  sensorType : Type of sensor (accelerometer, gyroscope, magnetometer)
+ * @param  deltaT : Time difference between sensor values
+ * @param  pXYZ : Pointer to sensor values array
+ * @retval None
+ */
+static void StateSensorsEventCallback(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ) {
+    static uint8_t varianceCalcDone = 0;
+    /* keep these around because yaw calculations need data already calculated
+     * when accelerometer data was available
+     */
+
+    if (0 == varianceCalcDone) {
+        varianceCalcDone = ProfileSensorMeasurements(sensorType, pXYZ);
+        return;
+    }
+
+    switch (sensorType) { /* interpret values according to sensor type */
+    case GYRO_IDX: {
+        /* run correction step */
+        float32_t const * pSensorAngleRate = pXYZ;
+        CorrectAttitudeRateState(deltaT, pSensorAngleRate[ROLL_IDX], &rollEstimator, &rollState);
+        CorrectAttitudeRateState(deltaT, pSensorAngleRate[PITCH_IDX], &pitchEstimator, &pitchState);
+        CorrectAttitudeRateState(deltaT, pSensorAngleRate[YAW_IDX], &yawEstimator, &yawState);
+    }
+        break;
+    case ACC_IDX: {
+        /* run correction step */
+        float32_t const * pAccMeterXYZ = pXYZ; /* interpret values as accelerations */
+        GetAttitudeFromAccelerometer(sensorAttitudeRPY, pAccMeterXYZ);
+        CorrectAttitudeState(sensorAttitudeRPY[ROLL_IDX], &rollEstimator, &rollState);
+        CorrectAttitudeState(sensorAttitudeRPY[PITCH_IDX], &pitchEstimator, &pitchState);
+    }
+        break;
+    case MAG_IDX: {
+        /* run correction step */
+        float32_t const * pMagMeter = pXYZ;
+        sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pMagMeter, sensorAttitudeRPY[ROLL_IDX],
+                sensorAttitudeRPY[PITCH_IDX]);
+        CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
+    }
+        break;
+    default:
+        ErrorHandler();
+    }
 }
 
 /*
@@ -369,7 +437,7 @@ static void PredictAttitudeState(float32_t const deltaT, const float32_t sensorR
 	/* angleRateBias not corrected, see equations in section "State Estimation Theory" */
 
 	/* Step 2: Calculate a priori error covariance matrix P*/
-	pEstimator->p11 += (deltaT*pEstimator->p22 - pEstimator->p12 - pEstimator->p21 + (pEstimator->q1Variance * deltaT * deltaT))*deltaT;
+	pEstimator->p11 += (deltaT*pEstimator->p22 - pEstimator->p12 - pEstimator->p21 + (pEstimator->q1 * deltaT * deltaT))*deltaT;
 	pEstimator->p12 -= pEstimator->p22 * deltaT;
 	pEstimator->p21 -= pEstimator->p22 * deltaT;
 	pEstimator->p22 += pEstimator->q2 * deltaT;
@@ -393,20 +461,63 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
 	float32_t s = pEstimator->p11 + pEstimator->r1;
 
 	/* Step 5: Calculate Kalman gain*/
-	pEstimator->k1 = pEstimator->p11 /s;
-	pEstimator->k2 = pEstimator->p21 /s;
+	pEstimator->k11 = pEstimator->p11 /s;
+	pEstimator->k12 = pEstimator->p21 /s;
 
 	/* Step 6: Update a posteriori state estimation*/
-	pState->angle += pEstimator->k1 * y;
+	pState->angle += pEstimator->k11 * y;
 	/* angleRateBias deliberately not updated as per equations, see FCB PDF */
 
 	/* Step 7: Update a posteriori error covariance matrix P */
 	float32_t p11_tmp = pEstimator->p11;
 	float32_t p12_tmp = pEstimator->p12;
-	pEstimator->p11 = p11_tmp - pEstimator->k1*p11_tmp;
-	pEstimator->p12 = p12_tmp - pEstimator->k1*p12_tmp;
-	pEstimator->p21 -= pEstimator->k2*p11_tmp;
-	pEstimator->p22 -= pEstimator->k2*p12_tmp;
+	pEstimator->p11 = p11_tmp - pEstimator->k11*p11_tmp;
+	pEstimator->p12 = p12_tmp - pEstimator->k11*p12_tmp;
+	pEstimator->p21 -= pEstimator->k12*p11_tmp;
+	pEstimator->p22 -= pEstimator->k12*p12_tmp;
+}
+
+/*
+ * @brief   Performs the correction part of the Kalman filtering.
+ * @param   newAngle: Pointer to measured angle using accelerometer or magnetometer (roll, pitch or yaw)
+ * @param   pEstimator: Pointer to KalmanFilterType struct (roll pitch or yaw estimator)
+ * @param   stateAngle: Pointer to struct member of StateVectorType (roll, pitch or yaw)
+ * @param   stateRateBias: Pointer to struct member of StateVectorType (rollRateBias, pitchRateBias or yawRateBias)
+ * @retval  None
+ */
+static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator,
+        AttitudeStateVectorType * pState) {
+    float32_t y1, y2, s11, s12, s21, s22, detS_inv, p11_tmp, p12_tmp;
+
+    /* Correction */
+    /* Step3: Calculate y, difference between a-priori state and measurement z */
+   // y1 = sensorAngle - pState->angle;
+    y2 = sensorRate - pState->angleRate;
+
+    /* Step 4: Calculate innovation covariance matrix S */
+    s11 = pEstimator->p11 + pEstimator->r1;
+    s12 = pEstimator->p12;
+    s21 = pEstimator->p21;
+    s22 = pEstimator->p22 + pEstimator->r2;
+    detS_inv = 1/(s11*s22 - s12*s21); // Determinant of S
+
+    /* Step 5: Calculate Kalman gains */
+    pEstimator->k21 = detS_inv * (pEstimator->p21*s22 + pEstimator->p22*s21);
+    pEstimator->k22 = detS_inv * (pEstimator->p22*s11 + pEstimator->p21*s12);
+
+    /* Step 6: Update a posteriori state estimation */
+    pState->angle = pState->angle + pEstimator->k12*y2;
+    pState->angleRate = pState->angleRate + pEstimator->k22*y2;
+    pState->angleRateBias = pState->angleRateBias + pEstimator->k32*y2;
+    /* angleRateBias deliberately not updated as per equations, see FCB PDF */
+
+    /* Step 7: Update a posteriori error covariance matrix P */
+    p11_tmp = pEstimator->p11;
+    p12_tmp = pEstimator->p12;
+    pEstimator->p11 = p11_tmp - pEstimator->k11*p11_tmp;
+    pEstimator->p12 = p12_tmp - pEstimator->k11*p12_tmp;
+    pEstimator->p21 -= pEstimator->k12*p11_tmp;
+    pEstimator->p22 -= pEstimator->k12*p12_tmp;
 }
 
 /**
@@ -464,19 +575,19 @@ static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_
         arm_mean_f32(pSampleData[PROC].samples[ROLL_IDX], VAR_SAMPLE_MAX, &mean);
         arm_var_f32(pSampleData[PROC].samples[ROLL_IDX], VAR_SAMPLE_MAX, &variance);
         rollState.angleRateBias = mean;
-        rollEstimator.q1Variance = variance;
+        rollEstimator.q1 = variance;
         rollEstimator.p22 = variance;
 
         arm_mean_f32(pSampleData[PROC].samples[PITCH_IDX], VAR_SAMPLE_MAX, &mean);
         arm_var_f32(pSampleData[PROC].samples[PITCH_IDX], VAR_SAMPLE_MAX, &variance);
         pitchState.angleRateBias = mean;
-        pitchEstimator.q1Variance = variance;
+        pitchEstimator.q1 = variance;
         pitchEstimator.p22 = variance;
 
         arm_mean_f32(pSampleData[PROC].samples[YAW_IDX], VAR_SAMPLE_MAX, &mean);
         arm_var_f32(pSampleData[PROC].samples[YAW_IDX], VAR_SAMPLE_MAX, &variance);
         yawState.angleRateBias = mean;
-        yawEstimator.q1Variance = variance;
+        yawEstimator.q1 = variance;
         yawEstimator.p22 = variance;
       } break;
       case ACC_IDX :

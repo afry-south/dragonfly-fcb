@@ -53,6 +53,7 @@
 
 #include "motor_control.h"
 #include "receiver.h"
+#include "state_estimation.h"
 #include "uart.h"
 
 #include "task_status.h"
@@ -148,41 +149,50 @@ void HAL_CRC_MspDeInit(CRC_HandleTypeDef *hcrc) {
  * @retval None
  */
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
-	if (htim->Instance == PRIMARY_RECEIVER_TIM) {
-		/*##-1- Enable peripherals and GPIO Clocks #################################*/
-		/* Primary Receiver TIM Peripheral clock enable */
-		PRIMARY_RECEIVER_TIM_CLK_ENABLE();
 
-		/*##-2- Configure the NVIC for PRIMARY_RECEIVER_TIM ########################*/
-		HAL_NVIC_SetPriority(PRIMARY_RECEIVER_TIM_IRQn, PRIMARY_RECEIVER_TIM_IRQ_PREEMPT_PRIO,
-		PRIMARY_RECEIVER_TIM_IRQ_SUB_PRIO);
+    if (htim->Instance == PRIMARY_RECEIVER_TIM) {
+        /*##-1- Enable peripherals and GPIO Clocks #################################*/
+        /* Primary Receiver TIM Peripheral clock enable */
+        PRIMARY_RECEIVER_TIM_CLK_ENABLE();
 
-		/* Enable the PRIMARY_RECEIVER_TIM global Interrupt */
-		HAL_NVIC_EnableIRQ(PRIMARY_RECEIVER_TIM_IRQn);
-	} else if (htim->Instance == AUX_RECEIVER_TIM) {
+        /*##-2- Configure the NVIC for PRIMARY_RECEIVER_TIM ########################*/
+        HAL_NVIC_SetPriority(PRIMARY_RECEIVER_TIM_IRQn, PRIMARY_RECEIVER_TIM_IRQ_PREEMPT_PRIO,
+        PRIMARY_RECEIVER_TIM_IRQ_SUB_PRIO);
 
-		/*##-1- Enable peripherals and GPIO Clocks #################################*/
-		/* Aux Receiver TIM Peripheral clock enable */
-		AUX_RECEIVER_TIM_CLK_ENABLE();
+        /* Enable the PRIMARY_RECEIVER_TIM global Interrupt */
+        HAL_NVIC_EnableIRQ(PRIMARY_RECEIVER_TIM_IRQn);
+    } else if (htim->Instance == AUX_RECEIVER_TIM) {
+        /*##-1- Enable peripherals and GPIO Clocks #################################*/
+        /* Aux Receiver TIM Peripheral clock enable */
+        AUX_RECEIVER_TIM_CLK_ENABLE();
 
-		/*##-2- Configure the NVIC for AUX_RECEIVER_TIM ############################*/
-		HAL_NVIC_SetPriority(AUX_RECEIVER_TIM_IRQn, AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO, AUX_RECEIVER_TIM_IRQ_SUB_PRIO);
+        /*##-2- Configure the NVIC for AUX_RECEIVER_TIM ############################*/
+        HAL_NVIC_SetPriority(AUX_RECEIVER_TIM_IRQn, AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO, AUX_RECEIVER_TIM_IRQ_SUB_PRIO);
 
-		/* Enable the AUX_RECEIVER_TIM global Interrupt */
-		HAL_NVIC_EnableIRQ(AUX_RECEIVER_TIM_IRQn);
-	} else if (htim->Instance == TASK_STATUS_TIM){ //for task status
+        /* Enable the AUX_RECEIVER_TIM global Interrupt */
+        HAL_NVIC_EnableIRQ(AUX_RECEIVER_TIM_IRQn);
+    } else if (htim->Instance == TASK_STATUS_TIM) {
+        /*##-1- Enable peripherals and GPIO Clocks #################################*/
+        /* TIM Task status clock enable */
+        TASK_STATUS_TIM_CLK_ENABLE();
 
-		/*##-1- Enable peripherals and GPIO Clocks #################################*/
-		/*TIM6 Peripheral clock enable */
-		TASK_STATUS_TIM_CLK_ENABLE();
+        /*##-2- Configure the NVIC for TASK_STATUS_TIM ############################*/
+        HAL_NVIC_SetPriority(TASK_STATUS_TIM_IRQn, TASK_STATUS_TIM_IRQ_PREEMPT_PRIO, TASK_STATUS_TIM_IRQ_SUB_PRIO);
 
-		/*##-2- Configure the NVIC for AUX_RECEIVER_TIM ############################*/
-		HAL_NVIC_SetPriority(TASK_STATUS_TIM_IRQn, AUX_RECEIVER_TIM_IRQ_PREEMPT_PRIO, AUX_RECEIVER_TIM_IRQ_SUB_PRIO);
+        /* Enable the TASK_STATUS_TIM global Interrupt */
+        HAL_NVIC_EnableIRQ(TASK_STATUS_TIM_IRQn);
+    } else if (htim->Instance == STATE_ESTIMATION_UPDATE_TIM) {
+        /*##-1- Enable peripherals and GPIO Clocks #################################*/
+        /* TIM State estimation update clock enable */
+        STATE_ESTIMATION_UPDATE_TIM_CLK_ENABLE();
 
-		/* Enable the AUX_RECEIVER_TIM global Interrupt */
-		HAL_NVIC_EnableIRQ(TASK_STATUS_TIM_IRQn);
+        /*##-2- Configure the NVIC for STATE_ESTIMATION_UPDATE_TIM ############################*/
+        HAL_NVIC_SetPriority(STATE_ESTIMATION_UPDATE_TIM_IRQn, STATE_ESTIMATION_UPDATE_TIM_IRQ_PREEMPT_PRIO,
+        STATE_ESTIMATION_UPDATE_TIM_IRQ_SUB_PRIO);
 
-	}
+        /* Enable the STATE_ESTIMATION_UPDATE_TIM global Interrupt */
+        HAL_NVIC_EnableIRQ(STATE_ESTIMATION_UPDATE_TIM_IRQn);
+    }
 }
 
 /**
@@ -191,13 +201,20 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
  * @retval None
  */
 void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *htim) {
-	if (htim->Instance == PRIMARY_RECEIVER_TIM) {
-		/* Primary receiver TIM Peripheral clock disable */
-		PRIMARY_RECEIVER_TIM_CLK_DISABLE();
-	} else if (htim->Instance == AUX_RECEIVER_TIM) {
-		/* Aux receiver TIM Peripheral clock disable */
-		AUX_RECEIVER_TIM_CLK_DISABLE();
-	}
+
+    if(htim->Instance ==  PRIMARY_RECEIVER_TIM) {
+        /* Primary receiver TIM Peripheral clock disable */
+        PRIMARY_RECEIVER_TIM_CLK_DISABLE();
+    } else if(htim->Instance == AUX_RECEIVER_TIM) {
+        /* Aux receiver TIM Peripheral clock disable */
+        AUX_RECEIVER_TIM_CLK_DISABLE();
+    } else if(htim->Instance == TASK_STATUS_TIM) {
+        /* Task status TIM Peripheral clock disable */
+        TASK_STATUS_TIM_CLK_DISABLE();
+    } else if(htim->Instance == STATE_ESTIMATION_UPDATE_TIM) {
+        /* State estimation update TIM Peripheral clock disable */
+        STATE_ESTIMATION_UPDATE_TIM_CLK_DISABLE();
+    }
 }
 
 /**

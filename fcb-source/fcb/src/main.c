@@ -111,6 +111,7 @@ static void InitSystem(void) {
 
 	/* Init the states for the Kalman filter */
 	InitStatesXYZ();
+	InitStateEstimationTimeEvent();
 
 	/* Init the rotation matrix */
 	InitRotationMatrix();

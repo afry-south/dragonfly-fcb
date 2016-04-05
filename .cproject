@@ -94,8 +94,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/FreeRTOS/Source/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/dragonfly-fcb/fcb-source/communication/uart/inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${WorkspaceDirPath}\dragonfly\sw\comms\protobuf&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${WorkspaceDirPath}\dragonfly\tools\nanopb-0.3.5-windows-x86&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${WorkspaceDirPath}/dragonfly/sw/comms/protobuf&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${WorkspaceDirPath}/dragonfly/tools/nanopb-0.3.5-windows-x86&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1564222692" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F303VC"/>

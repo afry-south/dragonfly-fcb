@@ -8,7 +8,9 @@
 #define __SENSORS_H
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f3xx.h"
 #include "arm_math.h"
+
 #include "communication.h"
 #include "flight_control.h"
 #include "fcb_retval.h"
@@ -33,18 +35,30 @@ typedef enum FcbRPYIndex {
 typedef struct KalmanFilter
 {
     /* process noise covariance matrix components */
-	float32_t q1Variance; /* multiply with deltaT^2 to get q1 */
+	float32_t q1;   /* multiply with deltaT^2 to get q1 */
 	float32_t q2;
+	float32_t q3;
 	float32_t r1;	// Measurement noise covariance matrix component
+	float32_t r2;   // Measurement noise covariance matrix component
 	float32_t p11;	// Error covariance matrix component
-	float32_t p12;
-	float32_t p21;
-	float32_t p22;
-	float32_t k1;	// Kalman gain
-	float32_t k2;   // note: k1 & k2 these don't have to be part of the struct as they
+	float32_t p12;  // Error covariance matrix component
+	float32_t p13;  // Error covariance matrix component
+	float32_t p21;  // Error covariance matrix component
+	float32_t p22;  // Error covariance matrix component
+	float32_t p23;  // Error covariance matrix component
+	float32_t p31;  // Error covariance matrix component
+	float32_t p32;  // Error covariance matrix component
+	float32_t p33;  // Error covariance matrix component
+	float32_t k11;	// Kalman gain
+	float32_t k12;  // Kalman gain
+	float32_t k21;  // Kalman gain
+	float32_t k22;  // Kalman gain
+	float32_t k31;  // Kalman gain
+	float32_t k32;   // note: k<x> these don't have to be part of the struct as they
 	                // need not be carried over from one iteration to the next
 	                // but it's useful for displaying variables.
 } KalmanFilterType;
+// TODO use vectors/matrices for Q, R, P, K
 
 /**
  * This is used for roll, pitch & yaw attitude.
@@ -57,6 +71,15 @@ typedef struct AttitudeStateVector
 } AttitudeStateVectorType;
 
 /* Exported constants --------------------------------------------------------*/
+#define STATE_ESTIMATION_UPDATE_TIM                     TIM7
+#define STATE_ESTIMATION_UPDATE_TIM_CLK_ENABLE()        __TIM7_CLK_ENABLE()
+#define STATE_ESTIMATION_UPDATE_TIM_CLK_DISABLE()       __TIM7_CLK_DISABLE()
+#define STATE_ESTIMATION_UPDATE_TIM_IRQn                TIM7_IRQn
+#define STATE_ESTIMATION_UPDATE_TIM_IRQHandler          TIM7_IRQHandler
+#define STATE_ESTIMATION_UPDATE_TIM_IRQ_PREEMPT_PRIO    configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY // Set to this since used w/ RTOS
+#define STATE_ESTIMATION_UPDATE_TIM_IRQ_SUB_PRIO        0
+#define STATE_ESTIMATION_TIME_UPDATE_PERIOD             (60000-1)
+#define STATE_ESTIMATION_TIME_UPDATE_PRESCALER          12
 
 // TODO we need separate values for roll pitch and yaw as well as separate init values of P matrix
 #define	STATE_ESTIMATION_SAMPLE_PERIOD	(float32_t) 	FLIGHT_CONTROL_TASK_PERIOD / 1000.0
@@ -65,6 +88,13 @@ typedef struct AttitudeStateVector
 #define	R1_CAL (float32_t)								0.000185 /* 480 measured from USB console and
                                                           * calculated with SensorVariance.sce
                                                           */
+
+typedef enum {
+    STATE_EST_ERROR = 0, STATE_EST_OK = !STATE_EST_ERROR
+} StateEstimationStatus;
+
+/* Exported variables --------------------------------------------------------*/
+TIM_HandleTypeDef StateEstimationTimHandle;
 
 /* Exported macro ------------------------------------------------------------*/
 
@@ -75,8 +105,9 @@ float32_t GetYawAngle(void);
 float32_t GetHeading(void);
 
 void InitStatesXYZ(void);
-void PredictStatesXYZ(const float32_t sensorRateRoll, const float32_t sensorRatePitch, const float32_t sensorRateYaw);
-void CorrectStatesXYZ(const float32_t sensorAngleRoll, const float32_t sensorAnglePitch, const float32_t sensorAngleYaw);
+StateEstimationStatus InitStateEstimationTimeEvent(void);
+void StateEstimationTimeEventCallback(void);
+
 FcbRetValType StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 FcbRetValType StopStateSamplingTask(void);
 void SetStatePrintSamplingSerialization(const SerializationType serializationType);

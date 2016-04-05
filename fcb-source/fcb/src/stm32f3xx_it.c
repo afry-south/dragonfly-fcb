@@ -1,4 +1,4 @@
-/**
+/*
   ******************************************************************************
   * @file    stm32f3xx_it.c
   * @author  �F Embedded Systems Syd
@@ -16,6 +16,9 @@
 
 #include "fcb_error.h"
 #include "task_status.h"
+#include "receiver.h"
+#include "state_estimation.h"
+#include "uart.h"
 
 /** @addtogroup STM32F3-Discovery_Demo STM32F3-Discovery_Demo
  * @{
@@ -28,10 +31,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd;
-extern UART_HandleTypeDef UartHandle;
-
-extern TIM_HandleTypeDef PrimaryReceiverTimHandle;
-extern TIM_HandleTypeDef AuxReceiverTimHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -175,12 +174,21 @@ void AUX_RECEIVER_TIM_IRQHandler(void) {
 }
 
 /**
- * @brief  This function handles the AUX_RECEIVER_TIM timer interrupt request.
+ * @brief  This function handles the TASK_STATUS_TIM timer interrupt request.
  * @param  None
  * @retval None
  */
 void TASK_STATUS_TIM_IRQHandler(void) {
 	HAL_TIM_IRQHandler(&TaskStatusTimHandle);
+}
+
+/**
+ * @brief  This function handles the STATE_ESTIMATION_UPDATE_TIM timer interrupt request.
+ * @param  None
+ * @retval None
+ */
+void STATE_ESTIMATION_UPDATE_TIM_IRQHandler(void) {
+    HAL_TIM_IRQHandler(&StateEstimationTimHandle);
 }
 
 /**

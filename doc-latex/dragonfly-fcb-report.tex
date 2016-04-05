@@ -378,7 +378,11 @@ Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The s
 		P22 -= K2*P12_tmp;
 		\end{lstlisting}
 	\subsection{Attitude estimation using three value state vector}
-		In this version inspired by Linux Helgesson\footnote{\url{www.linushelgesson.se/2012/04/pitch-and-roll-estimating-kalman-filter-for-stabilizing-quadrocopters}}, the state vector is the angle $\theta$, the angular rate $\dot{\theta}$ and angular rate bias $\dot{\theta}_b$. The matrix $B$ in the state equation \ref{eq:state-equation-2v} is set to zero due to the complexity of accurately modelling the impact of control input $u$ on the state vector but this may be added in future versions.
+		In this version {\url{www.linushelgesson.se/2012/04/pitch-and-roll-estimating-kalman-filter-for-stabilizing-quadrocopters}}, the state vector is the angle $\theta$, the angular rate $\dot{\theta}$ and angular rate bias $\dot{\theta}_b$. The matrix $B$ in the state equation \ref{eq:state-equation-2v} is set to zero due to the complexity of accurately modelling the impact of control input $u$ on the state vector but this may be added in future versions.
+
+[TODO: Add information and pseudo-code on how to include B matrix and system input]
+
+[TODO: Needs review and correcting, S matrix seems wrong...]
 
 		Step 1: Predict the estimated states $\hat{x}_{k|k-1}$
 		\begin{equation}
