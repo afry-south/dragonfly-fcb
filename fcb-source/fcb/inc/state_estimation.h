@@ -57,6 +57,7 @@ typedef struct KalmanFilter
 	float32_t k32;   // note: k<x> these don't have to be part of the struct as they
 	                // need not be carried over from one iteration to the next
 	                // but it's useful for displaying variables.
+	float32_t h;    // Sample time [s]
 } KalmanFilterType;
 // TODO use vectors/matrices for Q, R, P, K
 
@@ -84,10 +85,12 @@ typedef struct AttitudeStateVector
 // TODO we need separate values for roll pitch and yaw as well as separate init values of P matrix
 #define	STATE_ESTIMATION_SAMPLE_PERIOD	(float32_t) 	FLIGHT_CONTROL_TASK_PERIOD / 1000.0
 #define Q1_CAL (float32_t)								0.05
-#define	Q2_CAL (float32_t)								0.005
-#define	R1_CAL (float32_t)								0.000185 /* 480 measured from USB console and
+#define	Q2_CAL (float32_t)								0.5 //0.005
+#define Q3_CAL (float32_t)                              0.0005
+#define	R1_CAL (float32_t)						   		0.000185 /* 480 measured from USB console and
                                                           * calculated with SensorVariance.sce
                                                           */
+#define R2_CAL                                          0.005
 
 typedef enum {
     STATE_EST_ERROR = 0, STATE_EST_OK = !STATE_EST_ERROR

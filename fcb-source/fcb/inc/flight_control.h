@@ -57,6 +57,10 @@ float GetZVelocityReferenceSignal(void);
 float GetRollAngleReferenceSignal(void);
 float GetPitchAngleReferenceSignal(void);
 float GetYawAngularRateReferenceSignal(void);
+float32_t GetThrustControlSignal();
+float32_t GetRollControlSignal();
+float32_t GetPitchControlSignal();
+float32_t GetYawControlSignal();
 
 #endif /* __FLIGHT_CONTROL_H */
 

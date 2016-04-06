@@ -122,6 +122,58 @@ float GetYawAngularRateReferenceSignal(void) {
 	return RefSignals.YawAngleRate;
 }
 
+/*
+ * @brief  Gets thrust force control signal, which is an approximate of the real thrust force [N]
+ * @param  None
+ * @retval Thrust force [N]
+ */
+float32_t GetThrustControlSignal() {
+    if(flightControlMode != FLIGHT_CONTROL_IDLE && flightControlMode != FLIGHT_CONTROL_RAW) {
+        return ctrlSignals.Thrust;
+    } else {
+        return 0;
+    }
+}
+
+/*
+ * @brief  Gets roll moment control signal, which is an approximate of the real roll moment [Nm]
+ * @param  None
+ * @retval Roll moment [Nm]
+ */
+float32_t GetRollControlSignal() {
+    if(flightControlMode != FLIGHT_CONTROL_IDLE && flightControlMode != FLIGHT_CONTROL_RAW) {
+        return ctrlSignals.RollMoment;
+    } else {
+        return 0;
+    }
+}
+
+/*
+ * @brief  Gets pitch moment control signal, which is an approximate of the real pitch moment [Nm]
+ * @param  None
+ * @retval Pitch moment [Nm]
+ */
+float32_t GetPitchControlSignal() {
+    if(flightControlMode != FLIGHT_CONTROL_IDLE && flightControlMode != FLIGHT_CONTROL_RAW) {
+        return ctrlSignals.PitchMoment;
+    } else {
+        return 0;
+    }
+}
+
+/*
+ * @brief  Gets yaw moment control signal, which is an approximate of the real yaw moment [Nm]
+ * @param  None
+ * @retval Yaw moment [Nm]
+ */
+float32_t GetYawControlSignal() {
+    if(flightControlMode != FLIGHT_CONTROL_IDLE && flightControlMode != FLIGHT_CONTROL_RAW) {
+        return ctrlSignals.YawMoment;
+    } else {
+        return 0;
+    }
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /*
@@ -198,15 +250,15 @@ static void SetReferenceSignals(void) {
 
 	/* Set Z velocity reference depending on receiver throttle channel */
 	// TODO set Z velocity reference to control altitude when such a controller is available
-//	if (throttle <= RECEIVER_TO_REFERENCE_ZERO_PADDING && throttle >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
-//		RefSignals.ZVelocity = 0.0;
-//	} else if (throttle >= 0) {
-//		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle - RECEIVER_TO_REFERENCE_ZERO_PADDING)
-//				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
-//	} else {
-//		RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle + RECEIVER_TO_REFERENCE_ZERO_PADDING)
-//				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
-//	}
+	if (throttle <= RECEIVER_TO_REFERENCE_ZERO_PADDING && throttle >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
+	    RefSignals.ZVelocity = 0.0;
+	} else if (throttle >= 0) {
+	    RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+					        / (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+	} else {
+	    RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+					        / (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+	}
 
 	/* Set roll angle reference depending on receiver aileron channel */
 	if (aileron <= RECEIVER_TO_REFERENCE_ZERO_PADDING && aileron >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
