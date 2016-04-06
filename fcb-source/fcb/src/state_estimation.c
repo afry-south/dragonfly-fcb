@@ -43,9 +43,9 @@ static FcbSensorVarianceCalcType * pSampleData = NULL;
 
 
 /* Private variables ---------------------------------------------------------*/
-static AttitudeStateVectorType rollState = { 0, 0 , 0 };
-static AttitudeStateVectorType pitchState = { 0, 0 , 0 };
-static AttitudeStateVectorType yawState = { 0, 0 , 0 };
+static AttitudeStateVectorType rollState    = { 0.0, 0.0, 0.0 };
+static AttitudeStateVectorType pitchState   = { 0.0, 0.0, 0.0 };
+static AttitudeStateVectorType yawState     = { 0.0, 0.0, 0.0 };
 
 static KalmanFilterType rollEstimator;
 static KalmanFilterType pitchEstimator;
@@ -72,6 +72,7 @@ static void StatePrintSamplingTask(void const *argument);
 // TODO Need mutex between sensors between each sensor as well?) and time update events...? Shared resources P-matrix
 // TODO Need RTOS task with queue pending on each sensor and time-event and handling it accordingly
 // TODO Also need mutex protecting states when written/read
+// TODO Need input u and B vector. u is ctrlSignals. Also need inertia IXX, IYY, IZZ
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -108,15 +109,10 @@ StateEstimationStatus InitStateEstimationTimeEvent(void)
 
     /*##-1- Configure the TIM peripheral #######################################*/
 
-    /* Set TIMx instance */
+    /* Set STATE_ESTIMATION_UPDATE_TIM instance */
     StateEstimationTimHandle.Instance = STATE_ESTIMATION_UPDATE_TIM;
 
-    /* Initialize TIM3 peripheral as follows:
-         + Period = 10000 - 1
-         + Prescaler = (SystemCoreClock/10000) - 1
-         + ClockDivision = 0
-         + Counter direction = Up
-     */
+    /* Initialize STATE_ESTIMATION_UPDATE_TIM peripheral */
     StateEstimationTimHandle.Init.Period = 60000 - 1;
     StateEstimationTimHandle.Init.Prescaler = 12;
     StateEstimationTimHandle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -129,7 +125,6 @@ StateEstimationStatus InitStateEstimationTimeEvent(void)
     }
 
     /*##-2- Start the TIM Base generation in interrupt mode ####################*/
-    /* Start Channel1 */
     if(HAL_TIM_Base_Start_IT(&StateEstimationTimHandle) != HAL_OK)
     {
         /* Starting Error */
