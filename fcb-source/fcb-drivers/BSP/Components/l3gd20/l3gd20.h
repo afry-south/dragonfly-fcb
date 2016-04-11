@@ -45,7 +45,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "..\Common\gyro.h"
+#include "gyro.h"
 #include "stm32f3xx_hal.h"
 
 /** @addtogroup BSP
