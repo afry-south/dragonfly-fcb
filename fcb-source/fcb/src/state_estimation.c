@@ -75,8 +75,7 @@ static void StatePrintSamplingTask(void const *argument);
 
 // TODO Need mutex between sensors between each sensor as well?) and time update events...? Shared resources P-matrix
 // TODO Need RTOS task with queue pending on each sensor and time-event and handling it accordingly
-// TODO Also need mutex protecting states when written/read
-// TODO Need input u and B vector. u is ctrlSignals. Also need inertia IXX, IYY, IZZ
+// TODO Also need mutex protecting states when written/read?
 
 /* Exported functions --------------------------------------------------------*/
 
