@@ -90,12 +90,16 @@ void InitStatesXYZ(void) {
     StateInit(&pitchEstimator);
     StateInit(&yawEstimator);
 
-    rollState.angle = 0.0;
+    rollState.angle = 0.0; // TODO init to first accelerometer angle
+    rollState.angleRate = 0.0;
     rollState.angleRateBias = 0.0;
-    pitchState.angle = 0.0;
+
+    pitchState.angle = 0.0; // TODO init to first accelerometer angle
+    pitchState.angleRate = 0.0;
     pitchState.angleRateBias = 0.0;
 
-    yawState.angle = 0.0; /* should really be initialised with current heading TODO */
+    yawState.angle = 0.0; /* should really be initialised with current heading, that is why bias is overestimated initially TODO */
+    yawState.angleRate = 0.0;
     yawState.angleRateBias = 0.0;
 
     FcbSensorRegisterClientCallback(StateSensorsEventCallback);
@@ -172,6 +176,33 @@ float32_t GetPitchAngle(void) {
  */
 float32_t GetYawAngle(void) {
     return yawState.angle;
+}
+
+/*
+ * @brief  Gets the (unbiased) roll angular rate
+ * @param  None
+ * @retval Roll rate
+ */
+float32_t GetRollRate(void) {
+    return rollState.angleRateUnbiased;
+}
+
+/* GetPitch
+ * @brief  Gets the (unbiased) pitch angular rate
+ * @param  None
+ * @retval Pitch rate
+ */
+float32_t GetPitchRate(void) {
+    return pitchState.angleRateUnbiased;
+}
+
+/* GetYaw
+ * @brief  Gets the (unbiased) yaw angular rate
+ * @param  None
+ * @retval Yaw rate
+ */
+float32_t GetYawRate(void) {
+    return yawState.angleRateUnbiased;
 }
 
 /*
@@ -440,7 +471,8 @@ static void PredictAttitudeState(KalmanFilterType* pEstimator, AttitudeStateVect
     /* Prediction */
     /* Step 1: Calculate a priori state estimation*/
     pState->angle += h * (pState->angleRate - pState->angleRateBias) + h * h / (2 * inertia) * ctrl;
-    pState->angleRate += h / inertia * ctrl; // TODO
+    pState->angleRate += h / inertia * ctrl;
+    pState->angleRateUnbiased = pState->angleRate - pState->angleRateUnbiased; // Update the unbiased rate state
     /* pState->angleRateBias not estimated, see equations in section "State Estimation Theory" */
 
     /* Step 2: Calculate a priori error covariance matrix P*/

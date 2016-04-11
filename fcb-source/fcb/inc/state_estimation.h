@@ -69,6 +69,7 @@ typedef struct AttitudeStateVector
   float32_t volatile angle; /* for yaw, aka "heading" */
   float32_t angleRate; /* not used */
   float32_t angleRateBias;
+  float32_t angleRateUnbiased; // Not used in Kalman filter derivation, but should be fed in to control
 } AttitudeStateVectorType;
 
 /* Exported constants --------------------------------------------------------*/
@@ -105,7 +106,9 @@ TIM_HandleTypeDef StateEstimationTimHandle;
 float32_t GetRollAngle(void);
 float32_t GetPitchAngle(void);
 float32_t GetYawAngle(void);
-float32_t GetHeading(void);
+float32_t GetRollRate(void);
+float32_t GetPitchRate(void);
+float32_t GetYawRate(void);
 
 void InitStatesXYZ(void);
 StateEstimationStatus InitStateEstimationTimeEvent(void);

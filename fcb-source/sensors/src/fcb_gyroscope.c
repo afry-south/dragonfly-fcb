@@ -29,13 +29,11 @@
 
 /* static & local declarations */
 
-enum { GYROSCOPE_OFFSET_SAMPLES = 100 };
-
 enum { XDOT_IDX = 0 }; /* index of sGyroXYZAngleDot & ditto Offset */
 enum { YDOT_IDX = 1 }; /* as above */
 enum { ZDOT_IDX = 2 }; /* as above */
 
-const float32_t GYRO_X_AXIS_VARIANCE = 0.098603;
+const float32_t GYRO_X_AXIS_VARIANCE = 0.098603; // TODO These could be used to set Kalman filters Correction variance (R)
 const float32_t GYRO_Y_AXIS_VARIANCE = 0.104274;
 const float32_t GYRO_Z_AXIS_VARIANCE = 0.103256;
 const float32_t GYRO_AXIS_VARIANCE_ROUGH = 0.000256;
@@ -50,7 +48,6 @@ const float32_t GYRO_AXIS_VARIANCE_ROUGH = 0.000256;
 /* Private variables ---------------------------------------------------------*/
 
 static float32_t sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 }; /* not volatile - only print thread reads */
-static float32_t sGyroXYZAngleDotOffset[3] = { 0.0, 0.0, 0.0 };
 static float32_t sGyroSamplePeriod = 0.0f;
 static xSemaphoreHandle mutexGyro;
 
@@ -101,7 +98,6 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
      * needs to hold the mutexMag
      */
     float lGyroXYZAngleDot[3] = { 0.0f, 0.0f, 0.0f };
-    static uint32_t call_counter = 0;
 
     /* returns rad/s */
     status = L3GD20_ReadXYZAngRate(gyroscopeData);
@@ -117,28 +113,6 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
     lGyroXYZAngleDot[XDOT_IDX] = -gyroscopeData[YDOT_IDX];
     lGyroXYZAngleDot[YDOT_IDX] = -gyroscopeData[XDOT_IDX];
     lGyroXYZAngleDot[ZDOT_IDX] = -gyroscopeData[ZDOT_IDX];
-
-    if (GYROSCOPE_OFFSET_SAMPLES > call_counter) {
-        sGyroXYZAngleDotOffset[XDOT_IDX] += lGyroXYZAngleDot[XDOT_IDX];
-        sGyroXYZAngleDotOffset[YDOT_IDX] += lGyroXYZAngleDot[YDOT_IDX];
-        sGyroXYZAngleDotOffset[ZDOT_IDX] += lGyroXYZAngleDot[ZDOT_IDX];
-        call_counter++;
-    } else if (GYROSCOPE_OFFSET_SAMPLES == call_counter) {
-        sGyroXYZAngleDotOffset[XDOT_IDX] = sGyroXYZAngleDotOffset[XDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
-        sGyroXYZAngleDotOffset[YDOT_IDX] = sGyroXYZAngleDotOffset[YDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
-        sGyroXYZAngleDotOffset[ZDOT_IDX] = sGyroXYZAngleDotOffset[ZDOT_IDX] / GYROSCOPE_OFFSET_SAMPLES;
-        call_counter++;
-    } else {
-        /* TODO apply calibration
-         *
-         * as things are, the gyroscope drifts in time. Even taking 200 samples
-         * at startup and then using this to calculate an offset will not
-         * produce zero drift.
-         */
-        lGyroXYZAngleDot[XDOT_IDX] = lGyroXYZAngleDot[XDOT_IDX] - sGyroXYZAngleDotOffset[XDOT_IDX];
-        lGyroXYZAngleDot[YDOT_IDX] = lGyroXYZAngleDot[YDOT_IDX] - sGyroXYZAngleDotOffset[YDOT_IDX];
-        lGyroXYZAngleDot[ZDOT_IDX] = lGyroXYZAngleDot[ZDOT_IDX] - sGyroXYZAngleDotOffset[ZDOT_IDX];
-    }
 
     if (pdTRUE != xSemaphoreTake(mutexGyro,  portMAX_DELAY /* wait forever */)) {
       ErrorHandler();

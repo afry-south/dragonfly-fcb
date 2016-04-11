@@ -62,6 +62,7 @@ static float32_t sMagSamplePeriod = 0.0f;
  *
  * @see FcbSensorCalibrationParmIndex for what the numbers mean.
  */
+#if USE_SCILAB_CALIBRATION_VALUES
 static float32_t sXYZMagCalPrm[CALIB_IDX_MAX] = { -0.0105836, 0.0906626, 0.0484313, 0.8757337, 0.8965046, 0.8977956 /* 123 samples */
 /* - 0.0127656,    0.0804974,    0.0338544,    0.9025001,    0.9189748,    0.9415154 6 samples */
 }; /* values copied from MagnetometerCalibration.sce */
@@ -71,6 +72,10 @@ static float32_t sXYZMagCalPrm[CALIB_IDX_MAX] = { -0.0105836, 0.0906626, 0.04843
  * @see FcbSensorCalibrationParmIndex for what the numbers mean.
  */
 static float32_t sXYZAccCalPrm[CALIB_IDX_MAX] = { -0.1155430, -0.0068883, 0.4760651, 0.9649397, 0.9764581, 0.9652411 }; /* values copied from bottom of AccelerometerCalibration.sce */
+#else
+static float32_t sXYZMagCalPrm[CALIB_IDX_MAX] = { 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
+static float32_t sXYZAccCalPrm[CALIB_IDX_MAX] = { 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
+#endif
 
 static enum FcbAccMagMode accMagMode = ACCMAGMTR_UNINITIALISED;
 
@@ -164,6 +169,7 @@ void FetchDataFromAccelerometer(void) {
     acceleroMeterData[Y_IDX] = -acceleroMeterData[Y_IDX];
     acceleroMeterData[Z_IDX] = -acceleroMeterData[Z_IDX];
 
+    // TODO IS BELOW NEEDED? HOW TO CALIBRATE ACCELEROMETER?
     if (ACCMAGMTR_FETCHING == accMagMode) {
         /* only apply calibration tune when in normal fetch mode - in calibrate
          * mode raw data is desired.
