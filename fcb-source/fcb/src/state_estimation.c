@@ -73,9 +73,10 @@ static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sen
         AttitudeStateVectorType * pState);
 static void StatePrintSamplingTask(void const *argument);
 
-// TODO Need mutex between sensors between each sensor as well?) and time update events...? Shared resources P-matrix
-// TODO Need RTOS task with queue pending on each sensor and time-event and handling it accordingly
-// TODO Also need mutex protecting states when written/read?
+/*
+ * TODO : The below implementation is not real-time/concurrently safe as there are shared resources between
+ * the time update timer ISR callback and the SensorEvent callback function. Needs synchronization solution.
+*/
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -89,18 +90,22 @@ void InitStatesXYZ(void) {
     StateInit(&pitchEstimator);
     StateInit(&yawEstimator);
 
-    rollState.angle = 0.0; // TODO init to first accelerometer angle
+    rollState.angle = 0.0; // TODO init to first accelerometer angle or mean of a few samples
     rollState.angleRate = 0.0;
     rollState.angleRateBias = 0.0;
+    rollState.angleRateUnbiased = rollState.angleRate - rollState.angleRateBias;
 
-    pitchState.angle = 0.0; // TODO init to first accelerometer angle
+    pitchState.angle = 0.0; // TODO init to first accelerometer angle or mean of a few samples
     pitchState.angleRate = 0.0;
     pitchState.angleRateBias = 0.0;
+    pitchState.angleRateUnbiased = pitchState.angleRate - pitchState.angleRateBias;
 
-    yawState.angle = 0.0; /* should really be initialised with current heading, that is why bias is overestimated initially TODO */
+    yawState.angle = 0.0; /* TODO should really be initialised with current heading (mean of a few samples), which is why bias is overestimated initially */
     yawState.angleRate = 0.0;
     yawState.angleRateBias = 0.0;
+    yawState.angleRateUnbiased = yawState.angleRate - yawState.angleRateBias;
 
+    /* Register callback function that gets call each time new sensor samples are available */
     FcbSensorRegisterClientCallback(StateSensorsEventCallback);
 }
 
@@ -274,7 +279,7 @@ void PrintStateValues(const SerializationType serializationType) {
     if ((serializationType == NO_SERIALIZATION) || (serializationType == CALIBRATION_SERIALIZATION)) {
         float32_t sensorAttitude[3], accValues[3], magValues[3], gyroValues[3];
 
-        // TODO Delete sensor attitude printouts
+        // TODO Delete sensor attitude printouts later
         /* Get magnetometer values */
         GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
 
@@ -327,7 +332,6 @@ void PrintStateValues(const SerializationType serializationType) {
         stateValuesProto.has_yawAngle = true;
         stateValuesProto.yawAngle = yawState.angle;
 
-        // TODO add attitude rates when available
         stateValuesProto.has_rollRate = true;
         stateValuesProto.rollRate = rollState.angleRate;
         stateValuesProto.has_pitchRate = true;
@@ -387,7 +391,7 @@ static void StateInit(KalmanFilterType * Estimator) {
     /* q1 = sqrt(var(rate))*STATE_ESTIMATION_SAMPLE_PERIOD^2
      * q2 = sqrt(var(rateBias))
      * r1 = sqrt(var(angle)) */
-    // TODO Needs to be set individually for each Kalman filter
+    // TODO Needs to be set individually for each Kalman filter based on sensor and axis noise variance values
     Estimator->q1 = Q1_CAL; //GYRO_AXIS_VARIANCE_ROUGH;
     Estimator->q2 = Q2_CAL;
     Estimator->q3 = Q3_CAL;
