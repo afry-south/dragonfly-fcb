@@ -34,7 +34,6 @@
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef UartHandle;
 uint8_t rxByte = 0;
 
 /* UART Receive FIFO buffer */

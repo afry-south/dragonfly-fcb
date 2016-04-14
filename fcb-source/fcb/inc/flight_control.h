@@ -61,10 +61,16 @@ typedef struct
 /* Exported function prototypes --------------------------------------------- */
 void CreateFlightControlTask(void);
 enum FlightControlMode GetFlightControlMode(void);
+
 float32_t GetZVelocityReferenceSignal(void);
 float32_t GetRollAngleReferenceSignal(void);
 float32_t GetPitchAngleReferenceSignal(void);
 float32_t GetYawAngularRateReferenceSignal(void);
+
+float32_t GetThrustControlSignal();
+float32_t GetRollControlSignal();
+float32_t GetPitchControlSignal();
+float32_t GetYawControlSignal();
 
 void setMaxLimitForReferenceSignal(float32_t maxZVelocity, float32_t maxRollAngle, float32_t maxPitchAngle, float32_t maxYawAngleRate);
 void getMaxLimitForReferenceSignal(float32_t* maxZVelocity, float32_t* maxRollAngle, float32_t* maxPitchAngle, float32_t* maxYawAngleRate);

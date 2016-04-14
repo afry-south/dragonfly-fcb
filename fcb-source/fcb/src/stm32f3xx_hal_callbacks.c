@@ -16,6 +16,7 @@
 #include "fcb_error.h"
 #include "usbd_cdc_if.h"
 #include "uart.h"
+#include "state_estimation.h"
 
 #include "stm32f3_discovery.h"
 
@@ -112,7 +113,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		AuxReceiverTimerPeriodCountIncrement();
 	} else if (htim->Instance == TASK_STATUS_TIM){
 		IncreaseTaskStatusTimerPeriodCount();
-	}
+	} else if (htim->Instance == STATE_ESTIMATION_UPDATE_TIM){
+	    StateEstimationTimeEventCallback();
+    }
 }
 
 /**

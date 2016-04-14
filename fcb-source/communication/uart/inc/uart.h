@@ -50,6 +50,9 @@ typedef enum {
 #define UART_FORCE_RESET()             __USART2_FORCE_RESET()
 #define UART_RELEASE_RESET()           __USART2_RELEASE_RESET()
 
+/* Exported variables --------------------------------------------------------*/
+UART_HandleTypeDef UartHandle;
+
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported functions ------------------------------------------------------- */

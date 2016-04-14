@@ -167,7 +167,7 @@ void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
 // ctrlSignals->Thrust = UpdatePIDControl(&AltCtrl, GetZVelocity(), GetZVelocityReferenceSignal()); // TODO control altitude later
 	ctrlSignals->RollMoment = UpdatePIDControl(&RollCtrl, GetRollAngle(), GetRollAngleReferenceSignal());
 	ctrlSignals->PitchMoment = UpdatePIDControl(&PitchCtrl, GetPitchAngle(), GetPitchAngleReferenceSignal());
-	ctrlSignals->YawMoment = UpdatePIDControl(&YawCtrl, GetYawAngle(), GetYawAngularRateReferenceSignal()); // TODO should be GetYawRate()
+	ctrlSignals->YawMoment = UpdatePIDControl(&YawCtrl, GetYawRate(), GetYawAngularRateReferenceSignal()); // TODO should be GetYawRate()
 }
 
 /* Private functions ---------------------------------------------------------*/

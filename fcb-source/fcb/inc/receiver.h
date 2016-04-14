@@ -112,6 +112,10 @@
 
 #define IS_RECEIVER_CHANNEL_INACTIVE_PERIODS_COUNT      300     // Corresponds to ~1.092 s
 
+/* Exported variables --------------------------------------------------------*/
+TIM_HandleTypeDef PrimaryReceiverTimHandle;
+TIM_HandleTypeDef AuxReceiverTimHandle;
+
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
 	RECEIVER_ERROR = 0, RECEIVER_OK = !RECEIVER_ERROR

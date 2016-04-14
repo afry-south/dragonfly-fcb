@@ -124,10 +124,6 @@ typedef struct {
 
 /* Private variables ---------------------------------------------------------*/
 
-/* Timer time base handlers for each timer - These are exported to stm32f3xx_it.c */
-TIM_HandleTypeDef PrimaryReceiverTimHandle;
-TIM_HandleTypeDef AuxReceiverTimHandle;
-
 /* Timer IC init declarations for each channel */
 static TIM_IC_InitTypeDef ThrottleChannelICConfig;
 static TIM_IC_InitTypeDef AileronChannelICConfig;
