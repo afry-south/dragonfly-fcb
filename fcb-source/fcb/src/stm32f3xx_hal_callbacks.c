@@ -114,7 +114,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	} else if (htim->Instance == TASK_STATUS_TIM){
 		IncreaseTaskStatusTimerPeriodCount();
 	} else if (htim->Instance == STATE_ESTIMATION_UPDATE_TIM){
-	    StateEstimationTimeEventCallback();
+		SendPredictionUpdateToFlightControl();
     }
 }
 

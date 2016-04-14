@@ -34,12 +34,37 @@ typedef struct
   float YawAngleRate;	// [rad/s]
 } RefSignals_TypeDef;
 
+typedef enum {
+  FLIGHT_CONTROL_UPDATE,
+  CORRECTION_UPDATE,
+  PREDICTION_UPDATE
+} FlightControlMsgType_TypeDef;
+
+typedef struct {
+  FcbSensorIndexType sensorType;
+  float32_t xyz[3];
+  uint8_t deltaTms;
+} sensorReading_TypeDef;
+
+/**
+ * Messages sent to the queue
+ */
+typedef struct FlightControlMsg {
+  sensorReading_TypeDef sensorReading;
+  FlightControlMsgType_TypeDef type;
+} FlightControlMsg_TypeDef;
+
 /* Private define ------------------------------------------------------------*/
 #define FLIGHT_CONTROL_TASK_PRIO		configMAX_PRIORITIES-1
+
+#define FLIGHT_CONTROL_QUEUE_SIZE		      6
+#define FLIGHT_CONTROL_QUEUE_TIMEOUT          2000 // [ms]
 
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
+static xQueueHandle qFlightControl = NULL;
+
 static RefSignals_TypeDef RefSignals; // Control reference signals
 static CtrlSignals_TypeDef ctrlSignals; // Physical control signals
 
@@ -63,6 +88,10 @@ static void FlightControlTask(void const *argument);
  * @retval None.
  */
 void CreateFlightControlTask(void) {
+    if (0 == (qFlightControl = xQueueCreate(FLIGHT_CONTROL_QUEUE_SIZE, sizeof(FlightControlMsg_TypeDef)))) {
+        ErrorHandler();
+    }
+
 	/* Flight Control task creation
 	 * Task function pointer: FlightControlTask
 	 * Task name: FLIGHT_CTRL
@@ -294,6 +323,44 @@ static void SetReferenceSignals(void) {
 	}
 }
 
+void SendFlightControlUpdateToFlightControl(void)
+{
+    FlightControlMsg_TypeDef msg;
+    msg.type = FLIGHT_CONTROL_UPDATE;
+    portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
+
+    if (pdTRUE != xQueueSendFromISR(qFlightControl, &msg, &higherPriorityTaskWoken)) {
+        ErrorHandler();
+    }
+}
+
+void SendPredictionUpdateToFlightControl(void)
+{
+    FlightControlMsg_TypeDef msg;
+    msg.type = PREDICTION_UPDATE;
+    portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
+
+    if (pdTRUE != xQueueSendFromISR(qFlightControl, &msg, &higherPriorityTaskWoken)) {
+        ErrorHandler();
+    }
+}
+
+void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType,
+                                         uint8_t deltaTms,
+                                         float32_t xyz[3])
+{
+    FlightControlMsg_TypeDef msg;
+    msg.type = CORRECTION_UPDATE;
+    msg.sensorReading.sensorType = sensorType;
+    msg.sensorReading.deltaTms = deltaTms;
+    memcpy(msg.sensorReading.xyz, xyz, sizeof(float32_t)*3);
+    portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
+
+    if (pdTRUE != xQueueSendFromISR(qFlightControl, &msg, &higherPriorityTaskWoken)) {
+        ErrorHandler();
+    }
+}
+
 /**
  * @brief  Flight control task function
  * @param  argument : Unused parameter
@@ -302,29 +369,45 @@ static void SetReferenceSignals(void) {
 static void FlightControlTask(void const *argument) {
 	(void) argument;
 
-	portTickType xLastWakeTime;
 	uint32_t ledFlashCounter = 0;
-
-	/* Initialise the xLastWakeTime variable with the current time */
-	xLastWakeTime = xTaskGetTickCount();
-
+	FlightControlMsg_TypeDef msg;
 
 	for (;;) {
-		vTaskDelayUntil(&xLastWakeTime, FLIGHT_CONTROL_TASK_PERIOD);
+        if (pdFALSE == xQueueReceive(qFlightControl, &msg,  FLIGHT_CONTROL_QUEUE_TIMEOUT)) {
+            /*
+             * if no message was received, interrupts from the sensors
+             * aren't arriving and this is a serious error.
+             */
+            ErrorHandler();
+        }
 
-		/* Perform flight control activities */
-		UpdateFlightControl();
+        switch (msg.type) {
+        case PREDICTION_UPDATE:
+            StateEstimationTimeEventCallback();
+//            break;
+        case FLIGHT_CONTROL_UPDATE:
+            /* Perform flight control activities */
+            UpdateFlightControl();
 
-		/* Blink with LED to indicate thread is alive */
-		if(ledFlashCounter % 100 == 0) {
-			BSP_LED_On(LED6);
-		}
-		else if(ledFlashCounter % 20 == 0) {
-			BSP_LED_Off(LED6);
-		}
+            /* Blink with LED to indicate thread is alive */
+            if(ledFlashCounter % 100 == 0) {
+                BSP_LED_On(LED6);
+            }
+            else if(ledFlashCounter % 20 == 0) {
+                BSP_LED_Off(LED6);
+            }
 
-		ledFlashCounter++;
-	}
+            ledFlashCounter++;
+            break;
+        case CORRECTION_UPDATE:
+            StateSensorsEventCallback(msg.sensorReading.sensorType,
+                                      msg.sensorReading.deltaTms/1000,
+                                      msg.sensorReading.xyz);
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 /**

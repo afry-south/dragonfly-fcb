@@ -128,7 +128,7 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
       return;
     }
 
-    FcbSensorPush2Client(GYRO_IDX, deltaTms, sGyroXYZAngleDot);
+    SendCorrectionUpdateToFlightControl(GYRO_IDX, deltaTms, sGyroXYZAngleDot);
 }
 
 

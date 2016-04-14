@@ -197,7 +197,7 @@ void FetchDataFromAccelerometer(void) {
         return;
     }
 
-    FcbSensorPush2Client(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+    SendCorrectionUpdateToFlightControl(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
 }
 
 void StartAccMagMtrCalibration(uint8_t samples) {
@@ -261,7 +261,7 @@ void FetchDataFromMagnetometer(void) {
         return;
     }
 
-    FcbSensorPush2Client(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+    SendCorrectionUpdateToFlightControl(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
 
 #ifdef FCB_SENSORS_SCILAB_CALIB
     /* - copy values from CLI to SciLab data file

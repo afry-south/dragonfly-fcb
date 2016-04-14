@@ -12,6 +12,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "arm_math.h"
+#include "fcb_sensors.h"
 
 /* Exported constants --------------------------------------------------------*/
 
@@ -61,6 +62,21 @@ float32_t GetThrustControlSignal();
 float32_t GetRollControlSignal();
 float32_t GetPitchControlSignal();
 float32_t GetYawControlSignal();
+
+void SendFlightControlUpdateToFlightControl(void);
+/**
+ * This function sends a message to the flight control queue to indicate that a new prediction shall be calculated.
+ */
+void SendPredictionUpdateToFlightControl(void);
+
+/**
+ * This function sends a message to the flight control queue with new sensor values.
+ *
+ * @param sensorType see FcbSensorIndexType
+ * @param deltaT time period to previous sensor drdy in ms
+ * @param xyz a 3-array of XYZ sensor readings. See wiki page "Sensors"
+ */
+void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType, uint8_t deltaTms, float32_t xyz[3]);
 
 #endif /* __FLIGHT_CONTROL_H */
 

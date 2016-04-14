@@ -61,7 +61,6 @@ static SerializationType statePrintSerializationType;
 static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f };
 
 /* Private function prototypes -----------------------------------------------*/
-static void StateSensorsEventCallback(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * xyz); /* type FcbSensorCbk  */
 static void StateInit(KalmanFilterType * pEstimator);
 static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_t const * pXYZData);
 
@@ -72,11 +71,6 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
 static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator,
         AttitudeStateVectorType * pState);
 static void StatePrintSamplingTask(void const *argument);
-
-/*
- * TODO : The below implementation is not real-time/concurrently safe as there are shared resources between
- * the time update timer ISR callback and the SensorEvent callback function. Needs synchronization solution.
-*/
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -104,9 +98,6 @@ void InitStatesXYZ(void) {
     yawState.angleRate = 0.0;
     yawState.angleRateBias = 0.0;
     yawState.angleRateUnbiased = yawState.angleRate - yawState.angleRateBias;
-
-    /* Register callback function that gets call each time new sensor samples are available */
-    FcbSensorRegisterClientCallback(StateSensorsEventCallback);
 }
 
 /*
@@ -408,7 +399,7 @@ static void StateInit(KalmanFilterType * Estimator) {
  * @param  pXYZ : Pointer to sensor values array
  * @retval None
  */
-static void StateSensorsEventCallback(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ) {
+void StateSensorsEventCallback(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ) {
     static uint8_t varianceCalcDone = 0;
     /* keep these around because yaw calculations need data already calculated
      * when accelerometer data was available

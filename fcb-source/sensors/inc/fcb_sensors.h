@@ -108,30 +108,6 @@ int FcbSensorsConfig(void);
 
 
 /**
- * This registers a client callback which will be called when data arrives
- * in the SENSORS task. The callback is NULL per default and one
- * has to be set by client code to receive asynchronous data updates.
- *
- * To delete the existing callback, set it to NULL.
- *
- * @return FCB_OK: callback registered success
- * @return FCB_ERR:  there is already a callback, try registering a NULL cbk first
- */
-uint8_t FcbSensorRegisterClientCallback(FcbSensorCbk cbk);
-
-
-/**
- * This function is intended to be called from the various sensors to
- * give sensor values to our one client callback.
- *
- * @param sensorType see FcbSensorIndexType
- * @param deltaT time period to previous sensor drdy in s
- * @param xyz pointer to 3-array of XYZ sensor readings. See wiki page "Sensors"
- */
-void FcbSensorPush2Client(FcbSensorIndexType sensorType, uint8_t deltaT, float32_t const * xyz);
-
-
-/**
  * posts a FcbSensorMessage to the queue which is
  * polled by SENSORS task.
  *
