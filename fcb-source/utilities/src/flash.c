@@ -32,7 +32,7 @@ static FlashErrorStatus ReadSettingsFromFlash(uint8_t* readSettingsData, const u
 static FlashErrorStatus WriteFlashPage(const uint32_t* writeData,
 		const uint8_t pageNbr);
 static FlashErrorStatus ReadFlashPage(uint8_t * readData, const uint8_t pageNbr);
-static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t wordNbr);
+static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t pageOffset);
 static FlashErrorStatus ReadFlashBytes(uint8_t * readData, const uint32_t startAddr, const uint32_t nbrOfBytes);
 
 static uint32_t GetFlashPageOffsetAddress(const uint8_t pageNbr, const uint16_t pageOffset);
@@ -69,6 +69,36 @@ FlashErrorStatus WriteCalibrationValuesToFlash( const Receiver_CalibrationValues
 	return status;
 }
 
+/*
+ * @brief  Reads previously stored reference max limits from flash memory
+ * @param  referenceMaxLimits : Pointer to reference max limits struct to which values will enter
+ * @retval FLASH_OK if values read succesfully from flash, else FLASH_ERROR
+ */
+FlashErrorStatus ReadReferenceMaxLimitsFromFlash(RefSignals_TypeDef* referenceMaxLimits) {
+	FlashErrorStatus status = FLASH_OK;
+
+	/* Read reference calibration settings from flash, if valid data exists */
+	status = ReadSettingsFromFlash((uint8_t*) referenceMaxLimits, sizeof(RefSignals_TypeDef),
+			FLASH_REFERENCE_MAX_LIMITS_PAGE, FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET);
+
+	return status;
+}
+
+/*
+ * @brief  Writes the reference max limits to flash memory for persistent storage
+ * @param  referenceMaxLimits : Pointer to reference max limits struct to be saved
+ * @retval FLASH_OK if calibration values written succesfully to flash, else FLASH_ERROR
+ */
+FlashErrorStatus WriteReferenceMaxLimitsToFlash( const RefSignals_TypeDef* referenceMaxLimits) {
+	FlashErrorStatus status = FLASH_OK;
+
+	/* Write reference calibration settings to flash */
+	status = WriteSettingsToFlash((uint8_t*) referenceMaxLimits, sizeof(RefSignals_TypeDef),
+			FLASH_REFERENCE_MAX_LIMITS_PAGE, FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET);
+
+	return status;
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /*
@@ -92,13 +122,13 @@ static FlashErrorStatus WriteSettingsToFlash(const uint8_t* writeSettingsData, c
 		return FLASH_ERROR;
 
 	/* Copy data to tmpPage at offset+1 location (CRC stored at first index) */
-	memcpy(&tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET + FLASH_WORD_BYTE_SIZE], writeSettingsData,
+	memcpy(&tmpPage[settingsPageOffset + FLASH_WORD_BYTE_SIZE], writeSettingsData,
 			writeSettingsDataSize);
 
 	/* Take the CRC of the data to be inserted into flash storage, except for the first index which is reserved for the CRC itself */
-	uint32_t crcValue = CalculateCRC(&tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET + FLASH_WORD_BYTE_SIZE],
+	uint32_t crcValue = CalculateCRC(&tmpPage[settingsPageOffset + FLASH_WORD_BYTE_SIZE],
 			writeSettingsDataSize);
-	memcpy(&tmpPage[FLASH_RECEIVER_CALIBRATION_DATA_OFFSET], (uint8_t*) &crcValue, FLASH_WORD_BYTE_SIZE);
+	memcpy(&tmpPage[settingsPageOffset], (uint8_t*) &crcValue, FLASH_WORD_BYTE_SIZE);
 	if (!WriteFlashPage((uint32_t*) tmpPage, settingsPageNbr))
 		return FLASH_ERROR;
 
@@ -165,7 +195,7 @@ static FlashErrorStatus WriteFlashPage(const uint32_t* writeData, const uint8_t 
 	uint32_t i = 0;
 
 	while (i < FLASH_PAGE_SIZE / FLASH_WORD_BYTE_SIZE && HALStatus == HAL_OK && IS_VALID_FLASH_ADDR(address)) {
-		if (writeData[i] != ReadFlashWord(pageNbr, i)) // To prevent unnecessary writing (if byte values should == 0xFF anyway)
+		if (writeData[i] != ReadFlashWord(pageNbr, i * FLASH_WORD_BYTE_SIZE)) // To prevent unnecessary writing (if byte values should == 0xFF anyway)
 			HALStatus = HAL_FLASH_Program(TYPEPROGRAM_WORD, address, writeData[i]); // Word size is 32 bits/4 bytes => 1 page = 2048 bytes = 512 words
 
 		address += FLASH_WORD_BYTE_SIZE;
@@ -210,11 +240,11 @@ static FlashErrorStatus ReadFlashPage(uint8_t * readData, const uint8_t pageNbr)
 /*
  * @brief  Reads one word (32 bits/4 bytes) of flash memory from flash
  * @param  pageNbr : flash page number
- * @param  wordNbr : word offset from pageNbr base
+ * @param  pageOffset : offset from pageNbr base (in bytes)
  * @retval word value as an unsigned 32-bit integer
  */
-static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t wordNbr) {
-	uint32_t address = FLASH_BASE_ADDR + pageNbr * FLASH_PAGE_SIZE + FLASH_WORD_BYTE_SIZE * wordNbr;
+static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t pageOffset) {
+	uint32_t address = FLASH_BASE_ADDR + pageNbr * FLASH_PAGE_SIZE + pageOffset;
 
 	/* Check flash address validity */
 	if (!IS_VALID_FLASH_ADDR(address))
