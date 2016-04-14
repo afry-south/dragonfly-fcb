@@ -50,10 +50,10 @@ typedef enum {
 
 typedef struct
 {
-  float ZVelocity;		// [m/s]
-  float RollAngle;		// [rad]
-  float PitchAngle;		// [rad]
-  float YawAngleRate;	// [rad/s]
+  float32_t ZVelocity;		// [m/s]
+  float32_t RollAngle;		// [rad]
+  float32_t PitchAngle;		// [rad]
+  float32_t YawAngleRate;	// [rad/s]
 } RefSignals_TypeDef;
 
 /* Exported macro ------------------------------------------------------------*/
@@ -61,13 +61,13 @@ typedef struct
 /* Exported function prototypes --------------------------------------------- */
 void CreateFlightControlTask(void);
 enum FlightControlMode GetFlightControlMode(void);
-float GetZVelocityReferenceSignal(void);
-float GetRollAngleReferenceSignal(void);
-float GetPitchAngleReferenceSignal(void);
-float GetYawAngularRateReferenceSignal(void);
+float32_t GetZVelocityReferenceSignal(void);
+float32_t GetRollAngleReferenceSignal(void);
+float32_t GetPitchAngleReferenceSignal(void);
+float32_t GetYawAngularRateReferenceSignal(void);
 
-void setMaxLimitForReferenceSignal(float maxZVelocity, float maxRollAngle, float maxPitchAngle, float maxYawAngleRate);
-void getMaxLimitForReferenceSignal(float* maxZVelocity, float* maxRollAngle, float* maxPitchAngle, float* maxYawAngleRate);
+void setMaxLimitForReferenceSignal(float32_t maxZVelocity, float32_t maxRollAngle, float32_t maxPitchAngle, float32_t maxYawAngleRate);
+void getMaxLimitForReferenceSignal(float32_t* maxZVelocity, float32_t* maxRollAngle, float32_t* maxPitchAngle, float32_t* maxYawAngleRate);
 
 #endif /* __FLIGHT_CONTROL_H */
 

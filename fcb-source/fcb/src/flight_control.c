@@ -90,7 +90,7 @@ enum FlightControlMode GetFlightControlMode(void) {
  * @param  None
  * @retval Z velocity reference signal value
  */
-float GetZVelocityReferenceSignal(void) {
+float32_t GetZVelocityReferenceSignal(void) {
 	return RefSignals.ZVelocity;
 }
 
@@ -99,7 +99,7 @@ float GetZVelocityReferenceSignal(void) {
  * @param  None
  * @retval Roll angle reference signal value
  */
-float GetRollAngleReferenceSignal(void) {
+float32_t GetRollAngleReferenceSignal(void) {
 	return RefSignals.RollAngle;
 }
 
@@ -108,7 +108,7 @@ float GetRollAngleReferenceSignal(void) {
  * @param  None
  * @retval Pitch angle reference signal value
  */
-float GetPitchAngleReferenceSignal(void) {
+float32_t GetPitchAngleReferenceSignal(void) {
 	return RefSignals.PitchAngle;
 }
 
@@ -117,7 +117,7 @@ float GetPitchAngleReferenceSignal(void) {
  * @param  None
  * @retval Yaw angular velocity reference signal value
  */
-float GetYawAngularRateReferenceSignal(void) {
+float32_t GetYawAngularRateReferenceSignal(void) {
 	return RefSignals.YawAngleRate;
 }
 
@@ -277,7 +277,7 @@ static void SetReferenceSignals(void) {
 	}
 }
 
-void setMaxLimitForReferenceSignal(float maxZVelocity, float maxRollAngle, float maxPitchAngle, float maxYawAngleRate) {
+void setMaxLimitForReferenceSignal(float32_t maxZVelocity, float32_t maxRollAngle, float32_t maxPitchAngle, float32_t maxYawAngleRate) {
 	RefSignalsLimits.ZVelocity = maxZVelocity;
 	RefSignalsLimits.RollAngle = maxRollAngle;
 	RefSignalsLimits.PitchAngle = maxPitchAngle;
@@ -293,7 +293,7 @@ void setMaxLimitForReferenceSignalToDefault(void) {
 	RefSignalsLimits.YawAngleRate = DEFAULT_MAX_YAW_RATE;
 }
 
-void getMaxLimitForReferenceSignal(float* maxZVelocity, float* maxRollAngle, float* maxPitchAngle, float* maxYawAngleRate) {
+void getMaxLimitForReferenceSignal(float32_t* maxZVelocity, float32_t* maxRollAngle, float32_t* maxPitchAngle, float32_t* maxYawAngleRate) {
 	*maxZVelocity = RefSignalsLimits.ZVelocity;
 	*maxRollAngle = RefSignalsLimits.RollAngle;
 	*maxPitchAngle = RefSignalsLimits.PitchAngle;

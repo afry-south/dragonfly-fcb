@@ -41,7 +41,7 @@
 #define FLASH_RECEIVER_CALIBRATION_DATA_OFFSET  0                               // Storage byte offset from page base address (has to be word aligned)
 #define FLASH_RECEIVER_CALIBRATION_SIZE         sizeof(Receiver_CalibrationValues_TypeDef) + HAL_CRC_LENGTH_32B/4       // Added room for CRC
 #define FLASH_RECEIVER_CALIBRATION_END			FLASH_RECEIVER_CALIBRATION_DATA_OFFSET + FLASH_RECEIVER_CALIBRATION_SIZE
-/* Max receiver limits settings */
+/* Max reference signal limits settings */
 #define FLASH_REFERENCE_MAX_LIMITS_PAGE         FLASH_SETTINGS_START_PAGE       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
 #define FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET  FLASH_RECEIVER_CALIBRATION_END  // Storage byte offset from page base address (has to be word aligned)
 #define FLASH_REFERENCE_MAX_LIMITS_SIZE         sizeof(RefSignals_TypeDef) + HAL_CRC_LENGTH_32B/4       // Added room for CRC
