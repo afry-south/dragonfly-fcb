@@ -32,7 +32,7 @@ static FlashErrorStatus ReadSettingsFromFlash(uint8_t* readSettingsData, const u
 static FlashErrorStatus WriteFlashPage(const uint32_t* writeData,
 		const uint8_t pageNbr);
 static FlashErrorStatus ReadFlashPage(uint8_t * readData, const uint8_t pageNbr);
-static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t wordNbr);
+static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t pageOffset);
 static FlashErrorStatus ReadFlashBytes(uint8_t * readData, const uint32_t startAddr, const uint32_t nbrOfBytes);
 
 static uint32_t GetFlashPageOffsetAddress(const uint8_t pageNbr, const uint16_t pageOffset);
@@ -70,31 +70,31 @@ FlashErrorStatus WriteCalibrationValuesToFlash( const Receiver_CalibrationValues
 }
 
 /*
- * @brief  Reads previously stored receiver max limits from flash memory
- * @param  receiverMaxLimits : Pointer to receiver max limits struct to which values will enter
+ * @brief  Reads previously stored reference max limits from flash memory
+ * @param  referenceMaxLimits : Pointer to reference max limits struct to which values will enter
  * @retval FLASH_OK if values read succesfully from flash, else FLASH_ERROR
  */
-FlashErrorStatus ReadReceiverMaxLimitsFromFlash(RefSignals_TypeDef* receiverMaxLimits) {
+FlashErrorStatus ReadReferenceMaxLimitsFromFlash(RefSignals_TypeDef* referenceMaxLimits) {
 	FlashErrorStatus status = FLASH_OK;
 
-	/* Read receiver calibration settings from flash, if valid data exists */
-	status = ReadSettingsFromFlash((uint8_t*) receiverMaxLimits, sizeof(RefSignals_TypeDef),
-			FLASH_RECEIVER_MAX_LIMITS_PAGE, FLASH_RECEIVER_MAX_LIMITS_DATA_OFFSET);
+	/* Read reference calibration settings from flash, if valid data exists */
+	status = ReadSettingsFromFlash((uint8_t*) referenceMaxLimits, sizeof(RefSignals_TypeDef),
+			FLASH_REFERENCE_MAX_LIMITS_PAGE, FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET);
 
 	return status;
 }
 
 /*
- * @brief  Writes the receiver max limits to flash memory for persistent storage
- * @param  receiverMaxLimits : Pointer to receiver max limits struct to be saved
+ * @brief  Writes the reference max limits to flash memory for persistent storage
+ * @param  referenceMaxLimits : Pointer to reference max limits struct to be saved
  * @retval FLASH_OK if calibration values written succesfully to flash, else FLASH_ERROR
  */
-FlashErrorStatus WriteRecieverMaxLimitsToFlash( const RefSignals_TypeDef* receiverMaxLimits) {
+FlashErrorStatus WriteReferenceMaxLimitsToFlash( const RefSignals_TypeDef* referenceMaxLimits) {
 	FlashErrorStatus status = FLASH_OK;
 
-	/* Write receiver calibration settings to flash */
-	status = WriteSettingsToFlash((uint8_t*) receiverMaxLimits, sizeof(RefSignals_TypeDef),
-			FLASH_RECEIVER_MAX_LIMITS_PAGE, FLASH_RECEIVER_MAX_LIMITS_DATA_OFFSET);
+	/* Write reference calibration settings to flash */
+	status = WriteSettingsToFlash((uint8_t*) referenceMaxLimits, sizeof(RefSignals_TypeDef),
+			FLASH_REFERENCE_MAX_LIMITS_PAGE, FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET);
 
 	return status;
 }
@@ -240,11 +240,11 @@ static FlashErrorStatus ReadFlashPage(uint8_t * readData, const uint8_t pageNbr)
 /*
  * @brief  Reads one word (32 bits/4 bytes) of flash memory from flash
  * @param  pageNbr : flash page number
- * @param  wordNbr : word offset from pageNbr base
+ * @param  pageOffset : offset from pageNbr base (in bytes)
  * @retval word value as an unsigned 32-bit integer
  */
-static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t wordNbr) {
-	uint32_t address = FLASH_BASE_ADDR + pageNbr * FLASH_PAGE_SIZE + wordNbr;
+static uint32_t ReadFlashWord(const uint8_t pageNbr, const uint16_t pageOffset) {
+	uint32_t address = FLASH_BASE_ADDR + pageNbr * FLASH_PAGE_SIZE + pageOffset;
 
 	/* Check flash address validity */
 	if (!IS_VALID_FLASH_ADDR(address))

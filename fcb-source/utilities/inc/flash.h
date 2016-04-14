@@ -42,10 +42,10 @@
 #define FLASH_RECEIVER_CALIBRATION_SIZE         sizeof(Receiver_CalibrationValues_TypeDef) + HAL_CRC_LENGTH_32B/4       // Added room for CRC
 #define FLASH_RECEIVER_CALIBRATION_END			FLASH_RECEIVER_CALIBRATION_DATA_OFFSET + FLASH_RECEIVER_CALIBRATION_SIZE
 /* Max receiver limits settings */
-#define FLASH_RECEIVER_MAX_LIMITS_PAGE          FLASH_SETTINGS_START_PAGE       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
-#define FLASH_RECEIVER_MAX_LIMITS_DATA_OFFSET   FLASH_RECEIVER_CALIBRATION_END  // Storage byte offset from page base address (has to be word aligned)
-#define FLASH_RECEIVER_MAX_LIMITS_SIZE          sizeof(RefSignals_TypeDef) + HAL_CRC_LENGTH_32B/4       // Added room for CRC
-#define FLASH_RECEIVER_MAX_LIMITS_END			FLASH_RECEIVER_MAX_LIMITS_DATA_OFFSET + FLASH_RECEIVER_MAX_LIMITS_SIZE
+#define FLASH_REFERENCE_MAX_LIMITS_PAGE         FLASH_SETTINGS_START_PAGE       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
+#define FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET  FLASH_RECEIVER_CALIBRATION_END  // Storage byte offset from page base address (has to be word aligned)
+#define FLASH_REFERENCE_MAX_LIMITS_SIZE         sizeof(RefSignals_TypeDef) + HAL_CRC_LENGTH_32B/4       // Added room for CRC
+#define FLASH_REFERENCE_MAX_LIMITS_END          FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET + FLASH_RECEIVER_MAX_LIMITS_SIZE
 
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
@@ -57,8 +57,8 @@ typedef enum {
 /* Exported function prototypes --------------------------------------------- */
 FlashErrorStatus ReadCalibrationValuesFromFlash(volatile Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
 FlashErrorStatus WriteCalibrationValuesToFlash(const Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
-FlashErrorStatus ReadReceiverMaxLimitsFromFlash(RefSignals_TypeDef* receiverMaxLimits);
-FlashErrorStatus WriteRecieverMaxLimitsToFlash( const RefSignals_TypeDef* receiverMaxLimits);
+FlashErrorStatus ReadReferenceMaxLimitsFromFlash(RefSignals_TypeDef* receiverMaxLimits);
+FlashErrorStatus WriteReferenceMaxLimitsToFlash( const RefSignals_TypeDef* receiverMaxLimits);
 
 #endif /* __FLASH_H */
 

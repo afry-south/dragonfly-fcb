@@ -120,8 +120,8 @@ static portBASE_TYPE CLIAbout(int8_t *pcWriteBuffer, size_t xWriteBufferLen, con
 static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
-static portBASE_TYPE CLISetMaxReceiverSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
-static portBASE_TYPE CLIGetMaxReceiverSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+static portBASE_TYPE CLISetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+static portBASE_TYPE CLIGetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLIGetStateValues(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE CLIStartStateSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
@@ -268,18 +268,18 @@ static const CLI_Command_Definition_t getRefSignalsCommand = { (const int8_t * c
         0 /* Number of parameters expected */
 };
 
-/* Structure that defines the "set-max-limit-receiver-signals" command line command. */
-static const CLI_Command_Definition_t setMaxLimitReceiverSignalsCommand = { (const int8_t * const ) "set-max-limit-receiver-signals",
-        (const int8_t * const ) "\r\nset-max-limit-receiver-signals:\r\n Sets new max limits for receiver signals"
-        		"<maxZVelocity> <maxRollAngle> <maxPitchAngle> <maxYawAngleRat>\r\n",
-		CLISetMaxReceiverSignals, /* The function to run. */
+/* Structure that defines the "set-max-limit-ref-signals" command line command. */
+static const CLI_Command_Definition_t setMaxLimitReferenceSignalsCommand = { (const int8_t * const ) "set-max-limit-ref-signals",
+        (const int8_t * const ) "\r\nset-max-limit-ref-signals:\r\n Sets new max limits for reference signals"
+        		"<maxZVelocity> <maxRollAngle> <maxPitchAngle> <maxYawAngleRate>\r\n",
+		CLISetMaxReferenceSignals, /* The function to run. */
         4 /* Number of parameters expected */
 };
 
-/* Structure that defines the "get-max-limit-receiver-signals" command line command. */
-static const CLI_Command_Definition_t getMaxLimitReceiverSignalsCommand = { (const int8_t * const ) "get-max-limit-receiver-signals",
-        (const int8_t * const ) "\r\nget-max-limit-receiver-signals:\r\n Get max limits for receiver signals\r\n",
-		CLIGetMaxReceiverSignals, /* The function to run. */
+/* Structure that defines the "get-max-limit-ref-signals" command line command. */
+static const CLI_Command_Definition_t getMaxLimitReferenceSignalsCommand = { (const int8_t * const ) "get-max-limit-ref-signals",
+        (const int8_t * const ) "\r\nget-max-limit-ref-signals:\r\n Get max limits for reference signals\r\n",
+		CLIGetMaxReferenceSignals, /* The function to run. */
         0 /* Number of parameters expected */
 };
 
@@ -363,8 +363,8 @@ void RegisterCLICommands(void) {
     /* Flight control CLI commands */
     FreeRTOS_CLIRegisterCommand(&getFlightModeCommand);
     FreeRTOS_CLIRegisterCommand(&getRefSignalsCommand);
-    FreeRTOS_CLIRegisterCommand(&setMaxLimitReceiverSignalsCommand);
-    FreeRTOS_CLIRegisterCommand(&getMaxLimitReceiverSignalsCommand);
+    FreeRTOS_CLIRegisterCommand(&setMaxLimitReferenceSignalsCommand);
+    FreeRTOS_CLIRegisterCommand(&getMaxLimitReferenceSignalsCommand);
     FreeRTOS_CLIRegisterCommand(&getStatesCommand);
     FreeRTOS_CLIRegisterCommand(&startStateSamplingCommand);
     FreeRTOS_CLIRegisterCommand(&stopStateSamplingCommand);
@@ -1481,7 +1481,7 @@ static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBuffer
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLISetMaxReceiverSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+static portBASE_TYPE CLISetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
     float pcParameter[4];
 
     portBASE_TYPE xParameterStringLength;
@@ -1510,7 +1510,7 @@ static portBASE_TYPE CLISetMaxReceiverSignals(int8_t* pcWriteBuffer, size_t xWri
  * @param  pcCommandString : Command line string
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
-static portBASE_TYPE CLIGetMaxReceiverSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+static portBASE_TYPE CLIGetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
     float pcParameter[4];
 
     configASSERT(pcWriteBuffer);

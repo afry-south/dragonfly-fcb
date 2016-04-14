@@ -283,7 +283,7 @@ void setMaxLimitForReferenceSignal(float maxZVelocity, float maxRollAngle, float
 	RefSignalsLimits.PitchAngle = maxPitchAngle;
 	RefSignalsLimits.YawAngleRate = maxYawAngleRate;
 
-	WriteRecieverMaxLimitsToFlash(&RefSignalsLimits);
+	WriteReferenceMaxLimitsToFlash(&RefSignalsLimits);
 }
 
 void setMaxLimitForReferenceSignalToDefault(void) {
@@ -311,7 +311,7 @@ static void FlightControlTask(void const *argument) {
 	portTickType xLastWakeTime;
 	uint32_t ledFlashCounter = 0;
 
-	if (FLASH_OK != ReadReceiverMaxLimitsFromFlash(&RefSignalsLimits)) {
+	if (FLASH_OK != ReadReferenceMaxLimitsFromFlash(&RefSignalsLimits)) {
 		setMaxLimitForReferenceSignalToDefault();
 	}
 
