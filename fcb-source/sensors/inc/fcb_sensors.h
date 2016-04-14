@@ -94,7 +94,7 @@ typedef struct FcbSensorMsg {
  *
  * @see FcbSensorIndexType
  */
-typedef void (*FcbSensorCbk)(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * xyz);
+typedef void (*SendCorrectionUpdateCallback_TypeDef)(FcbSensorIndexType sensorType, uint8_t deltaTms, float32_t xyz[3]);
 
 
 /**

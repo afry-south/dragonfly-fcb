@@ -372,6 +372,13 @@ static void FlightControlTask(void const *argument) {
 	uint32_t ledFlashCounter = 0;
 	FlightControlMsg_TypeDef msg;
 
+    if (SensorRegisterAccClientCallback(SendCorrectionUpdateToFlightControl)) {
+    	ErrorHandler();
+    }
+    if (SensorRegisterGyroClientCallback(SendCorrectionUpdateToFlightControl)) {
+    	ErrorHandler();
+    }
+
 	for (;;) {
         if (pdFALSE == xQueueReceive(qFlightControl, &msg,  FLIGHT_CONTROL_QUEUE_TIMEOUT)) {
             /*

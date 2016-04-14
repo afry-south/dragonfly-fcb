@@ -88,6 +88,8 @@ static enum FcbAccMagMode accMagMode = ACCMAGMTR_UNINITIALISED;
 static void GaussNewtonLeastSphereFit(void);
 #endif
 
+static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
+
 /* public fcn definitions */
 
 uint8_t FcbInitialiseAccMagSensor(void) {
@@ -146,6 +148,16 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     return retVal;
 }
 
+uint8_t SensorRegisterAccClientCallback(SendCorrectionUpdateCallback_TypeDef cbk) {
+  if (NULL != SendCorrectionUpdateCallback) {
+    return FCB_ERR;
+  }
+
+  SendCorrectionUpdateCallback = cbk;
+
+  return FCB_OK;
+}
+
 void FetchDataFromAccelerometer(void) {
     float32_t acceleroMeterData[3] = { 0.0f, 0.0f, 0.0f };
     HAL_StatusTypeDef status = HAL_OK;
@@ -197,7 +209,7 @@ void FetchDataFromAccelerometer(void) {
         return;
     }
 
-    SendCorrectionUpdateToFlightControl(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+    SendCorrectionUpdateCallback(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
 }
 
 void StartAccMagMtrCalibration(uint8_t samples) {
@@ -261,7 +273,7 @@ void FetchDataFromMagnetometer(void) {
         return;
     }
 
-    SendCorrectionUpdateToFlightControl(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+    SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
 
 #ifdef FCB_SENSORS_SCILAB_CALIB
     /* - copy values from CLI to SciLab data file
