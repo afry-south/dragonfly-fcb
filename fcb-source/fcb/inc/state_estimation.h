@@ -112,8 +112,8 @@ float32_t GetYawRate(void);
 
 void InitStatesXYZ(void);
 StateEstimationStatus InitStateEstimationTimeEvent(void);
-void StateEstimationTimeEventCallback(void);
-void StateSensorsEventCallback(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ);
+void UpdatePredictionState(void);
+void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ);
 
 FcbRetValType StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 FcbRetValType StopStateSamplingTask(void);

@@ -390,7 +390,7 @@ static void FlightControlTask(void const *argument) {
 
         switch (msg.type) {
         case PREDICTION_UPDATE:
-            StateEstimationTimeEventCallback();
+            UpdatePredictionState();
 //            break;
         case FLIGHT_CONTROL_UPDATE:
             /* Perform flight control activities */
@@ -407,7 +407,7 @@ static void FlightControlTask(void const *argument) {
             ledFlashCounter++;
             break;
         case CORRECTION_UPDATE:
-            StateSensorsEventCallback(msg.sensorReading.sensorType,
+            UpdateCorrectionState(msg.sensorReading.sensorType,
                                       msg.sensorReading.deltaTms/1000,
                                       msg.sensorReading.xyz);
             break;

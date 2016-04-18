@@ -135,11 +135,11 @@ StateEstimationStatus InitStateEstimationTimeEvent(void) {
 }
 
 /*
- * @brief  State estimation time-update callback
+ * @brief  State estimation time-update
  * @param  None
  * @retval None
  */
-void StateEstimationTimeEventCallback(void) {
+void UpdatePredictionState(void) {
     /* Run prediction step for attitude estimators */
     PredictAttitudeState(&rollEstimator, &rollState, IXX, GetRollControlSignal());
     PredictAttitudeState(&pitchEstimator, &pitchState, IYY, GetPitchControlSignal());
@@ -393,13 +393,13 @@ static void StateInit(KalmanFilterType * Estimator) {
 }
 
 /*
- * @brief  State estimation sensor value update callback
+ * @brief  State estimation sensor value update
  * @param  sensorType : Type of sensor (accelerometer, gyroscope, magnetometer)
  * @param  deltaT : Time difference between sensor values
  * @param  pXYZ : Pointer to sensor values array
  * @retval None
  */
-void StateSensorsEventCallback(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ) {
+void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ) {
     static uint8_t varianceCalcDone = 0;
     /* keep these around because yaw calculations need data already calculated
      * when accelerometer data was available
