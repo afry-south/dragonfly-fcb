@@ -140,7 +140,9 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
       return;
     }
 
-    SendCorrectionUpdateCallback(GYRO_IDX, deltaTms, sGyroXYZAngleDot);
+    if (SendCorrectionUpdateCallback != NULL) {
+        SendCorrectionUpdateCallback(GYRO_IDX, deltaTms, sGyroXYZAngleDot);
+    }
 }
 
 

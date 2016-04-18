@@ -209,7 +209,9 @@ void FetchDataFromAccelerometer(void) {
         return;
     }
 
-    SendCorrectionUpdateCallback(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+    if (SendCorrectionUpdateCallback != NULL) {
+        SendCorrectionUpdateCallback(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+    }
 }
 
 void StartAccMagMtrCalibration(uint8_t samples) {
@@ -273,7 +275,9 @@ void FetchDataFromMagnetometer(void) {
         return;
     }
 
-    SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+    if (SendCorrectionUpdateCallback != NULL) {
+        SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+    }
 
 #ifdef FCB_SENSORS_SCILAB_CALIB
     /* - copy values from CLI to SciLab data file
