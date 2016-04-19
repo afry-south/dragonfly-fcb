@@ -1514,6 +1514,11 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
         snprintf((char*) pcWriteBuffer, xWriteBufferLen,
                 "Flight states [deg]\nrollAngle: %1.3f\npitchAngle: %1.3f\nyawAngle: %1.3f\r\n",
                 Radian2Degree(GetRollAngle()), Radian2Degree(GetPitchAngle()), Radian2Degree(GetYawAngle()));
+
+        snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+                            "States [deg]:\nroll: %1.3f\npitch: %1.3f\nyaw: %1.3f\nrollRate: %1.3f\npitchRate: %1.3f\nyawRate: %1.3f\n\r\n",
+                            Radian2Degree(GetRollAngle()), Radian2Degree(GetPitchAngle()), Radian2Degree(GetYawAngle()),
+                            Radian2Degree(GetRollRate()), Radian2Degree(GetPitchRate()), Radian2Degree(GetYawRate()));
         break;
     case 'p':
         /* Add estimated attitude states to protobuffer type struct members */
@@ -1524,13 +1529,12 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
         stateValuesProto.has_yawAngle = true;
         stateValuesProto.yawAngle = GetYawAngle();
 
-        // TODO add attitude rates when available
-        stateValuesProto.has_rollRate = false;
-        stateValuesProto.rollRate = 0.0;
-        stateValuesProto.has_pitchRate = false;
-        stateValuesProto.pitchRate = 0.0;
-        stateValuesProto.has_yawRate = false;
-        stateValuesProto.yawRate = 0.0;
+        stateValuesProto.has_rollRate = true;
+        stateValuesProto.rollRate = GetRollRate();
+        stateValuesProto.has_pitchRate = true;
+        stateValuesProto.pitchRate = GetPitchRate();
+        stateValuesProto.has_yawRate = true;
+        stateValuesProto.yawRate = GetYawRate();
 
         // TODO add position estimates when available
         stateValuesProto.has_posX = false;
