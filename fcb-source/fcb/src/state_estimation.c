@@ -79,22 +79,22 @@ static void StatePrintSamplingTask(void const *argument);
  * @param  None
  * @retval None
  */
-void InitStatesXYZ(void) {
+void InitStatesXYZ(float32_t initAngles[3]) {
     StateInit(&rollEstimator);
     StateInit(&pitchEstimator);
     StateInit(&yawEstimator);
 
-    rollState.angle = 0.0; // TODO init to first accelerometer angle or mean of a few samples
+    rollState.angle = initAngles[0];
     rollState.angleRate = 0.0;
     rollState.angleRateBias = 0.0;
     rollState.angleRateUnbiased = rollState.angleRate - rollState.angleRateBias;
 
-    pitchState.angle = 0.0; // TODO init to first accelerometer angle or mean of a few samples
+    pitchState.angle = initAngles[1];
     pitchState.angleRate = 0.0;
     pitchState.angleRateBias = 0.0;
     pitchState.angleRateUnbiased = pitchState.angleRate - pitchState.angleRateBias;
 
-    yawState.angle = 0.0; /* TODO should really be initialised with current heading (mean of a few samples), which is why bias is overestimated initially */
+    yawState.angle = initAngles[2];
     yawState.angleRate = 0.0;
     yawState.angleRateBias = 0.0;
     yawState.angleRateUnbiased = yawState.angleRate - yawState.angleRateBias;
@@ -143,7 +143,7 @@ void UpdatePredictionState(void) {
     /* Run prediction step for attitude estimators */
     PredictAttitudeState(&rollEstimator, &rollState, IXX, GetRollControlSignal());
     PredictAttitudeState(&pitchEstimator, &pitchState, IYY, GetPitchControlSignal());
-    PredictAttitudeState( &yawEstimator, &yawState, IZZ, GetYawControlSignal());
+    PredictAttitudeState(&yawEstimator, &yawState, IZZ, GetYawControlSignal());
 }
 
 /* GetRoll

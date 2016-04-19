@@ -110,7 +110,7 @@ float32_t GetRollRate(void);
 float32_t GetPitchRate(void);
 float32_t GetYawRate(void);
 
-void InitStatesXYZ(void);
+void InitStatesXYZ(float32_t initAngles[3]);
 StateEstimationStatus InitStateEstimationTimeEvent(void);
 void UpdatePredictionState(void);
 void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ);

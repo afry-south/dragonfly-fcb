@@ -60,6 +60,11 @@ typedef struct FlightControlMsg {
 #define FLIGHT_CONTROL_QUEUE_SIZE		      6
 #define FLIGHT_CONTROL_QUEUE_TIMEOUT          2000 // [ms]
 
+#define GOT_GYRO_SENSOR_SAMPLE  1
+#define GOT_ACC_SENSOR_SAMPLE   2
+#define GOT_MAG_SENSOR_SAMPLE   4
+#define GOT_ALL_SENSOR_SAMPLES  (GOT_ACC_SENSOR_SAMPLE | GOT_MAG_SENSOR_SAMPLE)
+
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
@@ -361,6 +366,41 @@ void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType,
     }
 }
 
+void initKalmanFiler(void) {
+    float32_t startupSensorValues[3];
+    uint32_t nbrOfSamples[3] = {0, 0, 0};
+	FlightControlMsg_TypeDef msg;
+
+	// Get some samples from accelerometer and magnetometer to be used as start values for Kalman filter.
+    while (nbrOfSamples[ACC_IDX] < 5 && nbrOfSamples[MAG_IDX] < 5) {
+    	xQueueReceive(qFlightControl, &msg,  FLIGHT_CONTROL_QUEUE_TIMEOUT);
+
+    	switch (msg.sensorReading.sensorType) {
+//    	case GYRO_IDX:
+//    		gotFirstSensorSamples &= GOT_GYRO_SENSOR_SAMPLE;
+//    		break;
+    	case ACC_IDX:
+    		startupSensorValues[0] = msg.sensorReading.xyz[0];
+    		startupSensorValues[1] = msg.sensorReading.xyz[1];
+    		nbrOfSamples[ACC_IDX]++;
+    		break;
+    	case MAG_IDX:
+    		if (nbrOfSamples[ACC_IDX]) {
+    			startupSensorValues[2] = GetMagYawAngle(msg.sensorReading.xyz, startupSensorValues[0], startupSensorValues[1]);
+    			nbrOfSamples[MAG_IDX]++;
+    		}
+    		break;
+    	default:
+			break;
+    	}
+    }
+
+    /* Init the states for the Kalman filter */
+    InitStatesXYZ(startupSensorValues);
+    InitStateEstimationTimeEvent();
+
+}
+
 /**
  * @brief  Flight control task function
  * @param  argument : Unused parameter
@@ -370,7 +410,6 @@ static void FlightControlTask(void const *argument) {
 	(void) argument;
 
 	uint32_t ledFlashCounter = 0;
-	FlightControlMsg_TypeDef msg;
 
     if (SensorRegisterAccClientCallback(SendCorrectionUpdateToFlightControl)) {
     	ErrorHandler();
@@ -379,7 +418,11 @@ static void FlightControlTask(void const *argument) {
     	ErrorHandler();
     }
 
+    initKalmanFiler();
+
 	for (;;) {
+        FlightControlMsg_TypeDef msg;
+
         if (pdFALSE == xQueueReceive(qFlightControl, &msg,  FLIGHT_CONTROL_QUEUE_TIMEOUT)) {
             /*
              * if no message was received, interrupts from the sensors

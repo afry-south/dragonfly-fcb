@@ -109,10 +109,6 @@ static void InitSystem(void) {
 		ErrorHandler();
 	}
 
-	/* Init the states for the Kalman filter */
-	InitStatesXYZ();
-	InitStateEstimationTimeEvent();
-
 	/* Init the rotation matrix */
 	InitRotationMatrix();
 
