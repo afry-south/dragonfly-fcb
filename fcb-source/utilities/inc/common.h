@@ -30,6 +30,7 @@ void ConfigPVD(void);
 void InitLEDs(void);
 void LEDsOff(void);
 float32_t Radian2Degree(float32_t radian);
+void toMaxRadian(float32_t *radian);
 
 #endif /* __COMMON_H */
 

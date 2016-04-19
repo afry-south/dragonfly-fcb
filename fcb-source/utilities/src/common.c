@@ -167,6 +167,19 @@ float32_t Radian2Degree(float32_t radian) {
     return degree;
 }
 
+/*
+ * @brief   Checks and adjusts parameter to be inside range -Pi to +Pi.
+ * @param   radian: The value in radians that should be checked/adjusted.
+ */
+void toMaxRadian(float32_t *radian) {
+    while (*radian > PI) {
+        *radian -= 2*PI;
+    }
+    while (*radian < -PI) {
+        *radian += 2*PI;
+    }
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /**
