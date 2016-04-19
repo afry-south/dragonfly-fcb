@@ -200,6 +200,7 @@ float32_t GetYawRate(void) {
     return yawState.angleRateUnbiased;
 }
 
+
 /* Private functions ---------------------------------------------------------*/
 
 /*
@@ -301,8 +302,8 @@ static void PredictAttitudeState(KalmanFilterType* pEstimator, AttitudeStateVect
     /* Step 1: Calculate a priori state estimation*/
     pState->angle += h * (pState->angleRate - pState->angleRateBias) + h * h / (2 * inertia) * ctrl;
     pState->angleRate += h / inertia * ctrl;
-    pState->angleRateUnbiased = pState->angleRate - pState->angleRateUnbiased; // Update the unbiased rate state
     /* pState->angleRateBias not estimated, see equations in section "State Estimation Theory" */
+    pState->angleRateUnbiased = pState->angleRate - pState->angleRateBias; // Update the unbiased rate state
     toMaxRadian(&pState->angle);
 
     /* Step 2: Calculate a priori error covariance matrix P*/
@@ -411,6 +412,7 @@ static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sen
     pState->angle = pState->angle + pEstimator->k12 * y2;
     pState->angleRate = pState->angleRate + pEstimator->k22 * y2;
     pState->angleRateBias = pState->angleRateBias + pEstimator->k32 * y2;
+    pState->angleRateUnbiased = pState->angleRate - pState->angleRateBias; // Update the unbiased rate state
 
     /* Step 7: Update a posteriori error covariance matrix P
      * NOTE: This is only half of the P matrix update, i.e. the parts that are related to the attitude rate measurement */
@@ -655,8 +657,8 @@ void PrintStateValues(const SerializationType serializationType) {
                     snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
                             "States:\nAngle-RPY[deg]: %1.3f, %1.3f, %1.3f\nBias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %1.3f, %1.3f, %1.3f\n\r\n",
                             Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle),
-                            Radian2Degree(yawState.angle), rollState.angleRateBias, pitchState.angleRateBias,
-                            yawState.angleRateBias, sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
+                            Radian2Degree(yawState.angle), Radian2Degree(rollState.angleRateBias), Radian2Degree(pitchState.angleRateBias),
+                            Radian2Degree(yawState.angleRateBias), sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
 
             if (usedLen < STATE_PRINT_MAX_STRING_SIZE) {
                 usedLen = snprintf((char*) stateString + usedLen, STATE_PRINT_MAX_STRING_SIZE - usedLen,
@@ -675,18 +677,18 @@ void PrintStateValues(const SerializationType serializationType) {
 
         /* Add estimated attitude states to protobuffer type struct members */
         stateValuesProto.has_rollAngle = true;
-        stateValuesProto.rollAngle = rollState.angle;
+        stateValuesProto.rollAngle = GetRollAngle();
         stateValuesProto.has_pitchAngle = true;
-        stateValuesProto.pitchAngle = pitchState.angle;
+        stateValuesProto.pitchAngle = GetPitchAngle();
         stateValuesProto.has_yawAngle = true;
-        stateValuesProto.yawAngle = yawState.angle;
+        stateValuesProto.yawAngle = GetYawAngle();
 
         stateValuesProto.has_rollRate = true;
-        stateValuesProto.rollRate = rollState.angleRate;
+        stateValuesProto.rollRate = GetRollRate();
         stateValuesProto.has_pitchRate = true;
-        stateValuesProto.pitchRate = pitchState.angleRate;
+        stateValuesProto.pitchRate = GetPitchRate();
         stateValuesProto.has_yawRate = true;
-        stateValuesProto.yawRate = yawState.angleRate;
+        stateValuesProto.yawRate = GetYawRate();
 
         // TODO add position estimates when available
         stateValuesProto.has_posX = false;
@@ -722,6 +724,7 @@ void PrintStateValues(const SerializationType serializationType) {
             ErrorHandler();
     }
 }
+
 
 /**
  * @}
