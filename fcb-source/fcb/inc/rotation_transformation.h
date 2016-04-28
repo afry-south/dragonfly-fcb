@@ -23,6 +23,7 @@ void GetAttitudeFromAccelerometer(float32_t* dstAttitude, float32_t const * body
 void GetAttitudeFromMagnetometer(float32_t* dstAttitude, float32_t* bodyMagneticReadings);
 void Vector3DCrossProduct(float32_t* dstVector, const float32_t* srcVector1, const float32_t* srcVector2);
 void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector);
+void Vector3DTiltCompensate(float32_t* dstVector, float32_t* srcVector, float32_t roll, float32_t pitch);
 float32_t GetAccRollAngle(void);
 float32_t GetAccPitchAngle(void);
 float32_t GetMagYawAngle(float32_t* magValues, const float32_t roll, const float32_t pitch);

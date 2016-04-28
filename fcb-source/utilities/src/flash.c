@@ -99,6 +99,66 @@ FlashErrorStatus WriteReferenceMaxLimitsToFlash( const RefSignals_TypeDef* refer
 	return status;
 }
 
+/*
+ * @brief  Reads previously stored magnetometer calibration values from flash memory
+ * @param  magCalibrationValues : Pointer to magnetometer calibration values struct to which values will enter
+ * @retval FLASH_OK if calibration values read succesfully from flash, else FLASH_ERROR
+ */
+FlashErrorStatus ReadMagCalibrationValuesFromFlash(float32_t magCalibrationValues[6]) {
+	FlashErrorStatus status = FLASH_OK;
+
+	/* Read receiver calibration settings from flash, if valid data exists */
+	status = ReadSettingsFromFlash((uint8_t*) magCalibrationValues, FLASH_MAG_CALIBRATION_SIZE,
+			FLASH_MAG_CALIBRATION_PAGE, FLASH_MAG_CALIBRATION_DATA_OFFSET);
+
+	return status;
+}
+
+/*
+ * @brief  Writes the magnetometer calibration values to flash memory for persistent storage
+ * @param  magCalibrationValues : Pointer to magnetometer calibration values struct to be saved
+ * @retval FLASH_OK if calibration values written succesfully to flash, else FLASH_ERROR
+ */
+FlashErrorStatus WriteMagCalibrationValuesToFlash(const float32_t magCalibrationValues[6]) {
+	FlashErrorStatus status = FLASH_OK;
+
+	/* Write receiver calibration settings to flash */
+	status = WriteSettingsToFlash((uint8_t*) magCalibrationValues, FLASH_MAG_CALIBRATION_SIZE,
+			FLASH_MAG_CALIBRATION_PAGE, FLASH_MAG_CALIBRATION_DATA_OFFSET);
+
+	return status;
+}
+
+/*
+ * @brief  Reads previously stored accelerometer calibration values from flash memory
+ * @param  accCalibrationValues : Pointer to accelerometer calibration values to which values will enter
+ * @retval FLASH_OK if calibration values read succesfully from flash, else FLASH_ERROR
+ */
+FlashErrorStatus ReadAccCalibrationValuesFromFlash(float32_t accCalibrationValues[6]) {
+	FlashErrorStatus status = FLASH_OK;
+
+	/* Read receiver calibration settings from flash, if valid data exists */
+	status = ReadSettingsFromFlash((uint8_t*) accCalibrationValues, FLASH_ACC_CALIBRATION_SIZE,
+			FLASH_ACC_CALIBRATION_PAGE, FLASH_ACC_CALIBRATION_DATA_OFFSET);
+
+	return status;
+}
+
+/*
+ * @brief  Writes the accelerometer calibration values to flash memory for persistent storage
+ * @param  accCalibrationValues : Pointer to accelerometer calibration values to be saved
+ * @retval FLASH_OK if calibration values written succesfully to flash, else FLASH_ERROR
+ */
+FlashErrorStatus WriteAccCalibrationValuesToFlash(const float32_t accCalibrationValues[6]) {
+	FlashErrorStatus status = FLASH_OK;
+
+	/* Write receiver calibration settings to flash */
+	status = WriteSettingsToFlash((uint8_t*) accCalibrationValues, FLASH_ACC_CALIBRATION_SIZE,
+			FLASH_ACC_CALIBRATION_PAGE, FLASH_ACC_CALIBRATION_DATA_OFFSET);
+
+	return status;
+}
+
 /* Private functions ---------------------------------------------------------*/
 
 /*

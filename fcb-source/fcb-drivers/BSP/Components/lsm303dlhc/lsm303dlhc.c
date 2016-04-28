@@ -685,7 +685,7 @@ uint8_t LSM303DLHC_MagGetDataStatus(void)
  * @param  pfData : Data out pointer
  * @retval None
  */
-HAL_StatusTypeDef LSM303DLHC_MagReadXYZ(float* pfData) {
+HAL_StatusTypeDef LSM303DLHC_MagReadXYZ(float32_t* pfData) {
     HAL_StatusTypeDef status = HAL_OK;
     float pnRawData[3];
     uint8_t buffer[6];
@@ -712,14 +712,14 @@ HAL_StatusTypeDef LSM303DLHC_MagReadXYZ(float* pfData) {
      * assume little endian (we never change it on the fly)
      */
     if(status == HAL_OK) {
-        pnRawData[0] = (float) ((int16_t) (buffer[0] << 8) + (int16_t) buffer[1]); // X
-        pnRawData[1] = (float) ((int16_t) (buffer[4] << 8) + (int16_t) buffer[5]); // Y
-        pnRawData[2] = (float) ((int16_t) (buffer[2] << 8) + (int16_t) buffer[3]); // Z
+        pnRawData[0] = ((int16_t) (buffer[0] << 8) + (int16_t) buffer[1]); // X
+        pnRawData[1] = ((int16_t) (buffer[4] << 8) + (int16_t) buffer[5]); // Y
+        pnRawData[2] = ((int16_t) (buffer[2] << 8) + (int16_t) buffer[3]); // Z
 
         /* Obtain the Gauss value for the three axis */
-        pfData[0] = (float) pnRawData[0] / magConfig.xySensitivity;
-        pfData[1] = (float) pnRawData[1] / magConfig.xySensitivity;
-        pfData[2] = (float) pnRawData[2] / magConfig.zSensitivity;
+        pfData[0] = (float32_t)pnRawData[0] / magConfig.xySensitivity;
+        pfData[1] = (float32_t)pnRawData[1] / magConfig.xySensitivity;
+        pfData[2] = (float32_t)pnRawData[2] / magConfig.zSensitivity;
     }
 
     return status;
