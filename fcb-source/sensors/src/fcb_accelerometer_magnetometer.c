@@ -251,6 +251,11 @@ void FetchDataFromMagnetometer(void) {
 
         	WriteMagCalibrationValuesToFlash(sXYZMagCalPrm);
 
+        	char string[100];
+        	snprintf(string, 100, "Calib value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
+        			sXYZMagCalPrm[0], sXYZMagCalPrm[1], sXYZMagCalPrm[2], sXYZMagCalPrm[3], sXYZMagCalPrm[4], sXYZMagCalPrm[5]);
+        	USBComSendString(string);
+
         	/* calibration done */
             accMagMode = ACCMAGMTR_FETCHING;
             sampleIndex = 0;
