@@ -236,7 +236,7 @@ static void UpdateFlightControl(void) {
 		SetReferenceSignals();
 
 		/* Update PID control output */
-		ctrlSignals.Thrust = (GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/UINT16_MAX; // NOTE: Raw throttle control fow now until control developed for Z velocity
+		ctrlSignals.Thrust = -(GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/((float32_t)UINT16_MAX); // NOTE: Raw throttle control fow now until control developed for Z velocity
 		UpdatePIDControlSignals(&ctrlSignals);
 
 		/* Allocate control signal action to motors */
