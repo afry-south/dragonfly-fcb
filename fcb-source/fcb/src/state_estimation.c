@@ -60,12 +60,15 @@ static SerializationType statePrintSerializationType;
 
 static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f };
 
+static portTickType magLastCorrectionTick = 0;
+static portTickType accLastCorrectionTick = 0;
+
 /* Private function prototypes -----------------------------------------------*/
 static void StateInit(KalmanFilterType * pEstimator);
 static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_t const * pXYZData);
 
 static void PredictAttitudeState(KalmanFilterType* pEstimator, AttitudeStateVectorType * pState,
-        float32_t const inertia, float32_t const ctrl);
+        float32_t const inertia, float32_t const ctrl, float32_t const tSinceLastCorrection);
 static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator,
         AttitudeStateVectorType * pState);
 static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator,
@@ -140,10 +143,14 @@ StateEstimationStatus InitStateEstimationTimeEvent(void) {
  * @retval None
  */
 void UpdatePredictionState(void) {
-    /* Run prediction step for attitude estimators */
-    PredictAttitudeState(&rollEstimator, &rollState, IXX, GetRollControlSignal());
-    PredictAttitudeState(&pitchEstimator, &pitchState, IYY, GetPitchControlSignal());
-    PredictAttitudeState(&yawEstimator, &yawState, IZZ, GetYawControlSignal());
+	uint32_t currentTick = xTaskGetTickCount();
+	float32_t timeSinceLastAccCorrection = ((float32_t)currentTick - accLastCorrectionTick) / configTICK_RATE_HZ;
+	float32_t timeSinceLastMagCorrection = ((float32_t)currentTick - magLastCorrectionTick) / configTICK_RATE_HZ;
+
+	/* Run prediction step for attitude estimators */
+    PredictAttitudeState(&rollEstimator, &rollState, IXX, GetRollControlSignal(), timeSinceLastAccCorrection);
+    PredictAttitudeState(&pitchEstimator, &pitchState, IYY, GetPitchControlSignal(), timeSinceLastAccCorrection);
+    PredictAttitudeState(&yawEstimator, &yawState, IZZ, GetYawControlSignal(), timeSinceLastMagCorrection);
 }
 
 /* GetRoll
@@ -261,6 +268,8 @@ void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, floa
         GetAttitudeFromAccelerometer(sensorAttitudeRPY, pAccMeterXYZ);
         CorrectAttitudeState(sensorAttitudeRPY[ROLL_IDX], &rollEstimator, &rollState);
         CorrectAttitudeState(sensorAttitudeRPY[PITCH_IDX], &pitchEstimator, &pitchState);
+
+        accLastCorrectionTick = xTaskGetTickCount();
     }
         break;
     case MAG_IDX: {
@@ -268,6 +277,8 @@ void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, floa
         float32_t const * pMagMeter = pXYZ;
         sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pMagMeter, GetRollAngle(), GetPitchAngle());
         CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
+
+        magLastCorrectionTick = xTaskGetTickCount();
     }
         break;
     default:
@@ -283,24 +294,26 @@ void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, floa
  * @param   ctrl: Physical control action ([Nm] for attitude)
  * @retval 	None
  */
-static void PredictAttitudeState(KalmanFilterType* pEstimator, AttitudeStateVectorType * pState,
-        float32_t const inertia, float32_t const ctrl) {
-    float32_t p11_tmp, p12_tmp, p13_tmp, p21_tmp, p22_tmp, p23_tmp, p31_tmp, p32_tmp, p33_tmp, h;
-
-    p11_tmp = pEstimator->p11;
-    p12_tmp = pEstimator->p12;
-    p13_tmp = pEstimator->p13;
-    p21_tmp = pEstimator->p21;
-    p22_tmp = pEstimator->p22;
-    p23_tmp = pEstimator->p23;
-    p31_tmp = pEstimator->p31;
-    p32_tmp = pEstimator->p32;
-    p33_tmp = pEstimator->p33;
-    h = pEstimator->h;
+static void PredictAttitudeState(KalmanFilterType* pEstimator,
+                                 AttitudeStateVectorType * pState,
+                                 float32_t const inertia,
+                                 float32_t const ctrl,
+                                 float32_t const tSinceLastCorrection) {
+    float32_t p11_tmp = pEstimator->p11;
+    float32_t p12_tmp = pEstimator->p12;
+    float32_t p13_tmp = pEstimator->p13;
+    float32_t p21_tmp = pEstimator->p21;
+    float32_t p22_tmp = pEstimator->p22;
+    float32_t p23_tmp = pEstimator->p23;
+    float32_t p31_tmp = pEstimator->p31;
+    float32_t p32_tmp = pEstimator->p32;
+    float32_t p33_tmp = pEstimator->p33;
+    float32_t h = pEstimator->h;
+    float32_t deltaT = MIN(pEstimator->h, tSinceLastCorrection);
 
     /* Prediction */
     /* Step 1: Calculate a priori state estimation*/
-    pState->angle += h * (pState->angleRate - pState->angleRateBias) + h * h / (2 * inertia) * ctrl;
+    pState->angle += deltaT * (pState->angleRate - pState->angleRateBias) + h * h / (2 * inertia) * ctrl;
     pState->angleRate += h / inertia * ctrl;
     /* pState->angleRateBias not estimated, see equations in section "State Estimation Theory" */
     pState->angleRateUnbiased = pState->angleRate - pState->angleRateBias; // Update the unbiased rate state
