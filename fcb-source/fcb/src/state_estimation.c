@@ -315,6 +315,7 @@ static void PredictAttitudeState(KalmanFilterType* pEstimator,
     /* Step 1: Calculate a priori state estimation*/
     pState->angle += deltaT * (pState->angleRate - pState->angleRateBias) + h * h / (2 * inertia) * ctrl;
     pState->angleRate += h / inertia * ctrl;
+
     /* pState->angleRateBias not estimated, see equations in section "State Estimation Theory" */
     pState->angleRateUnbiased = pState->angleRate - pState->angleRateBias; // Update the unbiased rate state
     toMaxRadian(&pState->angle);

@@ -671,7 +671,7 @@ static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLe
 
     uint32_t len;
     bool protoStatus;
-    uint8_t serializedReceiverData[ReceiverSignalValuesProto_size];
+    uint8_t serializedData[ReceiverSignalValuesProto_size];
     ReceiverSignalValuesProto receiverSignalsProto;
 
     /* Empty pcWriteBuffer so no strange output is sent as command response */
@@ -725,14 +725,21 @@ static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLe
         receiverSignalsProto.aux1 = GetAux1ReceiverChannel();
 
         /* Create a stream that will write to our buffer and encode the data with protocol buffer */
-        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedReceiverData, ReceiverSignalValuesProto_size);
+        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, ReceiverSignalValuesProto_size);
         protoStatus = pb_encode(&protoStream, ReceiverSignalValuesProto_fields, &receiverSignalsProto);
 
         /* Insert header to the sample string, then copy the data after that */
-        len = snprintf((char*) pcWriteBuffer, xWriteBufferLen, "%u\n%u\n", RC_VALUES_MSG_ENUM, protoStream.bytes_written);
+        // TODO Make Function that builds/encapsulates the message
+        uint32_t crc = 0xFFFFFFFF; // Dummy CRC-32 value for now TODO
+        uint8_t msg_id = RC_VALUES_MSG_ENUM;
+        uint16_t msg_data_size = (uint16_t)protoStream.bytes_written;
+        memcpy(pcWriteBuffer, &msg_id, 1);
+        memcpy(&pcWriteBuffer[1], &crc, 4);
+        memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
+        len = 7;
         if(len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-            memcpy(&pcWriteBuffer[len], serializedReceiverData, protoStream.bytes_written);
-            memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+        	memcpy(&pcWriteBuffer[len], serializedData, protoStream.bytes_written);
+        	memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
         }
 
         if(!protoStatus) {
@@ -1201,7 +1208,7 @@ static portBASE_TYPE CLIGetMotorValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
 
     uint32_t len;
     bool protoStatus;
-    uint8_t serializedMotorData[MotorSignalValuesProto_size];
+    uint8_t serializedData[MotorSignalValuesProto_size];
     MotorSignalValuesProto motorSignalValuesProto;
 
     configASSERT(pcWriteBuffer);
@@ -1237,14 +1244,20 @@ static portBASE_TYPE CLIGetMotorValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
         motorSignalValuesProto.M4 = GetMotorValue(4);
 
         /* Create a stream that will write to our buffer and encode the data with protocol buffer */
-        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedMotorData, MotorSignalValuesProto_size);
+        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, MotorSignalValuesProto_size);
         protoStatus = pb_encode(&protoStream, MotorSignalValuesProto_fields, &motorSignalValuesProto);
 
         /* Insert header to the sample string, then copy the data after that */
-        len = snprintf((char*) pcWriteBuffer, xWriteBufferLen, "%u\n%u\n", MOTOR_VALUES_MSG_ENUM, protoStream.bytes_written);
+        uint32_t crc = 0xFFFFFFFF; // Dummy CRC-32 value for now TODO
+        uint8_t msg_id = MOTOR_VALUES_MSG_ENUM;
+        uint16_t msg_data_size = (uint16_t)protoStream.bytes_written;
+        memcpy(pcWriteBuffer, &msg_id, 1);
+        memcpy(&pcWriteBuffer[1], &crc, 4);
+        memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
+        len = 7;
         if(len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-            memcpy(&pcWriteBuffer[len], serializedMotorData, protoStream.bytes_written);
-            memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+        	memcpy(&pcWriteBuffer[len], serializedData, protoStream.bytes_written);
+        	memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
         }
 
         if(!protoStatus) {
@@ -1471,6 +1484,8 @@ static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBuffer
             "Reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angular rate: %1.4f rad/s\n",
             GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchAngleReferenceSignal(), GetYawAngularRateReferenceSignal());
 
+    // TODO protobuf param
+
     return pdFALSE;
 }
 
@@ -1580,13 +1595,8 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
     switch (pcParameter[0]) {
     case 'n':
         snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-                "Flight states [deg]\nrollAngle: %1.3f\npitchAngle: %1.3f\nyawAngle: %1.3f\r\n",
-                Radian2Degree(GetRollAngle()), Radian2Degree(GetPitchAngle()), Radian2Degree(GetYawAngle()));
-
-        snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-                            "States [deg]:\nroll: %1.3f\npitch: %1.3f\nyaw: %1.3f\nrollRate: %1.3f\npitchRate: %1.3f\nyawRate: %1.3f\n\r\n",
-                            Radian2Degree(GetRollAngle()), Radian2Degree(GetPitchAngle()), Radian2Degree(GetYawAngle()),
-                            Radian2Degree(GetRollRate()), Radian2Degree(GetPitchRate()), Radian2Degree(GetYawRate()));
+                "Flight states [deg]\nrollAngle: %1.3f\npitchAngle: %1.3f\nyawAngle: %1.3f\nrollRate: %1.3f\npitchRate: %1.3f\nyawRate: %1.3f\r\n",
+                Radian2Degree(GetRollAngle()), Radian2Degree(GetPitchAngle()), Radian2Degree(GetYawAngle()), Radian2Degree(GetRollRate()), Radian2Degree(GetPitchRate()), Radian2Degree(GetYawRate()));
         break;
     case 'p':
         /* Add estimated attitude states to protobuffer type struct members */
@@ -1597,6 +1607,7 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
         stateValuesProto.has_yawAngle = true;
         stateValuesProto.yawAngle = GetYawAngle();
 
+        // TODO add attitude rates when available
         stateValuesProto.has_rollRate = true;
         stateValuesProto.rollRate = GetRollRate();
         stateValuesProto.has_pitchRate = true;
@@ -1625,7 +1636,14 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
         protoStatus = pb_encode(&protoStream, FlightStatesProto_fields, &stateValuesProto);
 
         /* Insert header to the sample string, then copy the data after that */
-        len = snprintf((char*) pcWriteBuffer, xWriteBufferLen, "%u\n%u\n", FLIGHT_STATE_MSG_ENUM, protoStream.bytes_written);
+        uint32_t crc = 0xFFFFFFFF; // Dummy CRC-32 value for now TODO
+        uint8_t msg_id = FLIGHT_STATE_MSG_ENUM;
+        uint16_t msg_data_size = (uint16_t)protoStream.bytes_written;
+        memcpy(pcWriteBuffer, &msg_id, 1);
+        memcpy(&pcWriteBuffer[1], &crc, 4);
+        memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
+        len = 7;
+        //len = snprintf((char*) pcWriteBuffer, xWriteBufferLen, "%hhu%hu%hu", FLIGHT_STATE_MSG_ENUM, dummy_crc, protoStream.bytes_written);
         if(len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
             memcpy(&pcWriteBuffer[len], serializedStateData, protoStream.bytes_written);
             memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
