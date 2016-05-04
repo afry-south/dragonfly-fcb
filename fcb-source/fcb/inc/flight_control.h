@@ -30,10 +30,10 @@
 																 * Smygehuk, Sweden (according to Lantm�teriet) */
 #define COMPASS_DECLINATION		   (float)		3.226*PI/180.0	/* For Malmoe, Sweden the compass declination is about 3.226 deg East
  	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 * The total field strength is 50552 nT (505.52 mGauss) */
-/* Reference signal ranges */
-#define MAX_Z_VELOCITY			2.0			// Max vertical velocity (+/-) [m/s] // TODO use int values m/s, mrad, mrad/s
-#define MAX_ROLLPITCH_ANGLE 	15*PI/180	// Max roll/pitch angle (+/-) [rad] (NOTE! Not in deg!)
-#define MAX_YAW_RATE			30*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
+/* Default reference signal ranges */
+#define DEFAULT_MAX_Z_VELOCITY          2.0			// Max vertical velocity (+/-) [m/s] // TODO use int values m/s, mrad, mrad/s
+#define DEFAULT_MAX_ROLLPITCH_ANGLE     15*PI/180	// Max roll/pitch angle (+/-) [rad] (NOTE! Not in deg!)
+#define DEFAULT_MAX_YAW_RATE            30*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
 #define RECEIVER_TO_REFERENCE_ZERO_PADDING	1800	// Sets how large an area around 0 receiver value the reference signal should be set to zero
 
@@ -49,15 +49,25 @@ typedef enum {
 	FLIGHTCTRL_ERROR = 0, FLIGHTCTRL_OK = !FLIGHTCTRL_ERROR
 } FlightControlErrorStatus;
 
+typedef struct
+{
+  float32_t ZVelocity;		// [m/s]
+  float32_t RollAngle;		// [rad]
+  float32_t PitchAngle;		// [rad]
+  float32_t YawAngleRate;	// [rad/s]
+} RefSignals_TypeDef;
+
 /* Exported macro ------------------------------------------------------------*/
 
 /* Exported function prototypes --------------------------------------------- */
 void CreateFlightControlTask(void);
 enum FlightControlMode GetFlightControlMode(void);
-float GetZVelocityReferenceSignal(void);
-float GetRollAngleReferenceSignal(void);
-float GetPitchAngleReferenceSignal(void);
-float GetYawAngularRateReferenceSignal(void);
+
+float32_t GetZVelocityReferenceSignal(void);
+float32_t GetRollAngleReferenceSignal(void);
+float32_t GetPitchAngleReferenceSignal(void);
+float32_t GetYawAngularRateReferenceSignal(void);
+
 float32_t GetThrustControlSignal();
 float32_t GetRollControlSignal();
 float32_t GetPitchControlSignal();
@@ -77,6 +87,9 @@ void SendPredictionUpdateToFlightControl(void);
  * @param xyz a 3-array of XYZ sensor readings. See wiki page "Sensors"
  */
 void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType, uint8_t deltaTms, float32_t xyz[3]);
+
+void setMaxLimitForReferenceSignal(float32_t maxZVelocity, float32_t maxRollAngle, float32_t maxPitchAngle, float32_t maxYawAngleRate);
+void getMaxLimitForReferenceSignal(float32_t* maxZVelocity, float32_t* maxRollAngle, float32_t* maxPitchAngle, float32_t* maxYawAngleRate);
 
 #endif /* __FLIGHT_CONTROL_H */
 

@@ -20,19 +20,13 @@
 #include "rotation_transformation.h"
 #include "state_estimation.h"
 #include "fcb_accelerometer_magnetometer.h"
+#include "flash.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 
 /* Private typedef -----------------------------------------------------------*/
-typedef struct
-{
-  float ZVelocity;		// [m/s]
-  float RollAngle;		// [rad]
-  float PitchAngle;		// [rad]
-  float YawAngleRate;	// [rad/s]
-} RefSignals_TypeDef;
 
 typedef enum {
   FLIGHT_CONTROL_UPDATE,
@@ -71,6 +65,7 @@ typedef struct FlightControlMsg {
 static xQueueHandle qFlightControl = NULL;
 
 static RefSignals_TypeDef RefSignals; // Control reference signals
+static RefSignals_TypeDef RefSignalsLimits; // Max limits for reference signals
 static CtrlSignals_TypeDef ctrlSignals; // Physical control signals
 
 /* Flight mode */
@@ -82,6 +77,8 @@ xTaskHandle FlightControlTaskHandle; // Task handle for flight control task
 static void UpdateFlightControl(void);
 static void UpdateFlightMode(void);
 static void SetReferenceSignals(void);
+
+void setMaxLimitForReferenceSignalToDefault(void);
 
 static void FlightControlTask(void const *argument);
 
@@ -125,7 +122,7 @@ enum FlightControlMode GetFlightControlMode(void) {
  * @param  None
  * @retval Z velocity reference signal value
  */
-float GetZVelocityReferenceSignal(void) {
+float32_t GetZVelocityReferenceSignal(void) {
 	return RefSignals.ZVelocity;
 }
 
@@ -134,7 +131,7 @@ float GetZVelocityReferenceSignal(void) {
  * @param  None
  * @retval Roll angle reference signal value
  */
-float GetRollAngleReferenceSignal(void) {
+float32_t GetRollAngleReferenceSignal(void) {
 	return RefSignals.RollAngle;
 }
 
@@ -143,7 +140,7 @@ float GetRollAngleReferenceSignal(void) {
  * @param  None
  * @retval Pitch angle reference signal value
  */
-float GetPitchAngleReferenceSignal(void) {
+float32_t GetPitchAngleReferenceSignal(void) {
 	return RefSignals.PitchAngle;
 }
 
@@ -152,7 +149,7 @@ float GetPitchAngleReferenceSignal(void) {
  * @param  None
  * @retval Yaw angular velocity reference signal value
  */
-float GetYawAngularRateReferenceSignal(void) {
+float32_t GetYawAngularRateReferenceSignal(void) {
 	return RefSignals.YawAngleRate;
 }
 
@@ -284,24 +281,26 @@ static void SetReferenceSignals(void) {
 
 	/* Set Z velocity reference depending on receiver throttle channel */
 	// TODO set Z velocity reference to control altitude when such a controller is available
+	/*
 	if (throttle <= RECEIVER_TO_REFERENCE_ZERO_PADDING && throttle >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
-	    RefSignals.ZVelocity = 0.0;
+		RefSignals.ZVelocity = 0.0;
 	} else if (throttle >= 0) {
-	    RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle - RECEIVER_TO_REFERENCE_ZERO_PADDING)
-					        / (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+		RefSignals.ZVelocity = -RefSignalsLimits.ZVelocity*(throttle - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
 	} else {
-	    RefSignals.ZVelocity = -MAX_Z_VELOCITY*(throttle + RECEIVER_TO_REFERENCE_ZERO_PADDING)
-					        / (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
+		RefSignals.ZVelocity = -RefSignalsLimits.ZVelocity*(throttle + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING); // Negative sign because Z points downwards
 	}
+	*/
 
 	/* Set roll angle reference depending on receiver aileron channel */
 	if (aileron <= RECEIVER_TO_REFERENCE_ZERO_PADDING && aileron >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
 		RefSignals.RollAngle = 0.0;
 	} else if (aileron >= 0) {
-		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(aileron - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.RollAngle = -RefSignalsLimits.RollAngle*(aileron - RECEIVER_TO_REFERENCE_ZERO_PADDING)
 				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	} else {
-		RefSignals.RollAngle = -MAX_ROLLPITCH_ANGLE*(aileron + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.RollAngle = -RefSignalsLimits.RollAngle*(aileron + RECEIVER_TO_REFERENCE_ZERO_PADDING)
 				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	}
 
@@ -309,10 +308,10 @@ static void SetReferenceSignals(void) {
 	if (elevator <= RECEIVER_TO_REFERENCE_ZERO_PADDING && elevator >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
 		RefSignals.PitchAngle = 0.0;
 	} else if (elevator >= 0) {
-		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(elevator - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.PitchAngle = -RefSignalsLimits.PitchAngle*(elevator - RECEIVER_TO_REFERENCE_ZERO_PADDING)
 				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	} else {
-		RefSignals.PitchAngle = -MAX_ROLLPITCH_ANGLE*(elevator + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.PitchAngle = -RefSignalsLimits.PitchAngle*(elevator + RECEIVER_TO_REFERENCE_ZERO_PADDING)
 				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	}
 
@@ -320,10 +319,10 @@ static void SetReferenceSignals(void) {
 	if (rudder <= RECEIVER_TO_REFERENCE_ZERO_PADDING && rudder >= -RECEIVER_TO_REFERENCE_ZERO_PADDING) {
 		RefSignals.YawAngleRate = 0.0;
 	} else if (rudder >= 0) {
-		RefSignals.YawAngleRate = -MAX_YAW_RATE*(rudder - RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.YawAngleRate = -RefSignalsLimits.YawAngleRate*(rudder - RECEIVER_TO_REFERENCE_ZERO_PADDING)
 				/ (INT16_MAX - RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	} else {
-		RefSignals.YawAngleRate = -MAX_YAW_RATE*(rudder + RECEIVER_TO_REFERENCE_ZERO_PADDING)
+		RefSignals.YawAngleRate = -RefSignalsLimits.YawAngleRate*(rudder + RECEIVER_TO_REFERENCE_ZERO_PADDING)
 				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	}
 }
@@ -398,7 +397,29 @@ void initKalmanFiler(void) {
     /* Init the states for the Kalman filter */
     InitStatesXYZ(startupSensorValues);
     InitStateEstimationTimeEvent();
+}
 
+void setMaxLimitForReferenceSignal(float32_t maxZVelocity, float32_t maxRollAngle, float32_t maxPitchAngle, float32_t maxYawAngleRate) {
+	RefSignalsLimits.ZVelocity = maxZVelocity;
+	RefSignalsLimits.RollAngle = maxRollAngle;
+	RefSignalsLimits.PitchAngle = maxPitchAngle;
+	RefSignalsLimits.YawAngleRate = maxYawAngleRate;
+
+	WriteReferenceMaxLimitsToFlash(&RefSignalsLimits);
+}
+
+void setMaxLimitForReferenceSignalToDefault(void) {
+	RefSignalsLimits.ZVelocity = DEFAULT_MAX_Z_VELOCITY;
+	RefSignalsLimits.RollAngle = DEFAULT_MAX_ROLLPITCH_ANGLE;
+	RefSignalsLimits.PitchAngle = DEFAULT_MAX_ROLLPITCH_ANGLE;
+	RefSignalsLimits.YawAngleRate = DEFAULT_MAX_YAW_RATE;
+}
+
+void getMaxLimitForReferenceSignal(float32_t* maxZVelocity, float32_t* maxRollAngle, float32_t* maxPitchAngle, float32_t* maxYawAngleRate) {
+	*maxZVelocity = RefSignalsLimits.ZVelocity;
+	*maxRollAngle = RefSignalsLimits.RollAngle;
+	*maxPitchAngle = RefSignalsLimits.PitchAngle;
+	*maxYawAngleRate = RefSignalsLimits.YawAngleRate;
 }
 
 /**
@@ -417,6 +438,10 @@ static void FlightControlTask(void const *argument) {
     if (SensorRegisterGyroClientCallback(SendCorrectionUpdateToFlightControl)) {
     	ErrorHandler();
     }
+
+	if (FLASH_OK != ReadReferenceMaxLimitsFromFlash(&RefSignalsLimits)) {
+		setMaxLimitForReferenceSignalToDefault();
+	}
 
     initKalmanFiler();
 

@@ -120,6 +120,8 @@ static portBASE_TYPE CLIAbout(int8_t *pcWriteBuffer, size_t xWriteBufferLen, con
 static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+static portBASE_TYPE CLISetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+static portBASE_TYPE CLIGetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLIGetStateValues(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE CLIStartStateSampling(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
@@ -266,6 +268,21 @@ static const CLI_Command_Definition_t getRefSignalsCommand = { (const int8_t * c
         0 /* Number of parameters expected */
 };
 
+/* Structure that defines the "set-max-limit-ref-signals" command line command. */
+static const CLI_Command_Definition_t setMaxLimitReferenceSignalsCommand = { (const int8_t * const ) "set-max-limit-ref-signals",
+        (const int8_t * const ) "\r\nset-max-limit-ref-signals:\r\n Sets new max limits for reference signals"
+        		"<maxZVelocity> <maxRollAngle> <maxPitchAngle> <maxYawAngleRate>\r\n",
+		CLISetMaxReferenceSignals, /* The function to run. */
+        4 /* Number of parameters expected */
+};
+
+/* Structure that defines the "get-max-limit-ref-signals" command line command. */
+static const CLI_Command_Definition_t getMaxLimitReferenceSignalsCommand = { (const int8_t * const ) "get-max-limit-ref-signals",
+        (const int8_t * const ) "\r\nget-max-limit-ref-signals:\r\n Get max limits for reference signals\r\n",
+		CLIGetMaxReferenceSignals, /* The function to run. */
+        0 /* Number of parameters expected */
+};
+
 /* Structure that defines the "task-status" command line command. */
 static const CLI_Command_Definition_t taskStatusCommand = { (const int8_t * const ) "task-status",
         (const int8_t * const ) "\r\ntask-status:\r\n Prints task status\r\n",
@@ -346,6 +363,8 @@ void RegisterCLICommands(void) {
     /* Flight control CLI commands */
     FreeRTOS_CLIRegisterCommand(&getFlightModeCommand);
     FreeRTOS_CLIRegisterCommand(&getRefSignalsCommand);
+    FreeRTOS_CLIRegisterCommand(&setMaxLimitReferenceSignalsCommand);
+    FreeRTOS_CLIRegisterCommand(&getMaxLimitReferenceSignalsCommand);
     FreeRTOS_CLIRegisterCommand(&getStatesCommand);
     FreeRTOS_CLIRegisterCommand(&startStateSamplingCommand);
     FreeRTOS_CLIRegisterCommand(&stopStateSamplingCommand);
@@ -1455,6 +1474,55 @@ static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBuffer
     return pdFALSE;
 }
 
+/**
+ * @brief  Implements CLI command to set the max limit for received signals from RC control.
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLISetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+    float pcParameter[4];
+
+    portBASE_TYPE xParameterStringLength;
+//    portBASE_TYPE lParameterNumber = 0;
+
+    configASSERT(pcWriteBuffer);
+
+    /* Obtain the parameter strings. */
+    for (int i = 0; i < 4; i++) {
+        pcParameter[i] = atof((char*)FreeRTOS_CLIGetParameter(pcCommandString, i+1, &xParameterStringLength));
+    }
+
+    setMaxLimitForReferenceSignal(pcParameter[0], pcParameter[1], pcParameter[2], pcParameter[3]);
+
+    snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+            "Set max limit for reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angular rate: %1.4f rad/s\n",
+			pcParameter[0], pcParameter[1], pcParameter[2], pcParameter[3]);
+
+    return pdFALSE; /* Return false to indicate command activity finished */
+}
+
+/**
+ * @brief  Implements CLI command to get the max limit for received signals from RC control.
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+    float pcParameter[4];
+
+    configASSERT(pcWriteBuffer);
+
+    getMaxLimitForReferenceSignal(&pcParameter[0], &pcParameter[1], &pcParameter[2], &pcParameter[3]);
+
+    snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+            "Max limit for reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angular rate: %1.4f rad/s\n",
+			pcParameter[0], pcParameter[1], pcParameter[2], pcParameter[3]);
+
+    return pdFALSE; /* Return false to indicate command activity finished */
+}
 /**
  * @brief  Implements "task-status" command, prints task status
  * @param  pcWriteBuffer : Reference to output buffer

@@ -389,21 +389,30 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
         }
 
         /* Check for sensor data ready read timeouts */
-        timeSinceDrdy = HAL_GetTick() - sensorDrdyCalc[GYRO_IDX].lastDrdyTime;
+        // lastDrdyTime must be read before HAL_GetTick(), as lastDrdyTime is updated from a ISR.
+        // Else lastDrdyTime could be increased after HAL_GetTick() and timeSinceDrdy < 0.
+        uint32_t lastDrdyTime = sensorDrdyCalc[GYRO_IDX].lastDrdyTime;
+        timeSinceDrdy = HAL_GetTick() - lastDrdyTime;
         if (msg.event != FCB_SENSOR_GYRO_DATA_READY && timeSinceDrdy > SENSOR_ERROR_TIMEOUT) {
             ErrorHandler();
         } else if (msg.event != FCB_SENSOR_GYRO_DATA_READY && timeSinceDrdy > SENSOR_DRDY_TIMEOUT) {
             FetchDataFromGyroscope(sensorDrdyCalc[GYRO_IDX].lastDrdyTime);
         }
 
-        timeSinceDrdy = HAL_GetTick() - sensorDrdyCalc[ACC_IDX].lastDrdyTime;
+        // lastDrdyTime must be read before HAL_GetTick(), as lastDrdyTime is updated from a ISR.
+        // Else lastDrdyTime could be increased after HAL_GetTick() and timeSinceDrdy < 0.
+        lastDrdyTime = sensorDrdyCalc[ACC_IDX].lastDrdyTime;
+        timeSinceDrdy = HAL_GetTick() - lastDrdyTime;
         if (msg.event != FCB_SENSOR_ACC_DATA_READY && timeSinceDrdy > SENSOR_ERROR_TIMEOUT) {
             ErrorHandler();
         } else if (msg.event != FCB_SENSOR_ACC_DATA_READY && timeSinceDrdy > SENSOR_DRDY_TIMEOUT) {
             FetchDataFromAccelerometer();
         }
 
-        timeSinceDrdy = HAL_GetTick() - sensorDrdyCalc[MAG_IDX].lastDrdyTime;
+        // lastDrdyTime must be read before HAL_GetTick(), as lastDrdyTime is updated from a ISR.
+        // Else lastDrdyTime could be increased after HAL_GetTick() and timeSinceDrdy < 0.
+        lastDrdyTime = sensorDrdyCalc[MAG_IDX].lastDrdyTime;
+        timeSinceDrdy = HAL_GetTick() - lastDrdyTime;
         if (msg.event != FCB_SENSOR_MAGNETO_DATA_READY && timeSinceDrdy > SENSOR_ERROR_TIMEOUT) {
             ErrorHandler();
         } else if (msg.event != FCB_SENSOR_MAGNETO_DATA_READY && timeSinceDrdy > SENSOR_DRDY_TIMEOUT) {
