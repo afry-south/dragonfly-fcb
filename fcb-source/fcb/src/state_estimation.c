@@ -475,7 +475,7 @@ static void PredictAttitudeState(KalmanFilterType* pEstimator, AttitudeStateVect
     /* Step 1: Calculate a priori state estimation*/
     pState->angle += h * (pState->angleRate - pState->angleRateBias) + h * h / (2 * inertia) * ctrl;
     pState->angleRate += h / inertia * ctrl;
-    pState->angleRateUnbiased = pState->angleRate - pState->angleRateUnbiased; // Update the unbiased rate state
+    pState->angleRateUnbiased = pState->angleRate - pState->angleRateBias; // Update the unbiased rate state
     /* pState->angleRateBias not estimated, see equations in section "State Estimation Theory" */
 
     /* Step 2: Calculate a priori error covariance matrix P*/
