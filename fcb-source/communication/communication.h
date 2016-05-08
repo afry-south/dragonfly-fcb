@@ -11,6 +11,22 @@
 #include "semphr.h"
 #include "FreeRTOS_CLI.h"
 
+/* Exported constants --------------------------------------------------------*/
+
+enum ProtoMessageTypeEnum {
+	ERR_MSG_ENUM = 0,
+    RC_VALUES_MSG_ENUM,
+    MOTOR_VALUES_MSG_ENUM,
+    SENSOR_SAMPLES_MSG_ENUM,
+    FLIGHT_STATE_MSG_ENUM,
+    PID_PARAMS_MSG_ENUM,
+    REFSIGNALS_MSG_ENUM,
+    SIMULATED_STATES_MSG_ENUM,
+	CTRLSIGNAL_MSG_ENUM
+};
+
+#define	PROTO_HEADER_LEN	7
+
 /* Exported typedefs ---------------------------------------------------------*/
 typedef enum {
     ARRAY_BUFFER,
@@ -29,15 +45,5 @@ typedef struct {
     void* bufferPtr;
     xSemaphoreHandle* BufferMutex;
 } ComTxQueueItem_TypeDef;
-
-enum ProtoMessageTypeEnum {
-    RC_VALUES_MSG_ENUM = 1,
-    MOTOR_VALUES_MSG_ENUM,
-    SENSOR_SAMPLES_MSG_ENUM,
-    FLIGHT_STATE_MSG_ENUM,
-    PID_CTRLPARAMS_MSG_ENUM,
-    CTRL_REFSIGNALS_MSG_ENUM,
-    SIMULATED_STATES_ENUM
-};
 
 #endif /* COMMUNICATION_H_ */
