@@ -4,6 +4,8 @@
  * @version v. 1.0.0
  * @date    2016-04-27
  * @brief   Module contains a Gauss-Newton Algorithm for Sphere Fitting
+ * The implementation is derived from Rolfe Schmidt's blog at
+ * https://chionophilous.wordpress.com/2012/09/15/implementing-the-gauss-newton-algorithm-for-sphere-fitting-3-of-3/
  ******************************************************************************/
 
 #ifndef __SPHERE_CALIBRATION_H
