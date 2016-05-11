@@ -48,6 +48,10 @@ static AttitudeStateVectorType rollState = { 0.0, 0.0, 0.0 };
 static AttitudeStateVectorType pitchState = { 0.0, 0.0, 0.0 };
 static AttitudeStateVectorType yawState = { 0.0, 0.0, 0.0 };
 
+static AttitudeStateVectorType rollStateInternal = { 0.0, 0.0, 0.0 };
+static AttitudeStateVectorType pitchStateInternal = { 0.0, 0.0, 0.0 };
+static AttitudeStateVectorType yawStateInternal = { 0.0, 0.0, 0.0 };
+
 static KalmanFilterType rollEstimator;
 static KalmanFilterType pitchEstimator;
 static KalmanFilterType yawEstimator;
@@ -70,9 +74,9 @@ static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_
 static void PredictAttitudeState(KalmanFilterType* pEstimator, AttitudeStateVectorType * pState,
         float32_t const inertia, float32_t const ctrl, float32_t const tSinceLastCorrection);
 static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator,
-        AttitudeStateVectorType * pState);
+		AttitudeStateVectorType* pStateInternal, AttitudeStateVectorType* pState);
 static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator,
-        AttitudeStateVectorType * pState);
+        AttitudeStateVectorType* pStateInternal, AttitudeStateVectorType* pState);
 static void StatePrintSamplingTask(void const *argument);
 
 /* Exported functions --------------------------------------------------------*/
@@ -101,6 +105,21 @@ void InitStatesXYZ(float32_t initAngles[3]) {
     yawState.angleRate = 0.0;
     yawState.angleRateBias = 0.0;
     yawState.angleRateUnbiased = yawState.angleRate - yawState.angleRateBias;
+
+    rollStateInternal.angle = initAngles[0];
+    rollStateInternal.angleRate = 0.0;
+    rollStateInternal.angleRateBias = 0.0;
+    rollStateInternal.angleRateUnbiased = rollState.angleRate - rollState.angleRateBias;
+
+    pitchStateInternal.angle = initAngles[1];
+    pitchStateInternal.angleRate = 0.0;
+    pitchStateInternal.angleRateBias = 0.0;
+    pitchStateInternal.angleRateUnbiased = pitchState.angleRate - pitchState.angleRateBias;
+
+    yawStateInternal.angle = initAngles[2];
+    yawStateInternal.angleRate = 0.0;
+    yawStateInternal.angleRateBias = 0.0;
+    yawStateInternal.angleRateUnbiased = yawState.angleRate - yawState.angleRateBias;
 }
 
 /*
@@ -148,9 +167,9 @@ void UpdatePredictionState(void) {
 	float32_t timeSinceLastMagCorrection = ((float32_t)currentTick - magLastCorrectionTick) / configTICK_RATE_HZ;
 
 	/* Run prediction step for attitude estimators */
-    PredictAttitudeState(&rollEstimator, &rollState, IXX, GetRollControlSignal(), timeSinceLastAccCorrection);
-    PredictAttitudeState(&pitchEstimator, &pitchState, IYY, GetPitchControlSignal(), timeSinceLastAccCorrection);
-    PredictAttitudeState(&yawEstimator, &yawState, IZZ, GetYawControlSignal(), timeSinceLastMagCorrection);
+    PredictAttitudeState(&rollEstimator, &rollStateInternal, IXX, GetRollControlSignal(), timeSinceLastAccCorrection);
+    PredictAttitudeState(&pitchEstimator, &pitchStateInternal, IYY, GetPitchControlSignal(), timeSinceLastAccCorrection);
+    PredictAttitudeState(&yawEstimator, &yawStateInternal, IZZ, GetYawControlSignal(), timeSinceLastMagCorrection);
 }
 
 /* GetRoll
@@ -257,17 +276,17 @@ void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, floa
     case GYRO_IDX: {
         /* run correction step */
         float32_t const * pSensorAngleRate = pXYZ;
-        CorrectAttitudeRateState(deltaT, pSensorAngleRate[ROLL_IDX], &rollEstimator, &rollState);
-        CorrectAttitudeRateState(deltaT, pSensorAngleRate[PITCH_IDX], &pitchEstimator, &pitchState);
-        CorrectAttitudeRateState(deltaT, pSensorAngleRate[YAW_IDX], &yawEstimator, &yawState);
+        CorrectAttitudeRateState(deltaT, pSensorAngleRate[ROLL_IDX], &rollEstimator, &rollStateInternal, &rollState);
+        CorrectAttitudeRateState(deltaT, pSensorAngleRate[PITCH_IDX], &pitchEstimator, &pitchStateInternal, &pitchState);
+        CorrectAttitudeRateState(deltaT, pSensorAngleRate[YAW_IDX], &yawEstimator, &yawStateInternal, &yawState);
     }
         break;
     case ACC_IDX: {
         /* run correction step */
         float32_t const * pAccMeterXYZ = pXYZ; /* interpret values as accelerations */
         GetAttitudeFromAccelerometer(sensorAttitudeRPY, pAccMeterXYZ);
-        CorrectAttitudeState(sensorAttitudeRPY[ROLL_IDX], &rollEstimator, &rollState);
-        CorrectAttitudeState(sensorAttitudeRPY[PITCH_IDX], &pitchEstimator, &pitchState);
+        CorrectAttitudeState(sensorAttitudeRPY[ROLL_IDX], &rollEstimator, &rollStateInternal, &rollState);
+        CorrectAttitudeState(sensorAttitudeRPY[PITCH_IDX], &pitchEstimator, &pitchStateInternal, &pitchState);
 
         accLastCorrectionTick = xTaskGetTickCount();
     }
@@ -276,7 +295,7 @@ void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, floa
         /* run correction step */
         float32_t const * pMagMeter = pXYZ;
         sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pMagMeter, GetRollAngle(), GetPitchAngle());
-        CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawState);
+        CorrectAttitudeState(sensorAttitudeRPY[YAW_IDX], &yawEstimator, &yawStateInternal, &yawState);
 
         magLastCorrectionTick = xTaskGetTickCount();
     }
@@ -342,7 +361,8 @@ static void PredictAttitudeState(KalmanFilterType* pEstimator,
  * @param 	stateRateBias: Pointer to struct member of StateVectorType (rollRateBias, pitchRateBias or yawRateBias)
  * @retval 	None
  */
-static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator, AttitudeStateVectorType * pState) {
+static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator,
+		AttitudeStateVectorType* pStateInternal, AttitudeStateVectorType* pState) {
     float32_t y1, s11, s12, s21, s22, InvDetS;
     float32_t p11_tmp, p12_tmp, p13_tmp, p21_tmp, p22_tmp, p23_tmp, p31_tmp, p32_tmp, p33_tmp;
 
@@ -352,7 +372,7 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
 
     /* Correction */
     /* Step3: Calculate y, difference between a-priori state and measurement z */
-    y1 = sensorAngle - pState->angle;
+    y1 = sensorAngle - pStateInternal->angle;
     toMaxRadian(&y1);
 
     /* Step 4: Calculate innovation covariance matrix S */
@@ -368,10 +388,10 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
     pEstimator->k31 = InvDetS * (p31_tmp*s22 - p32_tmp*s21);
 
     /* Step 6: Update a posteriori state estimation */
-    pState->angle += pEstimator->k11*y1;
-    pState->angleRate += pEstimator->k21*y1;
-    pState->angleRateBias += pEstimator->k31*y1;
-    toMaxRadian(&pState->angle);
+    pStateInternal->angle += pEstimator->k11*y1;
+    pStateInternal->angleRate += pEstimator->k21*y1;
+    pStateInternal->angleRateBias += pEstimator->k31*y1;
+    toMaxRadian(&pStateInternal->angle);
 
     /* Step 7: Update a posteriori error covariance matrix P
      * NOTE: This is only half of the P matrix update, i.e. the parts that are related to the attitude measurement */
@@ -387,6 +407,12 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
     pEstimator->p31 = p31_tmp - p11_tmp*pEstimator->k31;
     pEstimator->p32 = p32_tmp - p12_tmp*pEstimator->k31;
     pEstimator->p33 = p33_tmp - p13_tmp*pEstimator->k31;
+
+    /* Update real states (i.e. filter output) by copying internal state from correction */
+    pState->angle = pStateInternal->angle;
+    pState->angleRate = pStateInternal->angleRate;
+    pState->angleRateBias = pStateInternal->angleRateBias;
+    pState->angleRateUnbiased = pStateInternal->angleRateUnbiased;
 }
 
 /*
@@ -398,7 +424,7 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
  * @retval  None
  */
 static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator,
-        AttitudeStateVectorType * pState) {
+        AttitudeStateVectorType* pStateInternal, AttitudeStateVectorType* pState) {
     float32_t y2, s11, s12, s21, s22, InvDetS;
     float32_t p11_tmp, p12_tmp, p13_tmp, p21_tmp, p22_tmp, p23_tmp, p31_tmp, p32_tmp, p33_tmp;
 
@@ -408,7 +434,7 @@ static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sen
 
     /* Correction */
     /* Step3: Calculate y, difference between a-priori state and measurement z */
-    y2 = sensorRate - pState->angleRate;
+    y2 = sensorRate - pStateInternal->angleRate;
 
     /* Step 4: Calculate innovation covariance matrix S */
     s11 = p11_tmp + pEstimator->r1;
@@ -423,10 +449,10 @@ static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sen
     pEstimator->k32 = InvDetS * (p32_tmp*s11 + p31_tmp*s12);
 
     /* Step 6: Update a posteriori state estimation */
-    pState->angle = pState->angle + pEstimator->k12 * y2;
-    pState->angleRate = pState->angleRate + pEstimator->k22 * y2;
-    pState->angleRateBias = pState->angleRateBias + pEstimator->k32 * y2;
-    pState->angleRateUnbiased = pState->angleRate - pState->angleRateBias; // Update the unbiased rate state
+    pStateInternal->angle = pStateInternal->angle + pEstimator->k12 * y2;
+    pStateInternal->angleRate = pStateInternal->angleRate + pEstimator->k22 * y2;
+    pStateInternal->angleRateBias = pStateInternal->angleRateBias + pEstimator->k32 * y2;
+    pStateInternal->angleRateUnbiased = pStateInternal->angleRate - pStateInternal->angleRateBias; // Update the unbiased rate state
 
     /* Step 7: Update a posteriori error covariance matrix P
      * NOTE: This is only half of the P matrix update, i.e. the parts that are related to the attitude rate measurement */
@@ -441,6 +467,12 @@ static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sen
     pEstimator->p31 = p31_tmp - p21_tmp*pEstimator->k32;
     pEstimator->p32 = p32_tmp - p22_tmp*pEstimator->k32;
     pEstimator->p33 = p33_tmp - p23_tmp*pEstimator->k32;
+
+    /* Update real states (i.e. filter output) by copying internal state from correction */
+    pState->angle = pStateInternal->angle;
+    pState->angleRate = pStateInternal->angleRate;
+    pState->angleRateBias = pStateInternal->angleRateBias;
+    pState->angleRateUnbiased = pStateInternal->angleRateUnbiased;
 }
 
 /**

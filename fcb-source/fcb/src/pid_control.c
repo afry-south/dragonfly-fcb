@@ -41,7 +41,7 @@ typedef struct
 }PIDController_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
-#define CONTROL_PERIOD			(float32_t) FLIGHT_CONTROL_TASK_PERIOD/1000.0
+#define CONTROL_PERIOD			((float32_t) FLIGHT_CONTROL_TASK_PERIOD/1000.0)
 
 /* Private macro -------------------------------------------------------------*/
 
