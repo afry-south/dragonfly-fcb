@@ -165,6 +165,23 @@ void Vector3DNormalize(float32_t* dstVector, float32_t* srcVector) {
 }
 
 /*
+ * @brief  Tilt compensate the input 3D vector of magnetic values
+ * @param  dstVector : tilt compensated vector result
+ * @param  srcVector : normalized vector with magnetic sensor values
+ * @retval None
+ */
+void Vector3DTiltCompensate(float32_t* dstVector, float32_t* srcVector, float32_t roll, float32_t pitch) {
+	dstVector[0] = srcVector[0]*arm_cos_f32(pitch)
+                 + srcVector[2]*arm_sin_f32(pitch);
+	dstVector[1] = srcVector[0]*arm_sin_f32(roll)*arm_sin_f32(pitch)
+                 + srcVector[1]*arm_cos_f32(roll)
+                 - srcVector[2]*arm_sin_f32(roll)*arm_cos_f32(pitch);
+	dstVector[2] = -srcVector[0]*arm_cos_f32(roll)*arm_sin_f32(pitch)
+                 + srcVector[1]*arm_sin_f32(roll)
+                 + srcVector[2]*arm_cos_f32(roll)*arm_cos_f32(pitch);
+}
+
+/*
  * @brief  Returns the yaw angle calculated from magnetometer values with tilt (roll/pitch) compensation
  * @note   TODO The tilt-compensation could also be performed with the (previous) state values instead of accelerometer angle values
  * @param  magValues : Vector containing 3D magnetometer values
@@ -178,10 +195,10 @@ float32_t GetMagYawAngle(float32_t* magValues, const float32_t roll, const float
 	float32_t yawAngle;
 
 	Vector3DNormalize(normalizedMag, magValues);
+	Vector3DTiltCompensate(normalizedMag, normalizedMag, roll, pitch);
 
-	/* Equation found in LSM303DLH Application Note document. Minus sign in first parameter in atan2 to get correct rotation direction around Z axis ("down") */
-	yawAngle = atan2f(-(normalizedMag[0]*arm_sin_f32(roll)*arm_sin_f32(pitch) + normalizedMag[1]*arm_cos_f32(roll) - normalizedMag[2]*arm_sin_f32(roll)*arm_cos_f32(pitch)),
-			normalizedMag[0]*arm_cos_f32(pitch) + normalizedMag[2]*arm_sin_f32(pitch));
+    /* Equation found in LSM303DLH Application Note document. Minus sign in first parameter in atan2 to get correct rotation direction around Z axis ("down") */
+    yawAngle = atan2f(-normalizedMag[1], normalizedMag[0]);
 
 	return yawAngle;
 }

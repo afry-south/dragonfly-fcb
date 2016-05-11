@@ -213,10 +213,9 @@ static const CLI_Command_Definition_t stopSensorSamplingCommand = { (const int8_
 };
 
 static const CLI_Command_Definition_t startAccMagMtrCalibration = { (const int8_t * const ) "start-accmagmtr-calibration",
-        (const int8_t * const) "\r\nstart-accmagmtr-calibration:\r\n Starts collection of 6 magmtr values via 6 USER btn presses\r\n"
-        "NOTE: use with SciLab Gauss-Newton scripts (todo Issue2)\r\n",
+        (const int8_t * const) "\r\nstart-accmagmtr-calibration <samples>:\r\n Starts collection of <samples> number of magmtr values\r\n",
         CLIStartAccMagMtrCalibration, /* the fcn to run */
-        0 /* nbr of expected parameters */
+        1 /* nbr of expected parameters */
 };
 
 /* Structure that defines the "get-motors" command line command. */
@@ -1186,10 +1185,14 @@ static portBASE_TYPE CLIStartAccMagMtrCalibration(int8_t *pcWriteBuffer, size_t 
     (void) pcCommandString;
     configASSERT(pcWriteBuffer);
 
+    portBASE_TYPE xParameterStringLength;
+
     strncpy((char*) pcWriteBuffer, "Starting Acc/Mag meter parameters "
             "not applied to acc or mag values ...\r\n", xWriteBufferLen);
 
-    StartAccMagMtrCalibration(ACCMAG_CALIBRATION_SAMPLES_N);
+    int32_t pcParameter = atoi((char*)FreeRTOS_CLIGetParameter(pcCommandString, 1, &xParameterStringLength));
+
+    StartAccMagMtrCalibration(pcParameter);
     return pdFALSE; /* false indicates CLI activity completed */
 }
 

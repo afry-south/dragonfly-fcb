@@ -474,7 +474,7 @@ void LSM303DLHC_MagInit(void);
   * @param  pfData : Data out pointer (size 3)
   * @retval None
   */
-HAL_StatusTypeDef LSM303DLHC_MagReadXYZ(float* pfData);
+HAL_StatusTypeDef LSM303DLHC_MagReadXYZ(float32_t* pfData);
 
 float32_t LSM303DLHC_MagDataRateHz(void); /* see source fcn banner */
 

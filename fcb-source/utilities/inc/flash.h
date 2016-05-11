@@ -45,7 +45,17 @@
 #define FLASH_REFERENCE_MAX_LIMITS_PAGE         FLASH_SETTINGS_START_PAGE       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
 #define FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET  FLASH_RECEIVER_CALIBRATION_END  // Storage byte offset from page base address (has to be word aligned)
 #define FLASH_REFERENCE_MAX_LIMITS_SIZE         sizeof(RefSignals_TypeDef) + HAL_CRC_LENGTH_32B/4       // Added room for CRC
-#define FLASH_REFERENCE_MAX_LIMITS_END          FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET + FLASH_RECEIVER_MAX_LIMITS_SIZE
+#define FLASH_REFERENCE_MAX_LIMITS_END          FLASH_REFERENCE_MAX_LIMITS_DATA_OFFSET + FLASH_REFERENCE_MAX_LIMITS_SIZE
+/* Magnetometer calibration values */
+#define FLASH_MAG_CALIBRATION_PAGE              FLASH_SETTINGS_START_PAGE       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
+#define FLASH_MAG_CALIBRATION_DATA_OFFSET       FLASH_REFERENCE_MAX_LIMITS_END  // Storage byte offset from page base address (has to be word aligned)
+#define FLASH_MAG_CALIBRATION_SIZE              sizeof(float32_t) * 6
+#define FLASH_MAG_CALIBRATION_END               FLASH_MAG_CALIBRATION_DATA_OFFSET + FLASH_MAG_CALIBRATION_SIZE
+/* Accelerometer calibration values */
+#define FLASH_ACC_CALIBRATION_PAGE              FLASH_SETTINGS_START_PAGE       // Storage page (must be >= FLASH_SETTINGS_START_ADDR)
+#define FLASH_ACC_CALIBRATION_DATA_OFFSET       FLASH_MAG_CALIBRATION_END  // Storage byte offset from page base address (has to be word aligned)
+#define FLASH_ACC_CALIBRATION_SIZE              sizeof(float32_t) * 6
+#define FLASH_ACC_CALIBRATION_END               FLASH_ACC_CALIBRATION_DATA_OFFSET + FLASH_ACC_CALIBRATION_SIZE
 
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
@@ -59,6 +69,10 @@ FlashErrorStatus ReadCalibrationValuesFromFlash(volatile Receiver_CalibrationVal
 FlashErrorStatus WriteCalibrationValuesToFlash(const Receiver_CalibrationValues_TypeDef* receiverCalibrationValues);
 FlashErrorStatus ReadReferenceMaxLimitsFromFlash(RefSignals_TypeDef* receiverMaxLimits);
 FlashErrorStatus WriteReferenceMaxLimitsToFlash( const RefSignals_TypeDef* receiverMaxLimits);
+FlashErrorStatus ReadMagCalibrationValuesFromFlash(float32_t magCalibrationValues[6]);
+FlashErrorStatus WriteMagCalibrationValuesToFlash(const float32_t magCalibrationValues[6]);
+FlashErrorStatus ReadAccCalibrationValuesFromFlash(float32_t accCalibrationValues[6]);
+FlashErrorStatus WriteAccCalibrationValuesToFlash(const float32_t accCalibrationValues[6]);
 
 #endif /* __FLASH_H */
 

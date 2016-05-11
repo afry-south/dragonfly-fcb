@@ -16,20 +16,6 @@
 #include <stdint.h>
 
 /**
- * Issue 2 & 3:
- *
- * start off by implementing Gauss-Newton in SciLab
- *
- * This means simply print the value to the console,
- * copy them into a file and then run SciLab script to calculate
- * the calibration data.
- *
- * TODO add script name.
- */
-#define FCB_SENSORS_SCILAB_CALIB
-
-
-/**
  * The Data Ready input from the magnetometer.
  *
  * This definition is intended to be used in the
@@ -54,10 +40,6 @@ enum FcbAccMagMode {
   ACCMAGMTR_FETCHING = 2, /** fetching data from sensor */
   ACCMAGMTR_CALIBRATING = 3, /** fetching calibration samples */
 };
-
-
-enum { ACCMAG_CALIBRATION_SAMPLES_N = 6 }; /* calibration samplin. TODO increase */
-
 
 
 /**
@@ -86,7 +68,7 @@ void FetchDataFromAccelerometer(void);
  *
  * @see ACCMAG_CALIBRATION_SAMPLES_N
  */
-void StartAccMagMtrCalibration(uint8_t samples);
+void StartAccMagMtrCalibration(uint32_t samples);
 
 
 /**
