@@ -68,7 +68,7 @@ static portTickType magLastCorrectionTick = 0;
 static portTickType accLastCorrectionTick = 0;
 
 /* Private function prototypes -----------------------------------------------*/
-static void StateInit(KalmanFilterType * pEstimator);
+static void StateInit(KalmanFilterType * Estimator, float32_t q1, float32_t q2, float32_t q3, float32_t r1, float32_t r2);
 static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_t const * pXYZData);
 
 static void PredictAttitudeState(KalmanFilterType* pEstimator, AttitudeStateVectorType * pState,
@@ -87,9 +87,9 @@ static void StatePrintSamplingTask(void const *argument);
  * @retval None
  */
 void InitStatesXYZ(float32_t initAngles[3]) {
-    StateInit(&rollEstimator);
-    StateInit(&pitchEstimator);
-    StateInit(&yawEstimator);
+    StateInit(&rollEstimator, 	Q1_CAL, Q2_CAL, Q3_CAL, R1_CAL, GYRO_X_AXIS_VARIANCE);
+    StateInit(&pitchEstimator, 	Q1_CAL, Q2_CAL, Q3_CAL, R1_CAL, GYRO_Y_AXIS_VARIANCE);
+    StateInit(&yawEstimator, 	Q1_CAL, Q2_CAL, Q3_CAL, R1_MAG, GYRO_Z_AXIS_VARIANCE);
 
     rollState.angle = initAngles[0];
     rollState.angleRate = 0.0;
@@ -231,25 +231,26 @@ float32_t GetYawRate(void) {
 
 /*
  * @brief  Initializes the roll state Kalman estimator
- * @param  None
+ * @param  Estimator : Kalman estimator struct
+ * @param  q1 : Attitude state model noise variance
+ * @param  q2 : Attitude rate state model noise variance
+ * @param  q3 : Bias state model noise variance
+ * @param  r1 : Attitude sensor noise variance
+ * @param  r2 : Attitude rate sensor noise variance
  * @retval None
  */
-static void StateInit(KalmanFilterType * Estimator) {
+static void StateInit(KalmanFilterType * Estimator, float32_t q1, float32_t q2, float32_t q3, float32_t r1, float32_t r2) {
     /* P matrix init is the Identity matrix*/
     Estimator->p11 = 0.1;
     Estimator->p12 = 0.0;
     Estimator->p21 = 0.0;
     Estimator->p22 = 0.1;
 
-    /* q1 = sqrt(var(rate))*STATE_ESTIMATION_SAMPLE_PERIOD^2
-     * q2 = sqrt(var(rateBias))
-     * r1 = sqrt(var(angle)) */
-    // TODO Needs to be set individually for each Kalman filter based on sensor and axis noise variance values
-    Estimator->q1 = Q1_CAL; //GYRO_AXIS_VARIANCE_ROUGH;
-    Estimator->q2 = Q2_CAL;
-    Estimator->q3 = Q3_CAL;
-    Estimator->r1 = R1_CAL; /* accelerometer based angle variance */
-    Estimator->r2 = R2_CAL;
+    Estimator->q1 = q1;
+    Estimator->q2 = q2;
+    Estimator->q3 = q3;
+    Estimator->r1 = r1;
+    Estimator->r2 = r2;
 
     Estimator->h = 1.0/((float32_t)(SystemCoreClock/(STATE_ESTIMATION_TIME_UPDATE_PERIOD+1)/STATE_ESTIMATION_TIME_UPDATE_PRESCALER));
 }
@@ -332,8 +333,8 @@ static void PredictAttitudeState(KalmanFilterType* pEstimator,
 
     /* Prediction */
     /* Step 1: Calculate a priori state estimation*/
-    pState->angle += deltaT * (pState->angleRate - pState->angleRateBias) + h * h / (2 * inertia) * ctrl;
-    pState->angleRate += h / inertia * ctrl;
+    pState->angle += deltaT * (pState->angleRate - pState->angleRateBias); // + h * h / (2 * inertia) * ctrl;
+    //pState->angleRate += h / inertia * ctrl;
 
     /* pState->angleRateBias not estimated, see equations in section "State Estimation Theory" */
     pState->angleRateUnbiased = pState->angleRate - pState->angleRateBias; // Update the unbiased rate state
@@ -410,9 +411,9 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
 
     /* Update real states (i.e. filter output) by copying internal state from correction */
     pState->angle = pStateInternal->angle;
-    pState->angleRate = pStateInternal->angleRate;
-    pState->angleRateBias = pStateInternal->angleRateBias;
-    pState->angleRateUnbiased = pStateInternal->angleRateUnbiased;
+    //pState->angleRate = pStateInternal->angleRate;
+    //pState->angleRateBias = pStateInternal->angleRateBias;
+    //pState->angleRateUnbiased = pStateInternal->angleRateUnbiased;
 }
 
 /*
@@ -469,7 +470,7 @@ static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sen
     pEstimator->p33 = p33_tmp - p23_tmp*pEstimator->k32;
 
     /* Update real states (i.e. filter output) by copying internal state from correction */
-    pState->angle = pStateInternal->angle;
+    //pState->angle = pStateInternal->angle;
     pState->angleRate = pStateInternal->angleRate;
     pState->angleRateBias = pStateInternal->angleRateBias;
     pState->angleRateUnbiased = pStateInternal->angleRateUnbiased;
