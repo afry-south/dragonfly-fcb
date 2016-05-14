@@ -87,9 +87,9 @@ static void StatePrintSamplingTask(void const *argument);
  * @retval None
  */
 void InitStatesXYZ(float32_t initAngles[3]) {
-    StateInit(&rollEstimator, 	Q1_CAL, Q2_CAL, Q3_CAL, R1_CAL, GYRO_X_AXIS_VARIANCE);
-    StateInit(&pitchEstimator, 	Q1_CAL, Q2_CAL, Q3_CAL, R1_CAL, GYRO_Y_AXIS_VARIANCE);
-    StateInit(&yawEstimator, 	Q1_CAL, Q2_CAL, Q3_CAL, R1_MAG, GYRO_Z_AXIS_VARIANCE);
+    StateInit(&rollEstimator, 	Q1_RP, Q2_CAL, Q3_CAL, R1_ACCRP, GYRO_X_AXIS_VARIANCE);
+    StateInit(&pitchEstimator, 	Q1_RP, Q2_CAL, Q3_CAL, R1_ACCRP, GYRO_Y_AXIS_VARIANCE);
+    StateInit(&yawEstimator, 	Q1_Y, Q2_CAL, Q3_CAL, R1_MAG, GYRO_Z_AXIS_VARIANCE);
 
     rollState.angle = initAngles[0];
     rollState.angleRate = 0.0;
@@ -230,7 +230,7 @@ float32_t GetYawRate(void) {
 /* Private functions ---------------------------------------------------------*/
 
 /*
- * @brief  Initializes the roll state Kalman estimator
+ * @brief  Initializes an angular state Kalman estimator
  * @param  Estimator : Kalman estimator struct
  * @param  q1 : Attitude state model noise variance
  * @param  q2 : Attitude rate state model noise variance
@@ -243,8 +243,13 @@ static void StateInit(KalmanFilterType * Estimator, float32_t q1, float32_t q2, 
     /* P matrix init is the Identity matrix*/
     Estimator->p11 = 0.1;
     Estimator->p12 = 0.0;
+    Estimator->p13 = 0.0;
     Estimator->p21 = 0.0;
-    Estimator->p22 = 0.1;
+    Estimator->p22 = 1.0;
+    Estimator->p23 = 0.0;
+    Estimator->p31 = 0.0;
+    Estimator->p32 = 0.0;
+    Estimator->p33 = 0.01;
 
     Estimator->q1 = q1;
     Estimator->q2 = q2;
@@ -268,10 +273,11 @@ void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, floa
      * when accelerometer data was available
      */
 
-    if (0 == varianceCalcDone) {
-        varianceCalcDone = ProfileSensorMeasurements(sensorType, pXYZ);
-        return;
-    }
+    // TODO reevaluate usage of function below...
+//    if (0 == varianceCalcDone) {
+//        varianceCalcDone = ProfileSensorMeasurements(sensorType, pXYZ);
+//        return;
+//    }
 
     switch (sensorType) { /* interpret values according to sensor type */
     case GYRO_IDX: {

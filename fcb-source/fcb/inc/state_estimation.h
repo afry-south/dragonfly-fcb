@@ -86,12 +86,13 @@ typedef struct AttitudeStateVector
 // TODO we need separate values for roll pitch and yaw as well as separate init values of P matrix
 #define	STATE_ESTIMATION_SAMPLE_PERIOD	(float32_t) 	FLIGHT_CONTROL_TASK_PERIOD / 1000.0
 
-#define Q1_CAL (float32_t)								0.001
-#define	Q2_CAL (float32_t)								0.01 //0.005
-#define Q3_CAL (float32_t)                              0.00001
+#define Q1_RP (float32_t)								0.001
+#define Q1_Y (float32_t)								0.0005
+#define	Q2_CAL (float32_t)								0.0003
+#define Q3_CAL (float32_t)                              0.000002
 
-#define R1_MAG (float32_t)								0.8
-#define	R1_CAL (float32_t)						   		0.2 /* .000185 480 measured from USB console and
+#define R1_MAG (float32_t)								0.05
+#define	R1_ACCRP (float32_t)						   	0.06 /* .000185 480 measured from USB console and
                                                           * calculated with SensorVariance.sce
                                                           */
 //#define R2_CAL                                          0.005
