@@ -39,6 +39,8 @@ typedef struct FcbSensorVarianceCalc {
 
 static FcbSensorVarianceCalcType * pSampleData = NULL;
 
+#define USE_CTRLSIGNAL_IN_PREDICTION_MODEL		0
+
 #define STATE_PRINT_SAMPLING_TASK_PRIO			1
 #define STATE_PRINT_MINIMUM_SAMPLING_TIME		20	// updated every 2.5 ms
 #define STATE_PRINT_MAX_STRING_SIZE				288
@@ -339,8 +341,13 @@ static void PredictAttitudeState(KalmanFilterType* pEstimator,
 
     /* Prediction */
     /* Step 1: Calculate a priori state estimation*/
-    pState->angle += deltaT * (pState->angleRate - pState->angleRateBias); // + h * h / (2 * inertia) * ctrl;
-    //pState->angleRate += h / inertia * ctrl;
+
+#if USE_CTRLSIGNAL_IN_PREDICTION_MODEL
+    pState->angle += deltaT * (pState->angleRate - pState->angleRateBias) + h*h/(2 * inertia) * ctrl;
+    pState->angleRate += h / inertia * ctrl;
+#else
+    pState->angle += deltaT * (pState->angleRate - pState->angleRateBias);
+#endif
 
     /* pState->angleRateBias not estimated, see equations in section "State Estimation Theory" */
     pState->angleRateUnbiased = pState->angleRate - pState->angleRateBias; // Update the unbiased rate state
@@ -417,9 +424,6 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
 
     /* Update real states (i.e. filter output) by copying internal state from correction */
     pState->angle = pStateInternal->angle;
-    //pState->angleRate = pStateInternal->angleRate;
-    //pState->angleRateBias = pStateInternal->angleRateBias;
-    //pState->angleRateUnbiased = pStateInternal->angleRateUnbiased;
 }
 
 /*
@@ -476,7 +480,6 @@ static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sen
     pEstimator->p33 = p33_tmp - p23_tmp*pEstimator->k32;
 
     /* Update real states (i.e. filter output) by copying internal state from correction */
-    //pState->angle = pStateInternal->angle;
     pState->angleRate = pStateInternal->angleRate;
     pState->angleRateBias = pStateInternal->angleRateBias;
     pState->angleRateUnbiased = pStateInternal->angleRateUnbiased;
