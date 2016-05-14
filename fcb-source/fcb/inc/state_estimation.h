@@ -66,7 +66,7 @@ typedef struct KalmanFilter
  */
 typedef struct AttitudeStateVector
 {
-  float32_t volatile angle; /* for yaw, aka "heading" */
+  float32_t angle; /* for yaw, aka "heading" */
   float32_t angleRate; /* not used */
   float32_t angleRateBias;
   float32_t angleRateUnbiased; // Not used in Kalman filter derivation, but should be fed in to control
@@ -85,13 +85,17 @@ typedef struct AttitudeStateVector
 
 // TODO we need separate values for roll pitch and yaw as well as separate init values of P matrix
 #define	STATE_ESTIMATION_SAMPLE_PERIOD	(float32_t) 	FLIGHT_CONTROL_TASK_PERIOD / 1000.0
-#define Q1_CAL (float32_t)								0.05
-#define	Q2_CAL (float32_t)								0.5 //0.005
-#define Q3_CAL (float32_t)                              0.0005
-#define	R1_CAL (float32_t)						   		0.000185 /* 480 measured from USB console and
+
+#define Q1_RP (float32_t)								0.001
+#define Q1_Y (float32_t)								0.0005
+#define	Q2_CAL (float32_t)								0.0003
+#define Q3_CAL (float32_t)                              0.000002
+
+#define R1_MAG (float32_t)								0.05
+#define	R1_ACCRP (float32_t)						   	0.06 /* .000185 480 measured from USB console and
                                                           * calculated with SensorVariance.sce
                                                           */
-#define R2_CAL                                          0.005
+//#define R2_CAL                                          0.005
 
 typedef enum {
     STATE_EST_ERROR = 0, STATE_EST_OK = !STATE_EST_ERROR
@@ -110,9 +114,10 @@ float32_t GetRollRate(void);
 float32_t GetPitchRate(void);
 float32_t GetYawRate(void);
 
-void InitStatesXYZ(void);
+void InitStatesXYZ(float32_t initAngles[3]);
 StateEstimationStatus InitStateEstimationTimeEvent(void);
-void StateEstimationTimeEventCallback(void);
+void UpdatePredictionState(void);
+void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ);
 
 FcbRetValType StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 FcbRetValType StopStateSamplingTask(void);

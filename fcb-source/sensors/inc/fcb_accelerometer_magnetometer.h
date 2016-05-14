@@ -10,6 +10,7 @@
  */
 
 #include "fcb_retval.h"
+#include "fcb_sensors.h"
 #include "stm32f3_discovery.h"
 
 #include "arm_math.h"
@@ -48,6 +49,9 @@ enum FcbAccMagMode {
  * @retval FCB_OK, error otherwise
  */
 uint8_t FcbInitialiseAccMagSensor(void);
+
+
+uint8_t SensorRegisterAccClientCallback(SendCorrectionUpdateCallback_TypeDef cbk);
 
 
 /**

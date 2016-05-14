@@ -66,6 +66,8 @@ static enum FcbAccMagMode accMagMode = ACCMAGMTR_UNINITIALISED;
 
 /* static fcn declarations */
 
+static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
+
 /* public fcn definitions */
 
 uint8_t FcbInitialiseAccMagSensor(void) {
@@ -127,6 +129,16 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     return retVal;
 }
 
+uint8_t SensorRegisterAccClientCallback(SendCorrectionUpdateCallback_TypeDef cbk) {
+  if (NULL != SendCorrectionUpdateCallback) {
+    return FCB_ERR;
+  }
+
+  SendCorrectionUpdateCallback = cbk;
+
+  return FCB_OK;
+}
+
 void FetchDataFromAccelerometer(void) {
     float32_t acceleroMeterData[3] = { 0.0f, 0.0f, 0.0f };
     HAL_StatusTypeDef status = HAL_OK;
@@ -178,7 +190,9 @@ void FetchDataFromAccelerometer(void) {
         return;
     }
 
-    FcbSensorPush2Client(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+    if (SendCorrectionUpdateCallback != NULL) {
+        SendCorrectionUpdateCallback(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+    }
 }
 
 void StartAccMagMtrCalibration(uint32_t samples) {
@@ -238,9 +252,9 @@ void FetchDataFromMagnetometer(void) {
 			return;
 		}
 
-		FcbSensorPush2Client(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+    if (SendCorrectionUpdateCallback != NULL) {
+        SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
     }
-    else if (ACCMAGMTR_CALIBRATING == accMagMode) {
     	static uint32_t sampleIndex = 0;
         if (sampleIndex < nbrOfSamplesForCalibration) {
         	addNewSample(magnetoMeterData);

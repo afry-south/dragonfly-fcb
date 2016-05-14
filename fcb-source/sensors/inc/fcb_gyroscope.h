@@ -9,6 +9,7 @@
 #include "fcb_retval.h"
 #include "stm32f3_discovery.h"
 #include "arm_math.h"
+#include "fcb_sensors.h"
 
 
 /**
@@ -34,6 +35,8 @@ extern const float32_t GYRO_AXIS_VARIANCE_ROUGH;
  * @retval FCB_OK, error otherwise
  */
 uint8_t InitialiseGyroscope(void);
+
+uint8_t SensorRegisterGyroClientCallback(SendCorrectionUpdateCallback_TypeDef cbk);
 
 
 /**
