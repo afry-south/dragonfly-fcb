@@ -28,12 +28,42 @@
 
 /* Private typedef -----------------------------------------------------------*/
 
+typedef enum {
+  FLIGHT_CONTROL_UPDATE,
+  CORRECTION_UPDATE,
+  PREDICTION_UPDATE
+} FlightControlMsgType_TypeDef;
+
+typedef struct {
+  FcbSensorIndexType sensorType;
+  float32_t xyz[3];
+  uint8_t deltaTms;
+} sensorReading_TypeDef;
+
+/**
+ * Messages sent to the queue
+ */
+typedef struct FlightControlMsg {
+  sensorReading_TypeDef sensorReading;
+  FlightControlMsgType_TypeDef type;
+} FlightControlMsg_TypeDef;
+
 /* Private define ------------------------------------------------------------*/
 #define FLIGHT_CONTROL_TASK_PRIO		configMAX_PRIORITIES-1
+
+#define FLIGHT_CONTROL_QUEUE_SIZE		      6
+#define FLIGHT_CONTROL_QUEUE_TIMEOUT          2000 // [ms]
+
+#define GOT_GYRO_SENSOR_SAMPLE  1
+#define GOT_ACC_SENSOR_SAMPLE   2
+#define GOT_MAG_SENSOR_SAMPLE   4
+#define GOT_ALL_SENSOR_SAMPLES  (GOT_ACC_SENSOR_SAMPLE | GOT_MAG_SENSOR_SAMPLE)
 
 /* Private macro -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
+static xQueueHandle qFlightControl = NULL;
+
 static RefSignals_TypeDef RefSignals; // Control reference signals
 static RefSignals_TypeDef RefSignalsLimits; // Max limits for reference signals
 static CtrlSignals_TypeDef ctrlSignals; // Physical control signals
@@ -60,6 +90,10 @@ static void FlightControlTask(void const *argument);
  * @retval None.
  */
 void CreateFlightControlTask(void) {
+    if (0 == (qFlightControl = xQueueCreate(FLIGHT_CONTROL_QUEUE_SIZE, sizeof(FlightControlMsg_TypeDef)))) {
+        ErrorHandler();
+    }
+
 	/* Flight Control task creation
 	 * Task function pointer: FlightControlTask
 	 * Task name: FLIGHT_CTRL
@@ -202,7 +236,7 @@ static void UpdateFlightControl(void) {
 		SetReferenceSignals();
 
 		/* Update PID control output */
-		ctrlSignals.Thrust = (GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/UINT16_MAX; // NOTE: Raw throttle control fow now until control developed for Z velocity
+		ctrlSignals.Thrust = -(GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/((float32_t)UINT16_MAX); // NOTE: Raw throttle control fow now until control developed for Z velocity
 		UpdatePIDControlSignals(&ctrlSignals);
 
 		/* Allocate control signal action to motors */
@@ -293,6 +327,78 @@ static void SetReferenceSignals(void) {
 	}
 }
 
+void SendFlightControlUpdateToFlightControl(void)
+{
+    FlightControlMsg_TypeDef msg;
+    msg.type = FLIGHT_CONTROL_UPDATE;
+    portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
+
+    if (pdTRUE != xQueueSendFromISR(qFlightControl, &msg, &higherPriorityTaskWoken)) {
+        ErrorHandler();
+    }
+}
+
+void SendPredictionUpdateToFlightControl(void)
+{
+    FlightControlMsg_TypeDef msg;
+    msg.type = PREDICTION_UPDATE;
+    portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
+
+    if (pdTRUE != xQueueSendFromISR(qFlightControl, &msg, &higherPriorityTaskWoken)) {
+        ErrorHandler();
+    }
+}
+
+void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType,
+                                         uint8_t deltaTms,
+                                         float32_t xyz[3])
+{
+    FlightControlMsg_TypeDef msg;
+    msg.type = CORRECTION_UPDATE;
+    msg.sensorReading.sensorType = sensorType;
+    msg.sensorReading.deltaTms = deltaTms;
+    memcpy(msg.sensorReading.xyz, xyz, sizeof(float32_t)*3);
+    portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
+
+    if (pdTRUE != xQueueSendFromISR(qFlightControl, &msg, &higherPriorityTaskWoken)) {
+        ErrorHandler();
+    }
+}
+
+void initKalmanFiler(void) {
+    float32_t startupSensorValues[3];
+    uint32_t nbrOfSamples[3] = {0, 0, 0};
+	FlightControlMsg_TypeDef msg;
+
+	// Get some samples from accelerometer and magnetometer to be used as start values for Kalman filter.
+    while (nbrOfSamples[ACC_IDX] < 5 && nbrOfSamples[MAG_IDX] < 5) {
+    	xQueueReceive(qFlightControl, &msg,  FLIGHT_CONTROL_QUEUE_TIMEOUT);
+
+    	switch (msg.sensorReading.sensorType) {
+//    	case GYRO_IDX:
+//    		gotFirstSensorSamples &= GOT_GYRO_SENSOR_SAMPLE;
+//    		break;
+    	case ACC_IDX:
+    		startupSensorValues[0] = msg.sensorReading.xyz[0];
+    		startupSensorValues[1] = msg.sensorReading.xyz[1];
+    		nbrOfSamples[ACC_IDX]++;
+    		break;
+    	case MAG_IDX:
+    		if (nbrOfSamples[ACC_IDX]) {
+    			startupSensorValues[2] = GetMagYawAngle(msg.sensorReading.xyz, startupSensorValues[0], startupSensorValues[1]);
+    			nbrOfSamples[MAG_IDX]++;
+    		}
+    		break;
+    	default:
+			break;
+    	}
+    }
+
+    /* Init the states for the Kalman filter */
+    InitStatesXYZ(startupSensorValues);
+    InitStateEstimationTimeEvent();
+}
+
 void setMaxLimitForReferenceSignal(float32_t maxZVelocity, float32_t maxRollAngle, float32_t maxPitchAngle, float32_t maxYawAngleRate) {
 	RefSignalsLimits.ZVelocity = maxZVelocity;
 	RefSignalsLimits.RollAngle = maxRollAngle;
@@ -324,33 +430,59 @@ void getMaxLimitForReferenceSignal(float32_t* maxZVelocity, float32_t* maxRollAn
 static void FlightControlTask(void const *argument) {
 	(void) argument;
 
-	portTickType xLastWakeTime;
 	uint32_t ledFlashCounter = 0;
+
+    if (SensorRegisterAccClientCallback(SendCorrectionUpdateToFlightControl)) {
+    	ErrorHandler();
+    }
+    if (SensorRegisterGyroClientCallback(SendCorrectionUpdateToFlightControl)) {
+    	ErrorHandler();
+    }
 
 	if (FLASH_OK != ReadReferenceMaxLimitsFromFlash(&RefSignalsLimits)) {
 		setMaxLimitForReferenceSignalToDefault();
 	}
 
-	/* Initialise the xLastWakeTime variable with the current time */
-	xLastWakeTime = xTaskGetTickCount();
-
+    initKalmanFiler();
 
 	for (;;) {
-		vTaskDelayUntil(&xLastWakeTime, FLIGHT_CONTROL_TASK_PERIOD);
+        FlightControlMsg_TypeDef msg;
 
-		/* Perform flight control activities */
-		UpdateFlightControl();
+        if (pdFALSE == xQueueReceive(qFlightControl, &msg,  FLIGHT_CONTROL_QUEUE_TIMEOUT)) {
+            /*
+             * if no message was received, interrupts from the sensors
+             * aren't arriving and this is a serious error.
+             */
+            ErrorHandler();
+        }
 
-		/* Blink with LED to indicate thread is alive */
-		if(ledFlashCounter % 100 == 0) {
-			BSP_LED_On(LED6);
-		}
-		else if(ledFlashCounter % 20 == 0) {
-			BSP_LED_Off(LED6);
-		}
+        switch (msg.type) {
+        case PREDICTION_UPDATE:
+            UpdatePredictionState();
+//            break;
+        case FLIGHT_CONTROL_UPDATE:
+            /* Perform flight control activities */
+            UpdateFlightControl();
 
-		ledFlashCounter++;
-	}
+            /* Blink with LED to indicate thread is alive */
+            if(ledFlashCounter % 100 == 0) {
+                BSP_LED_On(LED6);
+            }
+            else if(ledFlashCounter % 20 == 0) {
+                BSP_LED_Off(LED6);
+            }
+
+            ledFlashCounter++;
+            break;
+        case CORRECTION_UPDATE:
+            UpdateCorrectionState(msg.sensorReading.sensorType,
+                                      msg.sensorReading.deltaTms/1000,
+                                      msg.sensorReading.xyz);
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 /**

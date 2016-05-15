@@ -29,6 +29,8 @@
 
 /* static & local declarations */
 
+static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
+
 enum { XDOT_IDX = 0 }; /* index of sGyroXYZAngleDot & ditto Offset */
 enum { YDOT_IDX = 1 }; /* as above */
 enum { ZDOT_IDX = 2 }; /* as above */
@@ -90,6 +92,16 @@ uint8_t InitialiseGyroscope(void) {
     return retVal;
 }
 
+uint8_t SensorRegisterGyroClientCallback(SendCorrectionUpdateCallback_TypeDef cbk) {
+  if (NULL != SendCorrectionUpdateCallback) {
+    return FCB_ERR;
+  }
+
+  SendCorrectionUpdateCallback = cbk;
+
+  return FCB_OK;
+}
+
 void FetchDataFromGyroscope(uint8_t deltaTms) {
     float gyroscopeData[3] = { 0.0f, 0.0f, 0.0f };
     HAL_StatusTypeDef status = HAL_OK;
@@ -128,7 +140,9 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
       return;
     }
 
-    FcbSensorPush2Client(GYRO_IDX, deltaTms, sGyroXYZAngleDot);
+    if (SendCorrectionUpdateCallback != NULL) {
+        SendCorrectionUpdateCallback(GYRO_IDX, deltaTms, sGyroXYZAngleDot);
+    }
 }
 
 

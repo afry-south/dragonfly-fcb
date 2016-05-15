@@ -58,7 +58,7 @@ static float32_t sMagSamplePeriod = 0.0f;
  *
  * @see FcbSensorCalibrationParmIndex for what the numbers mean.
  */
-static float32_t sXYZMagCalPrm[CALIB_IDX_MAX];
+static float32_t sXYZMagCalPrm[CALIB_IDX_MAX] = { 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
 static float32_t sXYZAccCalPrm[CALIB_IDX_MAX] = { 0.0, 0.0, 0.0, 1.0, 1.0, 1.0 };
 
 
@@ -66,10 +66,14 @@ static enum FcbAccMagMode accMagMode = ACCMAGMTR_UNINITIALISED;
 
 /* static fcn declarations */
 
+static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
+
 /* public fcn definitions */
 
 uint8_t FcbInitialiseAccMagSensor(void) {
     uint8_t retVal = FCB_OK;
+    FlashErrorStatus flash_status = FLASH_OK;
+    float32_t sXYZMagCalPrmTemp[CALIB_IDX_MAX];
 
     if (accMagMode != ACCMAGMTR_UNINITIALISED) {
         /* they are already initialised - this is a logical error. */
@@ -121,10 +125,24 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     LSM303DLHC_AccReadXYZ(sXYZDotDot);
     LSM303DLHC_MagReadXYZ(dummyData);
 
-    ReadMagCalibrationValuesFromFlash(sXYZMagCalPrm);
+    flash_status = ReadMagCalibrationValuesFromFlash(sXYZMagCalPrmTemp);
+    if(flash_status == FLASH_OK && CheckMagCalParams(sXYZMagCalPrmTemp) == FCB_OK) {
+    	// If previously saved calibration params found, copy these to used params
+    	memcpy(sXYZMagCalPrm, sXYZMagCalPrmTemp, sizeof(sXYZMagCalPrm));
+    }
 
     accMagMode = ACCMAGMTR_FETCHING;
     return retVal;
+}
+
+uint8_t SensorRegisterAccClientCallback(SendCorrectionUpdateCallback_TypeDef cbk) {
+  if (NULL != SendCorrectionUpdateCallback) {
+    return FCB_ERR;
+  }
+
+  SendCorrectionUpdateCallback = cbk;
+
+  return FCB_OK;
 }
 
 void FetchDataFromAccelerometer(void) {
@@ -178,7 +196,9 @@ void FetchDataFromAccelerometer(void) {
         return;
     }
 
-    FcbSensorPush2Client(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+    if (SendCorrectionUpdateCallback != NULL) {
+        SendCorrectionUpdateCallback(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+    }
 }
 
 void StartAccMagMtrCalibration(uint32_t samples) {
@@ -238,7 +258,9 @@ void FetchDataFromMagnetometer(void) {
 			return;
 		}
 
-		FcbSensorPush2Client(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+		if (SendCorrectionUpdateCallback != NULL) {
+			SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+		}
     }
     else if (ACCMAGMTR_CALIBRATING == accMagMode) {
     	static uint32_t sampleIndex = 0;
@@ -326,6 +348,20 @@ void SetAccMagMeasuredSamplePeriod(float32_t accMeasuredPeriod, float32_t magMea
 void GetAccMagMeasuredSamplePeriod(float32_t *accMeasuredPeriod, float32_t *magMeasuredPeriod) {
     *accMeasuredPeriod = sAccSamplePeriod;
     *magMeasuredPeriod = sMagSamplePeriod;
+}
+
+uint8_t CheckMagCalParams(float32_t* magCalPrms) {
+	uint8_t status = FCB_OK;
+
+	if (magCalPrms[X_SCALING_CALIB_IDX] < 0.1) {
+		status = FCB_ERR;
+	} else if (magCalPrms[Y_SCALING_CALIB_IDX] < 0.1) {
+		status = FCB_ERR;
+	} else if (magCalPrms[Z_SCALING_CALIB_IDX] < 0.1) {
+		status = FCB_ERR;
+	}
+
+	return status;
 }
 
 /**

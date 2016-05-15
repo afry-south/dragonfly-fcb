@@ -10,6 +10,7 @@
  */
 
 #include "fcb_retval.h"
+#include "fcb_sensors.h"
 #include "stm32f3_discovery.h"
 
 #include "arm_math.h"
@@ -48,6 +49,9 @@ enum FcbAccMagMode {
  * @retval FCB_OK, error otherwise
  */
 uint8_t FcbInitialiseAccMagSensor(void);
+
+
+uint8_t SensorRegisterAccClientCallback(SendCorrectionUpdateCallback_TypeDef cbk);
 
 
 /**
@@ -157,6 +161,8 @@ void SetAccMagMeasuredSamplePeriod(float32_t accMeasuredPeriod, float32_t magMea
  * magnetometer code respectively.
  */
 void GetAccMagMeasuredSamplePeriod(float32_t * accMeasuredPeriod, float32_t *magMeasuredPeriod);
+
+uint8_t CheckMagCalParams(float32_t* magCalPrms);
 
 #endif /* FCB_ACCELEROMETER_H */
 

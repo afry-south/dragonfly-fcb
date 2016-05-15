@@ -64,8 +64,6 @@ typedef struct FcbSensorDataRateCalc {
  */
 static FcbSensorDataRateCalcType sensorDrdyCalc[FCB_SENSOR_NBR] = { { 0, 0, 0.0f, 0, 0} };
 
-static FcbSensorCbk sClientCbk = NULL;
-
 #ifdef FCB_SENSORS_DEBUG
 static float32_t sensorSampleRates[FCB_SENSOR_NBR] = { 0.0f };
 #endif
@@ -106,24 +104,6 @@ int FcbSensorsConfig(void) {
     }
 
     return retVal;
-}
-
-uint8_t FcbSensorRegisterClientCallback(FcbSensorCbk cbk) {
-  if (NULL != sClientCbk) {
-    return FCB_ERR;
-  }
-
-  sClientCbk = cbk;
-
-  return FCB_OK;
-}
-
-
-void FcbSensorPush2Client(FcbSensorIndexType sensorType, uint8_t deltaTms, float32_t const * xyz) {
-    float32_t deltaT = (float) (deltaTms) / 1000; /* from ms to s */
-    if (NULL != sClientCbk) {
-        sClientCbk(sensorType, deltaT, xyz);
-    }
 }
 
 /*
