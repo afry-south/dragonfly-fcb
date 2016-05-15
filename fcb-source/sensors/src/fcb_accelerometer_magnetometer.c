@@ -212,46 +212,46 @@ void StopAccMagMtrCalibration(uint8_t samples) {
 }
 
 void FetchDataFromMagnetometer(void) {
-    HAL_StatusTypeDef status = HAL_OK;
-    float32_t magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
+	HAL_StatusTypeDef status = HAL_OK;
+	float32_t magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
 
-    if ((ACCMAGMTR_FETCHING == accMagMode) || (ACCMAGMTR_CALIBRATING == accMagMode)) {
-        status = LSM303DLHC_MagReadXYZ(magnetoMeterData);
-        if (status != HAL_OK) {
+	if ((ACCMAGMTR_FETCHING == accMagMode)|| (ACCMAGMTR_CALIBRATING == accMagMode)) {
+		status = LSM303DLHC_MagReadXYZ(magnetoMeterData);
+		if (status != HAL_OK) {
 #ifdef FCB_ACCMAG_DEBUG
-            USBComSendString("ERROR: LSM303DLHC_MagReadXYZ\n");
+			USBComSendString("ERROR: LSM303DLHC_MagReadXYZ\n");
 #endif
-            FcbSendSensorMessage(FCB_SENSOR_MAGNETO_DATA_READY);
-            return;
-        }
-    }
+			FcbSendSensorMessage(FCB_SENSOR_MAGNETO_DATA_READY);
+			return;
+		}
+	}
 
-    /* TODO ... and then copy them into a mutex-protected sXYZMagVector here?? */
+	/* TODO ... and then copy them into a mutex-protected sXYZMagVector here?? */
 
-    /* adjust magnetometer axes to the axes of the quadcopter fuselage
-     * see "Sensors" page in Wiki.
-     *
-     * NOTE: X axis is already aligned
-     */
-    magnetoMeterData[Y_IDX] = -magnetoMeterData[Y_IDX];
-    magnetoMeterData[Z_IDX] = -magnetoMeterData[Z_IDX];
+	/* adjust magnetometer axes to the axes of the quadcopter fuselage
+	 * see "Sensors" page in Wiki.
+	 *
+	 * NOTE: X axis is already aligned
+	 */
+	magnetoMeterData[Y_IDX] = -magnetoMeterData[Y_IDX];
+	magnetoMeterData[Z_IDX] = -magnetoMeterData[Z_IDX];
 
-    if (ACCMAGMTR_FETCHING == accMagMode) {
-        magnetoMeterData[X_IDX] = (magnetoMeterData[X_IDX] - sXYZMagCalPrm[X_OFFSET_CALIB_IDX])
-                / sXYZMagCalPrm[X_SCALING_CALIB_IDX];
-        magnetoMeterData[Y_IDX] = (magnetoMeterData[Y_IDX] - sXYZMagCalPrm[Y_OFFSET_CALIB_IDX])
-                / sXYZMagCalPrm[Y_SCALING_CALIB_IDX];
-        magnetoMeterData[Z_IDX] = (magnetoMeterData[Z_IDX] - sXYZMagCalPrm[Z_OFFSET_CALIB_IDX])
-                / sXYZMagCalPrm[Z_SCALING_CALIB_IDX];
+	if (ACCMAGMTR_FETCHING == accMagMode) {
+		magnetoMeterData[X_IDX] = (magnetoMeterData[X_IDX] - sXYZMagCalPrm[X_OFFSET_CALIB_IDX])
+						/ sXYZMagCalPrm[X_SCALING_CALIB_IDX];
+		magnetoMeterData[Y_IDX] = (magnetoMeterData[Y_IDX] - sXYZMagCalPrm[Y_OFFSET_CALIB_IDX])
+						/ sXYZMagCalPrm[Y_SCALING_CALIB_IDX];
+		magnetoMeterData[Z_IDX] = (magnetoMeterData[Z_IDX] - sXYZMagCalPrm[Z_OFFSET_CALIB_IDX])
+						/ sXYZMagCalPrm[Z_SCALING_CALIB_IDX];
 
 		if (pdTRUE != xSemaphoreTake(mutexMag, portMAX_DELAY /* wait forever */)) {
 			ErrorHandler();
 			return;
 		}
 
-		sXYZMagVector[X_IDX] = (float32_t)magnetoMeterData[X_IDX];
-		sXYZMagVector[Y_IDX] = (float32_t)magnetoMeterData[Y_IDX];
-		sXYZMagVector[Z_IDX] = (float32_t)magnetoMeterData[Z_IDX];
+		sXYZMagVector[X_IDX] = (float32_t) magnetoMeterData[X_IDX];
+		sXYZMagVector[Y_IDX] = (float32_t) magnetoMeterData[Y_IDX];
+		sXYZMagVector[Z_IDX] = (float32_t) magnetoMeterData[Z_IDX];
 
 		if (pdTRUE != xSemaphoreGive(mutexMag)) {
 			ErrorHandler();
@@ -259,30 +259,31 @@ void FetchDataFromMagnetometer(void) {
 		}
 
 		if (SendCorrectionUpdateCallback != NULL) {
-			SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+			SendCorrectionUpdateCallback(MAG_IDX,
+					1 /* dummy - not used for mag */, sXYZMagVector);
 		}
-    }
-    else if (ACCMAGMTR_CALIBRATING == accMagMode) {
-    	static uint32_t sampleIndex = 0;
-        if (sampleIndex < nbrOfSamplesForCalibration) {
-        	addNewSample(magnetoMeterData);
-        	sampleIndex++;
-        }
-        else {
-        	calibrate(sXYZMagCalPrm);
+	} else if (ACCMAGMTR_CALIBRATING == accMagMode) {
+		static uint32_t sampleIndex = 0;
+		if (sampleIndex < nbrOfSamplesForCalibration) {
+			addNewSample(magnetoMeterData);
+			sampleIndex++;
+		} else {
+			calibrate(sXYZMagCalPrm);
 
-        	WriteMagCalibrationValuesToFlash(sXYZMagCalPrm);
+			WriteMagCalibrationValuesToFlash(sXYZMagCalPrm);
 
-        	char string[100];
-        	snprintf(string, 100, "Calib value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
-        			sXYZMagCalPrm[0], sXYZMagCalPrm[1], sXYZMagCalPrm[2], sXYZMagCalPrm[3], sXYZMagCalPrm[4], sXYZMagCalPrm[5]);
-        	USBComSendString(string);
+			char string[100];
+			snprintf(string, 100,
+					"Calib value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
+					sXYZMagCalPrm[0], sXYZMagCalPrm[1], sXYZMagCalPrm[2],
+					sXYZMagCalPrm[3], sXYZMagCalPrm[4], sXYZMagCalPrm[5]);
+			USBComSendString(string);
 
-        	/* calibration done */
-            accMagMode = ACCMAGMTR_FETCHING;
-            sampleIndex = 0;
-        }
-    }
+			/* calibration done */
+			accMagMode = ACCMAGMTR_FETCHING;
+			sampleIndex = 0;
+		}
+	}
 }
 
 void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot) {
