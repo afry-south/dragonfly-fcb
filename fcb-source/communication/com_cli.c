@@ -668,7 +668,6 @@ static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLe
     portBASE_TYPE xParameterStringLength;
     portBASE_TYPE lParameterNumber = 0;
 
-    uint32_t len;
     bool protoStatus;
     uint8_t serializedData[ReceiverSignalValuesProto_size];
     ReceiverSignalValuesProto receiverSignalsProto;
@@ -729,23 +728,22 @@ static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLe
 
         /* Insert header to the sample string, then copy the data after that */
         // TODO Make Function that builds/encapsulates the message
-        uint32_t crc = 0xFFFFFFFF; // Dummy CRC-32 value for now TODO
+        uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
         uint8_t msg_id = RC_VALUES_MSG_ENUM;
         uint16_t msg_data_size = (uint16_t)protoStream.bytes_written;
         memcpy(pcWriteBuffer, &msg_id, 1);
         memcpy(&pcWriteBuffer[1], &crc, 4);
         memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
-        len = 7;
-        if(len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-        	memcpy(&pcWriteBuffer[len], serializedData, protoStream.bytes_written);
-        	memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+        if(PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+        	memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+        	memcpy(&pcWriteBuffer[PROTO_HEADER_LEN+protoStream.bytes_written], "\r\n", strlen("\r\n"));
         }
 
         if(!protoStatus) {
             ErrorHandler();
         }
 
-        dataOutLength = len + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+        dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
 
         break;
     default:
@@ -951,9 +949,8 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
     portBASE_TYPE lParameterNumber = 0;
 
     float32_t accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ;
-    uint32_t len;
     bool protoStatus;
-    uint8_t serializedSensorData[SensorSamplesProto_size];
+    uint8_t serializedData[SensorSamplesProto_size];
     SensorSamplesProto sensorProto;
 
     /* Empty pcWriteBuffer so no strange output is sent as command response */
@@ -1016,22 +1013,28 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
         sensorProto.magZ = magZ;
 
         /* Create a stream that will write to our buffer and encode the data with protocol buffer */
-        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedSensorData, SensorSamplesProto_size);
+        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, SensorSamplesProto_size);
         protoStatus = pb_encode(&protoStream, SensorSamplesProto_fields, &sensorProto);
 
+
         /* Insert header to the sample string, then copy the data after that */
-        len = snprintf((char*) pcWriteBuffer, xWriteBufferLen, "%u\n%u\n", SENSOR_SAMPLES_MSG_ENUM,
-                protoStream.bytes_written);
-        if (len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-            memcpy(&pcWriteBuffer[len], serializedSensorData, protoStream.bytes_written);
-            memcpy(&pcWriteBuffer[len + protoStream.bytes_written], "\r\n", strlen("\r\n"));
+        uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
+        uint8_t msg_id = FLIGHT_STATE_MSG_ENUM;
+        uint16_t msg_data_size = (uint16_t)protoStream.bytes_written;
+        memcpy(pcWriteBuffer, &msg_id, 1);
+        memcpy(&pcWriteBuffer[1], &crc, 4);
+        memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
+
+        if(PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN+protoStream.bytes_written], "\r\n", strlen("\r\n"));
         }
 
         if (!protoStatus) {
             ErrorHandler();
         }
 
-        dataOutLength = len + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+        dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
 
         break;
     default:
@@ -1209,7 +1212,6 @@ static portBASE_TYPE CLIGetMotorValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
     portBASE_TYPE xParameterStringLength;
     portBASE_TYPE lParameterNumber = 0;
 
-    uint32_t len;
     bool protoStatus;
     uint8_t serializedData[MotorSignalValuesProto_size];
     MotorSignalValuesProto motorSignalValuesProto;
@@ -1251,23 +1253,23 @@ static portBASE_TYPE CLIGetMotorValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
         protoStatus = pb_encode(&protoStream, MotorSignalValuesProto_fields, &motorSignalValuesProto);
 
         /* Insert header to the sample string, then copy the data after that */
-        uint32_t crc = 0xFFFFFFFF; // Dummy CRC-32 value for now TODO
+        uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
         uint8_t msg_id = MOTOR_VALUES_MSG_ENUM;
         uint16_t msg_data_size = (uint16_t)protoStream.bytes_written;
         memcpy(pcWriteBuffer, &msg_id, 1);
         memcpy(&pcWriteBuffer[1], &crc, 4);
         memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
-        len = 7;
-        if(len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-        	memcpy(&pcWriteBuffer[len], serializedData, protoStream.bytes_written);
-        	memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+
+        if(PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+        	memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+        	memcpy(&pcWriteBuffer[PROTO_HEADER_LEN+protoStream.bytes_written], "\r\n", strlen("\r\n"));
         }
 
         if(!protoStatus) {
             ErrorHandler();
         }
 
-        dataOutLength = len + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+        dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
 
         break;
     default:
@@ -1573,9 +1575,8 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
     portBASE_TYPE xParameterStringLength;
     portBASE_TYPE lParameterNumber = 0;
 
-    uint32_t len;
     bool protoStatus;
-    uint8_t serializedStateData[FlightStatesProto_size];
+    uint8_t serializedData[FlightStatesProto_size];
     FlightStatesProto stateValuesProto;
 
     configASSERT(pcWriteBuffer);
@@ -1635,28 +1636,27 @@ static portBASE_TYPE CLIGetStateValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
         stateValuesProto.velZ = 0.0;
 
         /* Create a stream that will write to our buffer and encode the data with protocol buffer */
-        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedStateData, FlightStatesProto_size);
+        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, FlightStatesProto_size);
         protoStatus = pb_encode(&protoStream, FlightStatesProto_fields, &stateValuesProto);
 
         /* Insert header to the sample string, then copy the data after that */
-        uint32_t crc = 0xFFFFFFFF; // Dummy CRC-32 value for now TODO
+        uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
         uint8_t msg_id = FLIGHT_STATE_MSG_ENUM;
         uint16_t msg_data_size = (uint16_t)protoStream.bytes_written;
         memcpy(pcWriteBuffer, &msg_id, 1);
         memcpy(&pcWriteBuffer[1], &crc, 4);
         memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
-        len = 7;
-        //len = snprintf((char*) pcWriteBuffer, xWriteBufferLen, "%hhu%hu%hu", FLIGHT_STATE_MSG_ENUM, dummy_crc, protoStream.bytes_written);
-        if(len + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-            memcpy(&pcWriteBuffer[len], serializedStateData, protoStream.bytes_written);
-            memcpy(&pcWriteBuffer[len+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+
+        if(PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN+protoStream.bytes_written], "\r\n", strlen("\r\n"));
         }
 
         if (!protoStatus) {
             ErrorHandler();
         }
 
-        dataOutLength = len + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+        dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
 
         break;
     default:
