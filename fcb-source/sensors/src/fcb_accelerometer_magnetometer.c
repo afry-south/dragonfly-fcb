@@ -80,6 +80,7 @@ static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
 static void setXYZVector(float32_t *srcVector, float32_t *dstVector);
 void adjustAxesOrientation(float32_t *xyzValues);
 static void applayCalibrationPrmToRawData(float32_t *calPrmVector, float32_t *xyzValues);
+bool handleAccSampling(float32_t *acceleroMeterData);
 
 /* public fcn definitions */
 
@@ -210,12 +211,16 @@ bool handleAccSampling(float32_t *acceleroMeterData) {
 	bool calibrationDone = false;
 
 	if (samplePosition < NBR_SAMPLE_POSITIONS) {
+		// We will take samples from a number of different positions.
 		if (sampleInPosition == IN_POSITION) {
+			// Device is in new position
 			if (sampleIndex < NBR_OF_SAMPLES_IN_EACH_POSITION) {
+				// Add the sample to the calibration algorithm.
 				adjustAxesOrientation(acceleroMeterData);
 				addNewSample(acceleroMeterData);
 				sampleIndex++;
 			} else {
+				// All samples for this position is done. Inform the user to put the device in a new position.
 				sampleIndex = 0;
 				sampleInPosition = MOVING;
 				samplePosition++;
@@ -223,9 +228,12 @@ bool handleAccSampling(float32_t *acceleroMeterData) {
 				USBComSendString("Move device to next position\n");
 			}
 		} else {
+			// Wait some time for the device to be put in a new position.
 			if (sampleIndex < NBR_OF_SAMPLES_BETWEEN_EACH_POSITION) {
+				// Still more time to wait.
 				sampleIndex++;
 			} else {
+				// Time to start to take some samples. Also inform the user about this.
 				sampleIndex = 0;
 				sampleInPosition = IN_POSITION;
 
@@ -233,6 +241,7 @@ bool handleAccSampling(float32_t *acceleroMeterData) {
 			}
 		}
 	} else {
+		// Calibration done, return true and reset internal variables.
 		calibrationDone = true;
 		sampleIndex = 0;
 		sampleInPosition = MOVING;
