@@ -41,6 +41,16 @@ enum {
 enum {
     ACCMAG_SAMPLING_MAX_STRING_SIZE = 128
 };
+
+enum { NBR_OF_SAMPLES_IN_EACH_POSITION  = 10 };
+enum { NBR_SAMPLE_POSITIONS = 6 };
+enum { NBR_OF_SAMPLES_BETWEEN_EACH_POSITION = 500 };
+
+typedef enum {
+	MOVING,
+	IN_POSITION
+} AccCalibSamplePosition_t;
+
 /* print-to-usb com port sampling */
 static uint32_t nbrOfSamplesForCalibration;
 
@@ -67,6 +77,9 @@ static enum FcbAccMagMode accMagMode = ACCMAGMTR_UNINITIALISED;
 /* static fcn declarations */
 
 static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
+static void setXYZVector(float32_t *srcVector, float32_t *dstVector);
+void adjustAxesOrientation(float32_t *xyzValues);
+static void applayCalibrationPrmToRawData(float32_t *calPrmVector, float32_t *xyzValues);
 
 /* public fcn definitions */
 
@@ -108,7 +121,6 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
 
     /* ISSUE1_TODO - fetch accelerometer calib from flash */
-    /* ISSUE2_TODO - fetch magnetometer calib from flash */
 
     LSM303DLHC_AccConfig();
     sAccSamplePeriod = 1 / (float) LSM303DLHC_AccDataRateHz();
@@ -124,6 +136,17 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     float32_t dummyData[3];
     LSM303DLHC_AccReadXYZ(sXYZDotDot);
     LSM303DLHC_MagReadXYZ(dummyData);
+
+//    if (FLASH_OK != ReadMagCalibrationValuesFromFlash(sXYZMagCalPrm)) {
+//    	return FCB_ERR_INIT;
+//    }
+//    if (!sXYZMagCalPrm[X_SCALING_CALIB_IDX] || !sXYZMagCalPrm[Y_SCALING_CALIB_IDX] || !sXYZMagCalPrm[Z_SCALING_CALIB_IDX]) {
+//        // TODO Send to FMS that acc/mag-meter must be calibrated.
+////    	accMagMode = ACCMAGMTR_NOT_CALIBRATED;
+//    }
+//    else {
+//        accMagMode = ACCMAGMTR_FETCHING;
+//    }
 
     flash_status = ReadMagCalibrationValuesFromFlash(sXYZMagCalPrmTemp);
     if(flash_status == FLASH_OK && CheckMagCalParams(sXYZMagCalPrmTemp) == FCB_OK) {
@@ -145,11 +168,85 @@ uint8_t SensorRegisterAccClientCallback(SendCorrectionUpdateCallback_TypeDef cbk
   return FCB_OK;
 }
 
+void setXYZVector(float32_t *srcVector, float32_t *dstVector) {
+	if (pdTRUE != xSemaphoreTake(mutexMag, portMAX_DELAY /* wait forever */)) {
+		ErrorHandler();
+		return;
+	}
+
+	dstVector[X_IDX] = srcVector[X_IDX];
+	dstVector[Y_IDX] = srcVector[Y_IDX];
+	dstVector[Z_IDX] = srcVector[Z_IDX];
+
+	if (pdTRUE != xSemaphoreGive(mutexMag)) {
+		ErrorHandler();
+		return;
+	}
+}
+
+void adjustAxesOrientation(float32_t *xyzValues) {
+	/* adjust sensor axes to the axes of the quadcopter fuselage
+	 * see "Sensors" page in Wiki.
+	 *
+	 * NOTE: X axis is already aligned
+	 */
+	xyzValues[Y_IDX] = -xyzValues[Y_IDX];
+	xyzValues[Z_IDX] = -xyzValues[Z_IDX];
+}
+
+void applayCalibrationPrmToRawData(float32_t *calPrmVector, float32_t *xyzValues) {
+	xyzValues[X_IDX] = (xyzValues[X_IDX] - calPrmVector[X_OFFSET_CALIB_IDX])
+					/ calPrmVector[X_SCALING_CALIB_IDX];
+	xyzValues[Y_IDX] = (xyzValues[Y_IDX] - calPrmVector[Y_OFFSET_CALIB_IDX])
+					/ calPrmVector[Y_SCALING_CALIB_IDX];
+	xyzValues[Z_IDX] = (xyzValues[Z_IDX] - calPrmVector[Z_OFFSET_CALIB_IDX])
+					/ calPrmVector[Z_SCALING_CALIB_IDX];
+}
+
+bool handleAccSampling(float32_t *acceleroMeterData) {
+	static uint32_t sampleIndex = 0;
+	static AccCalibSamplePosition_t sampleInPosition = MOVING;
+	static uint32_t samplePosition = 0;
+	bool calibrationDone = false;
+
+	if (samplePosition < NBR_SAMPLE_POSITIONS) {
+		if (sampleInPosition == IN_POSITION) {
+			if (sampleIndex < NBR_OF_SAMPLES_IN_EACH_POSITION) {
+				adjustAxesOrientation(acceleroMeterData);
+				addNewSample(acceleroMeterData);
+				sampleIndex++;
+			} else {
+				sampleIndex = 0;
+				sampleInPosition = MOVING;
+				samplePosition++;
+
+				USBComSendString("Move device to next position\n");
+			}
+		} else {
+			if (sampleIndex < NBR_OF_SAMPLES_BETWEEN_EACH_POSITION) {
+				sampleIndex++;
+			} else {
+				sampleIndex = 0;
+				sampleInPosition = IN_POSITION;
+
+				USBComSendString("Start sampling for this position\n");
+			}
+		}
+	} else {
+		calibrationDone = true;
+		sampleIndex = 0;
+		sampleInPosition = MOVING;
+		samplePosition = 0;
+	}
+
+	return calibrationDone;
+}
+
 void FetchDataFromAccelerometer(void) {
     float32_t acceleroMeterData[3] = { 0.0f, 0.0f, 0.0f };
     HAL_StatusTypeDef status = HAL_OK;
 
-    if ((ACCMAGMTR_FETCHING == accMagMode) || (ACCMAGMTR_CALIBRATING == accMagMode)) {
+    if (ACCMAGMTR_UNINITIALISED != accMagMode) {
         status = LSM303DLHC_AccReadXYZ(acceleroMeterData);
         if (status != HAL_OK) { // Handle accelerometer read timeout error
 #ifdef FCB_ACCMAG_DEBUG
@@ -160,62 +257,42 @@ void FetchDataFromAccelerometer(void) {
         }
     }
 
-    /* from accelerometer to quadcopter coordinate axes
-     * see "Sensors" page in Wiki.
-     *
-     * NOTE: X axis already aligned
-     */
-    acceleroMeterData[Y_IDX] = -acceleroMeterData[Y_IDX];
-    acceleroMeterData[Z_IDX] = -acceleroMeterData[Z_IDX];
+	if (ACCMAGMTR_FETCHING == accMagMode) {
+		adjustAxesOrientation(acceleroMeterData);
+		applayCalibrationPrmToRawData(sXYZAccCalPrm, acceleroMeterData);
+		setXYZVector(acceleroMeterData, sXYZDotDot);
 
-    // TODO IS BELOW NEEDED? HOW TO CALIBRATE ACCELEROMETER?
-    if (ACCMAGMTR_FETCHING == accMagMode) {
-        /* only apply calibration tune when in normal fetch mode - in calibrate
-         * mode raw data is desired.
-         */
-        acceleroMeterData[X_IDX] = (acceleroMeterData[X_IDX] - sXYZAccCalPrm[X_OFFSET_CALIB_IDX])
-                * sXYZAccCalPrm[X_SCALING_CALIB_IDX];
-        acceleroMeterData[Y_IDX] = (acceleroMeterData[Y_IDX] - sXYZAccCalPrm[Y_OFFSET_CALIB_IDX])
-                * sXYZAccCalPrm[Y_SCALING_CALIB_IDX];
-        acceleroMeterData[Z_IDX] = (acceleroMeterData[Z_IDX] - sXYZAccCalPrm[Z_OFFSET_CALIB_IDX])
-                * sXYZAccCalPrm[Z_SCALING_CALIB_IDX];
-    }
+	    if (SendCorrectionUpdateCallback != NULL) {
+            SendCorrectionUpdateCallback(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+	    }
+	} else if (ACCMTR_CALIBRATING == accMagMode) {
+		if (handleAccSampling(acceleroMeterData)) {
+			calibrate(sXYZAccCalPrm);
+			WriteMagCalibrationValuesToFlash(sXYZAccCalPrm);
 
-    if (pdTRUE != xSemaphoreTake(mutexAcc, portMAX_DELAY /* wait forever */)) {
-        ErrorHandler();
-        return;
-    }
+			char string[100];
+			snprintf(string, 100,
+					"Calib acc value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
+					sXYZAccCalPrm[0], sXYZAccCalPrm[1], sXYZAccCalPrm[2],
+					sXYZAccCalPrm[3], sXYZAccCalPrm[4], sXYZAccCalPrm[5]);
+			USBComSendString(string);
 
-    /* all 3 updated simultaneously */
-    sXYZDotDot[X_IDX] = acceleroMeterData[X_IDX];
-    sXYZDotDot[Y_IDX] = acceleroMeterData[Y_IDX];
-    sXYZDotDot[Z_IDX] = acceleroMeterData[Z_IDX];
-
-    if (pdTRUE != xSemaphoreGive(mutexAcc)) {
-        ErrorHandler();
-        return;
-    }
-
-    if (SendCorrectionUpdateCallback != NULL) {
-        SendCorrectionUpdateCallback(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
-    }
+			/* calibration done */
+			accMagMode = ACCMAGMTR_FETCHING;
+		}
+	}
 }
 
 void StartAccMagMtrCalibration(uint32_t samples) {
     nbrOfSamplesForCalibration = samples;
-    accMagMode = ACCMAGMTR_CALIBRATING;
-}
-
-void StopAccMagMtrCalibration(uint8_t samples) {
-    (void) samples;
-    accMagMode = ACCMAGMTR_FETCHING;
+    accMagMode = MAGMTR_CALIBRATING;
 }
 
 void FetchDataFromMagnetometer(void) {
 	HAL_StatusTypeDef status = HAL_OK;
 	float32_t magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
 
-	if ((ACCMAGMTR_FETCHING == accMagMode)|| (ACCMAGMTR_CALIBRATING == accMagMode)) {
+	if (ACCMAGMTR_UNINITIALISED != accMagMode) {
 		status = LSM303DLHC_MagReadXYZ(magnetoMeterData);
 		if (status != HAL_OK) {
 #ifdef FCB_ACCMAG_DEBUG
@@ -226,45 +303,18 @@ void FetchDataFromMagnetometer(void) {
 		}
 	}
 
-	/* TODO ... and then copy them into a mutex-protected sXYZMagVector here?? */
-
-	/* adjust magnetometer axes to the axes of the quadcopter fuselage
-	 * see "Sensors" page in Wiki.
-	 *
-	 * NOTE: X axis is already aligned
-	 */
-	magnetoMeterData[Y_IDX] = -magnetoMeterData[Y_IDX];
-	magnetoMeterData[Z_IDX] = -magnetoMeterData[Z_IDX];
-
 	if (ACCMAGMTR_FETCHING == accMagMode) {
-		magnetoMeterData[X_IDX] = (magnetoMeterData[X_IDX] - sXYZMagCalPrm[X_OFFSET_CALIB_IDX])
-						/ sXYZMagCalPrm[X_SCALING_CALIB_IDX];
-		magnetoMeterData[Y_IDX] = (magnetoMeterData[Y_IDX] - sXYZMagCalPrm[Y_OFFSET_CALIB_IDX])
-						/ sXYZMagCalPrm[Y_SCALING_CALIB_IDX];
-		magnetoMeterData[Z_IDX] = (magnetoMeterData[Z_IDX] - sXYZMagCalPrm[Z_OFFSET_CALIB_IDX])
-						/ sXYZMagCalPrm[Z_SCALING_CALIB_IDX];
-
-		if (pdTRUE != xSemaphoreTake(mutexMag, portMAX_DELAY /* wait forever */)) {
-			ErrorHandler();
-			return;
-		}
-
-		sXYZMagVector[X_IDX] = (float32_t) magnetoMeterData[X_IDX];
-		sXYZMagVector[Y_IDX] = (float32_t) magnetoMeterData[Y_IDX];
-		sXYZMagVector[Z_IDX] = (float32_t) magnetoMeterData[Z_IDX];
-
-		if (pdTRUE != xSemaphoreGive(mutexMag)) {
-			ErrorHandler();
-			return;
-		}
+		adjustAxesOrientation(magnetoMeterData);
+		applayCalibrationPrmToRawData(sXYZMagCalPrm, magnetoMeterData);
+		setXYZVector(magnetoMeterData, sXYZMagVector);
 
 		if (SendCorrectionUpdateCallback != NULL) {
-			SendCorrectionUpdateCallback(MAG_IDX,
-					1 /* dummy - not used for mag */, sXYZMagVector);
+			SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
 		}
-	} else if (ACCMAGMTR_CALIBRATING == accMagMode) {
+	} else if (MAGMTR_CALIBRATING == accMagMode) {
 		static uint32_t sampleIndex = 0;
 		if (sampleIndex < nbrOfSamplesForCalibration) {
+			adjustAxesOrientation(magnetoMeterData);
 			addNewSample(magnetoMeterData);
 			sampleIndex++;
 		} else {
@@ -274,13 +324,13 @@ void FetchDataFromMagnetometer(void) {
 
 			char string[100];
 			snprintf(string, 100,
-					"Calib value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
+					"Calib mag value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
 					sXYZMagCalPrm[0], sXYZMagCalPrm[1], sXYZMagCalPrm[2],
 					sXYZMagCalPrm[3], sXYZMagCalPrm[4], sXYZMagCalPrm[5]);
 			USBComSendString(string);
 
 			/* calibration done */
-			accMagMode = ACCMAGMTR_FETCHING;
+			accMagMode = ACCMTR_CALIBRATING;
 			sampleIndex = 0;
 		}
 	}
