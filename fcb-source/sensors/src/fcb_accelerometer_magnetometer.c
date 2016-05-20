@@ -333,6 +333,7 @@ void FetchDataFromMagnetometer(void) {
 					sXYZMagCalPrm[0], sXYZMagCalPrm[1], sXYZMagCalPrm[2],
 					sXYZMagCalPrm[3], sXYZMagCalPrm[4], sXYZMagCalPrm[5]);
 			USBComSendString(string);
+			USBComSendString("\nMove device to first position for Accelerometer calibration.\n");
 
 			/* calibration done */
 			accMagMode = ACCMTR_CALIBRATING;
