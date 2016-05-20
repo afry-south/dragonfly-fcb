@@ -152,8 +152,6 @@ void SetAccMagMeasuredSamplePeriod(float32_t accMeasuredPeriod, float32_t magMea
  */
 void GetAccMagMeasuredSamplePeriod(float32_t * accMeasuredPeriod, float32_t *magMeasuredPeriod);
 
-uint8_t CheckMagCalParams(float32_t* magCalPrms);
-
 #endif /* FCB_ACCELEROMETER_H */
 
 /**

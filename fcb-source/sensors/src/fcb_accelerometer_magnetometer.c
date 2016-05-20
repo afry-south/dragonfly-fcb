@@ -81,13 +81,14 @@ static void setXYZVector(float32_t *srcVector, float32_t *dstVector);
 void adjustAxesOrientation(float32_t *xyzValues);
 static void applayCalibrationPrmToRawData(float32_t *calPrmVector, float32_t *xyzValues);
 bool handleAccSampling(float32_t *acceleroMeterData);
+uint8_t CheckCalParams(float32_t* magCalPrms);
 
 /* public fcn definitions */
 
 uint8_t FcbInitialiseAccMagSensor(void) {
     uint8_t retVal = FCB_OK;
     FlashErrorStatus flash_status = FLASH_OK;
-    float32_t sXYZMagCalPrmTemp[CALIB_IDX_MAX];
+    float32_t sXYZCalPrmTemp[CALIB_IDX_MAX];
 
     if (accMagMode != ACCMAGMTR_UNINITIALISED) {
         /* they are already initialised - this is a logical error. */
@@ -138,21 +139,16 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     LSM303DLHC_AccReadXYZ(sXYZDotDot);
     LSM303DLHC_MagReadXYZ(dummyData);
 
-//    if (FLASH_OK != ReadMagCalibrationValuesFromFlash(sXYZMagCalPrm)) {
-//    	return FCB_ERR_INIT;
-//    }
-//    if (!sXYZMagCalPrm[X_SCALING_CALIB_IDX] || !sXYZMagCalPrm[Y_SCALING_CALIB_IDX] || !sXYZMagCalPrm[Z_SCALING_CALIB_IDX]) {
-//        // TODO Send to FMS that acc/mag-meter must be calibrated.
-////    	accMagMode = ACCMAGMTR_NOT_CALIBRATED;
-//    }
-//    else {
-//        accMagMode = ACCMAGMTR_FETCHING;
-//    }
+    flash_status = ReadMagCalibrationValuesFromFlash(sXYZCalPrmTemp);
+    if(flash_status == FLASH_OK && CheckCalParams(sXYZCalPrmTemp) == FCB_OK) {
+        // If previously saved calibration params found, copy these to used params
+        memcpy(sXYZMagCalPrm, sXYZCalPrmTemp, sizeof(sXYZMagCalPrm));
+    }
 
-    flash_status = ReadMagCalibrationValuesFromFlash(sXYZMagCalPrmTemp);
-    if(flash_status == FLASH_OK && CheckMagCalParams(sXYZMagCalPrmTemp) == FCB_OK) {
-    	// If previously saved calibration params found, copy these to used params
-    	memcpy(sXYZMagCalPrm, sXYZMagCalPrmTemp, sizeof(sXYZMagCalPrm));
+    flash_status = ReadAccCalibrationValuesFromFlash(sXYZCalPrmTemp);
+    if(flash_status == FLASH_OK && CheckCalParams(sXYZCalPrmTemp) == FCB_OK) {
+        // If previously saved calibration params found, copy these to used params
+        memcpy(sXYZAccCalPrm, sXYZCalPrmTemp, sizeof(sXYZAccCalPrm));
     }
 
     accMagMode = ACCMAGMTR_FETCHING;
@@ -277,7 +273,7 @@ void FetchDataFromAccelerometer(void) {
 	} else if (ACCMTR_CALIBRATING == accMagMode) {
 		if (handleAccSampling(acceleroMeterData)) {
 			calibrate(sXYZAccCalPrm);
-			WriteMagCalibrationValuesToFlash(sXYZAccCalPrm);
+			WriteAccCalibrationValuesToFlash(sXYZAccCalPrm);
 
 			char string[100];
 			snprintf(string, 100,
@@ -410,14 +406,14 @@ void GetAccMagMeasuredSamplePeriod(float32_t *accMeasuredPeriod, float32_t *magM
     *magMeasuredPeriod = sMagSamplePeriod;
 }
 
-uint8_t CheckMagCalParams(float32_t* magCalPrms) {
+uint8_t CheckCalParams(float32_t* calPrms) {
 	uint8_t status = FCB_OK;
 
-	if (magCalPrms[X_SCALING_CALIB_IDX] < 0.1) {
+	if (calPrms[X_SCALING_CALIB_IDX] < 0.1) {
 		status = FCB_ERR;
-	} else if (magCalPrms[Y_SCALING_CALIB_IDX] < 0.1) {
+	} else if (calPrms[Y_SCALING_CALIB_IDX] < 0.1) {
 		status = FCB_ERR;
-	} else if (magCalPrms[Z_SCALING_CALIB_IDX] < 0.1) {
+	} else if (calPrms[Z_SCALING_CALIB_IDX] < 0.1) {
 		status = FCB_ERR;
 	}
 
