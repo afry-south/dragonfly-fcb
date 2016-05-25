@@ -1,0 +1,449 @@
+﻿VOLUME =  1.2117443e+06  MM^3
+SURFACE AREA =  7.8674947e+05  MM^2
+AVERAGE DENSITY =  1.8142283e-06 KILOGRAM / MM^3
+MASS =  2.1983808e+00 KILOGRAM 
+
+CENTER OF GRAVITY with respect to _QUADCOPTER_SAMMANSTALLNING coordinate frame:
+X   Y   Z     1.5807752e-01  2.5386026e-01  2.8048500e+00  MM
+
+INERTIA with respect to _QUADCOPTER_SAMMANSTALLNING coordinate frame:  (KILOGRAM * MM^2)
+
+INERTIA TENSOR:
+Ixx Ixy Ixz  4.0672167e+04  1.1428648e+03 -1.7473998e+01
+Iyx Iyy Iyz  1.1428648e+03  4.0710518e+04  4.1740446e+01
+Izx Izy Izz -1.7473998e+01  4.1740446e+01  7.4656602e+04
+
+INERTIA at CENTER OF GRAVITY with respect to _QUADCOPTER_SAMMANSTALLNING coordinate frame:  (KILOGRAM * MM^2)
+
+INERTIA TENSOR:
+Ixx Ixy Ixz  4.0654730e+04  1.1429530e+03 -1.6499272e+01
+Iyx Iyy Iyz  1.1429530e+03  4.0693168e+04  4.3305781e+01
+Izx Izy Izz -1.6499272e+01  4.3305781e+01  7.4656405e+04
+
+PRINCIPAL MOMENTS OF INERTIA:  (KILOGRAM * MM^2)
+I1  I2  I3   3.9530784e+04  4.1817052e+04  7.4656467e+04
+
+ROTATION MATRIX from _QUADCOPTER_SAMMANSTALLNING orientation to PRINCIPAL AXES:
+       0.71302        0.70114       -0.00044
+      -0.70114        0.71302        0.00126
+       0.00120       -0.00059        1.00000
+
+ROTATION ANGLES from _QUADCOPTER_SAMMANSTALLNING orientation to PRINCIPAL AXES (degrees):
+angles about x  y  z  -0.072          0.000        -44.519 
+
+RADII OF GYRATION with respect to PRINCIPAL AXES:
+R1  R2  R3 1.3409613e+02  1.3791936e+02  1.8428172e+02  MM
+
+---------------------------------------------
+
+MASS PROPERTIES OF COMPONENTS OF THE ASSEMBLY
+(in assembly units and the _QUADCOPTER_SAMMANSTALLNING coordinate frame)
+
+   DENSITY             MASS          C.G.:  X        Y         Z
+
+            V1STATIV_ASSEMBLY_1_            MATERIAL:                              UNKNOWN
+         1.39748e-06  1.75310e-01 -6.19870e-03  6.19878e-03 -1.40618e+01
+                   LANDNINGSBEN_            MATERIAL:                                NYLON
+         1.20014e-06  2.07045e-02  2.15048e+02  0.00000e+00  1.90031e+00
+                   LANDNINGSBEN_            MATERIAL:                                NYLON
+         1.20014e-06  2.07045e-02  0.00000e+00 -2.15048e+02  1.90031e+00
+                   LANDNINGSBEN_            MATERIAL:                                NYLON
+         1.20014e-06  2.07045e-02 -2.15048e+02  0.00000e+00  1.90031e+00
+                   LANDNINGSBEN_            MATERIAL:                                NYLON
+         1.20014e-06  2.07045e-02  0.00000e+00  2.15048e+02  1.90031e+00
+                V23_LOWER_PLATE_            MATERIAL:                                NYLON
+         1.20014e-06  7.02642e-02  0.00000e+00  0.00000e+00  1.50000e+00
+         BATTERYHOLDER_ASSEMBLY_            MATERIAL:                              UNKNOWN
+         2.12090e-06  8.79877e-01  2.82284e-01 -1.39061e-01  4.03825e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -7.28320e+01  2.75772e+01 -4.00000e-01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -2.75772e+01  7.28320e+01 -4.00000e-01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  2.75772e+01 -7.28320e+01 -4.00000e-01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  7.28320e+01 -2.75772e+01 -4.00000e-01
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04  7.28320e+01 -2.75772e+01 -2.35000e+00
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04  2.75772e+01 -7.28320e+01 -2.35000e+00
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04  7.28320e+01 -2.75772e+01 -5.45000e+00
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04  2.75772e+01 -7.28320e+01 -5.45000e+00
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04 -7.28320e+01  2.75772e+01 -2.35000e+00
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04 -2.75772e+01  7.28320e+01 -2.35000e+00
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04 -7.28320e+01  2.75772e+01 -5.45000e+00
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04 -2.75772e+01  7.28320e+01 -5.45000e+00
+           LANDING_PIPE_D10X115_            MATERIAL:                               CARBON
+         1.70000e-06  2.74838e-03  2.42795e+02  0.00000e+00  5.97383e+01
+           LANDING_PIPE_D10X115_            MATERIAL:                               CARBON
+         1.70000e-06  2.74838e-03  0.00000e+00  2.42795e+02  5.97383e+01
+           LANDING_PIPE_D10X115_            MATERIAL:                               CARBON
+         1.70000e-06  2.74838e-03 -2.42795e+02  0.00000e+00  5.97383e+01
+           LANDING_PIPE_D10X115_            MATERIAL:                               CARBON
+         1.70000e-06  2.74838e-03  0.00000e+00 -2.42795e+02  5.97383e+01
+                        V1TASS1_            MATERIAL:                               RUBBER
+         1.80000e-06  5.88727e-03 -2.72878e+02  0.00000e+00  1.11845e+02
+                        V1TASS1_            MATERIAL:                               RUBBER
+         1.80000e-06  5.88727e-03  0.00000e+00  2.72878e+02  1.11845e+02
+                        V1TASS1_            MATERIAL:                               RUBBER
+         1.80000e-06  5.88727e-03  2.72878e+02  0.00000e+00  1.11845e+02
+                        V1TASS1_            MATERIAL:                               RUBBER
+         1.80000e-06  5.88727e-03  0.00000e+00 -2.72878e+02  1.11845e+02
+              TAROT_MOTOR_MOUNT_            MATERIAL:                                NYLON
+         1.20014e-06  3.91548e-02  2.83988e+02 -8.02585e-04 -1.12509e+01
+              TAROT_MOTOR_MOUNT_            MATERIAL:                                NYLON
+         1.20014e-06  3.91548e-02 -8.02585e-04 -2.83988e+02 -1.12509e+01
+              TAROT_MOTOR_MOUNT_            MATERIAL:                                NYLON
+         1.20014e-06  3.91548e-02 -2.83988e+02  8.02585e-04 -1.12509e+01
+              TAROT_MOTOR_MOUNT_            MATERIAL:                                NYLON
+         1.20014e-06  3.91548e-02  8.02585e-04  2.83988e+02 -1.12509e+01
+                     TM_U3_BASE_            MATERIAL:                               AL6061
+         2.71020e-06  8.80018e-02  3.02634e+02  0.00000e+00 -3.27026e+01
+                     TM_U3_BASE_            MATERIAL:                               AL6061
+         2.71020e-06  8.80018e-02  0.00000e+00 -3.02634e+02 -3.27026e+01
+                     TM_U3_BASE_            MATERIAL:                               AL6061
+         2.71020e-06  8.80018e-02 -3.02634e+02  0.00000e+00 -3.27026e+01
+                     TM_U3_BASE_            MATERIAL:                               AL6061
+         2.71020e-06  8.80018e-02  0.00000e+00  3.02634e+02 -3.27026e+01
+                  11_INCH_PROP__            MATERIAL:                               CARBON
+         1.80000e-06  1.42400e-02 -3.02690e+02  9.80114e-01 -4.95357e+01
+                  11_INCH_PROP__            MATERIAL:                               CARBON
+         1.80000e-06  1.42400e-02  9.80114e-01  3.02690e+02 -4.95357e+01
+                  11_INCH_PROP__            MATERIAL:                               CARBON
+         1.80000e-06  1.42400e-02  3.02690e+02 -9.80114e-01 -4.95357e+01
+                  11_INCH_PROP__            MATERIAL:                               CARBON
+         1.80000e-06  1.42400e-02 -9.80114e-01 -3.02690e+02 -4.95357e+01
+   V1ELECTRONIC_SPEED_CONTROL_1_            MATERIAL:                               RUBBER
+         1.00000e-06  2.32717e-03 -3.13003e+01  3.13615e+01 -5.48339e+00
+   V1ELECTRONIC_SPEED_CONTROL_1_            MATERIAL:                               RUBBER
+         1.00000e-06  2.32717e-03  3.13615e+01  3.13003e+01 -5.48339e+00
+   V1ELECTRONIC_SPEED_CONTROL_1_            MATERIAL:                               RUBBER
+         1.00000e-06  2.32717e-03  3.13003e+01 -3.13615e+01 -5.48339e+00
+   V1ELECTRONIC_SPEED_CONTROL_1_            MATERIAL:                               RUBBER
+         1.00000e-06  2.32717e-03 -3.13615e+01 -3.13003e+01 -5.48339e+00
+                 PROPELLER_LOCK_            MATERIAL:                               AL6061
+         2.71020e-06  1.51418e-03  0.00000e+00 -3.02500e+02 -5.09582e+01
+                 PROPELLER_LOCK_            MATERIAL:                               AL6061
+         2.71020e-06  1.51418e-03  3.02500e+02  0.00000e+00 -5.09582e+01
+                 PROPELLER_LOCK_            MATERIAL:                               AL6061
+         2.71020e-06  1.51418e-03  0.00000e+00  3.02500e+02 -5.09582e+01
+                 PROPELLER_LOCK_            MATERIAL:                               AL6061
+         2.71020e-06  1.51418e-03 -3.02500e+02  0.00000e+00 -5.09582e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  0.00000e+00 -3.08500e+02 -4.94483e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  0.00000e+00 -2.96500e+02 -4.94483e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  2.96500e+02  0.00000e+00 -4.94483e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  3.08500e+02  0.00000e+00 -4.94483e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  0.00000e+00  3.08500e+02 -4.94483e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  0.00000e+00  2.96500e+02 -4.94483e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -3.08500e+02  0.00000e+00 -4.94483e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -2.96500e+02  0.00000e+00 -4.94483e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  2.39233e+02  1.25000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  2.39233e+02 -1.25000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  2.65733e+02  1.25000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  2.65733e+02 -1.25000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  3.23733e+02 -1.70000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  3.23733e+02  1.70000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  1.25000e+01  2.65733e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  1.25000e+01  2.39233e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -1.25000e+01  2.65733e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -1.70000e+01  3.23733e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  1.70000e+01  3.23733e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -1.25000e+01  2.39233e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -3.23733e+02  1.70000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -2.65733e+02  1.25000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -2.39233e+02  1.25000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -3.23733e+02 -1.70000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -2.65733e+02 -1.25000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -2.39233e+02 -1.25000e+01 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -1.70000e+01 -3.23733e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -1.25000e+01 -2.65733e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04 -1.25000e+01 -2.39233e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  1.70000e+01 -3.23733e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  1.25000e+01 -2.65733e+02 -1.50983e+01
+                PROPELLER_SCREW_            MATERIAL:                                STEEL
+         7.82708e-06  9.23624e-04  1.25000e+01 -2.39233e+02 -1.50983e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -1.16500e+01  2.14500e+02 -1.00000e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  1.16500e+01  2.14500e+02 -1.00000e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  1.16500e+01  2.18908e+02  1.83654e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -1.16500e+01  2.18908e+02  1.83654e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -2.18908e+02  1.16500e+01  1.83654e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -2.14500e+02  1.16500e+01 -1.00000e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -2.18908e+02 -1.16500e+01  1.83654e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -2.14500e+02 -1.16500e+01 -1.00000e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -1.16500e+01 -2.18908e+02  1.83654e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04 -1.16500e+01 -2.14500e+02 -1.00000e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  1.16500e+01 -2.18908e+02  1.83654e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  1.16500e+01 -2.14500e+02 -1.00000e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  2.18908e+02 -1.16500e+01  1.83654e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  2.14500e+02 -1.16500e+01 -1.00000e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  2.14500e+02  1.16500e+01 -1.00000e+01
+                      M4_WASHER_            MATERIAL:                                STEEL
+         7.82708e-06  2.76187e-04  2.18908e+02  1.16500e+01  1.83654e+01
+             M4_SCREW_LAND_GEAR_            MATERIAL:                                STEEL
+         7.82708e-06  3.63608e-03  2.32787e+00  2.14500e+02 -1.00000e+01
+             M4_SCREW_LAND_GEAR_            MATERIAL:                                STEEL
+         7.82708e-06  3.63608e-03  2.32787e+00  2.18908e+02  1.83654e+01
+             M4_SCREW_LAND_GEAR_            MATERIAL:                                STEEL
+         7.82708e-06  3.63608e-03 -2.14500e+02  2.32787e+00 -1.00000e+01
+             M4_SCREW_LAND_GEAR_            MATERIAL:                                STEEL
+         7.82708e-06  3.63608e-03 -2.18908e+02  2.32787e+00  1.83654e+01
+             M4_SCREW_LAND_GEAR_            MATERIAL:                                STEEL
+         7.82708e-06  3.63608e-03 -2.32787e+00 -2.18908e+02  1.83654e+01
+             M4_SCREW_LAND_GEAR_            MATERIAL:                                STEEL
+         7.82708e-06  3.63608e-03 -2.32787e+00 -2.14500e+02 -1.00000e+01
+             M4_SCREW_LAND_GEAR_            MATERIAL:                                STEEL
+         7.82708e-06  3.63608e-03  2.14500e+02 -2.32787e+00 -1.00000e+01
+             M4_SCREW_LAND_GEAR_            MATERIAL:                                STEEL
+         7.82708e-06  3.63608e-03  2.18908e+02 -2.32787e+00  1.83654e+01
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04  2.14500e+02  1.36000e+01 -1.00000e+01
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04  2.18908e+02  1.36000e+01  1.83654e+01
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04 -1.36000e+01  2.14500e+02 -1.00000e+01
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04 -1.36000e+01  2.18908e+02  1.83654e+01
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04 -2.18908e+02 -1.36000e+01  1.83654e+01
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04 -2.14500e+02 -1.36000e+01 -1.00000e+01
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04  1.36000e+01 -2.14500e+02 -1.00000e+01
+                         M4_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  7.83144e-04  1.36000e+01 -2.18908e+02  1.83654e+01
+            STM_HOLDER_ASSEMBLY_            MATERIAL:                              UNKNOWN
+         7.82708e-06  5.92171e-03  0.00000e+00  0.00000e+00 -2.53288e+01
+                     STM_HOLDER_            MATERIAL:                                NYLON
+         1.20014e-06  3.51366e-02  4.30159e-01  4.03391e-01 -3.29366e+01
+                       SPEKTRUM_            MATERIAL:                                NYLON
+         1.20014e-06  1.33589e-02  4.47287e+01  4.64881e+01 -4.17243e+01
+              LINUX_CARD_HOLDER_            MATERIAL:                                NYLON
+         1.20014e-06  2.82375e-02  8.01247e-01 -8.57834e-01 -6.47000e+01
+                      WIFI_CARD_            MATERIAL:                                NYLON
+         1.20014e-06  2.54324e-03 -4.34478e+01 -4.45626e+01 -3.97938e+01
+              DISTANS_HEXA_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  4.98044e-03 -7.07107e+00 -5.65685e+01 -4.61841e+01
+              DISTANS_HEXA_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  4.98044e-03  5.65685e+01  7.07107e+00 -4.61841e+01
+              DISTANS_HEXA_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  4.98044e-03  7.07107e+00  5.65685e+01 -4.61841e+01
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04 -6.15183e+01 -3.88909e+01 -3.43978e+01
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04 -4.87904e+01 -2.61630e+01 -3.43978e+01
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04 -7.70746e+01  2.19203e+01 -6.61978e+01
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04 -2.19203e+01  7.70746e+01 -6.61978e+01
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04 -1.09602e+01 -4.41942e+01 -6.61978e+01
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04  4.41942e+01  1.09602e+01 -6.61978e+01
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04  6.57609e+01 -3.32340e+01 -6.61978e+01
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04  1.41421e+01 -4.66690e+01 -6.61978e+01
+              DISTANS_HEXA_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  4.98044e-03 -5.65685e+01 -7.07107e+00 -4.61841e+01
+                STM_KORT_DOUBLE_            MATERIAL:                                NYLON
+         1.20014e-06  3.85724e-02  1.34121e+00 -1.34121e+00 -4.59956e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -8.50000e+01  1.20000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  1.20000e+01  8.50000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  8.50000e+01 -1.20000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -1.20000e+01 -8.50000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -8.50000e+01 -1.20000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -1.20000e+01  8.50000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  8.50000e+01  1.20000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  1.20000e+01 -8.50000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  1.20000e+01 -5.50000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -5.50000e+01 -1.20000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -1.20000e+01  5.50000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  5.50000e+01  1.20000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -1.20000e+01 -5.50000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -5.50000e+01  1.20000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  1.20000e+01  5.50000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  5.50000e+01 -1.20000e+01 -2.22500e+01
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  8.50000e+01  1.20000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  1.20000e+01 -8.50000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -8.50000e+01 -1.20000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -1.20000e+01  8.50000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  8.50000e+01 -1.20000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -1.20000e+01 -8.50000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -8.50000e+01  1.20000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  1.20000e+01  8.50000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  5.50000e+01  1.20000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  1.20000e+01 -5.50000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -5.50000e+01 -1.20000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -1.20000e+01  5.50000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  5.50000e+01 -1.20000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -1.20000e+01 -5.50000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05 -5.50000e+01  1.20000e+01  3.25000e+00
+                      M2_BRICKA_            MATERIAL:                                STEEL
+         7.82708e-06  4.73655e-05  1.20000e+01  5.50000e+01  3.25000e+00
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04  8.50000e+01  1.20000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04  1.20000e+01 -8.50000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04 -8.50000e+01 -1.20000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04 -1.20000e+01  8.50000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04  8.50000e+01 -1.20000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04 -1.20000e+01 -8.50000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04 -8.50000e+01  1.20000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04  1.20000e+01  8.50000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04  5.50000e+01  1.20000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04  1.20000e+01 -5.50000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04 -5.50000e+01 -1.20000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04 -1.20000e+01  5.50000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04  5.50000e+01 -1.20000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04 -1.20000e+01 -5.50000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04 -5.50000e+01  1.20000e+01 -1.26448e+01
+                  M2_SRKUV_30MM_            MATERIAL:                                STEEL
+         7.82708e-06  9.26553e-04  1.20000e+01  5.50000e+01 -1.26448e+01
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04 -1.20000e+01 -8.50000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04 -8.50000e+01  1.20000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04  1.20000e+01  8.50000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04  8.50000e+01 -1.20000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04  1.20000e+01 -8.50000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04 -8.50000e+01 -1.20000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04 -1.20000e+01  8.50000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04  8.50000e+01  1.20000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04 -1.20000e+01 -5.50000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04 -5.50000e+01  1.20000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04  1.20000e+01  5.50000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04  5.50000e+01 -1.20000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04  1.20000e+01 -5.50000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04 -5.50000e+01 -1.20000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04 -1.20000e+01  5.50000e+01  4.25000e+00
+                         M2_NUT_            MATERIAL:                                STEEL
+         7.82708e-06  1.07740e-04  5.50000e+01  1.20000e+01  4.25000e+00
+           PROPELLER_PROTECTION_            MATERIAL:                                NYLON
+         1.20014e-06  1.06499e-02  3.81339e+02  0.00000e+00 -4.25000e+00
+           PROPELLER_PROTECTION_            MATERIAL:                                NYLON
+         1.20014e-06  1.06499e-02  0.00000e+00 -3.81339e+02 -4.25000e+00
+           PROPELLER_PROTECTION_            MATERIAL:                                NYLON
+         1.20014e-06  1.06499e-02 -3.81339e+02  0.00000e+00 -4.25000e+00
+           PROPELLER_PROTECTION_            MATERIAL:                                NYLON
+         1.20014e-06  1.06499e-02  0.00000e+00  3.81339e+02 -4.25000e+00
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04  5.93970e+01 -7.07107e+00 -6.61978e+01
+               DISTANS_HEXA_5MM_            MATERIAL:                                STEEL
+         7.82708e-06  8.92754e-04  6.64680e+01 -1.41421e+01 -6.61978e+01
+                 LINUX_A13_CARD_            MATERIAL:                                NYLON
+         1.20014e-06  5.14025e-02 -1.40227e+01  1.06447e+01 -7.49465e+01
+                       GPS_CARD_            MATERIAL:                                NYLON
+         1.20014e-06  4.55494e-03  3.64634e+01 -4.32089e+01 -7.30127e+01
+                 BAROMETER_CARD_            MATERIAL:                                NYLON
+         1.20014e-06  4.39893e-04  6.66022e+01 -6.93505e+00 -7.13820e+01
+              LINUX_CARD_HOLDER_            MATERIAL:                                NYLON
+         1.20014e-06  2.82375e-02  8.01247e-01 -8.57834e-01 -6.47000e+01

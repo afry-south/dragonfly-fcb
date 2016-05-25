@@ -22,7 +22,7 @@
 #define TD_VZ				(float32_t) 0.5
 #define BETA_VZ				(float32_t) 1.0			// Proportional set-point weighting
 #define GAMMA_VZ			(float32_t) 0.0
-#define N_VZ				(float32_t) 15.0		// Max derivative gain (often 10-20)
+#define N_VZ				(float32_t) 1000.0		// Max derivative gain
 #define MAX_THRUST			((float32_t) 4*AT*UINT16_MAX + 4*BT)	// Maximal upward thrust from all four motors combined [N]
 
 /* Roll/pitch angle control parameters */
@@ -31,7 +31,7 @@
 #define TD_RP				(float32_t) 10.0
 #define BETA_RP				(float32_t) 1.0			// Proportional set-point weighting
 #define GAMMA_RP			(float32_t) 0.0
-#define N_RP				(float32_t) 15.0		// Max derivative gain (often 10-20)
+#define N_RP				(float32_t) 1000.0		// Max derivative gain
 #define MAX_ROLLPITCH_MOM	((float32_t) MAX_THRUST/2*LENGTH_ARM/M_SQRT2)	// Two motors full thrust, two motors no thrust [Nm]
 
 /* Yaw angular rate control parameters */
@@ -40,7 +40,7 @@
 #define TD_YR				(float32_t) 0.0
 #define BETA_YR				(float32_t) 1.0			// Proportional set-point weighting
 #define GAMMA_YR			(float32_t) 0.0
-#define N_YR				(float32_t) 15.0		// Max derivative gain (often 10-20)
+#define N_YR				(float32_t) 1000.0		// Max derivative gain
 #define MAX_YAW_MOM			((float32_t) AQ*2*UINT16_MAX)		// Two motors with same rot dir full thrust, other two motors no thrust [Nm]
 
 /* Exported types ------------------------------------------------------------*/

@@ -19,16 +19,46 @@
 #define FLIGHT_CONTROL_TASK_PERIOD		10 // [ms]
 
 /* Physical properties of aircraft */
-// TODO make physical properties struct
-#define LENGTH_ARM 	        0.30		// Quadcopter arm length [m] // TODO use int values mm, g, g/(m^2)
-#define MASS		        2.100		// Total mass of the quadcopter [kg]
-#define IXX					0.030		// X-axis moment of inertia [kg/(m^2)]
-#define IYY					0.030		// Y-axis moment of inertia [kg/(m^2)]
-#define IZZ					0.060		// Z-axis moment of inertia [kg/(m^2)]
 
-#define G_ACC				(float)	   	9.815					/* Gravitational acceleration constant approx. 9.815 m/s^2 in
-																 * Smygehuk, Sweden (according to Lantm�teriet) */
-#define COMPASS_DECLINATION		   (float)		3.226*PI/180.0	/* For Malmoe, Sweden the compass declination is about 3.226 deg East
+/* Quadcopter arm length [m] (measured) */
+#define LENGTH_ARM 	            ((float32_t) 0.30)
+
+/* Total mass of the quadcopter [kg]
+ * # From CAD model w/o chassi : MASS = 2.1983808e+00 KILOGRAM
+ * # From CAD model w/ chassi  : MASS = 2.3523396e+00 KILOGRAM
+ * # NOTE: CAD model does not include masses of on-board electronics (e.g. PCBs and charger)
+ */
+#define MASS		            ((float32_t) 2.1983808)
+
+/* Inertia tensor of the quadcopter [kg]
+ *
+ * # From CAD model w/o chassi :
+ *
+ * INERTIA at CENTER OF GRAVITY with respect to _QUADCOPTER_SAMMANSTALLNING coordinate frame:  (KILOGRAM * MM^2)
+ * INERTIA TENSOR:
+ * Ixx Ixy Ixz  4.0654730e+04  1.1429530e+03 -1.6499272e+01
+ * Iyx Iyy Iyz  1.1429530e+03  4.0693168e+04  4.3305781e+01
+ * Izx Izy Izz -1.6499272e+01  4.3305781e+01  7.4656405e+04
+ *
+ * # From CAD model w/ chassi  :
+ *
+ * INERTIA at CENTER OF GRAVITY with respect to _QUADCOPTER_SAMMANSTALLNING coordinate frame:  (KILOGRAM * MM^2)
+ * INERTIA TENSOR:
+ * Ixx Ixy Ixz  4.1942971e+04  1.1949577e+03 -1.8072975e+01
+ * Iyx Iyy Iyz  1.1949577e+03  4.1981406e+04  4.0972106e+01
+ * Izx Izy Izz -1.8072975e+01  4.0972106e+01  7.5746409e+04
+ *
+ * # NOTE: CAD model does not include masses/inertia contributions of on-board electronics (e.g. PCBs and charger)
+ */
+
+#define IXX					    ((float32_t) 0.04065473)		// X-axis moment of inertia [kg/(m^2)]
+#define IYY					    ((float32_t) 0.040693168)		// Y-axis moment of inertia [kg/(m^2)]
+#define IZZ					    ((float32_t) 0.074656405)		// Z-axis moment of inertia [kg/(m^2)]
+
+#define G_ACC                   ((float32_t) 9.815)	/* Gravitational acceleration constant approx. 9.815 m/s^2 in
+                                                     * Smygehuk, Sweden (according to Lantmateriet) */
+
+#define COMPASS_DECLINATION	    ((float32_t) 3.226*PI/180.0)	/* For Malmoe, Sweden the compass declination is about 3.226 deg East
  	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 * The total field strength is 50552 nT (505.52 mGauss) */
 /* Default reference signal ranges */
 #define DEFAULT_MAX_Z_VELOCITY          2.0			// Max vertical velocity (+/-) [m/s] // TODO use int values m/s, mrad, mrad/s
