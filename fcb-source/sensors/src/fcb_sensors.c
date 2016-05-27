@@ -117,7 +117,7 @@ void FcbSendSensorMessageFromISR(uint8_t event) {
 
 #ifdef FCB_SENSORS_DEBUG
     static uint32_t cbk_sensor_counter = 0;
-    if ((cbk_sensor_counter % 48) == 0) {
+    if ((cbk_sensor_counter % 100) == 0) {
         BSP_LED_Toggle(LED5);
     }
     cbk_sensor_counter++;

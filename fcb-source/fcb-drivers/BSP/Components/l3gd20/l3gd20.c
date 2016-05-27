@@ -143,7 +143,7 @@ uint8_t L3GD20_Config(void) {
   L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
   L3GD20_InitStructure.Output_DataRate = cfgL3GD20OutputDataRate; /* 96 Hz according to data sheet, 94.5 Hz according to oscilloscope */
   L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
-  L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_4;
+  L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_1;
   L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;
   L3GD20_InitStructure.Endianness = L3GD20_BLE_LSB; /* if changed, modify L3GD20_ReadXYZAngRate as well */
   L3GD20_InitStructure.Full_Scale = L3GD20_FULLSCALE_500;

@@ -123,7 +123,7 @@ void LSM303DLHC_AccConfig(void) {
   /*  Low level init */
   COMPASSACCELERO_IO_Init();
 
-  accConfig.dataRate = LSM303DLHC_ODR_50_HZ;
+  accConfig.dataRate = LSM303DLHC_ODR_100_HZ;
 
   /* set up accelerometer */
   uint8_t ctrlReg1 = 0x00 |
@@ -146,10 +146,11 @@ void LSM303DLHC_AccConfig(void) {
   LSM303DLHC_AccRebootCmd();
   LSM303DLHC_AccInit(ctrlReg1, ctrlReg3, ctrlReg4);
 
-  LSM303DLHC_AccFilterConfig(LSM303DLHC_HPM_NORMAL_MODE |
-      LSM303DLHC_HPFCF_16 | // according to LSM303DLM (other sensor!) data sheet, this gives 0.25 Hz cut off frequency
-      LSM303DLHC_HPF_AOI1_DISABLE |
-      LSM303DLHC_HPF_AOI2_DISABLE);
+  LSM303DLHC_AccFilterCmd(LSM303DLHC_HIGHPASSFILTER_DISABLE);
+//  LSM303DLHC_AccFilterConfig(LSM303DLHC_HPM_NORMAL_MODE |
+//      LSM303DLHC_HPFCF_16 | // according to LSM303DLM (other sensor!) data sheet, this gives 0.25 Hz cut off frequency
+//      LSM303DLHC_HPF_AOI1_DISABLE |
+//      LSM303DLHC_HPF_AOI2_DISABLE);
 }
 
 
