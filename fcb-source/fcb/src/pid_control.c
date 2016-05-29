@@ -174,7 +174,7 @@ void InitPIDControllers(void) {
 
 /*
  * @brief  Update PID control and set control signals
- * @param  None.
+ * @param  ctrlSignals : Control signals struct
  * @retval None.
  */
 void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
@@ -182,6 +182,18 @@ void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
 	ctrlSignals->RollMoment = UpdatePIDControl(&RollCtrl, GetRollAngle(), GetRollAngleReferenceSignal());
 	ctrlSignals->PitchMoment = UpdatePIDControl(&PitchCtrl, GetPitchAngle(), GetPitchAngleReferenceSignal());
 	ctrlSignals->YawMoment = UpdatePIDControl(&YawCtrl, GetYawRate(), GetYawAngularRateReferenceSignal()); // TODO should be GetYawRate()
+}
+
+/*
+ * @brief  Reset control signals (roll, pitch, yaw moments and thrust force) to zero
+ * @param  ctrlSignals : Control signals struct
+ * @retval None.
+ */
+void ResetCtrlSignals(CtrlSignals_TypeDef* ctrlSignals) {
+	ctrlSignals->RollMoment = 0.0;
+	ctrlSignals->PitchMoment = 0.0;
+	ctrlSignals->YawMoment = 0.0;
+	ctrlSignals->Thrust = 0.0;
 }
 
 /* Private functions ---------------------------------------------------------*/

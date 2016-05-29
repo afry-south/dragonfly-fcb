@@ -172,7 +172,7 @@ float32_t GetYawAngularRateReferenceSignal(void) {
  * @param  None
  * @retval Thrust force [N]
  */
-float32_t GetThrustControlSignal() {
+float32_t GetThrustControlSignal(void) {
     if(flightControlMode != FLIGHT_CONTROL_IDLE && flightControlMode != FLIGHT_CONTROL_RAW) {
         return ctrlSignals.Thrust;
     } else {
@@ -185,7 +185,7 @@ float32_t GetThrustControlSignal() {
  * @param  None
  * @retval Roll moment [Nm]
  */
-float32_t GetRollControlSignal() {
+float32_t GetRollControlSignal(void) {
     if(flightControlMode != FLIGHT_CONTROL_IDLE && flightControlMode != FLIGHT_CONTROL_RAW) {
         return ctrlSignals.RollMoment;
     } else {
@@ -198,7 +198,7 @@ float32_t GetRollControlSignal() {
  * @param  None
  * @retval Pitch moment [Nm]
  */
-float32_t GetPitchControlSignal() {
+float32_t GetPitchControlSignal(void) {
     if(flightControlMode != FLIGHT_CONTROL_IDLE && flightControlMode != FLIGHT_CONTROL_RAW) {
         return ctrlSignals.PitchMoment;
     } else {
@@ -211,12 +211,24 @@ float32_t GetPitchControlSignal() {
  * @param  None
  * @retval Yaw moment [Nm]
  */
-float32_t GetYawControlSignal() {
+float32_t GetYawControlSignal(void) {
     if(flightControlMode != FLIGHT_CONTROL_IDLE && flightControlMode != FLIGHT_CONTROL_RAW) {
         return ctrlSignals.YawMoment;
     } else {
         return 0;
     }
+}
+
+/*
+ * @brief  Resets control reference signals
+ * @param  refSignals : Reference signals type struct
+ * @retval None
+ */
+void ResetRefSignals(RefSignals_TypeDef* refSignals) {
+	refSignals->RollAngle = 0.0;
+	refSignals->PitchAngle = 0.0;
+	refSignals->YawAngleRate = 0.0;
+	refSignals->ZVelocity = 0.0;
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -235,32 +247,45 @@ static void UpdateFlightControl(void) {
 
 	case FLIGHT_CONTROL_IDLE:
 		ShutdownMotors();
+
+		/* Reset control signals, values and parameters */
+		ResetCtrlSignals(&ctrlSignals);
+		ResetRefSignals(&RefSignals);
 		InitPIDControllers();	// Set PID control variables to initial values
+
 		return;
 
 	case FLIGHT_CONTROL_RAW:
-		// TODO Check that motors are armed
 		MotorAllocationRaw();
+
+		/* Reset control signals, values and parameters */
+		ResetCtrlSignals(&ctrlSignals);
+		ResetRefSignals(&RefSignals);
+		InitPIDControllers();	// Set PID control variables to initial values
+
 		return;
 
 	case FLIGHT_CONTROL_PID:
-		// TODO Check that motors are armed
-
-		/* Set the control reference signals*/
+		/* Set the control reference signals based on RC receiver input */
 		SetReferenceSignals();
 
 		/* Update PID control output */
-		ctrlSignals.Thrust = -(GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/((float32_t)UINT16_MAX); // NOTE: Raw throttle control fow now until control developed for Z velocity
+		ctrlSignals.Thrust = -(GetThrottleReceiverChannel()-INT16_MIN)*MAX_THRUST/((float32_t)UINT16_MAX); // NOTE: Raw throttle control for now until control developed for Z position/velocity
 		UpdatePIDControlSignals(&ctrlSignals);
 
-		/* Allocate control signal action to motors */
+		/* Allocate control signal action to motors based on thrust/torque<->motor signal mapping for each motor */
 		MotorAllocationPhysical(ctrlSignals.Thrust, ctrlSignals.RollMoment, ctrlSignals.PitchMoment, ctrlSignals.YawMoment);
+
+		return;
+
+	case FLIGHT_CONTROL_AUTONOMOUS:
+		// TODO : Should get reference signals from FMS board and call position controllers
 		return;
 
 	default:
 		ShutdownMotors();
-		return;
 
+		return;
 	}
 }
 
@@ -471,22 +496,19 @@ static void FlightControlTask(void const *argument) {
         }
 
         switch (msg.type) {
-        case PREDICTION_UPDATE:
-            UpdatePredictionState();
-//            break;
         case FLIGHT_CONTROL_UPDATE:
             /* Perform flight control activities */
             UpdateFlightControl();
 
             /* Blink with LED to indicate thread is alive */
-            if(ledFlashCounter % 100 == 0) {
-                BSP_LED_On(LED6);
-            }
-            else if(ledFlashCounter % 20 == 0) {
-                BSP_LED_Off(LED6);
+            if(ledFlashCounter % 200 == 0) {
+            	BSP_LED_Toggle(LED6);
             }
 
             ledFlashCounter++;
+//            break;
+        case PREDICTION_UPDATE:
+            UpdatePredictionState();
             break;
         case CORRECTION_UPDATE:
             UpdateCorrectionState(msg.sensorReading.sensorType,

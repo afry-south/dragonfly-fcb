@@ -81,14 +81,17 @@ typedef struct AttitudeStateVector
 #define STATE_ESTIMATION_UPDATE_TIM_IRQ_PREEMPT_PRIO    configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY // Set to this since used w/ RTOS
 #define STATE_ESTIMATION_UPDATE_TIM_IRQ_SUB_PRIO        0
 #define STATE_ESTIMATION_TIME_UPDATE_PERIOD             (60000-1)
-#define STATE_ESTIMATION_TIME_UPDATE_PRESCALER          12
+#define STATE_ESTIMATION_TIME_UPDATE_PRESCALER          6
 
 // TODO we need separate values for roll pitch and yaw as well as separate init values of P matrix
 #define	STATE_ESTIMATION_SAMPLE_PERIOD	(float32_t) 	FLIGHT_CONTROL_TASK_PERIOD / 1000.0
 
-#define Q1_RP (float32_t)								0.001
-#define Q1_Y (float32_t)								0.0005
-#define	Q2_CAL (float32_t)								0.0003
+#define Q1_RP (float32_t)								0.0005
+#define	Q2_RP (float32_t)								0.0003
+
+#define Q1_Y (float32_t)								0.0004
+#define	Q2_Y (float32_t)								0.0003
+
 #define Q3_CAL (float32_t)                              0.000002
 
 #define R1_MAG (float32_t)								0.05

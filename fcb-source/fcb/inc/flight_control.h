@@ -16,7 +16,7 @@
 
 /* Exported constants --------------------------------------------------------*/
 
-#define FLIGHT_CONTROL_TASK_PERIOD		10 // [ms]
+#define FLIGHT_CONTROL_TASK_PERIOD		5 // [ms]
 
 /* Physical properties of aircraft */
 
@@ -70,7 +70,8 @@
 enum FlightControlMode {
 	FLIGHT_CONTROL_IDLE,
 	FLIGHT_CONTROL_RAW,
-	FLIGHT_CONTROL_PID
+	FLIGHT_CONTROL_PID,
+	FLIGHT_CONTROL_AUTONOMOUS
 };
 
 /* Exported types ------------------------------------------------------------*/
@@ -102,6 +103,8 @@ float32_t GetThrustControlSignal();
 float32_t GetRollControlSignal();
 float32_t GetPitchControlSignal();
 float32_t GetYawControlSignal();
+
+void ResetRefSignals(RefSignals_TypeDef* refSignals);
 
 void SendFlightControlUpdateToFlightControl(void);
 /**

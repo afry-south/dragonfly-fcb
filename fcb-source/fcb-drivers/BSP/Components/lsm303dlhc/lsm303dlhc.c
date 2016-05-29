@@ -123,7 +123,7 @@ void LSM303DLHC_AccConfig(void) {
   /*  Low level init */
   COMPASSACCELERO_IO_Init();
 
-  accConfig.dataRate = LSM303DLHC_ODR_100_HZ;
+  accConfig.dataRate = LSM303DLHC_ODR_200_HZ;
 
   /* set up accelerometer */
   uint8_t ctrlReg1 = 0x00 |
@@ -643,7 +643,7 @@ void LSM303DLHC_MagInit(void)
   magConfig.fullScale = LSM303DLHC_FS_1_3_GA; /* earth's magnetic field vector is .5 Gauss */
   magConfig.xySensitivity = LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
   magConfig.zSensitivity = LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
-  magConfig.dataRate = LSM303DLHC_ODR_75_HZ;
+  magConfig.dataRate = LSM303DLHC_ODR_220_HZ;
   magConfig.temperatureSensor = LSM303DLHC_TEMPSENSOR_DISABLE;
 
   /* Configure MEMS: temp and Data rate */

@@ -116,11 +116,26 @@ void FcbSendSensorMessageFromISR(uint8_t event) {
     portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
 
 #ifdef FCB_SENSORS_DEBUG
-    static uint32_t cbk_sensor_counter = 0;
-    if ((cbk_sensor_counter % 100) == 0) {
-        BSP_LED_Toggle(LED5);
+    static uint32_t acc_cbk_sensor_counter = 0;
+    static uint32_t mag_cbk_sensor_counter = 0;
+    static uint32_t gyro_cbk_sensor_counter = 0;
+
+    if(event == FCB_SENSOR_ACC_DATA_READY) {
+    	if ((acc_cbk_sensor_counter % 200) == 0) {
+    		BSP_LED_Toggle(LED5);
+    	}
+    	acc_cbk_sensor_counter++;
+    } else if(event == FCB_SENSOR_MAGNETO_DATA_READY) {
+    	if ((mag_cbk_sensor_counter % 200) == 0) {
+    		BSP_LED_Toggle(LED3);
+    	}
+    	mag_cbk_sensor_counter++;
+    } else if(event == FCB_SENSOR_GYRO_DATA_READY) {
+    	if ((gyro_cbk_sensor_counter % 200) == 0) {
+    		BSP_LED_Toggle(LED4);
+    	}
+    	gyro_cbk_sensor_counter++;
     }
-    cbk_sensor_counter++;
 #endif
 
     if (0 == sensorSampleRateDone) {
@@ -368,10 +383,6 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
 
         switch (msg.event) {
         case FCB_SENSOR_GYRO_DATA_READY:
-            /*
-             * As settings are in BSP_GYRO_Init, the callback is called with a frequency
-             * of 94.5 Hz according to oscilloscope.
-             */
             FetchDataFromGyroscope(msg.deltaTime);
             break;
         case FCB_SENSOR_GYRO_CALIBRATE:

@@ -105,9 +105,9 @@ static void StatePrintSamplingTask(void const *argument);
  * @retval None
  */
 void InitStatesXYZ(float32_t initAngles[3]) {
-    StateInit(&rollEstimator, 	Q1_RP, Q2_CAL, Q3_CAL, R1_ACCRP, GYRO_X_AXIS_VARIANCE);
-    StateInit(&pitchEstimator, 	Q1_RP, Q2_CAL, Q3_CAL, R1_ACCRP, GYRO_Y_AXIS_VARIANCE);
-    StateInit(&yawEstimator, 	Q1_Y, Q2_CAL, Q3_CAL, R1_MAG, GYRO_Z_AXIS_VARIANCE);
+    StateInit(&rollEstimator, 	Q1_RP, 	Q2_RP, 	Q3_CAL, R1_ACCRP, 	GYRO_X_AXIS_VARIANCE);
+    StateInit(&pitchEstimator, 	Q1_RP, 	Q2_RP, 	Q3_CAL, R1_ACCRP, 	GYRO_Y_AXIS_VARIANCE);
+    StateInit(&yawEstimator, 	Q1_Y, 	Q2_Y, 	Q3_CAL, R1_MAG, 	GYRO_Z_AXIS_VARIANCE);
 
     rollState.angle = initAngles[0];
     rollState.angleRate = 0.0;
@@ -503,7 +503,7 @@ static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sen
 
 /**
  * gathers VAR_SAMPLE_MAX and calculates variance to be used in
- * estimation equations.
+ * estimation equations. TODO: This function needs review. Should it even be used?
  */
 static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_t const * pXYZData) {
     enum {

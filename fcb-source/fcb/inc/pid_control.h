@@ -57,6 +57,7 @@ typedef struct
 /* Exported function prototypes --------------------------------------------- */
 void InitPIDControllers(void);
 void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals);
+void ResetCtrlSignals(CtrlSignals_TypeDef* ctrlSignals);
 
 #endif /* __PID_CONTROL_H_ */
 

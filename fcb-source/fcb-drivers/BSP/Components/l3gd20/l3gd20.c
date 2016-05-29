@@ -94,7 +94,8 @@ GYRO_DrvTypeDef L3gd20Drv =
   L3GD20_ReadXYZAngRate
 };
 
-static uint8_t cfgL3GD20OutputDataRate = L3GD20_OUTPUT_DATARATE_1;
+/* L3GD20_OUTPUT_DATARATE_1: 96 Hz according to data sheet, 94.5 Hz according to oscilloscope */
+static uint8_t cfgL3GD20OutputDataRate = L3GD20_OUTPUT_DATARATE_2; // 190 Hz
 
 /**
   * @}
@@ -141,7 +142,7 @@ uint8_t L3GD20_Config(void) {
 
   /* Configure Mems : data rate, power mode, full scale and axes */
   L3GD20_InitStructure.Power_Mode = L3GD20_MODE_ACTIVE;
-  L3GD20_InitStructure.Output_DataRate = cfgL3GD20OutputDataRate; /* 96 Hz according to data sheet, 94.5 Hz according to oscilloscope */
+  L3GD20_InitStructure.Output_DataRate = cfgL3GD20OutputDataRate;
   L3GD20_InitStructure.Axes_Enable = L3GD20_AXES_ENABLE;
   L3GD20_InitStructure.Band_Width = L3GD20_BANDWIDTH_1;
   L3GD20_InitStructure.BlockData_Update = L3GD20_BlockDataUpdate_Continous;
