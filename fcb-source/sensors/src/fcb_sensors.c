@@ -293,12 +293,12 @@ void PrintSensorValues(const SerializationType serializationType) {
       sensorSamplesProto.has_accZ = true;
       sensorSamplesProto.accZ = accZ;
 
-      sensorSamplesProto.has_gyroAngRateXb = true;
-      sensorSamplesProto.gyroAngRateXb = gyroX;
-      sensorSamplesProto.has_gyroAngRateYb = true;
-      sensorSamplesProto.gyroAngRateYb = gyroY;
-      sensorSamplesProto.has_gyroAngRateZb = true;
-      sensorSamplesProto.gyroAngRateZb = gyroZ;
+      sensorSamplesProto.has_gyroX = true;
+      sensorSamplesProto.gyroX = gyroX;
+      sensorSamplesProto.has_gyroY = true;
+      sensorSamplesProto.gyroY = gyroY;
+      sensorSamplesProto.has_gyroZ = true;
+      sensorSamplesProto.gyroZ = gyroZ;
 
       sensorSamplesProto.has_magX = true;
       sensorSamplesProto.magX = magX;
