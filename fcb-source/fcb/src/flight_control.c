@@ -496,6 +496,9 @@ static void FlightControlTask(void const *argument) {
         }
 
         switch (msg.type) {
+        case PREDICTION_UPDATE:
+            UpdatePredictionState();
+            // break;
         case FLIGHT_CONTROL_UPDATE:
             /* Perform flight control activities */
             UpdateFlightControl();
@@ -506,9 +509,7 @@ static void FlightControlTask(void const *argument) {
             }
 
             ledFlashCounter++;
-//            break;
-        case PREDICTION_UPDATE:
-            UpdatePredictionState();
+
             break;
         case CORRECTION_UPDATE:
             UpdateCorrectionState(msg.sensorReading.sensorType,
