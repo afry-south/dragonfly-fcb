@@ -73,7 +73,6 @@ static TIM_HandleTypeDef MotorControlTimHandle;
 xTaskHandle MotorControlPrintSamplingTaskHandle = NULL;
 static volatile uint16_t motorControlPrintSampleTime;
 static volatile uint16_t motorControlPrintSampleDuration;
-static SerializationType motorValuesPrintSerializationType;
 
 /* Private function prototypes -----------------------------------------------*/
 static void MotorControlPrintSamplingTask(void const *argument);
@@ -194,61 +193,18 @@ void SetMotors(uint16_t ctrlValMotor1, uint16_t ctrlValMotor2, uint16_t ctrlValM
 }
 
 /*
- * @brief  Sets the serialization type of printed motor signal values
- * @param  serializationType : Data serialization type enum
- * @retval None.
- */
-void SetMotorPrintSamplingSerialization(const SerializationType serializationType) {
-	motorValuesPrintSerializationType = serializationType;
-}
-
-/*
  * @brief  Prints motor control signal values
  * @param  None.
  * @retval None.
  */
-void PrintMotorControlValues(const SerializationType serializationType) {
+void PrintMotorControlValues(void) {
 	char motorCtrlString[MOTOR_CONTROL_PRINT_MAX_STRING_SIZE];
 
-	if(serializationType == NO_SERIALIZATION) {
-		snprintf((char*) motorCtrlString, MOTOR_CONTROL_PRINT_MAX_STRING_SIZE,
-				"Motor control (uint16):\nM1: %u\nM2: %u\nM3: %u\nM4: %u\n\r\n", MotorControlValues.Motor1,
-				MotorControlValues.Motor2, MotorControlValues.Motor3, MotorControlValues.Motor4);
+	snprintf((char*) motorCtrlString, MOTOR_CONTROL_PRINT_MAX_STRING_SIZE,
+	        "Motor control (uint16):\nM1: %u\nM2: %u\nM3: %u\nM4: %u\n\r\n", MotorControlValues.Motor1,
+	        MotorControlValues.Motor2, MotorControlValues.Motor3, MotorControlValues.Motor4);
 
-		USBComSendString(motorCtrlString);
-	}
-	else if(serializationType == PROTOBUFFER_SERIALIZATION) {
-		bool protoStatus;
-		uint8_t serializedMotorData[MotorSignalValuesProto_size];
-		MotorSignalValuesProto motorSignalValuesProto;
-		uint32_t strLen;
-
-		motorSignalValuesProto.has_M1 = true;
-		motorSignalValuesProto.has_M2 = true;
-		motorSignalValuesProto.has_M3 = true;
-		motorSignalValuesProto.has_M4 = true;
-		motorSignalValuesProto.M1 = MotorControlValues.Motor1;
-		motorSignalValuesProto.M2 = MotorControlValues.Motor2;
-		motorSignalValuesProto.M3 = MotorControlValues.Motor3;
-		motorSignalValuesProto.M4 = MotorControlValues.Motor4;
-
-		/* Create a stream that will write to our buffer and encode the data with protocol buffer */
-		pb_ostream_t protoStream = pb_ostream_from_buffer(serializedMotorData, MotorSignalValuesProto_size);
-		protoStatus = pb_encode(&protoStream, MotorSignalValuesProto_fields, &motorSignalValuesProto);
-
-		/* Insert header to the sample string, then copy the data after that */
-		snprintf(motorCtrlString, MOTOR_CONTROL_PRINT_MAX_STRING_SIZE, "%c %c ", MOTOR_VALUES_MSG_ENUM, protoStream.bytes_written);
-		strLen = strlen(motorCtrlString);
-		if(strLen + protoStream.bytes_written + strlen("\r\n") < MOTOR_CONTROL_PRINT_MAX_STRING_SIZE) {
-			memcpy(&motorCtrlString[strLen], serializedMotorData, protoStream.bytes_written);
-			memcpy(&motorCtrlString[strLen+protoStream.bytes_written], "\r\n", strlen("\r\n"));
-		}
-
-		if(protoStatus)
-			USBComSendData((uint8_t*)motorCtrlString, strLen+protoStream.bytes_written+strlen("\r\n"));
-		else
-			ErrorHandler();
-	}
+	USBComSendString(motorCtrlString);
 }
 
 /*
@@ -415,7 +371,7 @@ static void MotorControlPrintSamplingTask(void const *argument) {
 	for (;;) {
 		vTaskDelayUntil(&xLastWakeTime, motorControlPrintSampleTime);
 
-		PrintMotorControlValues(motorValuesPrintSerializationType);
+		PrintMotorControlValues();
 
 		/* If sampling duration exceeded, delete task to stop sampling */
 		if (xTaskGetTickCount() >= xSampleStartTime + motorControlPrintSampleDuration * configTICK_RATE_HZ)

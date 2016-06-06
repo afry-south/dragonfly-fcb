@@ -157,8 +157,7 @@ int16_t GetRudderReceiverChannel(void);
 int16_t GetGearReceiverChannel(void);
 int16_t GetAux1ReceiverChannel(void);
 
-void SetReceiverPrintSamplingSerialization(const  SerializationType serializationType);
-void PrintReceiverValues(const  SerializationType serializationType);
+void PrintReceiverValues(void);
 
 uint16_t GetThrottleReceiverCalibrationMaxValue(void);
 uint16_t GetThrottleReceiverCalibrationMidValue(void);

@@ -118,10 +118,9 @@ void FcbSendSensorMessageFromISR(uint8_t event);
 // TODO Description
 void FcbSendSensorMessage(uint8_t event);
 
-void PrintSensorValues(const SerializationType serializationType);
+void PrintSensorValues(void);
 FcbRetValType StartSensorSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 FcbRetValType StopSensorSamplingTask(void);
-void SetSensorPrintSamplingSerialization(const SerializationType serializationType);
 
 
 /**

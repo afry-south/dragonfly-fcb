@@ -163,9 +163,9 @@ static const CLI_Command_Definition_t echoDataCommand = { (const int8_t * const 
 
 /* Structure that defines the "start-receiver-calibration" command line command. */
 static const CLI_Command_Definition_t startReceiverCalibrationCommand = { (const int8_t * const ) "start-receiver-calibration",
-        (const int8_t * const ) "\r\nstart-receiver-calibration <enc>:\r\n Starts receiver calibration procedure with values printing with <enc>  (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nstart-receiver-calibration:\r\n Starts receiver calibration procedure with values printing\r\n",
         CLIStartReceiverCalibration, /* The function to run. */
-        1 /* Number of parameters expected */
+        0 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-receiver-calibration" command line command. */
@@ -198,9 +198,9 @@ static const CLI_Command_Definition_t getReceiverCalibrationCommand = { (const i
 
 /* Structure that defines the "start-receiver-sampling" command line command. */
 static const CLI_Command_Definition_t startReceiverSamplingCommand = { (const int8_t * const ) "start-receiver-sampling",
-        (const int8_t * const ) "\r\nstart-receiver-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints receiver values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nstart-receiver-sampling <rate> <dur>:\r\n Prints receiver values once every <rate> ms for <dur> s\r\n",
         CLIStartReceiverSampling, /* The function to run. */
-        3 /* Number of parameters expected */
+        2 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-receiver-sampling" command line command. */
@@ -219,9 +219,9 @@ static const CLI_Command_Definition_t getSensorsCommand = { (const int8_t * cons
 
 /* Structure that defines the "start-sensor-sampling" command line command. */
 static const CLI_Command_Definition_t startSensorSamplingCommand = { (const int8_t * const ) "start-sensor-sampling",
-        (const int8_t * const ) "\r\nstart-sensor-sampling <rate> <dur> <enc>:\r\n Prints sensor values once every <rate> ms for <dur> s with <enc> (n=none, p=proto, c=calibration)\r\n",
+        (const int8_t * const ) "\r\nstart-sensor-sampling <rate> <dur>:\r\n Prints sensor values once every <rate> ms for <dur> s\r\n",
         CLIStartSensorSampling, /* The function to run. */
-        3 /* Number of parameters expected */
+        2 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-sensor-sampling" command line command. */
@@ -246,9 +246,9 @@ static const CLI_Command_Definition_t getMotorsCommand = { (const int8_t * const
 
 /* Structure that defines the "start-motor-sampling" command line command. */
 static const CLI_Command_Definition_t startMotorSamplingCommand = { (const int8_t * const ) "start-motor-sampling",
-        (const int8_t * const ) "\r\nstart-motor-sampling <rate> <dur> <enc>:\r\n Prints motor values once every <rate> ms for <dur> s with <enc> (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nstart-motor-sampling <rate> <dur>:\r\n Prints motor values once every <rate> ms for <dur> s\r\n",
         CLIStartMotorSampling, /* The function to run. */
-        3 /* Number of parameters expected */
+        2 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-motor-sampling" command line command. */
@@ -324,10 +324,10 @@ static const CLI_Command_Definition_t getStatesCommand = { (const int8_t * const
 
 /* Structure that defines the "start-motor-sampling" command line command. */
 static const CLI_Command_Definition_t startStateSamplingCommand = { (const int8_t * const ) "start-state-sampling",
-        (const int8_t * const ) "\r\nstart-state-sampling <rate> <dur> <enc>:\r\n"
-        "Prints state values once every <rate> ms for <dur> s with <enc> (n=none, p=proto, c=calibration)\r\n",
+        (const int8_t * const ) "\r\nstart-state-sampling <rate> <dur>:\r\n"
+        "Prints state values once every <rate> ms for <dur> s\r\n",
         CLIStartStateSampling, /* The function to run. */
-        3 /* Number of parameters expected */
+        2 /* Number of parameters expected */
 };
 
 /* Structure that defines the "stop-motor-sampling" command line command. */
@@ -617,12 +617,6 @@ static portBASE_TYPE CLIStartReceiverCalibration(int8_t* pcWriteBuffer, size_t x
     /* Sanity check something was returned. */
     configASSERT(pcParameter);
 
-    /* Get the current receiver values */
-    if(pcParameter[0] == 'n')
-        SetReceiverPrintSamplingSerialization(NO_SERIALIZATION);
-    else if(pcParameter[0] == 'p')
-        SetReceiverPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
-
     /* Start the receiver calibration procedure */
     if (StartReceiverCalibration())
         strncpy((char*) pcWriteBuffer,
@@ -908,21 +902,6 @@ static portBASE_TYPE CLIStartReceiverSampling(int8_t* pcWriteBuffer, size_t xWri
 
         receiverSampleDuration = atoi((char*) pcParameter);
 
-        lParameterNumber++;
-
-        pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
-                lParameterNumber, /* Return the next parameter. */
-                &xParameterStringLength /* Store the parameter string length. */);
-
-        /* Sanity check something was returned. */
-        configASSERT(pcParameter);
-
-        /* Set serialization and start the receiver value sampling task */
-        if (pcParameter[0] == 'n') {
-            SetReceiverPrintSamplingSerialization(NO_SERIALIZATION);
-        } else if (pcParameter[0] == 'p') {
-            SetReceiverPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
-        }
         StartReceiverSamplingTask(receiverSampleTime, receiverSampleDuration);
     }
 
@@ -1092,7 +1071,7 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
     int8_t* pcParameter;
     portBASE_TYPE xParameterStringLength, xReturn;
     static portBASE_TYPE lParameterNumber = 0;
-    SerializationType serialisationType = NO_SERIALIZATION;
+
     /* Check the write buffer is not NULL */
     configASSERT(pcWriteBuffer);
 
@@ -1146,30 +1125,6 @@ static portBASE_TYPE CLIStartSensorSampling(int8_t* pcWriteBuffer, size_t xWrite
 
         sensorSampleDuration = atoi((char*) pcParameter);
 
-        lParameterNumber++;
-
-        pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
-                lParameterNumber, /* Return the next parameter. */
-                &xParameterStringLength /* Store the parameter string length. */);
-
-        /* Sanity check something was returned. */
-        configASSERT(pcParameter);
-
-        /* Set serialization and start the receiver value sampling task */
-
-        switch (pcParameter[0]) {
-        case 'n':
-            serialisationType = NO_SERIALIZATION;
-            break;
-        case 'p':
-            serialisationType = PROTOBUFFER_SERIALIZATION;
-            break;
-        case 'c':
-            serialisationType = CALIBRATION_SERIALIZATION;
-            break;
-        }
-
-        SetSensorPrintSamplingSerialization(serialisationType);
         /* Start the sensor sample printing task */
         StartSensorSamplingTask(sensorSampleTime, sensorSampleDuration);
     }
@@ -1371,22 +1326,6 @@ static portBASE_TYPE CLIStartMotorSampling(int8_t* pcWriteBuffer, size_t xWriteB
         strncat((char*) pcWriteBuffer, "\n\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
         motorSampleDuration = atoi((char*) pcParameter);
-
-        lParameterNumber++;
-
-        pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
-                lParameterNumber, /* Return the next parameter. */
-                &xParameterStringLength /* Store the parameter string length. */);
-
-        /* Sanity check something was returned. */
-        configASSERT(pcParameter);
-
-        /* Set serialization and start the motor control sampling task */
-        if (pcParameter[0] == 'n') {
-            SetMotorPrintSamplingSerialization(NO_SERIALIZATION);
-        } else if (pcParameter[0] == 'p') {
-            SetMotorPrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
-        }
 
         StartMotorControlSamplingTask(motorSampleTime, motorSampleDuration);
     }
@@ -1904,24 +1843,6 @@ static portBASE_TYPE CLIStartStateSampling(int8_t* pcWriteBuffer, size_t xWriteB
         strncat((char*) pcWriteBuffer, "\n\r\n", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
 
         stateSampleDuration = atoi((char*) pcParameter);
-
-        lParameterNumber++;
-
-        pcParameter = (int8_t*) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
-                lParameterNumber, /* Return the next parameter. */
-                &xParameterStringLength /* Store the parameter string length. */);
-
-        /* Sanity check something was returned. */
-        configASSERT(pcParameter);
-
-        /* Set serialization and start the motor control sampling task */
-        if (pcParameter[0] == 'n') {
-            SetStatePrintSamplingSerialization(NO_SERIALIZATION);
-        } else if (pcParameter[0] == 'p') {
-            SetStatePrintSamplingSerialization(PROTOBUFFER_SERIALIZATION);
-        } else if (pcParameter[0] == 'c') {
-            SetStatePrintSamplingSerialization(CALIBRATION_SERIALIZATION);
-        }
 
         StartStateSamplingTask(stateSampleTime, stateSampleDuration);
     }
