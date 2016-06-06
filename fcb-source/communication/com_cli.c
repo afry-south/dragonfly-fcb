@@ -1628,11 +1628,11 @@ static portBASE_TYPE CLIGetCtrlSignals(int8_t* pcWriteBuffer, size_t xWriteBuffe
         ctrlValuesProto.has_thrustCtrl = true;
         ctrlValuesProto.thrustCtrl = GetThrustControlSignal();
         ctrlValuesProto.has_rollCtrl = true;
-        ctrlValuesProto.rollCtrl = GetThrustControlSignal();
+        ctrlValuesProto.rollCtrl = GetRollControlSignal();
         ctrlValuesProto.has_pitchCtrl = true;
-        ctrlValuesProto.pitchCtrl = GetThrustControlSignal();
+        ctrlValuesProto.pitchCtrl = GetPitchControlSignal();
         ctrlValuesProto.has_yawCtrl = true;
-        ctrlValuesProto.yawCtrl = GetThrustControlSignal();
+        ctrlValuesProto.yawCtrl = GetYawControlSignal();
 
     	/* Create a stream that will write to our buffer and encode the data with protocol buffer */
         pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, ControlSignalsProto_size);

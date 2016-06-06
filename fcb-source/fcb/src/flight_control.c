@@ -372,6 +372,14 @@ static void SetRefSignals(void) {
 		refSignals.yawAngleRate = -refSignalsLimits.yawAngleRate*(rudder + RECEIVER_TO_REFERENCE_ZERO_PADDING)
 				/ (-INT16_MIN - RECEIVER_TO_REFERENCE_ZERO_PADDING);
 	}
+
+	/* Go to "safe" reference signal values if receiver transmission becomes inactive */
+	if(RECEIVER_OK != IsReceiverActive()) {
+	    refSignals.rollAngle = 0.0;
+	    refSignals.pitchAngle = 0.0;
+	    refSignals.yawAngleRate = 0.0;
+	    refSignals.zVelocity = 0.0;
+	}
 }
 
 void SendFlightControlUpdateToFlightControl(void)
