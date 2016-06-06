@@ -46,10 +46,10 @@
 /* Exported types ------------------------------------------------------------*/
 typedef struct
 {
-  float32_t Thrust;			// [N]
-  float32_t RollMoment;		// [Nm]
-  float32_t PitchMoment;	// [Nm]
-  float32_t YawMoment;		// [Nm]
+  float32_t thrust;			// [N]
+  float32_t rollMoment;		// [Nm]
+  float32_t pitchMoment;	// [Nm]
+  float32_t yawMoment;		// [Nm]
 } CtrlSignals_TypeDef;
 
 /* Exported macro ------------------------------------------------------------*/

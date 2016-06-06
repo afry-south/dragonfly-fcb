@@ -63,6 +63,7 @@
 /* Default reference signal ranges */
 #define DEFAULT_MAX_Z_VELOCITY          2.0			// Max vertical velocity (+/-) [m/s] // TODO use int values m/s, mrad, mrad/s
 #define DEFAULT_MAX_ROLLPITCH_ANGLE     15*PI/180	// Max roll/pitch angle (+/-) [rad] (NOTE! Not in deg!)
+#define DEFAULT_MAX_YAW_ANGLE           180*PI/180  // +/- 180 for yaw angle so that is allowed to rotate fully around its axis
 #define DEFAULT_MAX_YAW_RATE            30*PI/180	// Max yaw angle rate [rad/s] (NOTE! Not deg/s)
 
 #define RECEIVER_TO_REFERENCE_ZERO_PADDING	1800	// Sets how large an area around 0 receiver value the reference signal should be set to zero
@@ -82,10 +83,11 @@ typedef enum {
 
 typedef struct
 {
-  float32_t ZVelocity;		// [m/s]
-  float32_t RollAngle;		// [rad]
-  float32_t PitchAngle;		// [rad]
-  float32_t YawAngleRate;	// [rad/s]
+  float32_t zVelocity;	    // [m/s]
+  float32_t rollAngle;	    // [rad]
+  float32_t pitchAngle;	    // [rad]
+  float32_t yawAngle;       // [rad]
+  float32_t yawAngleRate;   // [rad/s]
 } RefSignals_TypeDef;
 
 /* Exported macro ------------------------------------------------------------*/
@@ -97,12 +99,13 @@ enum FlightControlMode GetFlightControlMode(void);
 float32_t GetZVelocityReferenceSignal(void);
 float32_t GetRollAngleReferenceSignal(void);
 float32_t GetPitchAngleReferenceSignal(void);
+float32_t GetYawAngleReferenceSignal(void);
 float32_t GetYawAngularRateReferenceSignal(void);
 
-float32_t GetThrustControlSignal();
-float32_t GetRollControlSignal();
-float32_t GetPitchControlSignal();
-float32_t GetYawControlSignal();
+float32_t GetThrustControlSignal(void);
+float32_t GetRollControlSignal(void);
+float32_t GetPitchControlSignal(void);
+float32_t GetYawControlSignal(void);
 
 void ResetRefSignals(RefSignals_TypeDef* refSignals);
 
@@ -122,7 +125,7 @@ void SendPredictionUpdateToFlightControl(void);
 void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType, uint8_t deltaTms, float32_t xyz[3]);
 
 void setMaxLimitForReferenceSignal(float32_t maxZVelocity, float32_t maxRollAngle, float32_t maxPitchAngle, float32_t maxYawAngleRate);
-void getMaxLimitForReferenceSignal(float32_t* maxZVelocity, float32_t* maxRollAngle, float32_t* maxPitchAngle, float32_t* maxYawAngleRate);
+void getMaxLimitForReferenceSignal(float32_t* maxZVelocity, float32_t* maxRollAngle, float32_t* maxPitchAngle, float32_t* maxYawAngle,float32_t* maxYawAngleRate);
 
 #endif /* __FLIGHT_CONTROL_H */
 

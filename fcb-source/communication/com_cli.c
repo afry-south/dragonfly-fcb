@@ -138,6 +138,7 @@ static portBASE_TYPE CLIAbout(int8_t *pcWriteBuffer, size_t xWriteBufferLen, con
 static portBASE_TYPE CLISysTime(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
+static portBASE_TYPE CLIGetCtrlSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLISetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLIGetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
 static portBASE_TYPE CLITaskStatus(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString);
@@ -162,7 +163,7 @@ static const CLI_Command_Definition_t echoDataCommand = { (const int8_t * const 
 
 /* Structure that defines the "start-receiver-calibration" command line command. */
 static const CLI_Command_Definition_t startReceiverCalibrationCommand = { (const int8_t * const ) "start-receiver-calibration",
-        (const int8_t * const ) "\r\nstart-receiver-calibration <encoding>:\r\n Starts receiver calibration procedure with values printing with <encoding>  (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nstart-receiver-calibration <enc>:\r\n Starts receiver calibration procedure with values printing with <enc>  (n=none, p=proto)\r\n",
         CLIStartReceiverCalibration, /* The function to run. */
         1 /* Number of parameters expected */
 };
@@ -183,7 +184,7 @@ static const CLI_Command_Definition_t resetReceiverCalibrationCommand = { (const
 
 /* Structure that defines the "get-receiver" command line command. */
 static const CLI_Command_Definition_t getReceiverCommand = { (const int8_t * const ) "get-receiver",
-        (const int8_t * const ) "\r\nget-receiver <encoding>:\r\n Returns current receiver values with <encoding> (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nget-receiver <enc>:\r\n Returns current receiver values with <enc> (n=none, p=proto)\r\n",
         CLIGetReceiver, /* The function to run. */
         1 /* Number of parameters expected */
 };
@@ -211,14 +212,14 @@ static const CLI_Command_Definition_t stopReceiverSamplingCommand = { (const int
 
 /* Structure that defines the "get-sensors" command line command. */
 static const CLI_Command_Definition_t getSensorsCommand = { (const int8_t * const ) "get-sensors",
-        (const int8_t * const ) "\r\nget-sensors: <encoding>\r\n Prints last read sensor values with <encoding> (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nget-sensors: <enc>\r\n Prints last read sensor values with <enc> (n=none, p=proto)\r\n",
         CLIGetSensors, /* The function to run. */
         1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "start-sensor-sampling" command line command. */
 static const CLI_Command_Definition_t startSensorSamplingCommand = { (const int8_t * const ) "start-sensor-sampling",
-        (const int8_t * const ) "\r\nstart-sensor-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints sensor values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto, c=calibration)\r\n",
+        (const int8_t * const ) "\r\nstart-sensor-sampling <rate> <dur> <enc>:\r\n Prints sensor values once every <rate> ms for <dur> s with <enc> (n=none, p=proto, c=calibration)\r\n",
         CLIStartSensorSampling, /* The function to run. */
         3 /* Number of parameters expected */
 };
@@ -231,21 +232,21 @@ static const CLI_Command_Definition_t stopSensorSamplingCommand = { (const int8_
 };
 
 static const CLI_Command_Definition_t startAccMagMtrCalibration = { (const int8_t * const ) "start-accmagmtr-calibration",
-        (const int8_t * const) "\r\nstart-accmagmtr-calibration <samples>:\r\n Starts collection of <samples> number of magmtr values\r\n",
+        (const int8_t * const) "\r\nstart-accmagmtr-calibration <n>:\r\n Starts collection of <n> number of magmtr values\r\n",
         CLIStartAccMagMtrCalibration, /* the fcn to run */
         1 /* nbr of expected parameters */
 };
 
 /* Structure that defines the "get-motors" command line command. */
 static const CLI_Command_Definition_t getMotorsCommand = { (const int8_t * const ) "get-motors",
-        (const int8_t * const ) "\r\nget-motors <encoding>:\r\n Prints motor control values with <encoding> (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nget-motors <encoding>:\r\n Prints motor control values with <enc> (n=none, p=proto)\r\n",
         CLIGetMotorValues, /* The function to run. */
         1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "start-motor-sampling" command line command. */
 static const CLI_Command_Definition_t startMotorSamplingCommand = { (const int8_t * const ) "start-motor-sampling",
-        (const int8_t * const ) "\r\nstart-motor-sampling <sampletime> <sampleduration> <encoding>:\r\n Prints motor values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nstart-motor-sampling <rate> <dur> <enc>:\r\n Prints motor values once every <rate> ms for <dur> s with <enc> (n=none, p=proto)\r\n",
         CLIStartMotorSampling, /* The function to run. */
         3 /* Number of parameters expected */
 };
@@ -280,9 +281,16 @@ static const CLI_Command_Definition_t getFlightModeCommand = { (const int8_t * c
 
 /* Structure that defines the "get-ref-signals" command line command. */
 static const CLI_Command_Definition_t getRefSignalsCommand = { (const int8_t * const ) "get-ref-signals",
-        (const int8_t * const ) "\r\nget-ref-signals:\r\n Prints current reference signals\r\n",
+        (const int8_t * const ) "\r\nget-ref-signals <enc>:\r\n Prints current reference signals with <enc> (n=none, p=proto)\r\n",
         CLIGetRefSignals, /* The function to run. */
-        0 /* Number of parameters expected */
+        1 /* Number of parameters expected */
+};
+
+/* Structure that defines the "get-ctrl-signals" command line command. */
+static const CLI_Command_Definition_t getCtrlSignalsCommand = { (const int8_t * const ) "get-ctrl-signals",
+        (const int8_t * const ) "\r\nget-ctrl-signals <enc>:\r\n Prints current control signals with <enc> (n=none, p=proto)\r\n",
+        CLIGetCtrlSignals, /* The function to run. */
+        1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "set-max-limit-ref-signals" command line command. */
@@ -309,15 +317,15 @@ static const CLI_Command_Definition_t taskStatusCommand = { (const int8_t * cons
 
 /* Structure that defines the "get-states" command line command. */
 static const CLI_Command_Definition_t getStatesCommand = { (const int8_t * const ) "get-states",
-        (const int8_t * const ) "\r\nget-states <encoding>:\r\n Prints state values with <encoding> (n=none, p=proto)\r\n",
+        (const int8_t * const ) "\r\nget-states <enc>:\r\n Prints state values with <enc> (n=none, p=proto)\r\n",
         CLIGetStateValues, /* The function to run. */
         1 /* Number of parameters expected */
 };
 
 /* Structure that defines the "start-motor-sampling" command line command. */
 static const CLI_Command_Definition_t startStateSamplingCommand = { (const int8_t * const ) "start-state-sampling",
-        (const int8_t * const ) "\r\nstart-state-sampling <sampletime> <sampleduration> <encoding>:\r\n"
-        "Prints state values once every <sampletime> ms for <sampleduration> s with <encoding> (n=none, p=proto, c=calibration)\r\n",
+        (const int8_t * const ) "\r\nstart-state-sampling <rate> <dur> <enc>:\r\n"
+        "Prints state values once every <rate> ms for <dur> s with <enc> (n=none, p=proto, c=calibration)\r\n",
         CLIStartStateSampling, /* The function to run. */
         3 /* Number of parameters expected */
 };
@@ -380,6 +388,7 @@ void RegisterCLICommands(void) {
     /* Flight control CLI commands */
     FreeRTOS_CLIRegisterCommand(&getFlightModeCommand);
     FreeRTOS_CLIRegisterCommand(&getRefSignalsCommand);
+    FreeRTOS_CLIRegisterCommand(&getCtrlSignalsCommand);
     FreeRTOS_CLIRegisterCommand(&setMaxLimitReferenceSignalsCommand);
     FreeRTOS_CLIRegisterCommand(&getMaxLimitReferenceSignalsCommand);
     FreeRTOS_CLIRegisterCommand(&getStatesCommand);
@@ -1479,8 +1488,11 @@ static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBuffer
     case FLIGHT_CONTROL_PID:
         strncat((char*) pcWriteBuffer, "PID", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
         break;
+    case FLIGHT_CONTROL_AUTONOMOUS:
+    	strncat((char*) pcWriteBuffer, "AUTO", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+    	break;
     default:
-        strncat((char*) pcWriteBuffer, "UNKNOWN", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+        strncat((char*) pcWriteBuffer, "N/A", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
         break;
     }
 
@@ -1497,17 +1509,160 @@ static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBuffer
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
 static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
-    /* Remove compile time warnings about unused parameters, and check the write buffer is not NULL */
-    (void) pcCommandString;
+    int8_t* pcParameter;
+    portBASE_TYPE xParameterStringLength;
+    portBASE_TYPE lParameterNumber = 0;
+
+    bool protoStatus;
+    uint8_t serializedData[ControlReferenceSignalsProto_size];
+    ControlReferenceSignalsProto refValuesProto;
+
     configASSERT(pcWriteBuffer);
 
-    strncpy((char*) pcWriteBuffer, "Re: ", xWriteBufferLen);
+    /* Empty pcWriteBuffer so no strange output is sent as command response */
+    memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 
-    snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-            "Reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angular rate: %1.4f rad/s\n",
-            GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchAngleReferenceSignal(), GetYawAngularRateReferenceSignal());
+    lParameterNumber++;
 
-    // TODO protobuf param
+    /* Obtain the parameter string. */
+    pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+            lParameterNumber, /* Return the next parameter. */
+            &xParameterStringLength /* Store the parameter string length. */
+    );
+
+    /* Sanity check something was returned. */
+    configASSERT(pcParameter);
+
+    switch (pcParameter[0]) {
+    case 'n':
+    	snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+    	            "Reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angle: %1.4f rad\nYaw rate: %1.4f rad/s\n",
+    	            GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchAngleReferenceSignal(), GetYawAngleReferenceSignal(), GetYawAngularRateReferenceSignal());
+    	break;
+    case 'p':
+    	/* Add reference signal values to protobuffer type struct members */
+    	refValuesProto.has_refRoll = true;
+    	refValuesProto.refRoll = GetRollAngleReferenceSignal();
+    	refValuesProto.has_refPitch = true;
+    	refValuesProto.refPitch = GetPitchAngleReferenceSignal();
+    	refValuesProto.has_refYaw = true;
+    	refValuesProto.refYaw = GetYawAngleReferenceSignal();
+    	refValuesProto.has_refYawRate = true;
+    	refValuesProto.refYawRate = GetYawAngularRateReferenceSignal();
+
+    	/* Create a stream that will write to our buffer and encode the data with protocol buffer */
+    	pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, ControlReferenceSignalsProto_size);
+    	protoStatus = pb_encode(&protoStream, ControlReferenceSignalsProto_fields, &refValuesProto);
+
+    	/* Insert header to the sample string, then copy the data after that */
+    	uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
+    	uint8_t msg_id = REFSIGNALS_MSG_ENUM;
+    	uint16_t msg_data_size = (uint16_t) protoStream.bytes_written;
+    	memcpy(pcWriteBuffer, &msg_id, 1);
+    	memcpy(&pcWriteBuffer[1], &crc, 4);
+    	memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
+
+    	if (PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+    		memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+    		memcpy(&pcWriteBuffer[PROTO_HEADER_LEN + protoStream.bytes_written], "\r\n", strlen("\r\n"));
+    	}
+
+    	if (!protoStatus) {
+    		ErrorHandler();
+    	}
+
+    	dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+
+    	break;
+    default:
+    	strncpy((char*) pcWriteBuffer, "Invalid parameter\r\n",
+    			xWriteBufferLen);
+    	break;
+    }
+
+    return pdFALSE;
+}
+
+/**
+ * @brief  Implements "get-ctrl-signals" command, prints current control signals
+ * @param  pcWriteBuffer : Reference to output buffer
+ * @param  xWriteBufferLen : Size of output buffer
+ * @param  pcCommandString : Command line string
+ * @retval pdTRUE if more data follows, pdFALSE if command activity finished
+ */
+static portBASE_TYPE CLIGetCtrlSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
+    int8_t* pcParameter;
+    portBASE_TYPE xParameterStringLength;
+    portBASE_TYPE lParameterNumber = 0;
+
+    bool protoStatus;
+    uint8_t serializedData[ControlSignalsProto_size];
+    ControlSignalsProto ctrlValuesProto;
+
+    configASSERT(pcWriteBuffer);
+
+    /* Empty pcWriteBuffer so no strange output is sent as command response */
+    memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+
+    lParameterNumber++;
+
+    /* Obtain the parameter string. */
+    pcParameter = (int8_t *) FreeRTOS_CLIGetParameter(pcCommandString, /* The command string itself. */
+            lParameterNumber, /* Return the next parameter. */
+            &xParameterStringLength /* Store the parameter string length. */
+    );
+
+    /* Sanity check something was returned. */
+    configASSERT(pcParameter);
+
+    switch (pcParameter[0]) {
+    case 'n':
+    	snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+    	            "Control signals:\nThrust: %1.4f N\nRoll: %1.4f Nm\nPitch: %1.4f Nm\nYaw: %1.4f Nm\n",
+					GetThrustControlSignal(), GetRollControlSignal(), GetPitchControlSignal(), GetYawControlSignal());
+    	break;
+    case 'p':
+    	/* Add control signal values to protobuffer type struct members */
+        ctrlValuesProto.has_ctrlState = true;
+        ctrlValuesProto.ctrlState = GetFlightControlMode();
+        ctrlValuesProto.has_thrustCtrl = true;
+        ctrlValuesProto.thrustCtrl = GetThrustControlSignal();
+        ctrlValuesProto.has_rollCtrl = true;
+        ctrlValuesProto.rollCtrl = GetThrustControlSignal();
+        ctrlValuesProto.has_pitchCtrl = true;
+        ctrlValuesProto.pitchCtrl = GetThrustControlSignal();
+        ctrlValuesProto.has_yawCtrl = true;
+        ctrlValuesProto.yawCtrl = GetThrustControlSignal();
+
+    	/* Create a stream that will write to our buffer and encode the data with protocol buffer */
+        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, ControlSignalsProto_size);
+        protoStatus = pb_encode(&protoStream, ControlSignalsProto_fields, &ctrlValuesProto);
+
+    	/* Insert header to the sample string, then copy the data after that */
+    	uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
+    	uint8_t msg_id = CTRLSIGNALS_MSG_ENUM;
+    	uint16_t msg_data_size = (uint16_t) protoStream.bytes_written;
+    	memcpy(pcWriteBuffer, &msg_id, 1);
+    	memcpy(&pcWriteBuffer[1], &crc, 4);
+    	memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
+
+    	if (PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+    		memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+    		memcpy(&pcWriteBuffer[PROTO_HEADER_LEN + protoStream.bytes_written], "\r\n", strlen("\r\n"));
+    	}
+
+    	if (!protoStatus) {
+    		ErrorHandler();
+    	}
+
+    	dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+
+    	break;
+    default:
+    	strncpy((char*) pcWriteBuffer, "Invalid parameter\r\n",
+    			xWriteBufferLen);
+    	break;
+    }
 
     return pdFALSE;
 }
@@ -1549,15 +1704,15 @@ static portBASE_TYPE CLISetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWr
  * @retval pdTRUE if more data follows, pdFALSE if command activity finished
  */
 static portBASE_TYPE CLIGetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWriteBufferLen, const int8_t* pcCommandString) {
-    float pcParameter[4];
+    float32_t refLimits[5];
 
     configASSERT(pcWriteBuffer);
 
-    getMaxLimitForReferenceSignal(&pcParameter[0], &pcParameter[1], &pcParameter[2], &pcParameter[3]);
+    getMaxLimitForReferenceSignal(&refLimits[0], &refLimits[1], &refLimits[2], &refLimits[3], &refLimits[4]);
 
     snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-            "Max limit for reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angular rate: %1.4f rad/s\n",
-			pcParameter[0], pcParameter[1], pcParameter[2], pcParameter[3]);
+            "Max limit for reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angle: %1.4f rad\nYaw angular rate: %1.4f rad/s\n",
+            refLimits[0], refLimits[1], refLimits[2], refLimits[3], refLimits[4]);
 
     return pdFALSE; /* Return false to indicate command activity finished */
 }

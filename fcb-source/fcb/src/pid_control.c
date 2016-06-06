@@ -178,10 +178,10 @@ void InitPIDControllers(void) {
  * @retval None.
  */
 void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
-// ctrlSignals->Thrust = UpdatePIDControl(&AltCtrl, GetZVelocity(), GetZVelocityReferenceSignal()); // TODO control altitude later
-	ctrlSignals->RollMoment = UpdatePIDControl(&RollCtrl, GetRollAngle(), GetRollAngleReferenceSignal());
-	ctrlSignals->PitchMoment = UpdatePIDControl(&PitchCtrl, GetPitchAngle(), GetPitchAngleReferenceSignal());
-	ctrlSignals->YawMoment = UpdatePIDControl(&YawCtrl, GetYawRate(), GetYawAngularRateReferenceSignal()); // TODO should be GetYawRate()
+    // ctrlSignals->thrust = UpdatePIDControl(&AltCtrl, GetZVelocity(), GetZVelocityReferenceSignal()); // TODO control altitude later
+    ctrlSignals->rollMoment = UpdatePIDControl(&RollCtrl, GetRollAngle(), GetRollAngleReferenceSignal());
+    ctrlSignals->pitchMoment = UpdatePIDControl(&PitchCtrl, GetPitchAngle(), GetPitchAngleReferenceSignal());
+    ctrlSignals->yawMoment = UpdatePIDControl(&YawCtrl, GetYawRate(), GetYawAngularRateReferenceSignal()); // TODO should be GetYawRate()
 }
 
 /*
@@ -190,10 +190,10 @@ void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
  * @retval None.
  */
 void ResetCtrlSignals(CtrlSignals_TypeDef* ctrlSignals) {
-	ctrlSignals->RollMoment = 0.0;
-	ctrlSignals->PitchMoment = 0.0;
-	ctrlSignals->YawMoment = 0.0;
-	ctrlSignals->Thrust = 0.0;
+    ctrlSignals->thrust = 0.0;
+    ctrlSignals->rollMoment = 0.0;
+    ctrlSignals->pitchMoment = 0.0;
+    ctrlSignals->yawMoment = 0.0;
 }
 
 /* Private functions ---------------------------------------------------------*/

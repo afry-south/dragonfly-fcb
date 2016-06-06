@@ -126,17 +126,17 @@ void InitStatesXYZ(float32_t initAngles[3]) {
 
     rollStateInternal.angle = initAngles[0];
     rollStateInternal.angleRate = 0.0;
-    rollStateInternal.angleRateBias = 0.0;
+    rollStateInternal.angleRateBias = 0.0; // TODO init to gyroscope reading
     rollStateInternal.angleRateUnbiased = rollState.angleRate - rollState.angleRateBias;
 
     pitchStateInternal.angle = initAngles[1];
     pitchStateInternal.angleRate = 0.0;
-    pitchStateInternal.angleRateBias = 0.0;
+    pitchStateInternal.angleRateBias = 0.0; // TODO init to gyroscope reading
     pitchStateInternal.angleRateUnbiased = pitchState.angleRate - pitchState.angleRateBias;
 
     yawStateInternal.angle = initAngles[2];
     yawStateInternal.angleRate = 0.0;
-    yawStateInternal.angleRateBias = 0.0;
+    yawStateInternal.angleRateBias = 0.0; // TODO init to gyroscope reading
     yawStateInternal.angleRateUnbiased = yawState.angleRate - yawState.angleRateBias;
 }
 
