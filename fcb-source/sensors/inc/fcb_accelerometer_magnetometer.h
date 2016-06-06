@@ -39,7 +39,8 @@ enum FcbAccMagMode {
   ACCMAGMTR_UNINITIALISED = 0,
   ACCMAGMTR_PREFLIGHT = 1,
   ACCMAGMTR_FETCHING = 2, /** fetching data from sensor */
-  ACCMAGMTR_CALIBRATING = 3, /** fetching calibration samples */
+  MAGMTR_CALIBRATING = 3, /** fetching calibration samples */
+  ACCMTR_CALIBRATING = 4, /** fetching calibration samples */
 };
 
 
@@ -73,17 +74,6 @@ void FetchDataFromAccelerometer(void);
  * @see ACCMAG_CALIBRATION_SAMPLES_N
  */
 void StartAccMagMtrCalibration(uint32_t samples);
-
-
-/**
- * When this function has been called, GetAcceleration and GetMagVector
- * will return calibrated values (which is the default).
- *
- * @note this function will not be needed if or when all calibration
- * is done onboard the FCB board, today the calculations are done offline
- * in SciLab.
- */
-void StopAccMagMtrCalibration(uint8_t samples);
 
 
 /*
@@ -161,8 +151,6 @@ void SetAccMagMeasuredSamplePeriod(float32_t accMeasuredPeriod, float32_t magMea
  * magnetometer code respectively.
  */
 void GetAccMagMeasuredSamplePeriod(float32_t * accMeasuredPeriod, float32_t *magMeasuredPeriod);
-
-uint8_t CheckMagCalParams(float32_t* magCalPrms);
 
 #endif /* FCB_ACCELEROMETER_H */
 

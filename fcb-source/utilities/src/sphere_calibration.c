@@ -35,6 +35,17 @@ void computeGNMatrices(float32_t JtJ[][6], float32_t JtR[], float32_t beta[6]);
 
 /* Exported functions --------------------------------------------------------*/
 
+void clearObservationMatrices() {
+	memset(mu, 0, sizeof(mu));
+	memset(mu2, 0, sizeof(mu));
+	memset(ipXX, 0, sizeof(ipXX));
+	memset(ipX2X, 0, sizeof(ipX2X));
+	memset(ipX2X2, 0, sizeof(ipX2X2));
+	memset(obsMin, 0, sizeof(obsMin));
+	memset(obsMax, 0, sizeof(obsMax));
+	N = 0;
+}
+
 void addNewSample(const float32_t samples[3]) {
     uint32_t i, j;
 
@@ -224,5 +235,7 @@ void calibrate(float32_t calibParams[6]) {
 	for (i=0; i<6; i++) {
 		calibParams[i] = beta[i];
 	}
+
+	clearObservationMatrices();
 }
 
