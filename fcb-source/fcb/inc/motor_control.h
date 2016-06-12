@@ -77,8 +77,7 @@ void ShutdownMotors(void);
 
 MotorControlErrorStatus StartMotorControlSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 MotorControlErrorStatus StopMotorControlSamplingTask(void);
-void SetMotorPrintSamplingSerialization(const SerializationType serializationType);
-void PrintMotorControlValues(const SerializationType serializationType);
+void PrintMotorControlValues(void);
 uint16_t GetMotorValue(uint8_t motorNumber);
 
 #endif /* __MOTOR_CONTROL_H */

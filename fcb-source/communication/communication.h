@@ -14,7 +14,7 @@
 /* Exported constants --------------------------------------------------------*/
 
 enum ProtoMessageTypeEnum {
-	ERR_MSG_ENUM = 0,
+	ERR_MSG_ENUM = 0, // TODO define proto for this, e.g. one integer and one description string
     RC_VALUES_MSG_ENUM,
     MOTOR_VALUES_MSG_ENUM,
     SENSOR_SAMPLES_MSG_ENUM,
@@ -22,7 +22,8 @@ enum ProtoMessageTypeEnum {
     PID_PARAMS_MSG_ENUM,
     REFSIGNALS_MSG_ENUM,
     SIMULATED_STATES_MSG_ENUM,
-	CTRLSIGNALS_MSG_ENUM
+	CTRLSIGNALS_MSG_ENUM,
+	GENERIC_MSG_ENUM, // TODO define proto for this, e.g. one string for generic messages
 };
 
 #define	PROTO_HEADER_LEN	7

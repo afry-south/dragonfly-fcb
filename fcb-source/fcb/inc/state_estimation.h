@@ -124,8 +124,8 @@ void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, floa
 
 FcbRetValType StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 FcbRetValType StopStateSamplingTask(void);
-void SetStatePrintSamplingSerialization(const SerializationType serializationType);
-void PrintStateValues(const SerializationType serializationType);
+
+void PrintStateValues(void);
 
 #endif /* __SENSORS_H */
 

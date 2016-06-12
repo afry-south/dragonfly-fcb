@@ -45,6 +45,12 @@
 #include "usbd_cdc_if.h"
 
 /* Private define ------------------------------------------------------------*/
+#define USE_CTRLSIGNAL_IN_PREDICTION_MODEL      0
+
+#define STATE_PRINT_SAMPLING_TASK_PRIO          1
+#define STATE_PRINT_MINIMUM_SAMPLING_TIME       20  // updated every 2.5 ms
+#define STATE_PRINT_MAX_STRING_SIZE             288
+
 enum {
     VAR_SAMPLE_MAX = 100
 };
@@ -52,14 +58,6 @@ enum {
 typedef struct FcbSensorVarianceCalc {
     float32_t samples[3][VAR_SAMPLE_MAX];
 } FcbSensorVarianceCalcType;
-
-static FcbSensorVarianceCalcType * pSampleData = NULL;
-
-#define USE_CTRLSIGNAL_IN_PREDICTION_MODEL		0
-
-#define STATE_PRINT_SAMPLING_TASK_PRIO			1
-#define STATE_PRINT_MINIMUM_SAMPLING_TIME		20	// updated every 2.5 ms
-#define STATE_PRINT_MAX_STRING_SIZE				288
 
 /* Private variables ---------------------------------------------------------*/
 static AttitudeStateVectorType rollState = { 0.0, 0.0, 0.0 };
@@ -78,7 +76,6 @@ static KalmanFilterType yawEstimator;
 static volatile uint16_t statePrintSampleTime;
 static volatile uint16_t statePrintSampleDuration;
 xTaskHandle StatePrintSamplingTaskHandle = NULL;
-static SerializationType statePrintSerializationType;
 
 static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f };
 static float32_t sensorAttitudeRateRPY[3] = { 0.0f, 0.0f, 0.0f };
@@ -518,7 +515,7 @@ static void StatePrintSamplingTask(void const *argument) {
     for (;;) {
         vTaskDelayUntil(&xLastWakeTime, statePrintSampleTime);
 
-        PrintStateValues(statePrintSerializationType);
+        PrintStateValues();
 
         /* If sampling duration exceeded, delete task to stop sampling */
         if (xTaskGetTickCount() >= xSampleStartTime + statePrintSampleDuration * configTICK_RATE_HZ)
@@ -576,119 +573,38 @@ FcbRetValType StopStateSamplingTask(void) {
 }
 
 /*
- * @brief  Sets the serialization type of printed motor signal values
- * @param  serializationType : Data serialization type enum
- * @retval None.
- */
-void SetStatePrintSamplingSerialization(const SerializationType serializationType) {
-    statePrintSerializationType = serializationType;
-}
-
-/*
  * @brief Prints the state values
  * @param serializationType: Data serialization type enum
  * @retval None
  */
-void PrintStateValues(const SerializationType serializationType) {
-    static char stateString[STATE_PRINT_MAX_STRING_SIZE];
-    int usedLen = 0;
+void PrintStateValues(void) {
+    static char stateString[STATE_PRINT_MAX_STRING_SIZE]; // TODO when debug printing is cleaned up, this shouldn't be needed as static
 
-    if ((serializationType == NO_SERIALIZATION) || (serializationType == CALIBRATION_SERIALIZATION)) {
-        float32_t sensorAttitude[3], accValues[3], magValues[3], gyroValues[3];
+    float32_t sensorAttitude[3], accValues[3], magValues[3], gyroValues[3];
 
-        // TODO Delete sensor attitude printouts later
-        /* Get magnetometer values */
-        GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
+    // TODO Delete sensor attitude printouts later
+    /* Get magnetometer values */
+    GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
 
-        /* Get accelerometer values */
-        GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
+    /* Get accelerometer values */
+    GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
 
-        /* Calculate roll, pitch, yaw based on accelerometer and magnetometer values */
-        GetAttitudeFromAccelerometer(sensorAttitude, accValues);
-        sensorAttitude[2] = GetMagYawAngle(magValues, sensorAttitude[0], sensorAttitude[1]);
+    /* Calculate roll, pitch, yaw based on accelerometer and magnetometer values */
+    GetAttitudeFromAccelerometer(sensorAttitude, accValues);
+    sensorAttitude[2] = GetMagYawAngle(magValues, sensorAttitude[0], sensorAttitude[1]);
 
-        /* Get gyro values [rad/s] */
-        GetGyroAngleDot(&gyroValues[0], &gyroValues[1], &gyroValues[2]);
+    /* Get gyro values [rad/s] */
+    GetGyroAngleDot(&gyroValues[0], &gyroValues[1], &gyroValues[2]);
 
-        if (serializationType == NO_SERIALIZATION) {
-            snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-                    "States [deg]:\nroll: %1.3f\npitch: %1.3f\nyaw: %1.3f\nrollRate: %1.3f\npitchRate: %1.3f\nyawRate: %1.3f\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\ngyroRoll:%1.3f, gyroPitch:%1.3f, gyroYaw:%1.3f\n\r\n",
-                    Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle), Radian2Degree(yawState.angle),
-                    Radian2Degree(rollState.angleRate), Radian2Degree(pitchState.angleRate), Radian2Degree(yawState.angleRate),
-                    Radian2Degree(rollState.angleRateBias), Radian2Degree(pitchState.angleRateBias), Radian2Degree(yawState.angleRateBias),
-                    Radian2Degree(sensorAttitude[0]), Radian2Degree(sensorAttitude[1]), Radian2Degree(sensorAttitude[2]),
-                    Radian2Degree(gyroValues[0]), Radian2Degree(gyroValues[1]), Radian2Degree(gyroValues[2]));
-        } else /* CALIBRATION_SERIALIZATION */{
-            usedLen =
-                    snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-                            "States:\nAngle-RPY[deg]: %1.3f, %1.3f, %1.3f\nBias-RPY: %1.3f, %1.3f, %1.3f\nAcc-RPY: %1.3f, %1.3f, %1.3f\n\r\n",
-                            Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle),
-                            Radian2Degree(yawState.angle), Radian2Degree(rollState.angleRateBias), Radian2Degree(pitchState.angleRateBias),
-                            Radian2Degree(yawState.angleRateBias), sensorAttitude[0], sensorAttitude[1], sensorAttitude[2]);
+    snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
+            "States [deg]:\nroll: %1.3f\npitch: %1.3f\nyaw: %1.3f\nrollRate: %1.3f\npitchRate: %1.3f\nyawRate: %1.3f\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\ngyroRoll:%1.3f, gyroPitch:%1.3f, gyroYaw:%1.3f\n\r\n",
+            Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle), Radian2Degree(yawState.angle),
+            Radian2Degree(rollState.angleRate), Radian2Degree(pitchState.angleRate), Radian2Degree(yawState.angleRate),
+            Radian2Degree(rollState.angleRateBias), Radian2Degree(pitchState.angleRateBias), Radian2Degree(yawState.angleRateBias),
+            Radian2Degree(sensorAttitude[0]), Radian2Degree(sensorAttitude[1]), Radian2Degree(sensorAttitude[2]),
+            Radian2Degree(gyroValues[0]), Radian2Degree(gyroValues[1]), Radian2Degree(gyroValues[2]));
 
-            if (usedLen < STATE_PRINT_MAX_STRING_SIZE) {
-                usedLen = snprintf((char*) stateString + usedLen, STATE_PRINT_MAX_STRING_SIZE - usedLen,
-                        "KF: P11-RPY: %e, %e, %e\n"
-                                "KF: K1-RPY: %e, %e, %e\n\r\n", rollEstimator.p11, pitchEstimator.p11, yawEstimator.p11,
-                        rollEstimator.k11, pitchEstimator.k11, yawEstimator.k11);
-            }
-        }
-
-        USBComSendString(stateString);
-    } else if (serializationType == PROTOBUFFER_SERIALIZATION) {
-        bool protoStatus;
-        uint8_t serializedStateData[FlightStatesProto_size];
-        FlightStatesProto stateValuesProto;
-        uint32_t strLen;
-
-        /* Add estimated attitude states to protobuffer type struct members */
-        stateValuesProto.has_rollAngle = true;
-        stateValuesProto.rollAngle = GetRollAngle();
-        stateValuesProto.has_pitchAngle = true;
-        stateValuesProto.pitchAngle = GetPitchAngle();
-        stateValuesProto.has_yawAngle = true;
-        stateValuesProto.yawAngle = GetYawAngle();
-
-        stateValuesProto.has_rollRate = true;
-        stateValuesProto.rollRate = GetRollRate();
-        stateValuesProto.has_pitchRate = true;
-        stateValuesProto.pitchRate = GetPitchRate();
-        stateValuesProto.has_yawRate = true;
-        stateValuesProto.yawRate = GetYawRate();
-
-        // TODO add position estimates when available
-        stateValuesProto.has_posX = false;
-        stateValuesProto.posX = 0.0;
-        stateValuesProto.has_posY = false;
-        stateValuesProto.posY = 0.0;
-        stateValuesProto.has_posZ = false;
-        stateValuesProto.posZ = 0.0;
-
-        // TODO add velocity estimates when available
-        stateValuesProto.has_velX = false;
-        stateValuesProto.velX = 0.0;
-        stateValuesProto.has_velY = false;
-        stateValuesProto.velY = 0.0;
-        stateValuesProto.has_velZ = false;
-        stateValuesProto.velZ = 0.0;
-
-        /* Create a stream that will write to our buffer and encode the data with protocol buffer */
-        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedStateData, FlightStatesProto_size);
-        protoStatus = pb_encode(&protoStream, FlightStatesProto_fields, &stateValuesProto);
-
-        /* Insert header to the sample string, then copy the data after that */
-        snprintf(stateString, STATE_PRINT_MAX_STRING_SIZE, "%c %c ", FLIGHT_STATE_MSG_ENUM, protoStream.bytes_written);
-        strLen = strlen(stateString);
-        if (strLen + protoStream.bytes_written + strlen("\r\n") < STATE_PRINT_MAX_STRING_SIZE) {
-            memcpy(&stateString[strLen], serializedStateData, protoStream.bytes_written);
-            memcpy(&stateString[strLen + protoStream.bytes_written], "\r\n", strlen("\r\n"));
-        }
-
-        if (protoStatus)
-            USBComSendData((uint8_t*) stateString, strLen + protoStream.bytes_written + strlen("\r\n"));
-        else
-            ErrorHandler();
-    }
+    USBComSendString(stateString); // Send string over USB
 }
 
 
