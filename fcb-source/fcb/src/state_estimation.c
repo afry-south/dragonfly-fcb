@@ -81,14 +81,13 @@ xTaskHandle StatePrintSamplingTaskHandle = NULL;
 static SerializationType statePrintSerializationType;
 
 static float32_t sensorAttitudeRPY[3] = { 0.0f, 0.0f, 0.0f };
+static float32_t sensorAttitudeRateRPY[3] = { 0.0f, 0.0f, 0.0f };
 
 static portTickType magLastCorrectionTick = 0;
 static portTickType accLastCorrectionTick = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 static void StateInit(KalmanFilterType * Estimator, float32_t q1, float32_t q2, float32_t q3, float32_t r1, float32_t r2);
-static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_t const * pXYZData);
-
 static void PredictAttitudeState(KalmanFilterType* pEstimator, AttitudeStateVectorType * pState,
         float32_t const inertia, float32_t const ctrl, float32_t const tSinceLastCorrection);
 static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator,
@@ -286,24 +285,20 @@ static void StateInit(KalmanFilterType * Estimator, float32_t q1, float32_t q2, 
  * @retval None
  */
 void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ) {
-//  static uint8_t varianceCalcDone = 0;
-    /* keep these around because yaw calculations need data already calculated
-     * when accelerometer data was available
-     */
-
-    // TODO reevaluate usage of function below...
-//    if (0 == varianceCalcDone) {
-//        varianceCalcDone = ProfileSensorMeasurements(sensorType, pXYZ);
-//        return;
-//    }
 
     switch (sensorType) { /* interpret values according to sensor type */
     case GYRO_IDX: {
         /* run correction step */
         float32_t const * pSensorAngleRate = pXYZ;
-        CorrectAttitudeRateState(deltaT, pSensorAngleRate[ROLL_IDX], &rollEstimator, &rollStateInternal, &rollState);
-        CorrectAttitudeRateState(deltaT, pSensorAngleRate[PITCH_IDX], &pitchEstimator, &pitchStateInternal, &pitchState);
-        CorrectAttitudeRateState(deltaT, pSensorAngleRate[YAW_IDX], &yawEstimator, &yawStateInternal, &yawState);
+        TransformationErrorStatus status = TRANSF_OK;
+        status = GetEulerAngularRates(sensorAttitudeRateRPY, pSensorAngleRate, GetRollAngle(), GetPitchAngle());
+        if (status != TRANSF_OK) {
+            ErrorHandler();
+        }
+
+        CorrectAttitudeRateState(deltaT, sensorAttitudeRateRPY[ROLL_IDX], &rollEstimator, &rollStateInternal, &rollState);
+        CorrectAttitudeRateState(deltaT, sensorAttitudeRateRPY[PITCH_IDX], &pitchEstimator, &pitchStateInternal, &pitchState);
+        CorrectAttitudeRateState(deltaT, sensorAttitudeRateRPY[YAW_IDX], &yawEstimator, &yawStateInternal, &yawState);
     }
         break;
     case ACC_IDX: {
@@ -500,107 +495,6 @@ static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sen
     pState->angleRateBias = pStateInternal->angleRateBias;
     pState->angleRateUnbiased = pStateInternal->angleRateUnbiased;
 }
-
-/**
- * gathers VAR_SAMPLE_MAX and calculates variance to be used in
- * estimation equations. TODO: This function needs review. Should it even be used?
- */
-static uint8_t ProfileSensorMeasurements(FcbSensorIndexType sensorType, float32_t const * pXYZData) {
-    enum {
-        PROC, /* process samples, measurement samples, in this case gyroscope */
-        MEAS /* measurement samples, angles from accelero & magnetometer */
-    };
-
-    static uint8_t sCount[FCB_SENSOR_NBR] = { 0 };
-
-    uint8_t done = 0;
-
-    if (NULL == pSampleData) {
-        /*
-         * one set of measurements in rpy for
-         */
-        if (NULL == (pSampleData = malloc(2 * sizeof(FcbSensorVarianceCalcType)))) {
-            ErrorHandler();
-        }
-    }
-
-    switch (sensorType) {
-    case GYRO_IDX: {
-        pSampleData[PROC].samples[ROLL_IDX][sCount[GYRO_IDX]] = pXYZData[X_IDX];
-        pSampleData[PROC].samples[PITCH_IDX][sCount[GYRO_IDX]] = pXYZData[Y_IDX];
-        pSampleData[PROC].samples[YAW_IDX][sCount[GYRO_IDX]] = pXYZData[Z_IDX];
-    }
-        break;
-    case ACC_IDX:
-        GetAttitudeFromAccelerometer(sensorAttitudeRPY, pXYZData);
-        /* sample pitch measurement */
-        pSampleData[MEAS].samples[ROLL_IDX][sCount[ACC_IDX]] = sensorAttitudeRPY[ROLL_IDX];
-        /* sample roll measurement */
-        pSampleData[MEAS].samples[PITCH_IDX][sCount[ACC_IDX]] = sensorAttitudeRPY[PITCH_IDX];
-        break;
-    case MAG_IDX:
-        sensorAttitudeRPY[YAW_IDX] = GetMagYawAngle((float32_t*) pXYZData, sensorAttitudeRPY[ROLL_IDX],
-                sensorAttitudeRPY[PITCH_IDX]);
-        pSampleData[MEAS].samples[YAW_IDX][sCount[MAG_IDX]] = sensorAttitudeRPY[YAW_IDX];
-        break;
-    default:
-        ErrorHandler();
-    }
-
-    sCount[sensorType] += 1;
-
-    if (VAR_SAMPLE_MAX == sCount[sensorType]) {
-        float32_t variance = 0.0f;
-        float32_t mean = 0.0f;
-        switch (sensorType) {
-        case GYRO_IDX: {
-            arm_mean_f32(pSampleData[PROC].samples[ROLL_IDX], VAR_SAMPLE_MAX, &mean);
-            arm_var_f32(pSampleData[PROC].samples[ROLL_IDX], VAR_SAMPLE_MAX, &variance);
-            rollState.angleRateBias = mean;
-            rollEstimator.q1 = variance;
-            rollEstimator.p22 = variance;
-
-            arm_mean_f32(pSampleData[PROC].samples[PITCH_IDX], VAR_SAMPLE_MAX, &mean);
-            arm_var_f32(pSampleData[PROC].samples[PITCH_IDX], VAR_SAMPLE_MAX, &variance);
-            pitchState.angleRateBias = mean;
-            pitchEstimator.q1 = variance;
-            pitchEstimator.p22 = variance;
-
-            arm_mean_f32(pSampleData[PROC].samples[YAW_IDX], VAR_SAMPLE_MAX, &mean);
-            arm_var_f32(pSampleData[PROC].samples[YAW_IDX], VAR_SAMPLE_MAX, &variance);
-            yawState.angleRateBias = mean;
-            yawEstimator.q1 = variance;
-            yawEstimator.p22 = variance;
-        }
-            break;
-        case ACC_IDX:
-            arm_var_f32(pSampleData[MEAS].samples[ROLL_IDX], VAR_SAMPLE_MAX, &variance);
-            rollEstimator.r1 = variance;
-            rollEstimator.p11 = variance;
-            arm_var_f32(pSampleData[MEAS].samples[PITCH_IDX], VAR_SAMPLE_MAX, &variance);
-            pitchEstimator.r1 = variance;
-            pitchEstimator.p11 = variance;
-            break;
-        case MAG_IDX:
-            arm_var_f32(pSampleData[MEAS].samples[YAW_IDX], VAR_SAMPLE_MAX, &variance);
-            yawEstimator.r1 = variance;
-            yawEstimator.p11 = variance;
-            break;
-        default:
-            ErrorHandler();
-        }
-    }
-
-    if ((VAR_SAMPLE_MAX <= sCount[GYRO_IDX]) && (VAR_SAMPLE_MAX <= sCount[ACC_IDX])
-            && (VAR_SAMPLE_MAX <= sCount[MAG_IDX])) {
-        done = 1;
-        free(pSampleData);
-        pSampleData = NULL;
-    }
-
-    return done;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //                 Debug printing functions

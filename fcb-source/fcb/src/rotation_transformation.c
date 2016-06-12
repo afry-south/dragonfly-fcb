@@ -134,7 +134,7 @@ TransformationErrorStatus UpdateAngularRotationMatrix(const float32_t roll, cons
     cosPitch = arm_cos_f32(pitch);
 
     /* Check so that transformation matrix is not too close to becoming singular */
-    if (fabsf(cosPitch) < 0.01) {
+    if (fabsf(cosPitch) < 0.1) {
         return TRANSF_ERROR;
     }
 
@@ -306,8 +306,8 @@ TransformationErrorStatus GetEulerAngularRates(float32_t* rateDst, const float32
         return status;
     }
 
-    arm_mat_init_f32(&pqr, 3, 1, (float32_t*)bodyAngularRates);
-    arm_mat_init_f32(&eulerRates, 3, 1, (float32_t*)bodyAngularRates);
+    arm_mat_init_f32(&pqr, 1, 3, (float32_t*)bodyAngularRates);
+    arm_mat_init_f32(&eulerRates, 1, 3, (float32_t*)bodyAngularRates);
     arm_math_status = arm_mat_mult_f32(&angRateMatrix, &pqr, &eulerRates);
     if (arm_math_status != ARM_MATH_SUCCESS) {
         return TRANSF_ERROR;
