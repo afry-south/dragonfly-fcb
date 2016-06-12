@@ -129,6 +129,7 @@ static void InitSystem(void) {
 
 	/* Init the rotation matrix */
 	InitRotationMatrix();
+	InitAngularRotationMatrix();
 
 	/* Initialize PID control variables */
 	InitPIDControllers();
