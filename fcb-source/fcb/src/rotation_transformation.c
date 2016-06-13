@@ -34,9 +34,12 @@
 
 /* Private variables ---------------------------------------------------------*/
 static arm_matrix_instance_f32 DCM; // From inertial/world frame to body frame
+static float32_t DCMf32[9];
 static arm_matrix_instance_f32 DCMInv; // From body frame to inertial/world frame
+static float32_t DCMInvf32[9];
 
 static arm_matrix_instance_f32 angRateMatrix; // Used to transform angular rate from body to inertial/worl frame
+static float32_t angRateMatrixf32[9];
 
 /* [Unit: Gauss] Set to the magnetic vector in Malmö, SE, year 2015 (Components in north, east, down convention)
 * Data used from http://www.ngdc.noaa.gov/geomag-web/
@@ -56,9 +59,9 @@ float32_t inertialMagneticVectorNormalized[3] = {0.340345, 0.0209924, 0.940066};
 void InitRotationMatrix(void) {
 	float32_t DCMInvInit[9] =
 	{
-			1,     0,     1,
-			0,     1,     0,
-			0,     0,     1,
+			1.0,     0.0,     0.0,
+			0.0,     1.0,     0.0,
+			0.0,     0.0,     1.0,
 	};
 
 	/* Initialize the inverse DCM to the unit matrix (3x3) */
@@ -74,15 +77,18 @@ void InitRotationMatrix(void) {
  * @retval None
  */
 void InitAngularRotationMatrix(void) {
-    float32_t angRateMatrixInit[9] =
-    {
-            1,     0,     1,
-            0,     1,     0,
-            0,     0,     1,
-    };
+    angRateMatrixf32[0] = 1.0;
+    angRateMatrixf32[1] = 0.0;
+    angRateMatrixf32[2] = 0.0;
+    angRateMatrixf32[3] = 0.0;
+    angRateMatrixf32[4] = 1.0;
+    angRateMatrixf32[5] = 0.0;
+    angRateMatrixf32[6] = 0.0;
+    angRateMatrixf32[7] = 0.0;
+    angRateMatrixf32[8] = 1.0;
 
     /* Initialize the angular rate matrix to the unit matrix (3x3) */
-    arm_mat_init_f32(&angRateMatrix, 3, 3, angRateMatrixInit);
+    arm_mat_init_f32(&angRateMatrix, 3, 3, angRateMatrixf32);
 }
 
 /*
@@ -103,15 +109,18 @@ void UpdateRotationMatrix(const float32_t roll, const float32_t pitch, const flo
     cosYaw = arm_cos_f32(yaw);
 
 	/* Calculate the DCM based on roll, pitch and yaw angles */
-	float32_t DCMUpdate[9] =
-	{
-	        cosPitch*cosYaw,                            cosPitch*sinYaw,                            -sinPitch,
-			-cosRoll*sinYaw+sinRoll*sinPitch*cosYaw,    cosRoll*cosYaw+sinRoll*sinPitch*sinYaw,     sinRoll*cosPitch,
-			sinRoll*sinYaw+cosRoll*sinPitch*cosYaw,     -sinRoll*cosYaw+cosRoll*sinPitch*sinYaw,    cosRoll*cosPitch,
-	};
+    DCMf32[0] = cosPitch*cosYaw;
+    DCMf32[1] = cosPitch*sinYaw;
+    DCMf32[2] = -sinPitch;
+    DCMf32[3] = -cosRoll*sinYaw+sinRoll*sinPitch*cosYaw;
+    DCMf32[4] = cosRoll*cosYaw+sinRoll*sinPitch*sinYaw;
+    DCMf32[5] = sinRoll*cosPitch;
+    DCMf32[6] = sinRoll*sinYaw+cosRoll*sinPitch*cosYaw;
+    DCMf32[7] = -sinRoll*cosYaw+cosRoll*sinPitch*sinYaw;
+    DCMf32[8] = cosRoll*cosPitch;
 
 	/* Init the DCM that transforms FROM the inertial frame TO the body frame */
-	arm_mat_init_f32(&DCM, 3, 3, DCMUpdate);
+	arm_mat_init_f32(&DCM, 3, 3, angRateMatrixf32);
 
 	/* Calculate the DCM inverse, which is the same as matrix transpose since DCM is an orthonormal matrix. The inverse
 	 * transforms FROM the body frame TO the inertial frame*/
@@ -142,15 +151,18 @@ TransformationErrorStatus UpdateAngularRotationMatrix(const float32_t roll, cons
     secPitch = 1.0/cosPitch;
 
     /* Calculate the angular rate transformation matrix based on roll and pitch angles*/
-    float32_t angRateMatrixUpdate[9] =
-    {
-            1.0,    sinRoll*tanPitch,   cosRoll*tanPitch,
-            0.0,    cosRoll,            -sinRoll,
-            0.0,    sinRoll*secPitch,   cosRoll*secPitch,
-    };
+    angRateMatrixf32[0] = 1.0;
+    angRateMatrixf32[1] = sinRoll*tanPitch;
+    angRateMatrixf32[2] = cosRoll*tanPitch;
+    angRateMatrixf32[3] = 0.0;
+    angRateMatrixf32[4] = cosRoll;
+    angRateMatrixf32[5] = -sinRoll;
+    angRateMatrixf32[6] = 0.0;
+    angRateMatrixf32[7] = sinRoll*secPitch;
+    angRateMatrixf32[8] = cosRoll*secPitch;
 
     /* Init the DCM that transforms FROM the inertial frame TO the body frame */
-    arm_mat_init_f32(&angRateMatrix, 3, 3, angRateMatrixUpdate);
+    arm_mat_init_f32(&angRateMatrix, 3, 3, angRateMatrixf32);
 
     return TRANSF_OK;
 }
@@ -298,16 +310,13 @@ TransformationErrorStatus GetEulerAngularRates(float32_t* rateDst, const float32
     arm_matrix_instance_f32 pqr;
     arm_matrix_instance_f32 eulerRates;
 
-    // Check for pitch close to 90 deg
-    // Use matrix
-
     status = UpdateAngularRotationMatrix(roll, pitch);
     if (status != TRANSF_OK) {
         return status;
     }
 
-    arm_mat_init_f32(&pqr, 1, 3, (float32_t*)bodyAngularRates);
-    arm_mat_init_f32(&eulerRates, 1, 3, (float32_t*)bodyAngularRates);
+    arm_mat_init_f32(&pqr, 3, 1, (float32*t*) bodyAngularRates);
+    arm_mat_init_f32(&eulerRates, 3, 1, rateDst);
     arm_math_status = arm_mat_mult_f32(&angRateMatrix, &pqr, &eulerRates);
     if (arm_math_status != ARM_MATH_SUCCESS) {
         return TRANSF_ERROR;
