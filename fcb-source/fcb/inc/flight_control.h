@@ -16,7 +16,7 @@
 
 /* Exported constants --------------------------------------------------------*/
 
-#define FLIGHT_CONTROL_TASK_PERIOD		5 // [ms]
+#define FLIGHT_CONTROL_TASK_PERIOD		2.5 // [ms]
 
 /* Physical properties of aircraft */
 

@@ -123,7 +123,7 @@ void LSM303DLHC_AccConfig(void) {
   /*  Low level init */
   COMPASSACCELERO_IO_Init();
 
-  accConfig.dataRate = LSM303DLHC_ODR_200_HZ;
+  accConfig.dataRate = LSM303DLHC_ODR_400_HZ;
 
   /* set up accelerometer */
   uint8_t ctrlReg1 = 0x00 |

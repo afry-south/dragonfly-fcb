@@ -95,7 +95,7 @@ GYRO_DrvTypeDef L3gd20Drv =
 };
 
 /* L3GD20_OUTPUT_DATARATE_1: 96 Hz according to data sheet, 94.5 Hz according to oscilloscope */
-static uint8_t cfgL3GD20OutputDataRate = L3GD20_OUTPUT_DATARATE_2; // 190 Hz
+static uint8_t cfgL3GD20OutputDataRate = L3GD20_OUTPUT_DATARATE_3; // 380 Hz
 
 /**
   * @}
