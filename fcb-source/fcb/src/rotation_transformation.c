@@ -315,7 +315,7 @@ TransformationErrorStatus GetEulerAngularRates(float32_t* rateDst, const float32
         return status;
     }
 
-    arm_mat_init_f32(&pqr, 3, 1, (float32*t*) bodyAngularRates);
+    arm_mat_init_f32(&pqr, 3, 1, (float32_t*) bodyAngularRates);
     arm_mat_init_f32(&eulerRates, 3, 1, rateDst);
     arm_math_status = arm_mat_mult_f32(&angRateMatrix, &pqr, &eulerRates);
     if (arm_math_status != ARM_MATH_SUCCESS) {
