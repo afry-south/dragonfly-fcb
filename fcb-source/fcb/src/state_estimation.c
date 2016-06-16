@@ -89,7 +89,7 @@ static void PredictAttitudeState(KalmanFilterType* pEstimator, AttitudeStateVect
         float32_t const inertia, float32_t const ctrl, float32_t const tSinceLastCorrection);
 static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* pEstimator,
 		AttitudeStateVectorType* pStateInternal, AttitudeStateVectorType* pState);
-static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator,
+static void CorrectAttitudeRateState(const float32_t sensorRate, KalmanFilterType* pEstimator,
         AttitudeStateVectorType* pStateInternal, AttitudeStateVectorType* pState);
 static void StatePrintSamplingTask(void const *argument);
 
@@ -277,11 +277,10 @@ static void StateInit(KalmanFilterType * Estimator, float32_t q1, float32_t q2, 
 /*
  * @brief  State estimation sensor value update
  * @param  sensorType : Type of sensor (accelerometer, gyroscope, magnetometer)
- * @param  deltaT : Time difference between sensor values
  * @param  pXYZ : Pointer to sensor values array
  * @retval None
  */
-void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ) {
+void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t const * pXYZ) {
 
     switch (sensorType) { /* interpret values according to sensor type */
     case GYRO_IDX: {
@@ -293,9 +292,9 @@ void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, floa
             ErrorHandler();
         }
 
-        CorrectAttitudeRateState(deltaT, sensorAttitudeRateRPY[ROLL_IDX], &rollEstimator, &rollStateInternal, &rollState);
-        CorrectAttitudeRateState(deltaT, sensorAttitudeRateRPY[PITCH_IDX], &pitchEstimator, &pitchStateInternal, &pitchState);
-        CorrectAttitudeRateState(deltaT, sensorAttitudeRateRPY[YAW_IDX], &yawEstimator, &yawStateInternal, &yawState);
+        CorrectAttitudeRateState(sensorAttitudeRateRPY[ROLL_IDX], &rollEstimator, &rollStateInternal, &rollState);
+        CorrectAttitudeRateState(sensorAttitudeRateRPY[PITCH_IDX], &pitchEstimator, &pitchStateInternal, &pitchState);
+        CorrectAttitudeRateState(sensorAttitudeRateRPY[YAW_IDX], &yawEstimator, &yawStateInternal, &yawState);
     }
         break;
     case ACC_IDX: {
@@ -442,7 +441,7 @@ static void CorrectAttitudeState(const float32_t sensorAngle, KalmanFilterType* 
  * @param   stateRateBias: Pointer to struct member of StateVectorType (rollRateBias, pitchRateBias or yawRateBias)
  * @retval  None
  */
-static void CorrectAttitudeRateState(float32_t const deltaT, const float32_t sensorRate, KalmanFilterType* pEstimator,
+static void CorrectAttitudeRateState(const float32_t sensorRate, KalmanFilterType* pEstimator,
         AttitudeStateVectorType* pStateInternal, AttitudeStateVectorType* pState) {
     float32_t y2, s11, s12, s21, s22, InvDetS;
     float32_t p11_tmp, p12_tmp, p13_tmp, p21_tmp, p22_tmp, p23_tmp, p31_tmp, p32_tmp, p33_tmp;

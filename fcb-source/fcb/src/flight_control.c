@@ -51,7 +51,6 @@ typedef enum {
 typedef struct {
   FcbSensorIndexType sensorType;
   float32_t xyz[3];
-  uint8_t deltaTms;
 } sensorReading_TypeDef;
 
 /**
@@ -404,14 +403,11 @@ void SendPredictionUpdateToFlightControl(void)
     }
 }
 
-void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType,
-                                         uint8_t deltaTms,
-                                         float32_t xyz[3])
+void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType, float32_t xyz[3])
 {
     FlightControlMsg_TypeDef msg;
     msg.type = CORRECTION_UPDATE;
     msg.sensorReading.sensorType = sensorType;
-    msg.sensorReading.deltaTms = deltaTms;
     memcpy(msg.sensorReading.xyz, xyz, sizeof(float32_t)*3);
     portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
 
@@ -496,6 +492,9 @@ static void FlightControlTask(void const *argument) {
     if (SensorRegisterGyroClientCallback(SendCorrectionUpdateToFlightControl)) {
     	ErrorHandler();
     }
+//    if (SensorRegisterBaroClientCallback(SendCorrectionUpdateToFlightControl)) {
+//    	ErrorHandler();
+//    }
 
 	if (FLASH_OK != ReadReferenceMaxLimitsFromFlash(&refSignalsLimits)) {
 		setMaxLimitForReferenceSignalToDefault();
@@ -531,7 +530,7 @@ static void FlightControlTask(void const *argument) {
 
             break;
         case CORRECTION_UPDATE:
-            UpdateCorrectionState(msg.sensorReading.sensorType, msg.sensorReading.deltaTms/1000, msg.sensorReading.xyz);
+            UpdateCorrectionState(msg.sensorReading.sensorType, msg.sensorReading.xyz);
             break;
         default:
             break;
