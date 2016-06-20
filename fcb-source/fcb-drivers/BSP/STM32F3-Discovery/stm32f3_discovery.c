@@ -526,7 +526,7 @@ void I2Cbar_Init(void)
   * @param  Value: The target register value to be written
   * @retval  None
   */
-void I2C2_WriteData(uint16_t Addr, uint8_t Reg, uint8_t Value)
+void I2Cbar_WriteData(uint16_t Addr, uint8_t Reg, uint8_t Value)
 {
   HAL_StatusTypeDef status = HAL_OK;
 

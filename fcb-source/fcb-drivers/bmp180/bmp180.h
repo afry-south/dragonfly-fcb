@@ -11,18 +11,11 @@
 #include <stdint.h>
 #include "stm32f3_discovery.h"
 
-typedef struct {
-	uint16_t AC[6];
-	uint16_t B[2];
-	uint16_t MB;
-	uint16_t MC;
-	uint16_t MD;
-} BMP180CalibVals_t;
-
 void BMP180_init(void);
-void BMP180_readCalibVals(BMP180CalibVals_t *calibVals);
 
 void BMP180_StartPressureMeasure(void);
+void BMP180_StartTemperatureMeasure(void);
 HAL_StatusTypeDef BMP180_ReadPressureValue(float * pData);
+HAL_StatusTypeDef BMP180_UpdateInternalTempValue();
 
 #endif /* BMP180_BMP180_H_ */

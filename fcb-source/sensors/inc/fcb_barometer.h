@@ -11,5 +11,6 @@
 #include <stdint.h>
 
 uint8_t FcbInitialiseBarometer(void);
+void FetchDataFromBarometer(void);
 
 #endif /* INC_FCB_BAROMETER_H_ */

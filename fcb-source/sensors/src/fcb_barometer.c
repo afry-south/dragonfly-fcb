@@ -15,24 +15,70 @@
 
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include "timers.h"
+#include <stdbool.h>
 
-static xSemaphoreHandle mutexPressure;
+/* Private define ------------------------------------------------------------*/
 
-static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
-static BMP180CalibVals_t calibVals;
+// Define the period for starting and reading new pressure values in mSec.
+// Note that the actual period set to the timer will be half of this as also one
+// temperature reading will done for every pressure reading. Minimum time for both
+// temperature and pressure readings are 4.5 mSec each (without any filters).
+#define FCB_SENSOR_BAR_PERIOD	10
+
+/* Private typedef -----------------------------------------------------------*/
+
+typedef enum {
+	PRESSURE_MEASUREMENT = 0x30,
+	TEMPERATURE_MEASUREMENT = 0x31
+} CurrentMeasurementType;
+
+/* Private macro -------------------------------------------------------------*/
+
+/* Private variables ---------------------------------------------------------*/
+
+static xSemaphoreHandle barometerMutex;
+static xTimerHandle barometerTimer;
+
+//static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
 static float32_t sPressure;
+
+/* Private function prototypes -----------------------------------------------*/
+
+static void InitBarometerTimeEvent(CurrentMeasurementType measurmentType);
+void FetchDataFromBarometer(void);
+
+/* Exported functions --------------------------------------------------------*/
 
 uint8_t FcbInitialiseBarometer(void) {
     uint8_t retVal = FCB_OK;
 
-    if (NULL == (mutexPressure = xSemaphoreCreateMutex())) {
+    if (NULL == (barometerMutex = xSemaphoreCreateMutex())) {
         return FCB_ERR_INIT;
     }
 
     BMP180_init();
-    BMP180_readCalibVals(&calibVals);
+
+    InitBarometerTimeEvent(TEMPERATURE_MEASUREMENT);
+    BMP180_StartTemperatureMeasure();
 
     return retVal;
+}
+
+void vTimerCallback( xTimerHandle pxTimer ) {
+	uint32_t timerID = (uint32_t)pvTimerGetTimerID( pxTimer );
+	if (timerID == PRESSURE_MEASUREMENT) {
+		FetchDataFromBarometer();
+		// Start a new temperature measurement.
+        InitBarometerTimeEvent(TEMPERATURE_MEASUREMENT);
+        BMP180_StartTemperatureMeasure();
+	}
+	else if (timerID == TEMPERATURE_MEASUREMENT) {
+		BMP180_UpdateInternalTempValue();
+		// Start a new pressure measurement.
+        InitBarometerTimeEvent(PRESSURE_MEASUREMENT);
+        BMP180_StartPressureMeasure();
+	}
 }
 
 //uint8_t SensorRegisterBaroClientCallback(SendCorrectionUpdateCallback_TypeDef cbk) {
@@ -45,32 +91,46 @@ uint8_t FcbInitialiseBarometer(void) {
 //  return FCB_OK;
 //}
 
-void FetchDataFromBarometer(uint8_t deltaTms) {
+/* Private functions ---------------------------------------------------------*/
+
+void FetchDataFromBarometer(void) {
     float pressureData = 0.0f;
     HAL_StatusTypeDef status = HAL_OK;
 
     status = BMP180_ReadPressureValue(&pressureData);
-    if (status != HAL_OK) {
-#ifdef FCB_GYRO_DEBUG
-        USBComSendString("ERROR: L3GD20_ReadXYZAngRate\n");
-#endif
-        FcbSendSensorMessage(FCB_SENSOR_BAR_DATA_READY); // Re-send data ready read request if read fails
-        return;
-    }
 
-    if (pdTRUE != xSemaphoreTake(mutexPressure,  portMAX_DELAY /* wait forever */)) {
+    if (pdTRUE != xSemaphoreTake(barometerMutex,  portMAX_DELAY /* wait forever */)) {
       ErrorHandler();
       return;
     }
 
     sPressure = pressureData;
 
-    if (pdTRUE != xSemaphoreGive(mutexPressure)) {
+    if (pdTRUE != xSemaphoreGive(barometerMutex)) {
       ErrorHandler();
       return;
     }
 
-    if (SendCorrectionUpdateCallback != NULL) {
-        SendCorrectionUpdateCallback(BARO_IDX, &sPressure);
+//    if (SendCorrectionUpdateCallback != NULL) {
+//        SendCorrectionUpdateCallback(BARO_IDX, pressureData);
+//    }
+}
+
+static void InitBarometerTimeEvent(CurrentMeasurementType measurmentType) {
+	barometerTimer = xTimerCreate((signed char *)"BarometerTimer",         // Just a text name, not used by the kernel.
+			                      FCB_SENSOR_BAR_PERIOD,                   // The timer period in ticks.
+                                  pdFALSE, //pdTRUE,                       // The timer will auto-reload it selves when expired.
+                                  (void *)measurmentType,                  // Assign timer a unique id.
+                                  vTimerCallback                           // Timer calls this callback when it expires.
+                                  );
+
+	if (barometerTimer == NULL ) {
+		ErrorHandler();
+    }
+    else {
+        if (xTimerStart(barometerTimer, 0) != pdPASS ) {
+        	ErrorHandler();
+        }
     }
 }
+
