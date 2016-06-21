@@ -37,100 +37,95 @@ typedef enum {
 
 /* Private variables ---------------------------------------------------------*/
 
-static xSemaphoreHandle barometerMutex;
 static xTimerHandle barometerTimer;
+static CurrentMeasurementType currentMeasurementType;
 
-//static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
-static float32_t sPressure;
+static SendCorrectionUpdateCallback_TypeDef SendCorrectionUpdateCallback = NULL;
+static float32_t sAltitude;
 
 /* Private function prototypes -----------------------------------------------*/
 
-static void InitBarometerTimeEvent(CurrentMeasurementType measurmentType);
-void FetchDataFromBarometer(void);
+static void InitBarometerTimeEvent(void);
+static float32_t CalcAltitudeFromPressure(int32_t pressure);
 
 /* Exported functions --------------------------------------------------------*/
 
 uint8_t FcbInitialiseBarometer(void) {
     uint8_t retVal = FCB_OK;
 
-    if (NULL == (barometerMutex = xSemaphoreCreateMutex())) {
-        return FCB_ERR_INIT;
-    }
-
     BMP180_init();
 
-    InitBarometerTimeEvent(TEMPERATURE_MEASUREMENT);
+    currentMeasurementType = TEMPERATURE_MEASUREMENT;
+    InitBarometerTimeEvent();
     BMP180_StartTemperatureMeasure();
 
     return retVal;
 }
 
 void vTimerCallback( xTimerHandle pxTimer ) {
-	uint32_t timerID = (uint32_t)pvTimerGetTimerID( pxTimer );
-	if (timerID == PRESSURE_MEASUREMENT) {
-		FetchDataFromBarometer();
-		// Start a new temperature measurement.
-        InitBarometerTimeEvent(TEMPERATURE_MEASUREMENT);
+	FcbSendSensorMessage(FCB_SENSOR_BAR_DATA_READY);
+}
+
+void FetchDataFromBarometer(void) {
+    if (currentMeasurementType == PRESSURE_MEASUREMENT) {
+        int32_t pressureData = 0;
+        BMP180_ReadPressureValue(&pressureData);
+        float32_t newAltitude = CalcAltitudeFromPressure(pressureData);
+
+        if (SendCorrectionUpdateCallback != NULL) {
+            SendCorrectionUpdateCallback(BARO_IDX, &newAltitude);
+        }
+
+        sAltitude = newAltitude;
+
+        // Start a new temperature measurement.
+		currentMeasurementType = TEMPERATURE_MEASUREMENT;
         BMP180_StartTemperatureMeasure();
 	}
-	else if (timerID == TEMPERATURE_MEASUREMENT) {
+	else if (currentMeasurementType == TEMPERATURE_MEASUREMENT) {
 		BMP180_UpdateInternalTempValue();
 		// Start a new pressure measurement.
-        InitBarometerTimeEvent(PRESSURE_MEASUREMENT);
+		currentMeasurementType = PRESSURE_MEASUREMENT;
         BMP180_StartPressureMeasure();
 	}
 }
 
-//uint8_t SensorRegisterBaroClientCallback(SendCorrectionUpdateCallback_TypeDef cbk) {
-//  if (NULL != SendCorrectionUpdateCallback) {
-//    return FCB_ERR;
-//  }
-//
-//  SendCorrectionUpdateCallback = cbk;
-//
-//  return FCB_OK;
-//}
+uint8_t SensorRegisterBaroClientCallback(SendCorrectionUpdateCallback_TypeDef cbk) {
+    if (NULL != SendCorrectionUpdateCallback) {
+        return FCB_ERR;
+    }
+
+    SendCorrectionUpdateCallback = cbk;
+
+    return FCB_OK;
+}
+
+void GetAltitude(float32_t * alt) {
+    *alt = sAltitude;
+}
 
 /* Private functions ---------------------------------------------------------*/
 
-void FetchDataFromBarometer(void) {
-    float pressureData = 0.0f;
-    HAL_StatusTypeDef status = HAL_OK;
-
-    status = BMP180_ReadPressureValue(&pressureData);
-
-    if (pdTRUE != xSemaphoreTake(barometerMutex,  portMAX_DELAY /* wait forever */)) {
-      ErrorHandler();
-      return;
-    }
-
-    sPressure = pressureData;
-
-    if (pdTRUE != xSemaphoreGive(barometerMutex)) {
-      ErrorHandler();
-      return;
-    }
-
-//    if (SendCorrectionUpdateCallback != NULL) {
-//        SendCorrectionUpdateCallback(BARO_IDX, pressureData);
-//    }
-}
-
-static void InitBarometerTimeEvent(CurrentMeasurementType measurmentType) {
+static void InitBarometerTimeEvent(void) {
 	barometerTimer = xTimerCreate((signed char *)"BarometerTimer",         // Just a text name, not used by the kernel.
 			                      FCB_SENSOR_BAR_PERIOD,                   // The timer period in ticks.
-                                  pdFALSE, //pdTRUE,                       // The timer will auto-reload it selves when expired.
-                                  (void *)measurmentType,                  // Assign timer a unique id.
+                                  pdTRUE,                                  // The timer will auto-reload it selves when expired.
+                                  (void *)PRESSURE_MEASUREMENT,            // Assign timer a unique id.
                                   vTimerCallback                           // Timer calls this callback when it expires.
                                   );
 
 	if (barometerTimer == NULL ) {
 		ErrorHandler();
     }
-    else {
-        if (xTimerStart(barometerTimer, 0) != pdPASS ) {
-        	ErrorHandler();
-        }
+
+    if (xTimerStart(barometerTimer, 0) != pdPASS ) {
+      	ErrorHandler();
     }
 }
 
+static float32_t CalcAltitudeFromPressure(int32_t pressure) {
+	float32_t tmp = powf((float32_t)pressure / 101325.0f, 1.0f/5.255f);
+	float32_t altitude = 44330.0f * ( 1.0f - tmp);
+
+	return altitude;
+}

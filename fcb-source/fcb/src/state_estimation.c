@@ -316,6 +316,10 @@ void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t const * pXYZ
         magLastCorrectionTick = xTaskGetTickCount();
     }
         break;
+    case BARO_IDX: {
+
+    }
+    	break;
     default:
         ErrorHandler();
     }

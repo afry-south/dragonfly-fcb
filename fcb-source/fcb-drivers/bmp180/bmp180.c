@@ -69,7 +69,7 @@ void BMP180_StartTemperatureMeasure(void) {
 	I2Cbar_WriteData(BAROMETER_I2C_ADDRESS, BMP180_CTRL_MEAS_REG, BMP180_T_MEASURE);
 }
 
-HAL_StatusTypeDef BMP180_ReadPressureValue(float * pData) {
+HAL_StatusTypeDef BMP180_ReadPressureValue(int32_t * pData) {
     HAL_StatusTypeDef status = 0;
     uint8_t dataRead[3];
     uint32_t rawValue;

@@ -15,7 +15,7 @@ void BMP180_init(void);
 
 void BMP180_StartPressureMeasure(void);
 void BMP180_StartTemperatureMeasure(void);
-HAL_StatusTypeDef BMP180_ReadPressureValue(float * pData);
+HAL_StatusTypeDef BMP180_ReadPressureValue(int32_t * pData);
 HAL_StatusTypeDef BMP180_UpdateInternalTempValue();
 
 #endif /* BMP180_BMP180_H_ */

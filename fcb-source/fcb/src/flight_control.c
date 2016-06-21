@@ -492,9 +492,9 @@ static void FlightControlTask(void const *argument) {
     if (SensorRegisterGyroClientCallback(SendCorrectionUpdateToFlightControl)) {
     	ErrorHandler();
     }
-//    if (SensorRegisterBaroClientCallback(SendCorrectionUpdateToFlightControl)) {
-//    	ErrorHandler();
-//    }
+    if (SensorRegisterBaroClientCallback(SendCorrectionUpdateToFlightControl)) {
+    	ErrorHandler();
+    }
 
 	if (FLASH_OK != ReadReferenceMaxLimitsFromFlash(&refSignalsLimits)) {
 		setMaxLimitForReferenceSignalToDefault();

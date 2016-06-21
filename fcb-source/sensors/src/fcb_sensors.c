@@ -260,6 +260,9 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
         case FCB_SENSOR_MAGNETO_DATA_READY:
             FetchDataFromMagnetometer();
             break;
+        case FCB_SENSOR_BAR_DATA_READY:
+        	FetchDataFromBarometer();
+        	break;
         }
 
         /* Check for sensor data ready read timeouts */
