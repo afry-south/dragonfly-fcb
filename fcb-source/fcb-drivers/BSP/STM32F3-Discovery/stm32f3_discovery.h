@@ -252,6 +252,31 @@ typedef enum
    conditions (interrupts routines ...). */
 #define I2Cx_TIMEOUT_MAX                      0x10000
 
+/*##################### I2Cbar ###################################*/
+/**
+  * @brief  Definition for I2Cbar Interface pins
+  */
+#define DISCOVERY_I2Cbar                      I2C2
+#define DISCOVERY_I2Cbar_CLK_ENABLE()         __I2C2_CLK_ENABLE()
+#define DISCOVERY_I2Cbar_CLK_DISABLE()        __I2C2_CLK_DISABLE()
+#define DISCOVERY_I2Cbar_FORCE_RESET()        __I2C2_FORCE_RESET()
+#define DISCOVERY_I2Cbar_RELEASE_RESET()      __I2C2_RELEASE_RESET()
+
+#define DISCOVERY_I2Cbar_SCL_PIN              GPIO_PIN_9                  /* PA.09 */
+#define DISCOVERY_I2Cbar_SDA_PIN              GPIO_PIN_10                 /* PA.10 */
+
+#define DISCOVERY_I2Cbar_GPIO_PORT            GPIOA                       /* GPIOA */
+#define DISCOVERY_I2Cbar_GPIO_CLK_ENABLE()    __GPIOA_CLK_ENABLE()
+#define DISCOVERY_I2Cbar_GPIO_CLK_DISABLE()   __GPIOA_CLK_DISABLE()
+#define DISCOVERY_I2Cbar_AF                   GPIO_AF4_I2C2
+
+/* Maximum Timeout values for flags waiting loops. These timeouts are not based
+   on accurate values, they just guarantee that the application will not remain
+   stuck if the I2C communication is corrupted.
+   You may modify these timeout values depending on CPU frequency and application
+   conditions (interrupts routines ...). */
+#define I2Cbar_TIMEOUT_MAX                      0x10000
+
 /** @addtogroup STM32F072B_DISCOVERY_LOW_LEVEL_COMPONENT
   * @{
   */
@@ -303,6 +328,12 @@ typedef enum
 #define ACCELERO_INT2_PIN                GPIO_PIN_5                  /* PE.05 */
 #define ACCELERO_INT2_EXTI_IRQn          EXTI9_5_IRQn
 
+/*##################### PRESSURE SENSOR ##########################*/
+/**
+  * @brief  PRESSURE SENSOR I2C1 Interface
+  */
+#define BAROMETER_I2C_ADDRESS             0xEE
+
 /**
   * @}
   */
@@ -333,6 +364,11 @@ uint32_t  BSP_PB_GetState(Button_TypeDef Button);
 void      I2Cx_WriteData(uint16_t Addr, uint8_t Reg, uint8_t Value);
 uint8_t   I2Cx_ReadData(uint16_t Addr, uint8_t Reg);
 HAL_StatusTypeDef I2Cx_ReadDataLen(uint16_t Addr, uint8_t Reg, uint8_t * pData, uint16_t Len);
+
+void      I2Cbar_Init(void);
+void      I2Cbar_WriteData(uint16_t Addr, uint8_t Reg, uint8_t Value);
+uint8_t   I2Cbar_ReadData(uint16_t Addr, uint8_t Reg);
+HAL_StatusTypeDef I2Cbar_ReadDataLen(uint16_t Addr, uint8_t Reg, uint8_t * pData, uint16_t Len);
 
 /**
   * @}

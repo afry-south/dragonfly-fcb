@@ -108,8 +108,10 @@ static SPI_HandleTypeDef SpiHandle;
 
 #ifdef HAL_I2C_MODULE_ENABLED
 static I2C_HandleTypeDef I2cHandle;
+static I2C_HandleTypeDef I2CbarHandle;
 // uint32_t I2cxTimeout = I2Cx_TIMEOUT_MAX;    /*<! Value of Timeout when I2C communication fails */
 uint32_t I2cxTimeout = 0x2;    /*<! Value of Timeout when I2C communication fails */
+uint32_t I2CbarTimeout = 0x2;    /*<! Value of Timeout when I2C communication fails */
 #endif
 
 /**
@@ -125,6 +127,10 @@ uint32_t I2cxTimeout = 0x2;    /*<! Value of Timeout when I2C communication fail
 static void     I2Cx_Init(void);
 static void     I2Cx_Error (void);
 static void     I2Cx_MspInit(I2C_HandleTypeDef *hi2c);
+
+/* I2Cbar bus function */
+static void     I2Cbar_Error (void);
+static void     I2Cbar_MspInit();
 #endif
 
 #ifdef HAL_SPI_MODULE_ENABLED
@@ -462,6 +468,139 @@ static void I2Cx_Error (void)
 
   /* Re-Initialise the I2C communication BUS */
   I2Cx_Init();
+}
+
+/******************************* I2C Barometer Routines**********************************/
+
+/**
+  * @brief Discovery I2Cbar MSP Initialization
+  * @param hi2c I2C handle
+  * @retval None
+  */
+static void I2Cbar_MspInit()
+{
+  GPIO_InitTypeDef GPIO_InitStructure;
+
+  /* Enable SCK and SDA GPIO clocks */
+  DISCOVERY_I2Cbar_GPIO_CLK_ENABLE();
+
+  /* I2Cx SD1 & SCK pin configuration */
+  GPIO_InitStructure.Pin = (DISCOVERY_I2Cbar_SDA_PIN | DISCOVERY_I2Cbar_SCL_PIN);
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStructure.Pull = GPIO_PULLUP;
+  GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStructure.Alternate = DISCOVERY_I2Cbar_AF;
+  HAL_GPIO_Init(DISCOVERY_I2Cbar_GPIO_PORT, &GPIO_InitStructure);
+
+  /* Enable the I2C clock */
+  DISCOVERY_I2Cbar_CLK_ENABLE();
+}
+
+/**
+  * @brief Discovery I2Cx Bus initialization
+  * @param None
+  * @retval None
+  */
+void I2Cbar_Init(void)
+{
+  if(HAL_I2C_GetState(&I2CbarHandle) == HAL_I2C_STATE_RESET)
+  {
+    I2CbarHandle.Instance = DISCOVERY_I2Cbar;
+    I2CbarHandle.Init.OwnAddress1 =  BAROMETER_I2C_ADDRESS;
+    I2CbarHandle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    I2CbarHandle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLED;
+    I2CbarHandle.Init.OwnAddress2 = 0;
+    I2CbarHandle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLED;
+    I2CbarHandle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLED;
+
+    /* Init the I2C */
+    I2Cbar_MspInit();
+    HAL_I2C_Init(&I2CbarHandle);
+  }
+}
+
+/**
+  * @brief  Write a value in a register of the device through BUS.
+  * @param  Addr: Device address on BUS Bus.
+  * @param  Reg: The target register address to write
+  * @param  Value: The target register value to be written
+  * @retval  None
+  */
+void I2Cbar_WriteData(uint16_t Addr, uint8_t Reg, uint8_t Value)
+{
+  HAL_StatusTypeDef status = HAL_OK;
+
+  status = HAL_I2C_Mem_Write(&I2CbarHandle, Addr, (uint16_t)Reg, I2C_MEMADD_SIZE_8BIT, &Value, 1, I2CbarTimeout);
+
+  /* Check the communication status */
+  if(status != HAL_OK)
+  {
+    /* Execute user timeout callback */
+    I2Cbar_Error();
+  }
+}
+
+/**
+  * @brief  Read a value in a register of the device through BUS.
+  * @param  Addr: Device address on BUS Bus.
+  * @param  Reg: The target register address to write
+  * @retval Data read at register @
+  */
+uint8_t I2Cbar_ReadData(uint16_t Addr, uint8_t Reg)
+{
+  HAL_StatusTypeDef status = HAL_OK;
+  uint8_t value = 0;
+
+  status = HAL_I2C_Mem_Read(&I2CbarHandle, Addr, Reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2CbarTimeout);
+
+  /* Check the communication status */
+  if(status != HAL_OK)
+  {
+    /* Execute user timeout callback */
+    I2Cbar_Error();
+
+  }
+  return value;
+}
+
+/**
+  * @brief  Read a value in a register of the device through BUS.
+  * @param  Addr: Device address on BUS Bus.
+  * @param  Reg: The target register address to write
+  * @retval HAL_StatusTypeDef status
+  *
+  * @see HAL_StatusTypeDef
+  */
+HAL_StatusTypeDef I2Cbar_ReadDataLen(uint16_t Addr, uint8_t Reg, uint8_t * pData, uint16_t Len)
+{
+  HAL_StatusTypeDef status = HAL_OK;
+
+  status = HAL_I2C_Mem_Read(&I2CbarHandle, Addr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Len, I2CbarTimeout);
+
+  /* Check the communication status */
+  if(status != HAL_OK)
+  {
+    /* Execute user timeout callback */
+    I2Cbar_Error();
+  }
+
+  return status;
+}
+
+
+
+/**
+  * @brief I2C3 error treatment function
+  * @param None
+  * @retval None
+  */
+static void I2Cbar_Error (void)
+{
+  /* De-initialise the I2C communication BUS */
+  HAL_I2C_DeInit(&I2CbarHandle);
+
+  /* Re-Initialise the I2C communication BUS */
+  I2Cbar_Init();
 }
 #endif
 
