@@ -50,7 +50,6 @@ const float32_t GYRO_AXIS_VARIANCE_ROUGH = 0.000256;
 /* Private variables ---------------------------------------------------------*/
 
 static float32_t sGyroXYZAngleDot[3] = { 0.0, 0.0, 0.0 }; /* not volatile - only print thread reads */
-static float32_t sGyroSamplePeriod = 0.0f;
 static xSemaphoreHandle mutexGyro;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -85,10 +84,7 @@ uint8_t InitialiseGyroscope(void) {
     	ErrorHandler();
     }
 
-    /* start with configured data rate */
-    sGyroSamplePeriod = 1 / (float) L3GD20_DataRateHz();
-
-    FetchDataFromGyroscope(1 /* dummy value */); /* necessary so a fresh DRDY can be triggered */
+    FetchDataFromGyroscope(); /* necessary so a fresh DRDY can be triggered */
     return retVal;
 }
 
@@ -102,7 +98,7 @@ uint8_t SensorRegisterGyroClientCallback(SendCorrectionUpdateCallback_TypeDef cb
   return FCB_OK;
 }
 
-void FetchDataFromGyroscope(uint8_t deltaTms) {
+void FetchDataFromGyroscope(void) {
     float gyroscopeData[3] = { 0.0f, 0.0f, 0.0f };
     HAL_StatusTypeDef status = HAL_OK;
 
@@ -141,7 +137,7 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
     }
 
     if (SendCorrectionUpdateCallback != NULL) {
-        SendCorrectionUpdateCallback(GYRO_IDX, deltaTms, sGyroXYZAngleDot);
+        SendCorrectionUpdateCallback(GYRO_IDX, sGyroXYZAngleDot);
     }
 }
 
@@ -167,16 +163,6 @@ void GetGyroAngleDotNoMutex(float32_t * xAngleDot, float32_t * yAngleDot, float 
   *xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
   *yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
   *zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
-}
-
-
-void SetGyroMeasuredSamplePeriod(float32_t measuredPeriod) {
-  sGyroSamplePeriod = measuredPeriod;
-}
-
-
-float32_t GetGyroMeasuredSamplePeriod(void) {
-  return sGyroSamplePeriod;
 }
 
 /**

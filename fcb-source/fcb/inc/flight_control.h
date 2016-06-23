@@ -122,7 +122,7 @@ void SendPredictionUpdateToFlightControl(void);
  * @param deltaT time period to previous sensor drdy in ms
  * @param xyz a 3-array of XYZ sensor readings. See wiki page "Sensors"
  */
-void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType, uint8_t deltaTms, float32_t xyz[3]);
+void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType, float32_t xyz[3]);
 
 void setMaxLimitForReferenceSignal(float32_t maxZVelocity, float32_t maxRollAngle, float32_t maxPitchAngle, float32_t maxYawAngleRate);
 void getMaxLimitForReferenceSignal(float32_t* maxZVelocity, float32_t* maxRollAngle, float32_t* maxPitchAngle, float32_t* maxYawAngle,float32_t* maxYawAngleRate);

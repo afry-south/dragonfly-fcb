@@ -120,7 +120,7 @@ float32_t GetYawRate(void);
 void InitStatesXYZ(float32_t initAngles[3]);
 StateEstimationStatus InitStateEstimationTimeEvent(void);
 void UpdatePredictionState(void);
-void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t deltaT, float32_t const * pXYZ);
+void UpdateCorrectionState(FcbSensorIndexType sensorType, float32_t const * pXYZ);
 
 FcbRetValType StartStateSamplingTask(const uint16_t sampleTime, const uint32_t sampleDuration);
 FcbRetValType StopStateSamplingTask(void);

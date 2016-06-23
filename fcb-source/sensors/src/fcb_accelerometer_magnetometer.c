@@ -60,9 +60,6 @@ static float32_t sXYZMagVector[] = { 0, 0, 0 }; /* not volatile - only print thr
 static xSemaphoreHandle mutexAcc;
 static xSemaphoreHandle mutexMag;
 
-static float32_t sAccSamplePeriod = 0.0f;
-static float32_t sMagSamplePeriod = 0.0f;
-
 /**
  * Magnetometer calibration offset & scaling coefficients
  *
@@ -125,10 +122,7 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     /* ISSUE1_TODO - fetch accelerometer calib from flash */
 
     LSM303DLHC_AccConfig();
-    sAccSamplePeriod = 1 / (float) LSM303DLHC_AccDataRateHz();
-
     LSM303DLHC_MagInit();
-    sMagSamplePeriod = 1 / (float) LSM303DLHC_MagDataRateHz();
 
     /* do a pre-read to get the DRDY interrupts going. Since we trig on
      * rising flank and the sensor has data from power-on, by the time we get
@@ -268,7 +262,7 @@ void FetchDataFromAccelerometer(void) {
 		setXYZVector(acceleroMeterData, sXYZDotDot);
 
 	    if (SendCorrectionUpdateCallback != NULL) {
-            SendCorrectionUpdateCallback(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
+            SendCorrectionUpdateCallback(ACC_IDX, sXYZDotDot);
 	    }
 	} else if (ACCMTR_CALIBRATING == accMagMode) {
 		if (handleAccSampling(acceleroMeterData)) {
@@ -314,7 +308,7 @@ void FetchDataFromMagnetometer(void) {
 		setXYZVector(magnetoMeterData, sXYZMagVector);
 
 		if (SendCorrectionUpdateCallback != NULL) {
-			SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+			SendCorrectionUpdateCallback(MAG_IDX, sXYZMagVector);
 		}
 	} else if (MAGMTR_CALIBRATING == accMagMode) {
 		static uint32_t sampleIndex = 0;
@@ -395,16 +389,6 @@ void PrintAccelerometerValues(void) {
             sXYZDotDot[Y_IDX], sXYZDotDot[Z_IDX]);
 
     USBComSendString(sampleString);
-}
-
-void SetAccMagMeasuredSamplePeriod(float32_t accMeasuredPeriod, float32_t magMeasuredPeriod) {
-    sAccSamplePeriod = accMeasuredPeriod;
-    sMagSamplePeriod = magMeasuredPeriod;
-}
-
-void GetAccMagMeasuredSamplePeriod(float32_t *accMeasuredPeriod, float32_t *magMeasuredPeriod) {
-    *accMeasuredPeriod = sAccSamplePeriod;
-    *magMeasuredPeriod = sMagSamplePeriod;
 }
 
 uint8_t CheckCalParams(float32_t* calPrms) {

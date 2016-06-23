@@ -134,24 +134,6 @@ void GetMagVectorNoMutex(float32_t * x, float32_t * y, float32_t * z);
  */
 void PrintAccelerometerValues(void);
 
-
-/*
- * Set an updated value of the samplePeriod. The true sample period is not
- * exactly equal to the nominal value. Observed difference is about 2-3 Hz than
- * for the accelerometer and magnetometer. The accelerometer and magnetometer
- * have individual sample rates.
- *
- * @param measuredPeriod this value will be used as its sampling period henceforth
- */
-void SetAccMagMeasuredSamplePeriod(float32_t accMeasuredPeriod, float32_t magMeasuredPeriod);
-
-
-/*
- * This is the current gyro sample period used by the accelerometer and
- * magnetometer code respectively.
- */
-void GetAccMagMeasuredSamplePeriod(float32_t * accMeasuredPeriod, float32_t *magMeasuredPeriod);
-
 #endif /* FCB_ACCELEROMETER_H */
 
 /**

@@ -42,9 +42,8 @@ uint8_t SensorRegisterGyroClientCallback(SendCorrectionUpdateCallback_TypeDef cb
 /**
  * Fetches data (rotation speed, or angle dot) from gyroscope
  * sensor.
- * @param deltaTms time in ms since previous DRDY
  */
-void FetchDataFromGyroscope(uint8_t deltaTms);
+void FetchDataFromGyroscope(void);
 
 /*
  * get the current reading from the gyroscope.
@@ -58,20 +57,5 @@ void GetGyroAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float32_t * z
  * FcbSensorCbk functions which are called in the SENSRS task context
  */
 void GetGyroAngleDotNoMutex(float32_t * xAngleDot, float32_t * yAngleDot, float32_t * zAngleDot);
-
-
-/*
- * Set an updated value of the samplePeriod. The true sample period is not
- * exactly equal to the nominal value. Observed difference is less than
- * 1Hz for the gyro.
- *
- * @param measuredPeriod this value will be used as its sampling period henceforth
- */
-void SetGyroMeasuredSamplePeriod(float32_t measuredPeriod);
-
-/*
- * This is the current gyro sample period used by the sensors code.
- */
-float32_t GetGyroMeasuredSamplePeriod(void);
 
 #endif /* GYROSCOPE_H */
