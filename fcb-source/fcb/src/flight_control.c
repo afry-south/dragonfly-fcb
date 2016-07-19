@@ -516,8 +516,8 @@ static void FlightControlTask(void const *argument) {
         switch (msg.type) {
         case PREDICTION_UPDATE:
             UpdatePredictionState();
-            // break;
-        case FLIGHT_CONTROL_UPDATE:
+            // Intended fall through. But has to comment next case state to remove warning.
+        //case FLIGHT_CONTROL_UPDATE:
             /* Perform flight control activities */
             UpdateFlightControl();
 
@@ -525,8 +525,22 @@ static void FlightControlTask(void const *argument) {
             if(ledFlashCounter % 200 == 0) {
             	BSP_LED_Toggle(LED6);
             }
-
             ledFlashCounter++;
+
+        	switch (flightControlMode) {
+        	case FLIGHT_CONTROL_IDLE:
+        		BSP_LED_Off(LED10);
+        		BSP_LED_Off(LED3);
+        		break;
+        	case FLIGHT_CONTROL_RAW:
+        		BSP_LED_On(LED10);
+        		BSP_LED_Off(LED3);
+        		break;
+        	default:
+        		BSP_LED_On(LED10);
+        		BSP_LED_On(LED3);
+        		break;
+        	}
 
             break;
         case CORRECTION_UPDATE:
