@@ -63,7 +63,7 @@ uint8_t InitialiseGyroscope(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
 
     if (NULL == (mutexGyro = xSemaphoreCreateMutex())) {
-      return FCB_ERR_INIT;
+        return FCB_ERR_INIT;
     }
 
     /* configure GYRO DRDY (data ready) interrupt */
@@ -82,7 +82,7 @@ uint8_t InitialiseGyroscope(void) {
     if(L3GD20_Config() != 0)
     {
         /* Initialization Error */
-    	ErrorHandler();
+        ErrorHandler();
     }
 
     /* start with configured data rate */
@@ -93,13 +93,13 @@ uint8_t InitialiseGyroscope(void) {
 }
 
 uint8_t SensorRegisterGyroClientCallback(SendCorrectionUpdateCallback_TypeDef cbk) {
-  if (NULL != SendCorrectionUpdateCallback) {
-    return FCB_ERR;
-  }
+    if (NULL != SendCorrectionUpdateCallback) {
+        return FCB_ERR;
+    }
 
-  SendCorrectionUpdateCallback = cbk;
+    SendCorrectionUpdateCallback = cbk;
 
-  return FCB_OK;
+    return FCB_OK;
 }
 
 void FetchDataFromGyroscope(uint8_t deltaTms) {
@@ -127,8 +127,8 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
     lGyroXYZAngleDot[ZDOT_IDX] = -gyroscopeData[ZDOT_IDX];
 
     if (pdTRUE != xSemaphoreTake(mutexGyro,  portMAX_DELAY /* wait forever */)) {
-      ErrorHandler();
-      return;
+        ErrorHandler();
+        return;
     }
 
     sGyroXYZAngleDot[XDOT_IDX] = lGyroXYZAngleDot[XDOT_IDX];
@@ -136,8 +136,8 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
     sGyroXYZAngleDot[ZDOT_IDX] = lGyroXYZAngleDot[ZDOT_IDX];
 
     if (pdTRUE != xSemaphoreGive(mutexGyro)) {
-      ErrorHandler();
-      return;
+        ErrorHandler();
+        return;
     }
 
     if (SendCorrectionUpdateCallback != NULL) {
@@ -147,36 +147,36 @@ void FetchDataFromGyroscope(uint8_t deltaTms) {
 
 
 void GetGyroAngleDot(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngleDot) {
-  if (pdTRUE != xSemaphoreTake(mutexGyro,  portMAX_DELAY /* wait forever */)) {
-    ErrorHandler();
-    return;
-  }
+    if (pdTRUE != xSemaphoreTake(mutexGyro,  portMAX_DELAY /* wait forever */)) {
+        ErrorHandler();
+        return;
+    }
 
-  *xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
-  *yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
-  *zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
+    *xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
+    *yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
+    *zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
 
-  if (pdTRUE != xSemaphoreGive(mutexGyro)) {
-    ErrorHandler();
-    return;
-  }
+    if (pdTRUE != xSemaphoreGive(mutexGyro)) {
+        ErrorHandler();
+        return;
+    }
 }
 
 
 void GetGyroAngleDotNoMutex(float32_t * xAngleDot, float32_t * yAngleDot, float * zAngleDot) {
-  *xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
-  *yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
-  *zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
+    *xAngleDot = sGyroXYZAngleDot[XDOT_IDX];
+    *yAngleDot = sGyroXYZAngleDot[YDOT_IDX];
+    *zAngleDot = sGyroXYZAngleDot[ZDOT_IDX];
 }
 
 
 void SetGyroMeasuredSamplePeriod(float32_t measuredPeriod) {
-  sGyroSamplePeriod = measuredPeriod;
+    sGyroSamplePeriod = measuredPeriod;
 }
 
 
 float32_t GetGyroMeasuredSamplePeriod(void) {
-  return sGyroSamplePeriod;
+    return sGyroSamplePeriod;
 }
 
 /**

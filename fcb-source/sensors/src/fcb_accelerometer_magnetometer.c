@@ -47,8 +47,8 @@ enum { NBR_SAMPLE_POSITIONS = 6 };
 enum { NBR_OF_SAMPLES_BETWEEN_EACH_POSITION = 1000 };
 
 typedef enum {
-	MOVING,
-	IN_POSITION
+    MOVING,
+    IN_POSITION
 } AccCalibSamplePosition_t;
 
 /* print-to-usb com port sampling */
@@ -113,13 +113,12 @@ uint8_t FcbInitialiseAccMagSensor(void) {
     FcbSensorsInitGpioPinForInterrupt(GPIOE, GPIO_PIN_2);
 
     /* set up interrupt DRDY for accelerometer - see HAL_GPIO_EXTI_Callback fcn */
-    HAL_NVIC_SetPriority(EXTI4_IRQn,
-    configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
+    HAL_NVIC_SetPriority(EXTI4_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
     /* set up interrupt DRDY for magnetometer - see HAL_GPIO_EXTI_Callback fcn */
     HAL_NVIC_SetPriority(EXTI2_TSC_IRQn,
-    configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
+            configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
 
     /* ISSUE1_TODO - fetch accelerometer calib from flash */
@@ -156,95 +155,95 @@ uint8_t FcbInitialiseAccMagSensor(void) {
 }
 
 uint8_t SensorRegisterAccClientCallback(SendCorrectionUpdateCallback_TypeDef cbk) {
-  if (NULL != SendCorrectionUpdateCallback) {
-    return FCB_ERR;
-  }
+    if (NULL != SendCorrectionUpdateCallback) {
+        return FCB_ERR;
+    }
 
-  SendCorrectionUpdateCallback = cbk;
+    SendCorrectionUpdateCallback = cbk;
 
-  return FCB_OK;
+    return FCB_OK;
 }
 
 void setXYZVector(float32_t *srcVector, float32_t *dstVector) {
-	if (pdTRUE != xSemaphoreTake(mutexMag, portMAX_DELAY /* wait forever */)) {
-		ErrorHandler();
-		return;
-	}
+    if (pdTRUE != xSemaphoreTake(mutexMag, portMAX_DELAY /* wait forever */)) {
+        ErrorHandler();
+        return;
+    }
 
-	dstVector[X_IDX] = srcVector[X_IDX];
-	dstVector[Y_IDX] = srcVector[Y_IDX];
-	dstVector[Z_IDX] = srcVector[Z_IDX];
+    dstVector[X_IDX] = srcVector[X_IDX];
+    dstVector[Y_IDX] = srcVector[Y_IDX];
+    dstVector[Z_IDX] = srcVector[Z_IDX];
 
-	if (pdTRUE != xSemaphoreGive(mutexMag)) {
-		ErrorHandler();
-		return;
-	}
+    if (pdTRUE != xSemaphoreGive(mutexMag)) {
+        ErrorHandler();
+        return;
+    }
 }
 
 void adjustAxesOrientation(float32_t *xyzValues) {
-	/* adjust sensor axes to the axes of the quadcopter fuselage
-	 * see "Sensors" page in Wiki.
-	 *
-	 * NOTE: X axis is already aligned
-	 */
-	xyzValues[Y_IDX] = -xyzValues[Y_IDX];
-	xyzValues[Z_IDX] = -xyzValues[Z_IDX];
+    /* adjust sensor axes to the axes of the quadcopter fuselage
+     * see "Sensors" page in Wiki.
+     *
+     * NOTE: X axis is already aligned
+     */
+    xyzValues[Y_IDX] = -xyzValues[Y_IDX];
+    xyzValues[Z_IDX] = -xyzValues[Z_IDX];
 }
 
 void applayCalibrationPrmToRawData(float32_t *calPrmVector, float32_t *xyzValues) {
-	xyzValues[X_IDX] = (xyzValues[X_IDX] - calPrmVector[X_OFFSET_CALIB_IDX])
-					/ calPrmVector[X_SCALING_CALIB_IDX];
-	xyzValues[Y_IDX] = (xyzValues[Y_IDX] - calPrmVector[Y_OFFSET_CALIB_IDX])
-					/ calPrmVector[Y_SCALING_CALIB_IDX];
-	xyzValues[Z_IDX] = (xyzValues[Z_IDX] - calPrmVector[Z_OFFSET_CALIB_IDX])
-					/ calPrmVector[Z_SCALING_CALIB_IDX];
+    xyzValues[X_IDX] = (xyzValues[X_IDX] - calPrmVector[X_OFFSET_CALIB_IDX])
+					        / calPrmVector[X_SCALING_CALIB_IDX];
+    xyzValues[Y_IDX] = (xyzValues[Y_IDX] - calPrmVector[Y_OFFSET_CALIB_IDX])
+					        / calPrmVector[Y_SCALING_CALIB_IDX];
+    xyzValues[Z_IDX] = (xyzValues[Z_IDX] - calPrmVector[Z_OFFSET_CALIB_IDX])
+					        / calPrmVector[Z_SCALING_CALIB_IDX];
 }
 
 bool handleAccSampling(float32_t *acceleroMeterData) {
-	static uint32_t sampleIndex = 0;
-	static AccCalibSamplePosition_t sampleInPosition = MOVING;
-	static uint32_t samplePosition = 0;
-	bool calibrationDone = false;
+    static uint32_t sampleIndex = 0;
+    static AccCalibSamplePosition_t sampleInPosition = MOVING;
+    static uint32_t samplePosition = 0;
+    bool calibrationDone = false;
 
-	if (samplePosition < NBR_SAMPLE_POSITIONS) {
-		// We will take samples from a number of different positions.
-		if (sampleInPosition == IN_POSITION) {
-			// Device is in new position
-			if (sampleIndex < NBR_OF_SAMPLES_IN_EACH_POSITION) {
-				// Add the sample to the calibration algorithm.
-				adjustAxesOrientation(acceleroMeterData);
-				addNewSample(acceleroMeterData);
-				sampleIndex++;
-			} else {
-				// All samples for this position is done. Inform the user to put the device in a new position.
-				sampleIndex = 0;
-				sampleInPosition = MOVING;
-				samplePosition++;
+    if (samplePosition < NBR_SAMPLE_POSITIONS) {
+        // We will take samples from a number of different positions.
+        if (sampleInPosition == IN_POSITION) {
+            // Device is in new position
+            if (sampleIndex < NBR_OF_SAMPLES_IN_EACH_POSITION) {
+                // Add the sample to the calibration algorithm.
+                adjustAxesOrientation(acceleroMeterData);
+                addNewSample(acceleroMeterData);
+                sampleIndex++;
+            } else {
+                // All samples for this position is done. Inform the user to put the device in a new position.
+                sampleIndex = 0;
+                sampleInPosition = MOVING;
+                samplePosition++;
 
-				USBComSendString("Move device to next position\n");
-			}
-		} else {
-			// Wait some time for the device to be put in a new position.
-			if (sampleIndex < NBR_OF_SAMPLES_BETWEEN_EACH_POSITION) {
-				// Still more time to wait.
-				sampleIndex++;
-			} else {
-				// Time to start to take some samples. Also inform the user about this.
-				sampleIndex = 0;
-				sampleInPosition = IN_POSITION;
+                USBComSendString("Move device to next position\n");
+            }
+        } else {
+            // Wait some time for the device to be put in a new position.
+            if (sampleIndex < NBR_OF_SAMPLES_BETWEEN_EACH_POSITION) {
+                // Still more time to wait.
+                sampleIndex++;
+            } else {
+                // Time to start to take some samples. Also inform the user about this.
+                sampleIndex = 0;
+                sampleInPosition = IN_POSITION;
 
-				USBComSendString("Start sampling for this position\n");
-			}
-		}
-	} else {
-		// Calibration done, return true and reset internal variables.
-		calibrationDone = true;
-		sampleIndex = 0;
-		sampleInPosition = MOVING;
-		samplePosition = 0;
-	}
+                USBComSendString("Start sampling for this position\n");
+            }
+        }
+    } else {
+        // Calibration done, return true and reset internal variables.
+        calibrationDone = true;
+        sampleIndex = 0;
+        sampleInPosition = MOVING;
+        samplePosition = 0;
+    }
 
-	return calibrationDone;
+    return calibrationDone;
 }
 
 void FetchDataFromAccelerometer(void) {
@@ -262,30 +261,30 @@ void FetchDataFromAccelerometer(void) {
         }
     }
 
-	if (ACCMAGMTR_FETCHING == accMagMode) {
-		adjustAxesOrientation(acceleroMeterData);
-		applayCalibrationPrmToRawData(sXYZAccCalPrm, acceleroMeterData);
-		setXYZVector(acceleroMeterData, sXYZDotDot);
+    if (ACCMAGMTR_FETCHING == accMagMode) {
+        adjustAxesOrientation(acceleroMeterData);
+        applayCalibrationPrmToRawData(sXYZAccCalPrm, acceleroMeterData);
+        setXYZVector(acceleroMeterData, sXYZDotDot);
 
-	    if (SendCorrectionUpdateCallback != NULL) {
+        if (SendCorrectionUpdateCallback != NULL) {
             SendCorrectionUpdateCallback(ACC_IDX, 1 /* dummy not used for acc */, sXYZDotDot);
-	    }
-	} else if (ACCMTR_CALIBRATING == accMagMode) {
-		if (handleAccSampling(acceleroMeterData)) {
-			calibrate(sXYZAccCalPrm);
-			WriteAccCalibrationValuesToFlash(sXYZAccCalPrm);
+        }
+    } else if (ACCMTR_CALIBRATING == accMagMode) {
+        if (handleAccSampling(acceleroMeterData)) {
+            calibrate(sXYZAccCalPrm);
+            WriteAccCalibrationValuesToFlash(sXYZAccCalPrm);
 
-			char string[100];
-			snprintf(string, 100,
-					"Calib acc value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
-					sXYZAccCalPrm[0], sXYZAccCalPrm[1], sXYZAccCalPrm[2],
-					sXYZAccCalPrm[3], sXYZAccCalPrm[4], sXYZAccCalPrm[5]);
-			USBComSendString(string);
+            char string[100];
+            snprintf(string, 100,
+                    "Calib acc value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
+                    sXYZAccCalPrm[0], sXYZAccCalPrm[1], sXYZAccCalPrm[2],
+                    sXYZAccCalPrm[3], sXYZAccCalPrm[4], sXYZAccCalPrm[5]);
+            USBComSendString(string);
 
-			/* calibration done */
-			accMagMode = ACCMAGMTR_FETCHING;
-		}
-	}
+            /* calibration done */
+            accMagMode = ACCMAGMTR_FETCHING;
+        }
+    }
 }
 
 void StartAccMagMtrCalibration(uint32_t samples) {
@@ -294,52 +293,52 @@ void StartAccMagMtrCalibration(uint32_t samples) {
 }
 
 void FetchDataFromMagnetometer(void) {
-	HAL_StatusTypeDef status = HAL_OK;
-	float32_t magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
+    HAL_StatusTypeDef status = HAL_OK;
+    float32_t magnetoMeterData[3] = { 0.0f, 0.0f, 0.0f };
 
-	if (ACCMAGMTR_UNINITIALISED != accMagMode) {
-		status = LSM303DLHC_MagReadXYZ(magnetoMeterData);
-		if (status != HAL_OK) {
+    if (ACCMAGMTR_UNINITIALISED != accMagMode) {
+        status = LSM303DLHC_MagReadXYZ(magnetoMeterData);
+        if (status != HAL_OK) {
 #ifdef FCB_ACCMAG_DEBUG
-			USBComSendString("ERROR: LSM303DLHC_MagReadXYZ\n");
+            USBComSendString("ERROR: LSM303DLHC_MagReadXYZ\n");
 #endif
-			FcbSendSensorMessage(FCB_SENSOR_MAGNETO_DATA_READY);
-			return;
-		}
-	}
+            FcbSendSensorMessage(FCB_SENSOR_MAGNETO_DATA_READY);
+            return;
+        }
+    }
 
-	if (ACCMAGMTR_FETCHING == accMagMode) {
-		adjustAxesOrientation(magnetoMeterData);
-		applayCalibrationPrmToRawData(sXYZMagCalPrm, magnetoMeterData);
-		setXYZVector(magnetoMeterData, sXYZMagVector);
+    if (ACCMAGMTR_FETCHING == accMagMode) {
+        adjustAxesOrientation(magnetoMeterData);
+        applayCalibrationPrmToRawData(sXYZMagCalPrm, magnetoMeterData);
+        setXYZVector(magnetoMeterData, sXYZMagVector);
 
-		if (SendCorrectionUpdateCallback != NULL) {
-			SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
-		}
-	} else if (MAGMTR_CALIBRATING == accMagMode) {
-		static uint32_t sampleIndex = 0;
-		if (sampleIndex < nbrOfSamplesForCalibration) {
-			adjustAxesOrientation(magnetoMeterData);
-			addNewSample(magnetoMeterData);
-			sampleIndex++;
-		} else {
-			calibrate(sXYZMagCalPrm);
+        if (SendCorrectionUpdateCallback != NULL) {
+            SendCorrectionUpdateCallback(MAG_IDX, 1 /* dummy - not used for mag */, sXYZMagVector);
+        }
+    } else if (MAGMTR_CALIBRATING == accMagMode) {
+        static uint32_t sampleIndex = 0;
+        if (sampleIndex < nbrOfSamplesForCalibration) {
+            adjustAxesOrientation(magnetoMeterData);
+            addNewSample(magnetoMeterData);
+            sampleIndex++;
+        } else {
+            calibrate(sXYZMagCalPrm);
 
-			WriteMagCalibrationValuesToFlash(sXYZMagCalPrm);
+            WriteMagCalibrationValuesToFlash(sXYZMagCalPrm);
 
-			char string[100];
-			snprintf(string, 100,
-					"Calib mag value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
-					sXYZMagCalPrm[0], sXYZMagCalPrm[1], sXYZMagCalPrm[2],
-					sXYZMagCalPrm[3], sXYZMagCalPrm[4], sXYZMagCalPrm[5]);
-			USBComSendString(string);
-			USBComSendString("\nMove device to first position for Accelerometer calibration.\n");
+            char string[100];
+            snprintf(string, 100,
+                    "Calib mag value: %f\t: %f\t: %f: %f\t: %f\t: %f\n",
+                    sXYZMagCalPrm[0], sXYZMagCalPrm[1], sXYZMagCalPrm[2],
+                    sXYZMagCalPrm[3], sXYZMagCalPrm[4], sXYZMagCalPrm[5]);
+            USBComSendString(string);
+            USBComSendString("\nMove device to first position for Accelerometer calibration.\n");
 
-			/* calibration done */
-			accMagMode = ACCMTR_CALIBRATING;
-			sampleIndex = 0;
-		}
-	}
+            /* calibration done */
+            accMagMode = ACCMTR_CALIBRATING;
+            sampleIndex = 0;
+        }
+    }
 }
 
 void GetAcceleration(float32_t * xDotDot, float32_t * yDotDot, float32_t * zDotDot) {
@@ -408,17 +407,17 @@ void GetAccMagMeasuredSamplePeriod(float32_t *accMeasuredPeriod, float32_t *magM
 }
 
 uint8_t CheckCalParams(float32_t* calPrms) {
-	uint8_t status = FCB_OK;
+    uint8_t status = FCB_OK;
 
-	if (calPrms[X_SCALING_CALIB_IDX] < 0.1) {
-		status = FCB_ERR;
-	} else if (calPrms[Y_SCALING_CALIB_IDX] < 0.1) {
-		status = FCB_ERR;
-	} else if (calPrms[Z_SCALING_CALIB_IDX] < 0.1) {
-		status = FCB_ERR;
-	}
+    if (calPrms[X_SCALING_CALIB_IDX] < 0.1) {
+        status = FCB_ERR;
+    } else if (calPrms[Y_SCALING_CALIB_IDX] < 0.1) {
+        status = FCB_ERR;
+    } else if (calPrms[Z_SCALING_CALIB_IDX] < 0.1) {
+        status = FCB_ERR;
+    }
 
-	return status;
+    return status;
 }
 
 /**
