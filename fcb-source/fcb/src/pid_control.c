@@ -66,7 +66,7 @@ static PIDController_TypeDef PitchCtrl;
 static PIDController_TypeDef YawCtrl;
 
 /* Private function prototypes -----------------------------------------------*/
-static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t ctrlState, float32_t refSignal);
+static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t ctrlState, float32_t refSignal, float32_t dCtrlState, bool useDCtrlStatel);
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -179,9 +179,9 @@ void InitPIDControllers(void) {
  */
 void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals) {
     // ctrlSignals->thrust = UpdatePIDControl(&AltCtrl, GetZVelocity(), GetZVelocityReferenceSignal()); // TODO control altitude later
-    ctrlSignals->rollMoment = UpdatePIDControl(&RollCtrl, GetRollAngle(), GetRollAngleReferenceSignal());
-    ctrlSignals->pitchMoment = UpdatePIDControl(&PitchCtrl, GetPitchAngle(), GetPitchAngleReferenceSignal());
-    ctrlSignals->yawMoment = UpdatePIDControl(&YawCtrl, GetYawRate(), GetYawAngularRateReferenceSignal()); // TODO should be GetYawRate()
+    ctrlSignals->rollMoment = UpdatePIDControl(&RollCtrl, GetRollAngle(), GetRollAngleReferenceSignal(), GetRollRate(), true);
+    ctrlSignals->pitchMoment = UpdatePIDControl(&PitchCtrl, GetPitchAngle(), GetPitchAngleReferenceSignal(), GetPitchRate(), true);
+    ctrlSignals->yawMoment = UpdatePIDControl(&YawCtrl, GetYawRate(), GetYawAngularRateReferenceSignal(), 0, false); // TODO should be GetYawRate()
 }
 
 /*
@@ -205,7 +205,7 @@ void ResetCtrlSignals(CtrlSignals_TypeDef* ctrlSignals) {
  * @param	refSignal : The control reference signal value
  * @retval	PID control signal value
  */
-static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t ctrlState, float32_t refSignal) {
+static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t ctrlState, float32_t refSignal, float32_t ctrlStateRate, bool useCtrlStateRate) {
 	float32_t controlSignal, tmpControlSignal;
 
 	/* Calculate Proportional control part */
@@ -234,10 +234,19 @@ static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t c
 		ctrlParams->I += ctrlParams->Ti*CONTROL_PERIOD*(refSignal - ctrlState);
 	}
 
-	/* Calculate Derivative control part */
-	ctrlParams->D = ctrlParams->Td/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)*ctrlParams->D
-			+ ctrlParams->Td*ctrlParams->N/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)
-			* (ctrlParams->Gamma*(refSignal - ctrlParams->preRef) - (ctrlState - ctrlParams->preState));
+	/* If we don't have ctrl state rate, calculate if using the previous value. */
+	if (!useCtrlStateRate) {
+		/* Calculate Derivative control part */
+		ctrlParams->D = ctrlParams->Td/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)*ctrlParams->D
+				+ ctrlParams->Td*ctrlParams->N/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)
+				* (ctrlParams->Gamma*(refSignal - ctrlParams->preRef) - (ctrlState - ctrlParams->preState));
+	}
+	else {
+		/* Calculate Derivative control part */
+		ctrlParams->D = ctrlParams->Td/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)*ctrlParams->D
+				+ ctrlParams->Td*ctrlParams->N*CONTROL_PERIOD/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)
+				* (ctrlParams->Gamma*(refSignal - ctrlParams->preRef)/CONTROL_PERIOD - ctrlStateRate);
+	}
 
 #endif
 
