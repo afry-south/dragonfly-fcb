@@ -894,7 +894,7 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
     portBASE_TYPE xParameterStringLength;
     portBASE_TYPE lParameterNumber = 0;
 
-    float32_t accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ, accVector[3], accAngleVector[3];
+    float32_t gyroVector[3], accVector[3], accAngleVector[3], magVector[3];
     bool protoStatus;
     uint8_t serializedData[SensorSamplesProto_size];
     SensorSamplesProto sensorProto;
@@ -919,34 +919,32 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
     case 'n':
         if (outCnt == 0) {
             /* Get the latest sensor values */
-            GetAcceleration(&accX, &accY, &accZ);
-            accVector[0] = accX;
-            accVector[1] = accY;
-            accVector[2] = accZ;
+            GetAcceleration(&accVector[0], &accVector[1], &accVector[2]);
             GetAttitudeFromAccelerometer(accAngleVector, accVector);
+            GetMagVector(&magVector[0], &magVector[1], &magVector[2]);
+            accAngleVector[2] = GetMagYawAngle(magVector, GetRollAngle(), GetPitchAngle());
+
             snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-                    "Accelerometer [m/s^2/rad]\nAccX: %1.3f\nAccY: %1.3f\nAccZ: %1.3f\nAccRoll: %1.3f\nAccPitch: %1.3f\nAccYaw: %1.3f\r\n",
-                    accX, accY, accZ, accAngleVector[0], accAngleVector[1], accAngleVector[2]);
+                    "Accelerometer [m/s^2 / rad]\nAccX: %1.3f\nAccY: %1.3f\nAccZ: %1.3f\nAccRoll: %1.3f\nAccPitch: %1.3f\nAccYaw: %1.3f\r\n",
+                    accVector[0], accVector[1], accVector[2], accAngleVector[0], accAngleVector[1], accAngleVector[2]);
             outCnt = 3;
         } else if (outCnt == 2) {
-            GetGyroAngleDot(&gyroX, &gyroY, &gyroZ);
+            GetGyroAngleDot(&gyroVector[0], &gyroVector[1], &gyroVector[2]);
             snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-                    "Gyroscope [rad/s]\nGyroX: %1.3f\nGyroY: %1.3f\nGyroZ: %1.3f\r\n", gyroX, gyroY, gyroZ);
+                    "Gyroscope [rad/s]\nGyroX: %1.3f\nGyroY: %1.3f\nGyroZ: %1.3f\r\n", gyroVector[0], gyroVector[1], gyroVector[2]);
         } else {
-            GetMagVector(&magX, &magY, &magZ);
+            GetMagVector(&magVector[0], &magVector[1], &magVector[2]);
             snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-                    "Magnetometer [G]\nMagX: %1.3f\nMagY: %1.3f\nMagZ: %1.3f\r\n", magX, magY, magZ);
+                    "Magnetometer [G]\nMagX: %1.3f\nMagY: %1.3f\nMagZ: %1.3f\r\n", magVector[0], magVector[1], magVector[2]);
         }
 
         break;
     case 'p':
-        GetAcceleration(&accX, &accY, &accZ);
-        accVector[0] = accX;
-        accVector[1] = accY;
-        accVector[2] = accZ;
+        GetAcceleration(&accVector[0], &accVector[1], &accVector[2]);
         GetAttitudeFromAccelerometer(accAngleVector, accVector);
-        GetGyroAngleDot(&gyroX, &gyroY, &gyroZ);
-        GetMagVector(&magX, &magY, &magZ);
+        GetGyroAngleDot(&gyroVector[0], &gyroVector[1], &gyroVector[2]);
+        GetMagVector(&magVector[0], &magVector[1], &magVector[2]);
+        accAngleVector[2] = GetMagYawAngle(magVector, GetRollAngle(), GetPitchAngle());
 
         sensorProto.has_accX = true;
         sensorProto.has_accY = true;
@@ -960,23 +958,22 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
         sensorProto.has_magX = true;
         sensorProto.has_magY = true;
         sensorProto.has_magZ = true;
-        sensorProto.accX = accX;
-        sensorProto.accY = accY;
-        sensorProto.accZ = accZ;
+        sensorProto.accX = accVector[0];
+        sensorProto.accY = accVector[1];
+        sensorProto.accZ = accVector[2];
         sensorProto.accRoll = accAngleVector[0];
         sensorProto.accPitch = accAngleVector[1];
         sensorProto.accYaw = accAngleVector[2];
-        sensorProto.gyroX = gyroX;
-        sensorProto.gyroY = gyroY;
-        sensorProto.gyroZ = gyroZ;
-        sensorProto.magX = magX;
-        sensorProto.magY = magY;
-        sensorProto.magZ = magZ;
+        sensorProto.gyroX = gyroVector[0];
+        sensorProto.gyroY = gyroVector[1];
+        sensorProto.gyroZ = gyroVector[2];
+        sensorProto.magX = magVector[0];
+        sensorProto.magY = magVector[1];
+        sensorProto.magZ = magVector[2];
 
         /* Create a stream that will write to our buffer and encode the data with protocol buffer */
         pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, SensorSamplesProto_size);
         protoStatus = pb_encode(&protoStream, SensorSamplesProto_fields, &sensorProto);
-
 
         /* Insert header to the sample string, then copy the data after that */
         uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);

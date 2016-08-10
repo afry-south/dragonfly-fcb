@@ -32,7 +32,7 @@
 
 #define PROCESS_SENSORS_TASK_PRIO					configMAX_PRIORITIES-1 // Max priority
 
-#define SENSOR_DRDY_TIMEOUT                         500 // [ms]
+#define SENSOR_DRDY_TIMEOUT                         200 // [ms]
 #define SENSOR_ERROR_TIMEOUT                        2000 // [ms]
 
 #define	SENSOR_PRINT_MAX_STRING_SIZE				192
@@ -218,7 +218,22 @@ static void _FetchSensorAtTimeout(uint8_t event) {
 	if (timeSinceDrdy > SENSOR_ERROR_TIMEOUT) {
 		ErrorHandler();
 	} else if (timeSinceDrdy > SENSOR_DRDY_TIMEOUT) {
-		FetchDataFromGyroscope();
+	    switch (event) {
+	    case FCB_SENSOR_GYRO_DATA_READY:
+	        FetchDataFromGyroscope();
+	        break;
+	    case FCB_SENSOR_ACC_DATA_READY:
+	        FetchDataFromAccelerometer();
+	        break;
+	    case FCB_SENSOR_MAGNETO_DATA_READY:
+	        FetchDataFromMagnetometer();
+	        break;
+	    case FCB_SENSOR_BAR_DATA_READY:
+            FetchDataFromBarometer();
+            break;
+	    default:
+	        break; // Invalid sensor event
+	    }
 	}
 }
 

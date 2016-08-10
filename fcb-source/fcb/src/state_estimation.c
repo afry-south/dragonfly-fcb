@@ -50,7 +50,7 @@
 
 #define STATE_PRINT_SAMPLING_TASK_PRIO          1
 #define STATE_PRINT_MINIMUM_SAMPLING_TIME       20  // updated every 2.5 ms
-#define STATE_PRINT_MAX_STRING_SIZE             288
+#define STATE_PRINT_MAX_STRING_SIZE             256
 
 enum {
     VAR_SAMPLE_MAX = 100
@@ -577,36 +577,18 @@ FcbRetValType StopStateSamplingTask(void) {
 }
 
 /*
- * @brief Prints the state values
- * @param serializationType: Data serialization type enum
+ * @brief  Prints the state values over USB com
+ * @param  serializationType: Data serialization type enum
  * @retval None
  */
 void PrintStateValues(void) {
     static char stateString[STATE_PRINT_MAX_STRING_SIZE]; // TODO when debug printing is cleaned up, this shouldn't be needed as static
 
-    float32_t sensorAttitude[3], accValues[3], magValues[3], gyroValues[3];
-
-    // TODO Delete sensor attitude printouts later
-    /* Get magnetometer values */
-    GetMagVector(&magValues[0], &magValues[1], &magValues[2]);
-
-    /* Get accelerometer values */
-    GetAcceleration(&accValues[0], &accValues[1], &accValues[2]);
-
-    /* Calculate roll, pitch, yaw based on accelerometer and magnetometer values */
-    GetAttitudeFromAccelerometer(sensorAttitude, accValues);
-    sensorAttitude[2] = GetMagYawAngle(magValues, sensorAttitude[0], sensorAttitude[1]);
-
-    /* Get gyro values [rad/s] */
-    GetGyroAngleDot(&gyroValues[0], &gyroValues[1], &gyroValues[2]);
-
     snprintf((char*) stateString, STATE_PRINT_MAX_STRING_SIZE,
-            "States [deg]:\nroll: %1.3f\npitch: %1.3f\nyaw: %1.3f\nrollRate: %1.3f\npitchRate: %1.3f\nyawRate: %1.3f\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\naccRoll:%1.3f, accPitch:%1.3f, magYaw:%1.3f\ngyroRoll:%1.3f, gyroPitch:%1.3f, gyroYaw:%1.3f\n\r\n",
+            "States [deg / deg/s]:\nroll: %1.3f\npitch: %1.3f\nyaw: %1.3f\nrollRate: %1.3f\npitchRate: %1.3f\nyawRate: %1.3f\nrollRateBias: %1.3f\npitchRateBias: %1.3f\nyawRateBias: %1.3f\r\n",
             Radian2Degree(rollState.angle), Radian2Degree(pitchState.angle), Radian2Degree(yawState.angle),
             Radian2Degree(rollState.angleRate), Radian2Degree(pitchState.angleRate), Radian2Degree(yawState.angleRate),
-            Radian2Degree(rollState.angleRateBias), Radian2Degree(pitchState.angleRateBias), Radian2Degree(yawState.angleRateBias),
-            Radian2Degree(sensorAttitude[0]), Radian2Degree(sensorAttitude[1]), Radian2Degree(sensorAttitude[2]),
-            Radian2Degree(gyroValues[0]), Radian2Degree(gyroValues[1]), Radian2Degree(gyroValues[2]));
+            Radian2Degree(rollState.angleRateBias), Radian2Degree(pitchState.angleRateBias), Radian2Degree(yawState.angleRateBias));
 
     USBComSendString(stateString); // Send string over USB
 }
