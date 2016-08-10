@@ -44,6 +44,7 @@
 #include "state_estimation.h"
 #include "fcb_error.h"
 #include "pb_encode.h"
+#include "rotation_transformation.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -57,80 +58,19 @@
 
 /* Private function prototypes -----------------------------------------------*/
 
-/*
- * Function implements the "echo" command.
- */
 static portBASE_TYPE CLIEcho(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "echo-data" command.
- */
 static portBASE_TYPE CLIEchoData(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "start-receiver-calibration" command.
- */
-static portBASE_TYPE CLIStartReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-        const int8_t *pcCommandString);
-
-/*
- * Function implements the "stop-receiver-calibration" command.
- */
-static portBASE_TYPE CLIStopReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-        const int8_t *pcCommandString);
-
-/*
- * Function implements the "reset-receiver-calibration" command.
- */
-static portBASE_TYPE CLIResetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-        const int8_t *pcCommandString);
-
-/*
- * Function implements the "get-receiver" command.
- */
+static portBASE_TYPE CLIStartReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+static portBASE_TYPE CLIStopReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+static portBASE_TYPE CLIResetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "get-receiver-calibration" command.
- */
-static portBASE_TYPE CLIGetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-        const int8_t *pcCommandString);
-
-/*
- * Function implements the "start-receiver-sampling" command.
- */
-static portBASE_TYPE CLIStartReceiverSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-        const int8_t *pcCommandString);
-
-/*
- * Function implements the "stop-receiver-sampling" command.
- */
-static portBASE_TYPE CLIStopReceiverSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-        const int8_t *pcCommandString);
-
-/*
- * Function implements the "get-sensors" command.
- */
+static portBASE_TYPE CLIGetReceiverCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+static portBASE_TYPE CLIStartReceiverSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
+static portBASE_TYPE CLIStopReceiverSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE CLIGetSensors(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "start-sensor-sampling" command.
- */
-static portBASE_TYPE CLIStartSensorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
-        const int8_t *pcCommandString);
-
-/*
- * Function implements the "stop-sensor-sampling" command.
- */
+static portBASE_TYPE CLIStartSensorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE CLIStopSensorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-
-/* Fcn implements "start-accmagmtr-calibration" CLI command. */
 static portBASE_TYPE CLIStartAccMagMtrCalibration(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-
-/*
- * Function implements the "get-motors" command.
- */
 static portBASE_TYPE CLIGetMotorValues(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE CLIStartMotorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE CLIStopMotorSampling(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
@@ -296,15 +236,15 @@ static const CLI_Command_Definition_t getCtrlSignalsCommand = { (const int8_t * 
 /* Structure that defines the "set-max-limit-ref-signals" command line command. */
 static const CLI_Command_Definition_t setMaxLimitReferenceSignalsCommand = { (const int8_t * const ) "set-max-limit-ref-signals",
         (const int8_t * const ) "\r\nset-max-limit-ref-signals:\r\n Sets new max limits for reference signals"
-        		"<maxZVelocity> <maxRollAngle> <maxPitchAngle> <maxYawAngleRate>\r\n",
-		CLISetMaxReferenceSignals, /* The function to run. */
+        "<maxZVelocity> <maxRollAngle> <maxPitchAngle> <maxYawAngleRate>\r\n",
+        CLISetMaxReferenceSignals, /* The function to run. */
         4 /* Number of parameters expected */
 };
 
 /* Structure that defines the "get-max-limit-ref-signals" command line command. */
 static const CLI_Command_Definition_t getMaxLimitReferenceSignalsCommand = { (const int8_t * const ) "get-max-limit-ref-signals",
         (const int8_t * const ) "\r\nget-max-limit-ref-signals:\r\n Get max limits for reference signals\r\n",
-		CLIGetMaxReferenceSignals, /* The function to run. */
+        CLIGetMaxReferenceSignals, /* The function to run. */
         0 /* Number of parameters expected */
 };
 
@@ -756,8 +696,8 @@ static portBASE_TYPE CLIGetReceiver(int8_t *pcWriteBuffer, size_t xWriteBufferLe
         memcpy(&pcWriteBuffer[1], &crc, 4);
         memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
         if(PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-        	memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
-        	memcpy(&pcWriteBuffer[PROTO_HEADER_LEN+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN+protoStream.bytes_written], "\r\n", strlen("\r\n"));
         }
 
         if(!protoStatus) {
@@ -954,7 +894,7 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
     portBASE_TYPE xParameterStringLength;
     portBASE_TYPE lParameterNumber = 0;
 
-    float32_t accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ;
+    float32_t accX, accY, accZ, gyroX, gyroY, gyroZ, magX, magY, magZ, accVector[3], accAngleVector[3];
     bool protoStatus;
     uint8_t serializedData[SensorSamplesProto_size];
     SensorSamplesProto sensorProto;
@@ -980,8 +920,13 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
         if (outCnt == 0) {
             /* Get the latest sensor values */
             GetAcceleration(&accX, &accY, &accZ);
+            accVector[0] = accX;
+            accVector[1] = accY;
+            accVector[2] = accZ;
+            GetAttitudeFromAccelerometer(accAngleVector, accVector);
             snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-                    "Accelerometer [m/s^2]\nAccX: %1.3f\nAccY: %1.3f\nAccZ: %1.3f\r\n", accX, accY, accZ);
+                    "Accelerometer [m/s^2/rad]\nAccX: %1.3f\nAccY: %1.3f\nAccZ: %1.3f\nAccRoll: %1.3f\nAccPitch: %1.3f\nAccYaw: %1.3f\r\n",
+                    accX, accY, accZ, accAngleVector[0], accAngleVector[1], accAngleVector[2]);
             outCnt = 3;
         } else if (outCnt == 2) {
             GetGyroAngleDot(&gyroX, &gyroY, &gyroZ);
@@ -996,12 +941,19 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
         break;
     case 'p':
         GetAcceleration(&accX, &accY, &accZ);
+        accVector[0] = accX;
+        accVector[1] = accY;
+        accVector[2] = accZ;
+        GetAttitudeFromAccelerometer(accAngleVector, accVector);
         GetGyroAngleDot(&gyroX, &gyroY, &gyroZ);
         GetMagVector(&magX, &magY, &magZ);
 
         sensorProto.has_accX = true;
         sensorProto.has_accY = true;
         sensorProto.has_accZ = true;
+        sensorProto.has_accRoll = true;
+        sensorProto.has_accPitch = true;
+        sensorProto.has_accYaw = true;
         sensorProto.has_gyroX = true;
         sensorProto.has_gyroY = true;
         sensorProto.has_gyroZ = true;
@@ -1011,6 +963,9 @@ static portBASE_TYPE CLIGetSensors(int8_t* pcWriteBuffer, size_t xWriteBufferLen
         sensorProto.accX = accX;
         sensorProto.accY = accY;
         sensorProto.accZ = accZ;
+        sensorProto.accRoll = accAngleVector[0];
+        sensorProto.accPitch = accAngleVector[1];
+        sensorProto.accYaw = accAngleVector[2];
         sensorProto.gyroX = gyroX;
         sensorProto.gyroY = gyroY;
         sensorProto.gyroZ = gyroZ;
@@ -1243,8 +1198,8 @@ static portBASE_TYPE CLIGetMotorValues(int8_t* pcWriteBuffer, size_t xWriteBuffe
         memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
 
         if(PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-        	memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
-        	memcpy(&pcWriteBuffer[PROTO_HEADER_LEN+protoStream.bytes_written], "\r\n", strlen("\r\n"));
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN+protoStream.bytes_written], "\r\n", strlen("\r\n"));
         }
 
         if(!protoStatus) {
@@ -1428,8 +1383,8 @@ static portBASE_TYPE CLIGetFlightMode(int8_t* pcWriteBuffer, size_t xWriteBuffer
         strncat((char*) pcWriteBuffer, "PID", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
         break;
     case FLIGHT_CONTROL_AUTONOMOUS:
-    	strncat((char*) pcWriteBuffer, "AUTO", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
-    	break;
+        strncat((char*) pcWriteBuffer, "AUTO", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
+        break;
     default:
         strncat((char*) pcWriteBuffer, "N/A", xWriteBufferLen - strlen((char*) pcWriteBuffer) - 1);
         break;
@@ -1474,49 +1429,49 @@ static portBASE_TYPE CLIGetRefSignals(int8_t* pcWriteBuffer, size_t xWriteBuffer
 
     switch (pcParameter[0]) {
     case 'n':
-    	snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-    	            "Reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angle: %1.4f rad\nYaw rate: %1.4f rad/s\n",
-    	            GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchAngleReferenceSignal(), GetYawAngleReferenceSignal(), GetYawAngularRateReferenceSignal());
-    	break;
+        snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+                "Reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angle: %1.4f rad\nYaw rate: %1.4f rad/s\n",
+                GetZVelocityReferenceSignal(), GetRollAngleReferenceSignal(), GetPitchAngleReferenceSignal(), GetYawAngleReferenceSignal(), GetYawAngularRateReferenceSignal());
+        break;
     case 'p':
-    	/* Add reference signal values to protobuffer type struct members */
-    	refValuesProto.has_refRoll = true;
-    	refValuesProto.refRoll = GetRollAngleReferenceSignal();
-    	refValuesProto.has_refPitch = true;
-    	refValuesProto.refPitch = GetPitchAngleReferenceSignal();
-    	refValuesProto.has_refYaw = true;
-    	refValuesProto.refYaw = GetYawAngleReferenceSignal();
-    	refValuesProto.has_refYawRate = true;
-    	refValuesProto.refYawRate = GetYawAngularRateReferenceSignal();
+        /* Add reference signal values to protobuffer type struct members */
+        refValuesProto.has_refRoll = true;
+        refValuesProto.refRoll = GetRollAngleReferenceSignal();
+        refValuesProto.has_refPitch = true;
+        refValuesProto.refPitch = GetPitchAngleReferenceSignal();
+        refValuesProto.has_refYaw = true;
+        refValuesProto.refYaw = GetYawAngleReferenceSignal();
+        refValuesProto.has_refYawRate = true;
+        refValuesProto.refYawRate = GetYawAngularRateReferenceSignal();
 
-    	/* Create a stream that will write to our buffer and encode the data with protocol buffer */
-    	pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, ControlReferenceSignalsProto_size);
-    	protoStatus = pb_encode(&protoStream, ControlReferenceSignalsProto_fields, &refValuesProto);
+        /* Create a stream that will write to our buffer and encode the data with protocol buffer */
+        pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, ControlReferenceSignalsProto_size);
+        protoStatus = pb_encode(&protoStream, ControlReferenceSignalsProto_fields, &refValuesProto);
 
-    	/* Insert header to the sample string, then copy the data after that */
-    	uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
-    	uint8_t msg_id = REFSIGNALS_MSG_ENUM;
-    	uint16_t msg_data_size = (uint16_t) protoStream.bytes_written;
-    	memcpy(pcWriteBuffer, &msg_id, 1);
-    	memcpy(&pcWriteBuffer[1], &crc, 4);
-    	memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
+        /* Insert header to the sample string, then copy the data after that */
+        uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
+        uint8_t msg_id = REFSIGNALS_MSG_ENUM;
+        uint16_t msg_data_size = (uint16_t) protoStream.bytes_written;
+        memcpy(pcWriteBuffer, &msg_id, 1);
+        memcpy(&pcWriteBuffer[1], &crc, 4);
+        memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
 
-    	if (PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-    		memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
-    		memcpy(&pcWriteBuffer[PROTO_HEADER_LEN + protoStream.bytes_written], "\r\n", strlen("\r\n"));
-    	}
+        if (PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN + protoStream.bytes_written], "\r\n", strlen("\r\n"));
+        }
 
-    	if (!protoStatus) {
-    		ErrorHandler();
-    	}
+        if (!protoStatus) {
+            ErrorHandler();
+        }
 
-    	dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+        dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
 
-    	break;
+        break;
     default:
-    	strncpy((char*) pcWriteBuffer, "Invalid parameter\r\n",
-    			xWriteBufferLen);
-    	break;
+        strncpy((char*) pcWriteBuffer, "Invalid parameter\r\n",
+                xWriteBufferLen);
+        break;
     }
 
     return pdFALSE;
@@ -1556,12 +1511,12 @@ static portBASE_TYPE CLIGetCtrlSignals(int8_t* pcWriteBuffer, size_t xWriteBuffe
 
     switch (pcParameter[0]) {
     case 'n':
-    	snprintf((char*) pcWriteBuffer, xWriteBufferLen,
-    	            "Control signals:\nThrust: %1.4f N\nRoll: %1.4f Nm\nPitch: %1.4f Nm\nYaw: %1.4f Nm\n",
-					GetThrustControlSignal(), GetRollControlSignal(), GetPitchControlSignal(), GetYawControlSignal());
-    	break;
+        snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+                "Control signals:\nThrust: %1.4f N\nRoll: %1.4f Nm\nPitch: %1.4f Nm\nYaw: %1.4f Nm\n",
+                GetThrustControlSignal(), GetRollControlSignal(), GetPitchControlSignal(), GetYawControlSignal());
+        break;
     case 'p':
-    	/* Add control signal values to protobuffer type struct members */
+        /* Add control signal values to protobuffer type struct members */
         ctrlValuesProto.has_ctrlState = true;
         ctrlValuesProto.ctrlState = GetFlightControlMode();
         ctrlValuesProto.has_thrustCtrl = true;
@@ -1573,34 +1528,34 @@ static portBASE_TYPE CLIGetCtrlSignals(int8_t* pcWriteBuffer, size_t xWriteBuffe
         ctrlValuesProto.has_yawCtrl = true;
         ctrlValuesProto.yawCtrl = GetYawControlSignal();
 
-    	/* Create a stream that will write to our buffer and encode the data with protocol buffer */
+        /* Create a stream that will write to our buffer and encode the data with protocol buffer */
         pb_ostream_t protoStream = pb_ostream_from_buffer(serializedData, ControlSignalsProto_size);
         protoStatus = pb_encode(&protoStream, ControlSignalsProto_fields, &ctrlValuesProto);
 
-    	/* Insert header to the sample string, then copy the data after that */
-    	uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
-    	uint8_t msg_id = CTRLSIGNALS_MSG_ENUM;
-    	uint16_t msg_data_size = (uint16_t) protoStream.bytes_written;
-    	memcpy(pcWriteBuffer, &msg_id, 1);
-    	memcpy(&pcWriteBuffer[1], &crc, 4);
-    	memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
+        /* Insert header to the sample string, then copy the data after that */
+        uint32_t crc = CalculateCRC(serializedData, protoStream.bytes_written);
+        uint8_t msg_id = CTRLSIGNALS_MSG_ENUM;
+        uint16_t msg_data_size = (uint16_t) protoStream.bytes_written;
+        memcpy(pcWriteBuffer, &msg_id, 1);
+        memcpy(&pcWriteBuffer[1], &crc, 4);
+        memcpy(&pcWriteBuffer[5], &msg_data_size, 2);
 
-    	if (PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
-    		memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
-    		memcpy(&pcWriteBuffer[PROTO_HEADER_LEN + protoStream.bytes_written], "\r\n", strlen("\r\n"));
-    	}
+        if (PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n") < xWriteBufferLen) {
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN], serializedData, protoStream.bytes_written);
+            memcpy(&pcWriteBuffer[PROTO_HEADER_LEN + protoStream.bytes_written], "\r\n", strlen("\r\n"));
+        }
 
-    	if (!protoStatus) {
-    		ErrorHandler();
-    	}
+        if (!protoStatus) {
+            ErrorHandler();
+        }
 
-    	dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
+        dataOutLength = PROTO_HEADER_LEN + protoStream.bytes_written + strlen("\r\n"); // Set output data length
 
-    	break;
+        break;
     default:
-    	strncpy((char*) pcWriteBuffer, "Invalid parameter\r\n",
-    			xWriteBufferLen);
-    	break;
+        strncpy((char*) pcWriteBuffer, "Invalid parameter\r\n",
+                xWriteBufferLen);
+        break;
     }
 
     return pdFALSE;
@@ -1617,7 +1572,7 @@ static portBASE_TYPE CLISetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWr
     float pcParameter[4];
 
     portBASE_TYPE xParameterStringLength;
-//    portBASE_TYPE lParameterNumber = 0;
+    //    portBASE_TYPE lParameterNumber = 0;
 
     configASSERT(pcWriteBuffer);
 
@@ -1630,7 +1585,7 @@ static portBASE_TYPE CLISetMaxReferenceSignals(int8_t* pcWriteBuffer, size_t xWr
 
     snprintf((char*) pcWriteBuffer, xWriteBufferLen,
             "Set max limit for reference signals:\nZ velocity: %1.4f m/s\nRoll angle: %1.4f rad\nPitch angle: %1.4f rad\nYaw angular rate: %1.4f rad/s\n",
-			pcParameter[0], pcParameter[1], pcParameter[2], pcParameter[3]);
+            pcParameter[0], pcParameter[1], pcParameter[2], pcParameter[3]);
 
     return pdFALSE; /* Return false to indicate command activity finished */
 }

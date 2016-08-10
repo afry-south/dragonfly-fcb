@@ -43,6 +43,7 @@
 #include "fcb_accelerometer_magnetometer.h"
 #include "fcb_retval.h"
 #include "usbd_cdc_if.h"
+#include "rotation_transformation.h"
 
 /* Private define ------------------------------------------------------------*/
 #define USE_CTRLSIGNAL_IN_PREDICTION_MODEL      0

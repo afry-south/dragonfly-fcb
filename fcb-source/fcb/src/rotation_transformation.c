@@ -36,7 +36,7 @@
 static arm_matrix_instance_f32 DCM; // From inertial/world frame to body frame
 static float32_t DCMf32[9];
 static arm_matrix_instance_f32 DCMInv; // From body frame to inertial/world frame
-static float32_t DCMInvf32[9];
+//static float32_t DCMInvf32[9];
 
 static arm_matrix_instance_f32 angRateMatrix; // Used to transform angular rate from body to inertial/worl frame
 static float32_t angRateMatrixf32[9];

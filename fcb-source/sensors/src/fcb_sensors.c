@@ -269,7 +269,9 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
         _FetchSensorAtTimeout(FCB_SENSOR_GYRO_DATA_READY);
         _FetchSensorAtTimeout(FCB_SENSOR_ACC_DATA_READY);
         _FetchSensorAtTimeout(FCB_SENSOR_MAGNETO_DATA_READY);
-
+#if defined(USE_BAROMETER)
+        _FetchSensorAtTimeout(FCB_SENSOR_BAR_DATA_READY);
+#endif
     }
 }
 

@@ -193,7 +193,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/cmsis-boot"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/communication"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/fcb"/>
-						<entry excluding="BSP/STM32F3-Discovery/stm32f3_discovery_gyroscope.c|BSP/STM32F3-Discovery/stm32f3_discovery_accelerometer.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/fcb-drivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/fcb-drivers"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/ldscripts"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/sensors"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fcb-source/utilities"/>

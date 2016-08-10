@@ -34,6 +34,7 @@
 #include "rotation_transformation.h"
 #include "state_estimation.h"
 #include "fcb_accelerometer_magnetometer.h"
+#include "fcb_barometer.h"
 #include "flash.h"
 
 #include "FreeRTOS.h"
@@ -522,7 +523,7 @@ static void FlightControlTask(void const *argument) {
             UpdateFlightControl();
 
             /* Blink with LED to indicate thread is alive */
-            if(ledFlashCounter % 200 == 0) {
+            if(ledFlashCounter % 100 == 0) {
             	BSP_LED_Toggle(LED6);
             }
 
