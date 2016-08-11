@@ -5,6 +5,10 @@
  *      Author: a492478
  */
 
+#if !defined(USE_BAROMETER)
+#warning "USE_BAROMETER not defined. Barometer not used."
+#endif
+
 #include "fcb_barometer.h"
 #include "bmp180.h"
 #include "fcb_sensors.h"

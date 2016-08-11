@@ -120,6 +120,9 @@ bool GetSensorDrdyCalcIndex(uint8_t event, uint32_t *index) {
     case FCB_SENSOR_MAGNETO_DATA_READY:
     	*index = MAG_IDX;
         break;
+    case FCB_SENSOR_BAR_DATA_READY:
+        *index = BARO_IDX;
+        break;
     default:
         retVal = false;
         break;
@@ -229,7 +232,9 @@ static void _FetchSensorAtTimeout(uint8_t event) {
 	        FetchDataFromMagnetometer();
 	        break;
 	    case FCB_SENSOR_BAR_DATA_READY:
+#if defined(USE_BAROMETER)
             FetchDataFromBarometer();
+#endif
             break;
 	    default:
 	        break; // Invalid sensor event
@@ -252,9 +257,11 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
         ErrorHandler();
     }
 
+#if defined(USE_BAROMETER)
     if (FCB_OK != FcbInitialiseBarometer()) {
     	ErrorHandler();
     }
+#endif
 
     while (1) {
         if (pdFALSE == xQueueReceive(qFcbSensors, &msg,  SENSOR_ERROR_TIMEOUT)) {
@@ -276,7 +283,9 @@ static void _ProcessSensorValues(void* val __attribute__ ((unused))) {
             FetchDataFromMagnetometer();
             break;
         case FCB_SENSOR_BAR_DATA_READY:
+#if defined(USE_BAROMETER)
         	FetchDataFromBarometer();
+#endif
         	break;
         }
 
