@@ -2948,7 +2948,8 @@ tskTCB *pxNewTCB;
 						{
 							/* sizeof( int ) == sizeof( long ) so a smaller
 							printf() library can be used. ISSUE33 HERE */
-						  usedLen += snprintf( ( char * ) pcWriteBuffer + usedLen, xWriteBufferLen - usedLen,( char * ) "%s\t\t%u\t\t%u%%\t\t%u\r\n",
+						  usedLen += snprintf( ( char * ) pcWriteBuffer + usedLen, xWriteBufferLen - usedLen,( char * ) "%-*s%u\t\t%u%%\t\t%u\r\n",
+								    16,
 							        pxTaskStatusArray[ x ].pcTaskName,
 							        ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter,
 							        ( unsigned int ) ulStatsAsPercentage,
@@ -2975,8 +2976,9 @@ tskTCB *pxNewTCB;
 							printf() library can be used. */
 						  usedLen += snprintf( ( char * ) pcWriteBuffer + usedLen,
 							    xWriteBufferLen - usedLen,
-							    ( char * ) "%s\t\t%u\t\t<1%%\t\t%u\r\n",
-							    pxTaskStatusArray[ x ].pcTaskName,
+							    ( char * ) "%-*s%u\t\t<1%%\t\t%u\r\n",
+							    16,
+								pxTaskStatusArray[ x ].pcTaskName,
 							    ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter,
 							    ( unsigned int ) pxTaskStatusArray[ x ].usStackHighWaterMark);
 						}
