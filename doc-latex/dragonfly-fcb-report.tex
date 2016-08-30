@@ -18,6 +18,7 @@
 \usepackage{fancyvrb}           	% For lists with tabulators
 \fvset{tabsize=4}              	 	% Tabulator size
 \fvset{fontsize=\small}         	% List font size
+\usepackage[toc,page]{appendix}
 \usepackage[nottoc,numbib]{tocbibind}
 \usepackage{graphicx}		% Imports the graphicx package, useful for images
 % \usepackage{}
@@ -106,9 +107,339 @@ The BLM motors used for this project have an “outrunner” architecture, which
 
 \chapter{State Estimation Theory}
 \label{chap:state-estimation-theory}
+
+	\section{Kalman Filter}
+The Kalman filter is an optimal filter used to infer true system states from a fusion of measurement inputs and an internal model of dynamical system behaviour. In it's discretized form, the filter is divided in to two main steps: \emph{Prediction}, which uses the internal system model, and \emph{Correction}, which fuses the predicted states with measurements in order to provide optimal estimates of the states.
+
+The general form of the model that the Kalman filter attempts to optimise the state estimates for is given below by (\ref{eq:disc-sys-kalman-noise}), where, for each time instance $k$, $\mathbf{x_k}$ is the state vector, $\mathbf{u_k}$ the input vector, $\mathbf{z_k}$ the system output vector. $\mathbf{\Phi}$ is the system matrix, $\mathbf{\Gamma}$ the input mapping matrix and $\mathbf{C}$ the output mapping matrix. Finally, the vectors $\mathbf{w_k}$ and $\mathbf{v_k}$ represent model and observation assumed as zero-mean Gaussian.
+
+\begin{eqnarray}
+\mathbf{x_{k}} & = & \mathbf{\Phi x_{k-1}} + \mathbf{\Gamma u_{k}} + \mathbf{w_k} \\
+\mathbf{z_k} & = & \mathbf{C x_k} + \mathbf{v_k} \nonumber
+\label{eq:disc-sys-kalman-noise}
+\end{eqnarray}
+
+The optimality of the filter is defined as the minimum squared estimation error criteria $min(f(e_k))=min((x_k-\hat{x}_{k|k})^2)$, where $x_k$ is the true state and $\hat{x}_{k|k}$ its estimate. It pends on prior knowledge of the model and measurement uncertainty noise of $\mathbf{w_k}$ and $\mathbf{v_k}$. This information is encoded as the filter initialisation covariance matrices $\mathbf{Q}$ and $\mathbf{R}$ such that $\mathbf{w_k} \sim \mathcal{N}(\mathbf{0}, \mathbf{Q})$ and $v_k \sim \mathcal{N}(\mathbf{0}, \mathbf{R})$, where $\mathbf{Q}$ assigns the model uncertainty noise and $\mathbf{R}$ the level of measurement noise. For instance, low $\mathbf{Q}$ and large $\mathbf{R}$ values assign more trust to the model than the measurements. During filter operation the error covariance matrix $\mathbf{P_k} = E[\mathbf{e_k e_k^T}]$ tracks the current state estimation error $\mathbf{e_k}$ covariance which is used to calculate the Kalman gain $\mathbf{K_k}$ that weighs the model and measurement data against each other to provide the state esimates.
+
+	\subsection{Filter Equations}
+As mentioned above, the discrete Kalman filter is divided in two distinct parts, prediction and correction. The iterative process of this is depicted in Figure \ref{fig:kalmanprincip1}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.45]{images/kalman-principle.png}
+    \caption{Kalman filter operation principle. Image from Wikipedia.org.}
+    \label{fig:kalmanprincip1}
+\end{figure}
+
+The \emph{prediction} part consists state prediction based on the system model (\ref{eq:disc-sys-kalman}) and prediction covariance matrix update given by (\ref{eq:kalman-cov-upd-pred}).
+
+\begin{equation}
+\mathbf{\hat{x}_{k|k-1}} = \mathbf{\Phi\hat{x}_{k-1|k-1}} + \mathbf{\Gamma u_{k}}
+\label{eq:disc-sys-kalman}
+\end{equation}
+
+\begin{equation}
+\mathbf{P_{k|k-1}} = \mathbf{\Phi P_{k-1|k-1}\Phi^{T}} + \mathbf{Q}
+\label{eq:kalman-cov-upd-pred}
+\end{equation}
+
+For the measurement \emph{correction} part, steps are performed to calculate the Kalman gain (\ref{eq:kalman-gain-upd}), update the estimated state values (\ref{eq:kalman-state-upd}) and update the covariance matrix (\ref{eq:kalman-cov-upd-corr}). It is from the correction part the state estimate $\mathbf{\hat{x}_{k|k}}$ is output based on the Kalman gain $\mathbf{K_k}$ and the difference between measurement $\mathbf{z_k}$ and prediction model output $\mathbf{C\hat{x}_{k|k-1}}$.
+
+\begin{equation}
+\mathbf{K_k} = \mathbf{P_{k|k-1}C^T(C P_{k|k-1} C^T} + \mathbf{R})^{-1}
+\label{eq:kalman-gain-upd}
+\end{equation}
+
+\begin{equation}
+\mathbf{\hat{x}_{k|k}} = \mathbf{\hat{x}_{k|k-1}} + \mathbf{K_k (z_k - C\hat{x}_{k|k-1})}
+\label{eq:kalman-state-upd}
+\end{equation}
+
+\begin{equation}
+\mathbf{P_{k|k}} = \mathbf{(I-K_k C) P_{k|k-1}}
+\label{eq:kalman-cov-upd-corr}
+\end{equation}
+
+	\subsection{Initialisation}
+
+The $\mathbf{Q}$ and $\mathbf{R}$ matrices should theoretically be initialised as (\ref{eq:kalman-Q-init}) and (\ref{eq:kalman-R-init}), where the variances are assumed known (often through measurement) or tuned to desired filter performance. Other initialisation values for $\mathbf{Q}$ and $\mathbf{R}$ may work just as well since it is the relation between these values that define the behaviour of the filter, not the absolute values. Along with these matrices, the state vector $\mathbf{\hat{x}_{k|k}}$ should be initialised to suitable value depending on the application.
+
+\begin{equation}
+\mathbf{Q} = E[\mathbf{w_k w_k^T}]
+\label{eq:kalman-Q-init}
+\end{equation}
+
+\begin{equation}
+\mathbf{R} = E[\mathbf{v_k v_k^T}]
+\label{eq:kalman-R-init}
+\end{equation}
+
+The estimation state vector $\mathbf{\hat{x}_{0|0}}$ must be initialised to suitable values (typically based on raw measurements) along with the initial estimation error $e_0$ covariance matrix $\mathbf{P_{0|0}}$ (\ref{eq:kalman-P-init}), which encodes the initial error variance of the initialised state.
+
+\begin{equation}
+\mathbf{P_{0|0}} = E[\mathbf{e_0 e_0^T}]
+\label{eq:kalman-P-init}
+\end{equation}
+
+	\subsection{Real-time Operation Considerations}
+
+The Kalman filter assumes that measurements are always fresh when the prediction step equations are run. But, since the measurements from various sources may arrive asynchronously, the Kalman correction step equations can be split in to separate parts to account for which of the measurement sources that is being processed for the filter. This introduces the opportunity to apply an event-based approach to the Kalman filter operation where the events may be characterized as \emph{time update} from an internal timer to trigger prediction, and measurement data arrival to trigger the correction part relevant for the measurement source in question.
+
 	\section{Attitude Estimation}
-Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The state vector for the attitude is the attitude angle and the angular rate bias. The latter is due to gyroscope having a drift in its measured angular velocity, that is, taking a number of samples and averaging the value and using this as an offset. in the below equations, steps 1-2 are the prediction step of the Kalman filter and 3-7 the correction step. The estimation step for roll, pitch and yaw is run when the gyroscope values  are updated, these are angular velocities in rad/s. The correction step for roll and pitch is run when the accelerometer values are available. The correction step for yaw is run when magnetometer values are available.
-	\subsection{Two value state vector version}
+Dragonfly uses Kalman filters to estimate the roll, pitch and yaw angles. The input measurements are the gyroscope reading for angular rate and the angle calculated from the accelerometer readings in three dimensions. For the yaw angle, the measured angle in the horizontal plane is used in stead of the accelerometer.
+
+To calculate the roll $\phi$ and pitch $\theta$ angles from the accelerometer readings, the formulas (\ref{eq:rp-acc}) are used. These can be derived from the \emph{Direction Cosine Matrix} when transforming the measured body-frame acceleration to the world frame assuming the only measured acceleration is due to gravity (which is a crude approximation).
+
+\begin{equation}
+\label{eq:rp-acc}
+\phi_{acc} = \arctan \dfrac{a_y}{a_z} \qquad \theta_{acc} = -\arcsin \dfrac{a_x}{g}
+\end{equation}
+
+The yaw angle is calculated based on the magnetometer readings and the current rotational state in order to tilt-compensate the measurements. The equation for this is presented in (\ref{eq:y-mag}), where the used roll and pitch angles should prefereably be the estimated ones rather than the raw ones from the accelerometer.
+
+\begin{equation}
+\label{eq:y-mag}
+\psi_{mag} = \arctan - \dfrac{m_x \sin \phi \sin \theta + m_y \cos \phi - m_z \sin \phi \cos \theta}{m_x \cos \theta + m_z \sin \theta}
+\end{equation}
+
+	\subsection{Full Attitude State Estimator}
+
+In this version, inspired by \cite{lhelgesson} both the angle $\theta$ and the angular rate $\dot{\theta}$ states are esimated along with the angular rate bias $\dot{\theta}_b$. Becuase of this, the model order is increased by one, where the angular rate bias is included to compensate for a slowly drifting gyroscope measurement bias. It can be argued that this is the most by-the-book approach to the Kalman filter sensor fusion problem for attitude state estimation given the preconditions. The continous time model is given by (\ref{eq:kalman-3scontmodel}), where $I_{yy}$ is the rotational inertia around the $y$ axis and $\tau_y$ is the resulting pitch torque mainly caused by the rotor control action.
+
+\begin{eqnarray}
+	\mathbf{\dot{x}} & = & \mathbf{ A x } + \mathbf{ B u } \nonumber \\
+		\left[
+      		\begin{array}{c}
+      		\dot{\theta}\\
+		\ddot{\theta}\\
+		\ddot{\theta}_{b}
+      		\end{array} \right]
+		& = &
+		\left[
+		\begin{array}{c c c}
+		0 &   1 & -1 \\
+		0 & 0 & 0 \\
+		0 & 0 & 0 \\
+		\end{array} \right]
+		\left[
+		\begin{array}{c}
+		\theta\\
+		\dot{\theta}\\
+		\dot{\theta}_{b}
+		\end{array} \right]
+		+
+		\left[
+      		\begin{array}{c}
+      		0\\
+		1/I_{yy}\\
+		0
+      		\end{array} \right]
+		\tau_y
+		\label{eq:kalman-3scontmodel}
+\end{eqnarray}
+
+Since the Kalman state prediction will run iteratively with a discrete time step $h$ in the microcontroller software, the model described by (\ref{eq:kalman-3scontmodel}) needs to undergo discretization to reflect this. This is performed according to the method described in Appendix \ref{ch:sysdisc} yielding the time-discrete model (\ref{eq:kalman-3sdisc}) with time-step length $h$. Thus, the estimated states $\hat{x}_{k|k-1}$ will be updated after each consecutive prediction and measurement correction update. 
+
+\begin{eqnarray}
+\mathbf{\hat{x}_{k|k-1}} & = & \mathbf{\Phi\hat{x}_{k-1|k-1}} + \mathbf{\Gamma u_{k}} \\
+		\left[
+      		\begin{array}{c}
+      		\hat{\theta}\\
+		\hat{\dot{\theta}}\\
+		\hat{\dot{\theta}}_{b}
+      		\end{array} \right]_{k|k-1}
+		& = &
+		\left[
+		\begin{array}{c c c}
+		1 &  h & -h \\
+		0 & 1 & 0 \\
+		0 & 0 & 1 \\
+		\end{array} \right]
+		\left[
+		\begin{array}{c}
+		\hat{\theta}\\
+		\hat{\dot{\theta}}\\
+		\hat{\dot{\theta}}_{b}
+		\end{array} \right]_{k-1|k-1}
+		+ 
+		\dfrac{1}{I_{yy}}
+		\left[
+		\begin{array}{c}
+		h^2 / 2\\
+		h\\
+		0
+		\end{array} \right] 
+		\tau_y \nonumber
+		\label{eq:kalman-3sdisc}
+\end{eqnarray}
+
+The measurement update at time $k$ is described by the vector $z_k$ and the measurement matrix $\mathbf{C}$ given in (\ref{eq:measurement-equation-3v}).
+
+\begin{eqnarray}
+\label{eq:measurement-equation-3v}
+\mathbf{z_k} & = & \mathbf{C} x_k \nonumber \\
+\mathbf{z_{k}} & = &
+\left[ \begin{array}{c c c}
+1 & 0 & 0\\
+0 & 1 & 0
+\end{array} \right]
+\left[
+\begin{array}{c}
+\theta\\
+\dot{\theta}\\
+\dot{\theta}_{b}
+\end{array} \right]_{k|k-1}
+\end{eqnarray}
+
+		\subsubsection{Initialisation}
+Before iteratively running the Kalman filter, the noise covariance matrices $\mathbf{Q}$ and $\mathbf{R}$ must be given relative weighting to achieve desired performance of noise attenuation and state tracking. The states may be initialised to measurement values prior to Kalman filter initiation where the quadcopter is assumed to be standing idly on the ground. A common approach to mechanical models' noise is to approximate it as only acting on acceleration (i.e. they are due to external forces and moments), which can be described as the system equation (\ref{eq:disc-sys-kalman-3s-noise}), with $\mathbf{\Gamma_w} = \mathbf{\Gamma}$.
+
+\begin{equation}
+\mathbf{x_{k}} = \mathbf{\Phi x_{k-1}} + \mathbf{\Gamma u_{k}} + \mathbf{\Gamma_w}w_k \\
+\label{eq:disc-sys-kalman-3s-noise}
+\end{equation}
+
+This translates to a noise covariance matrix $\mathbf{Q}$ as given below in (\ref{eq:Q-kalman-3v-init}) for noise variance $\sigma^2_w$.
+
+\begin{equation}
+\label{eq:Q-kalman-3v-init}
+\mathbf{Q} = \mathbf{\Gamma_w \Gamma_w^T} \sigma^2_w = 
+\left[
+\begin{array}{c c c}
+h^4/4 & h^3/2 & 0 \\
+h^3/2 & h^2 & 0 \\
+0 & 0 & 0^{*}
+\end{array}\right] \sigma^2_w
+\end{equation}
+
+To let the angular rate bias drift slowly over time, which it commonly will do, the $\mathbf{Q}$ matrix element \underline{$Q_{3,3}$ should not be set to zero}, but a value significantly smaller than the other values on $\mathbf{Q}$'s diagonal. The measurement covariance matrix $\mathbf{R}$ is set to reflect the noise variance levels of each measurement from accelerometer and gyroscope as in (\ref{eq:R-kalman-3v-init}). 
+
+\begin{equation}
+\label{eq:R-kalman-3v-init}
+\mathbf{R} =
+\left[
+\begin{array}{c c c}
+\sigma^2 _{\theta_{acc}} & 0 \\
+0 & \sigma^2 _{\dot{\theta}_{gyro}} 
+\end{array}\right]
+\end{equation}
+
+However, $\sigma^2 _{\theta_{acc}}$ is nigh on impossible to assign a ''correct'' value to, since it is the calculated angle based on the measured acceleration. Thus, both accelerometer noise as well as acceleration due to non-rotational motion will distort the angle measurement. For this reason, it seems plausible that $\sigma^2 _{\theta_{acc}}$ should be larger $\sigma^2 _{\theta_{gyro}}$ and $Q_{1,1}$ but, ultimately, this will be down to tuning to desired filter performance as a trade-off between state tracking and smoothing.
+
+		\subsubsection{Prediction Derivation}
+
+Combining the Kalman prediction equations (\ref{eq:disc-sys-kalman}) and (\ref{eq:kalman-cov-upd-pred}) with the aforementioned system and estimator description provided for the \emph{Full Attitude State Estimation}, the Kalman filter prediction algorithm for attitude estimation can be derived. This is given as pseudo code below, which describes the operation used in the Flight Control software at each prediction update time instance. 
+
+		\begin{lstlisting}[frame=single, label={eq:error-covariance-prediction-3v},caption={Error covariance prediction pseudo code}]
+		P11 += P11 + h*(P12 + P21 - P13 - P31) + h*h*(P22 - P32 - P23 + P33) + Q11
+		P12 += h*(P22 - P32) + Q12
+		P13 += h*(P23 - P33)
+		P21 += h*(P22 - P23) + Q21
+		P22 += Q22
+		P31 += h*(P32 - P33)
+		P33 += Q33
+		// P23, P32  not updated
+		\end{lstlisting}
+
+		\subsubsection{Correction Derivation}
+
+The correction step of the Kalman filter follows the equations provided by (\ref{eq:kalman-gain-upd}), (\ref{eq:kalman-state-upd}) and (\ref{eq:kalman-cov-upd-corr}). To simplify calculation, the \emph{innovation covariance matrix} $\mathbf{S_k}$ (\ref{eq:innovation-covariance-matrix}) as a middle step before producing the Kalman gain $\mathbf{K_k}$ as shown in (\ref{eq:kalman-gain-3v-0}) and (\ref{eq:kalman-gain-3v}).
+
+\begin{equation}
+		\label{eq:innovation-covariance-matrix-3v}
+		\mathbf{S_{k}} = \mathbf{C P_{k|k-1} C^T} + \mathbf{R}
+\end{equation}
+
+\begin{equation}
+		\label{eq:kalman-gain-3v-0}
+		\mathbf{K_{k}} = \mathbf{P_{k|k-1} C^T S_k^{-1}}
+\end{equation}
+
+\begin{equation}
+		\label{eq:kalman-gain-3v}
+		\mathbf{K_k}  =
+		\frac{1}{det(\mathbf{S})}
+		  \left[ \begin{array}{c c}
+		      P_{11}(P_{22} + \sigma(\dot{\theta}_{gyro})) - P_{12}P_{21} & -P_{12}\sigma(\theta_{acc}) \\
+          P_{21}\sigma(\dot{\theta}_{gyro})                           & -P_{21}P_{12} + P_{22}(P_{11} + \sigma(\theta_{acc}))\\
+          P_{31}(P_{22}+\sigma(\dot{\theta}_{gyro})) - P_{32}P_{21}   & -P_{31}P_{12}+P_{32}(P_{11}+\sigma(\theta_{acc}))
+		    \end{array} \right]
+\end{equation}
+
+Calculating the estimation error vector $\mathbf{y_k}=z_k - C\hat{x}_{k|k-1}$ as the difference between the estimated state and the measured angle, the pseudo code for updating the ouput state estimation follow below.
+
+\begin{equation}
+		\label{eq:state-meas-difference-3v}
+		y_k =
+		\left[ \begin{array}{c}
+		y_1 \\
+		y_2
+		\end{array} \right]
+		=
+		\left[ \begin{array}{c}
+		\theta_{acc} - \hat{\theta}_{acc} \\
+		\dot{\theta}_{gyro} - \hat{\dot{\theta}}_{gyro}
+		\end{array} \right]
+\end{equation}
+
+		\begin{lstlisting}[frame=single, caption={Correct state estimate pseudo code}, label={pseudo:correct-state-estimate-3v}]
+		y1 = angleMeasured - angleEstimated
+		y2 = angleDotMeasured - angleDotEstimated
+
+		 detS = P22 * (P11 + angleVariance - P12)
+
+		K11 = 1 / detS * (P11 * (P22 + angleDotVariance)) - P12 * P21)
+		K12 = 1 / detS * -P12 * angleVariance
+		K21 = 1 / detS * P21 * angleDotVariance
+		K22 = 1 / detS * (-P21 * P12 + P22 * (P11 + angleVariance))
+		K31 = 1 / detS * (P31 * (P22 + angleDotVariance) - P32 * P21)
+		K32 = 1 / detS * (-P31 * P12 + P32 * (P11 + angleVariance))
+
+		angleEstimated		+=  K11 * y1 + K12 * y2
+		angleDotEstimated	+=  K21 * y1 + K22 * y2
+		angleDotBiasEstimated	+=  K31 * y1 + K32 * y2
+		\end{lstlisting}
+
+		
+Finally, the derived error covariance correction is given by (\ref{eq:error-cov-corrupd-3v}), which is translated in to the pseudo code below. 
+
+\begin{equation}
+\label{eq:error-cov-corrupd-3v}
+		P_{k|k} =
+      		\left[ \begin{array}{c c c}
+	          1 - K_{11} & - K_{12} & 0 \\
+	          -K_{21} & 1 - K_{22} & 0 \\
+	          -K_{31} & -K_{32} & 1
+		\end{array} \right]
+		\left[ \begin{array}{c c c}
+		P_{11} & P_{12} & P_{13} \\
+		P_{21} & P_{22} & P_{23} \\
+		P_{31} & P_{32} & P_{33}
+		\end{array}\right]_{k-1|k-1}
+\end{equation}
+
+		\begin{lstlisting}[frame=single, caption={Correct state estimate pseudo code}, label={pseudo:correct-error-covariance-3v}]
+		// note that that values P1[1-3] and P2[1-3] must be copied to temporary values for
+		// RHS expressions to yield the correct values
+		P11 -= K11 * P11 + K12 * P21
+		P12 -= K11 * P12 + K12 * P22
+		P13 -= K11 * P13 + K12 * P23
+
+		P21 -= K21 * P11 + K22 * P21
+		P22 -= K21 * P12 + K22 * P22
+		P23 -= K21 * P13 + K22 * P23
+
+		P31 -= K31 * P11 + K32 * P21
+		P32 -= K31 * P12 + K32 * P22
+		P33 -= K31 * P13 + K32 * P23
+		\end{lstlisting}
+
+\subsection{Reduced Attitude State Estimator}
+
+\textbf{NOTE:} \emph{This section has not been verified and updated to make use of the latest notations. The reduced estimator was originally used as a first attempt to evaluate Kalman filtering, but the development has moved on to other estimator approaches. Below theory and derivations is kept as reference and may be updated in the future.} \\
+
+The state vector for the attitude is the attitude angle and the angular rate bias. The latter is due to gyroscope having a drift in its measured angular velocity, that is, taking a number of samples and averaging the value and using this as an offset. in the below equations, steps 1-2 are the prediction step of the Kalman filter and 3-7 the correction step. The estimation step for roll, pitch and yaw is run when the gyroscope values  are updated, these are angular velocities in rad/s. The correction step for roll and pitch is run when the accelerometer values are available. The correction step for yaw is run when magnetometer values are available.
+	
 	The state vector is the angle $\theta$  and angle rate bias $\dot{\theta}_b$. In this version the gyroscope is used as the input $u$.
 
 		Step 1: Predict the estimated states $\hat{x}_{k|k-1}$
@@ -168,7 +499,7 @@ Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The s
 		P_{k|k-1}=AP_{k-1|k-1}A^{T}+Q
 		\end{equation}
 
-		where $Q$ is the process noise covariance matrix, in this application, $q_{00}$ this is the measured gyroscope error variance.
+		where $Q$ is the model noise covariance matrix, in this application, $q_{00}$ this is the measured gyroscope error variance.
 
 		\begin{equation}
 		\label{eq:error-covariance-prediction-detailed}
@@ -217,6 +548,7 @@ Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The s
 		\begin{equation}
 		\tilde{y}_{k}=z_{k}-H\hat{x}_{k|k-1}
 		\end{equation}
+
 		The extraction matrix $H$ matrix defines what sensor readings we would get under the conditions that our $\hat{x}$ was perfectly estimated and our sensors delivered perfect values.\footnote{See  \url{https://www.udacity.com/wiki/cs373/kalman-filter-matrices}}
 
 		\begin{equation}
@@ -377,245 +709,12 @@ Dragonfly uses a Kalman filter to estimate the roll, pitch and yaw angles. The s
 		P21 -= K2*P11_tmp;
 		P22 -= K2*P12_tmp;
 		\end{lstlisting}
-	\subsection{Attitude estimation using three value state vector}
-		In this version {\url{www.linushelgesson.se/2012/04/pitch-and-roll-estimating-kalman-filter-for-stabilizing-quadrocopters}}, the state vector is the angle $\theta$, the angular rate $\dot{\theta}$ and angular rate bias $\dot{\theta}_b$. The matrix $B$ in the state equation \ref{eq:state-equation-2v} is set to zero due to the complexity of accurately modelling the impact of control input $u$ on the state vector but this may be added in future versions.
 
-[TODO: Add information and pseudo-code on how to include B matrix and system input]
-
-[TODO: Needs review and correcting, S matrix seems wrong...]
-
-		Step 1: Predict the estimated states $\hat{x}_{k|k-1}$
-		\begin{equation}
-		\hat{x}_{k|k-1}=A\hat{x}_{k-1|k-1}
-		\end{equation}
-		\begin{equation}
-		\left[
-      		\begin{array}{c}
-      		\hat{\theta}\\
-		\hat{\dot{\theta}}\\
-		\hat{\dot{\theta}}_{b}
-      		\end{array} \right]_{k|k-1}
-		=
-		\left[
-		\begin{array}{c c c}
-		1 &   \Delta T & - \Delta T\\
-		0 & 1 & 0 \\
-		0 & 0 & 1 \\
-		\end{array} \right]
-		\left[
-		\begin{array}{c}
-		\hat{\theta}\\
-		\hat{\dot{\theta}}\\
-		\hat{\dot{\theta}}_{b}
-		\end{array} \right]_{k-1|k-1}
-		\end{equation}
-		Selecting a measurement vector $z$ at time $k$,
-		\begin{equation*}
-		z_k =
-		\left[
-		\begin{array}{c}
-		\theta\\
-		\hat{\theta}
-		\end{array}
-		\right]
-		\end{equation*}
-		the measurement equation
-		\begin{equation}
-		z_k = H x_k
-		\end{equation}
-		\begin{equation}
-		\label{eq:measurement-equation-3v}
-		z_{k}=
-		\left[ \begin{array}{c c c}
-		1 & 0 & 0\\
-		0 & 1 & 0
-		\end{array} \right]
-		\left[
-      		\begin{array}{c}
-      		\theta\\
-		\dot{\theta}\\
-		\dot{\theta}_{b}
-		\end{array} \right]_{k|k-1}
-		\end{equation}
-		shows the extration matrix $H$.
-		\subsubsection{Three value state vector prediction step}
-		Equation \ref{eq:error-covariance-prediction} for the three value state vector becomes:
-		\begin{equation}
-		\label{eq:error-covariance-prediction-3v}
-		P_{k|k-1}
-		=
-		\left[	\begin{array}{c c c}
-		1 &   \Delta T & - \Delta T\\
-		0 & 1 & 0 \\
-		0 & 0 & 1 \\
-		\end{array} \right]
-		P_{k-1|k-1}
-		\left[	\begin{array}{c c c}
-		1 &  0 & 0 \\
-		\Delta T  & 1 & 0 \\
-		-\Delta T  & 0 & 1 \\
-		\end{array} \right]
-		+ Q
-		\end{equation}
-		where
-		\begin{equation}
-		\label{eq:P-3v}
-		P =
-		\left[
-		\begin{array}{c c c}
-		P_{11} & P_{12} & P_{13} \\
-		P_{21} & P_{22} & P_{23} \\
-		P_{31} & P_{32} & P_{33}
-		\end{array}\right]
-		\end{equation}
-		and the constant matrix $Q$ is given by
-		\begin{equation}
-		\label{eq:Q-3v}
-		Q =
-		\left[ \begin{array}{c c c}
-		Q_{11} & 0 & 0 \\
-		0 & Q_{22} & 0 \\
-		0 & 0 & Q_{33}
-		\end{array} \right]
-		\end{equation}
-		The matrix $Q$ will initially be selected to give a value of the Kalman gain similtar to those achieved by the two-value state vector version, as the Kalman gain is dependent on the ratio between the measurement noise $R$ and process noise $Q$, but there is no method to directly measure the process noise.
-		Solving equations \ref{eq:error-covariance-prediction-3v} and \ref{eq:P-3v} by hand gives the following  pseudo code for predicting the error covariance matrix:
-		\begin{lstlisting}[frame=single, label={eq:error-covariance-prediction-3v},caption={Error covariance prediction pseudo code}]
-		P11 += P11 + dt * P21 - dt * P31
-		       + dt * (P12 + dt * P22 - dt * P32)
-		        - dt * (P13 + dt * P23 - dt * P33)
-		        + Q11
-		P12 += dt * (P22 - P32)
-		P13 += dt * (P23 - P33)
-		P21 += dt * (P22 - P23)
-		P22 += Q22
-		P31 += dt * (P32 - P33)
-		P33 += Q33
-		// P23, P32  not updated
-		\end{lstlisting}
-		which will drive the update or estimation step of the Kalman filter.
-		\subsubsection{Three value state vector correction step}
-		Equation \ref{eq:innovation-covariance-matrix} for calculating the error innovation covariance matrix $S_{k}$ becomes the below for the three value state vector variant:
-		\begin{equation}
-		\label{eq:innovation-covariance-matrix-3v}
-		S_{k} =
-		\left[ \begin{array}{c c c}
-		1 & 0 & 0 \\
-		0 & 1 & 0
-		\end{array} \right]
-		\left[
-		\begin{array}{c c c}
-		P_{11} & P_{12} & P_{13} \\
-		P_{21} & P_{22} & P_{23} \\
-		P_{31} & P_{32} & P_{33}
-		\end{array}\right]_{k-1|k-1}
-		\left[ \begin{array}{c c}
-		1 & 0 \\
-		0 & 1 \\
-		0 & 0
-		\end{array} \right]
-		+ R
-		\end{equation}
-		which become the below after matrix multiplications and substituting the diagonal elements of $R$ into the variances for the accelerometer derived angles and gyroscope angular velocity respectively.
-		\begin{equation}
-		S_{k} =
-		\left[ \begin{array}{c c}
-		P_{11} & P_{12} \\
-		P_{21} & P_{22}
-		\end{array} \right]
-		+
-		\left[ \begin{array}{c c}
-		\sigma(\theta_{acc}) & 0 \\
-		0 & \sigma(\dot{\theta}_{gyro})
-		\end{array} \right]
-		\end{equation}
-		which is used to derive the Kalman gain according to equation \ref{eq:kalman-gain}, which in the three value state vector becomes an 3 by 2 matrix $K$:
-		\begin{equation}
-		\label{eq:kalman-gain-3v}
-		K_k  =
-		\frac{1}{det(S)}
-		  \left[ \begin{array}{c c}
-		      P_{11}(P_{22} + \sigma(\dot{\theta}_{gyro})) - P_{12}P_{21} & -P_{12}\sigma(\theta_{acc}) \\
-          P_{21}\sigma(\dot{\theta}_{gyro})                           & -P_{21}P_{12} + P_{22}(P_{11} + \sigma(\theta_{acc}))\\
-          P_{31}(P_{22}+\sigma(\dot{\theta}_{gyro})) - P_{32}P_{21}   & -P_{31}P_{12}+P_{32}(P_{11}+\sigma(\theta_{acc}))
-		    \end{array} \right]
-		\end{equation}
-		where $det(S)$ is the determinant of matrix $S$ which results from the $S^{-1}$ term of equation \ref{eq:kalman-gain} and its expression is:
-		\begin{equation}
-		det(S) = P_{22}(P_{11} + \sigma(\theta_{acc}) - P_{12})
-		\end{equation}
-
-
-
-		See equation \ref{eq:correct-state-estimation} for the expression to correct the state estimation. Its term $y_k$ for the difference between the estimated state and the measured angle and angular rate in three value state vector variant then becomes:
-		\begin{equation}
-		\label{eq:state-meas-difference-3v}
-		y_k =
-		\left[ \begin{array}{c}
-		y_1 \\
-		y_2
-		\end{array} \right]
-		=
-		\left[ \begin{array}{c}
-		\theta_{acc} - \hat{\theta}_{acc} \\
-		\dot{\theta}_{gyro} - \hat{\dot{\theta}}_{gyro}
-		\end{array} \right]
-		\end{equation}
-		The pseudo code for doing equation \ref{eq:correct-state-estimation} in the three value state vector version follows:
-		\begin{lstlisting}[frame=single, caption={Correct state estimate pseudo code}, label={pseudo:correct-state-estimate-3v}]
-		y1 = angleMeasured - angleEstimated
-		y2 = angleDotMeasured - angleDotEstimated
-
-		 detS = P22 * (P11 + angleVariance - P12)
-
-		K11 = 1 / detS * (P11 * (P22 + angleDotVariance)) - P12 * P21)
-		K12 = 1 / detS * -P12 * angleVariance
-		K21 = 1 / detS * P21 * angleDotVariance
-		K22 = 1 / detS * (-P21 * P12 + P22 * (P11 + angleVariance))
-		K31 = 1 / detS * (P31 * (P22 + angleDotVariance) - P32 * P21)
-		K32 = 1 / detS * (-P31 * P12 + P32 * (P11 + angleVariance))
-
-		angleEstimated		+=  K11 * y1 + K12 * y2
-		angleDotEstimated	+=  K21 * y1 + K22 * y2
-		angleDotBiasEstimated	+=  K31 * y1 + K32 * y2
-		\end{lstlisting}
-		The error covariance correction is given by equation \ref{correct-error-covariance}. Using extraction matrix $H$ from equation \ref{eq:measurement-equation-3v} and  the Kalman gain $K_{k}$ from equation \ref{eq:kalman-gain-3v} the expression for the corrected $P$ becomes:
-		\begin{equation}
-		P_{k|k} =
-      		\left[ \begin{array}{c c c}
-	          1 - K_{11} & - K_{12} & 0 \\
-	          -K_{21} & 1 - K_{22} & 0 \\
-	          -K_{31} & -K_{32} & 1
-		\end{array} \right]
-		\left[ \begin{array}{c c c}
-		P_{11} & P_{12} & P_{13} \\
-		P_{21} & P_{22} & P_{23} \\
-		P_{31} & P_{32} & P_{33}
-		\end{array}\right]_{k-1|k-1}
-		\end{equation}
-		Re-using the Kalman gain from pseudo code \ref{pseudo:correct-error-covariance-3v}, the pseudo code for updating the error covariance becomes:
-		\begin{lstlisting}[frame=single, caption={Correct state estimate pseudo code}, label={pseudo:correct-error-covariance-3v}]
-		// note that that values P1[1-3] and P2[1-3] must be copied to temporary values for
-		// RHS expressions to yield the correct values
-		P11 -= K11 * P11 + K12 * P21
-		P12 -= K11 * P12 + K12 * P22
-		P13 -= K11 * P13 + K12 * P23
-
-		P21 -= K21 * P11 + K22 * P21
-		P22 -= K21 * P12 + K22 * P22
-		P23 -= K21 * P13 + K22 * P23
-
-		P31 -= K31 * P11 + K32 * P21
-		P32 -= K31 * P12 + K32 * P22
-		P33 -= K31 * P13 + K32 * P23
-		\end{lstlisting}
-	\section{Velocity Estimation}
-	Kalman filters are used to estimate the angles, $\theta_{k}$, and in order to find the angular velocity, $\dot{\theta}_{k}$, we can calculate the derivative of the angle. Equation \ref{eq:kalman-gain} for the three value state vector becomes:
+	The two-state Kalman filter presented in this subsection is used to estimate the angles, $\theta_{k}$, and in order to find the angular velocity, $\dot{\theta}_{k}$, we can calculate the derivative of the angle as (\ref{thetaDot}). In the next subsection, it will be shown how to construct a more complete attitude estimator that includes the angular rate as part of the system states. 
 	\begin{equation}
 	\label{thetaDot}
 	\dot{\theta}_{k}=\frac{\theta_{k}-\theta_{k-1}}{\Delta T}
 	\end{equation}
-
 
 \chapter{Flight Control Theory}
 
@@ -667,6 +766,36 @@ To run the algorithms on a digital system, the equation needs to be discretized.
 	\section{Magnetometer calibration}
 
 	\section{Accelerometer calibration}
+
+\begin{appendices}
+
+\chapter{System Discretization} \label{ch:sysdisc}
+
+A continous time dynamical system is genereally described as (\ref{eq:dynsys-cont}).
+
+\begin{eqnarray}
+	\mathbf{\dot{x}} & = & \mathbf{ A x } + \mathbf{ B u } \nonumber \\
+	\mathbf{y} & = & \mathbf{Cx} + \mathbf{Du}
+	\label{eq:dynsys-cont}
+\end{eqnarray}
+
+This can be transformed to a discretized version, which is often desirable for real-time operation and analysis where software sampled input and output signals. Using \emph{zero-order hold (ZOH)} and a constant sample time $h$, the system (\ref{eq:dynsys-cont}) can be transformed to (\ref{eq:dynsys-disc}).
+
+\begin{eqnarray}
+\mathbf{x_{k}} & = & \mathbf{\Phi x_{k-1}} + \mathbf{\Gamma u_{k}} \nonumber \\
+\mathbf{y_k} & = & \mathbf{C x_k} + \mathbf{D u_k}
+\label{eq:dynsys-disc}
+\end{eqnarray}
+
+The new matrices $\mathbf{\Phi}$ and $\mathbf{\Gamma}$ are calculated as in (\ref{dynsys-phigamma}).
+
+\begin{eqnarray}
+\mathbf{\Phi} & = & e^{\mathbf{A}h} \nonumber \\
+\mathbf{\Gamma} & = & \int_{0}^{h} e^{\mathbf{A}s} ds \mathbf{B}
+\label{eq:dynsys-disc}
+\end{eqnarray}
+
+\end{appendices}
 
 %
 % IMPLEMENTATION PART STARTS HERE!
@@ -1357,6 +1486,7 @@ free software license, such as the GNU General Public License,
 to permit their use in free software.
 
 \end{verbatim}
+
 \begin{thebibliography}{99}
 \bibitem{stenberg} Model-based Design Development and Control of a Wind Resistant Multirotor UAV, C. Månsson, D. Stenberg, Dept. of Automatic Control LTH 2014, \url{http://www.control.lth.se/Publication/5947.html}
 \bibitem{bresciani} Modelling, Identification and Control of a Quadrotor Helicopter, T. Bresciani, Dept. of Automatic Control LTH 2008, http://\url{www.control.lth.se/Publication/5823.html}
@@ -1366,6 +1496,7 @@ to permit their use in free software.
 \bibitem{stm32f3progman}PM0214 Programming Manual: STM32F3 and STM32F4 Series Cortex®-M4 programming manual, ST Microelectronics, http://\url{www.st.com/st-web-ui/static/active/en/resource/technical/document/programming_manual/DM00046982.pdf}
 \bibitem{stm32f3haldrivers}UM1786 User Manual: Description of STM32F3xx HAL drivers, ST Microelectronics, http://\url{http://www.st.com/st-web-ui/static/active/en/resource/technical/document/user_manual/DM00122016.pdf}
 \bibitem{spektrumar610userguide}Spektrum AR610 User Guide, Spektrum 2012, \url{https://www.spektrumrc.com/ProdInfo/Files/SPMAR610_Manual_EN.pdf}
+\bibitem{lhelgesson} Pitch and roll estimating Kalman filter for stabilizing quadrocopters http://{\url{www.linushelgesson.se/2012/04/pitch-and-roll-estimating-kalman-filter-for-stabilizing-quadrocopters}}
 \end{thebibliography}
 
 \end{document}                  % End of document
