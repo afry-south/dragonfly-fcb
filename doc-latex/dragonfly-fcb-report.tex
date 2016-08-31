@@ -204,7 +204,7 @@ The yaw angle is calculated based on the magnetometer readings and the current r
 
 	\subsection{Full Attitude State Estimator}
 
-In this version, inspired by \cite{lhelgesson} both the angle $\theta$ and the angular rate $\dot{\theta}$ states are esimated along with the angular rate bias $\dot{\theta}_b$. Becuase of this, the model order is increased by one, where the angular rate bias is included to compensate for a slowly drifting gyroscope measurement bias. It can be argued that this is the most by-the-book approach to the Kalman filter sensor fusion problem for attitude state estimation given the preconditions. The continous time model is given by (\ref{eq:kalman-3scontmodel}), where $I_{yy}$ is the rotational inertia around the $y$ axis and $\tau_y$ is the resulting pitch torque mainly caused by the rotor control action.
+In this version, inspired by \cite{lhelgesson}, both the angle $\theta$ and the angular rate $\dot{\theta}$ states are estimated along with the angular rate bias $\dot{\theta}_b$. Because of this, the model order is increased by one, where the angular rate bias is included to compensate for a slowly drifting gyroscope measurement bias. The equations derived here are based on the pitch angle $\theta$, but are analogous with roll $\phi$ and yaw $\psi$. It can be argued that this is the most by-the-book approach to the Kalman filter sensor fusion problem for attitude state estimation given the preconditions. The continuous time model is given by (\ref{eq:kalman-3scontmodel}), where $I_{yy}$ is the rotational inertia around the $y$ axis and $\tau_y$ is the resulting pitch torque mainly caused by the rotor control action.
 
 \begin{eqnarray}
 	\mathbf{\dot{x}} & = & \mathbf{ A x } + \mathbf{ B u } \nonumber \\
@@ -303,7 +303,7 @@ This translates to a noise covariance matrix $\mathbf{Q}$ as given below in (\re
 
 \begin{equation}
 \label{eq:Q-kalman-3v-init}
-\mathbf{Q} = \mathbf{\Gamma_w \Gamma_w^T} \sigma^2_w = 
+\mathbf{Q} = \mathbf{\Gamma_w \Gamma_w^T} \sigma^2_w = \dfrac{1}{I_{yy}^2}
 \left[
 \begin{array}{c c c}
 h^4/4 & h^3/2 & 0 \\
@@ -771,7 +771,7 @@ To run the algorithms on a digital system, the equation needs to be discretized.
 
 \chapter{System Discretization} \label{ch:sysdisc}
 
-A continous time dynamical system is genereally described as (\ref{eq:dynsys-cont}).
+A continuous time dynamical system is genereally described as (\ref{eq:dynsys-cont}).
 
 \begin{eqnarray}
 	\mathbf{\dot{x}} & = & \mathbf{ A x } + \mathbf{ B u } \nonumber \\
