@@ -188,18 +188,43 @@ The Kalman filter assumes that measurements are always fresh when the prediction
 	\section{Attitude Estimation}
 Dragonfly uses Kalman filters to estimate the roll, pitch and yaw angles. The input measurements are the gyroscope reading for angular rate and the angle calculated from the accelerometer readings in three dimensions. For the yaw angle, the measured angle in the horizontal plane is used in stead of the accelerometer.
 
-To calculate the roll $\phi$ and pitch $\theta$ angles from the accelerometer readings, the formulas (\ref{eq:rp-acc}) are used. These can be derived from the \emph{Direction Cosine Matrix} when transforming the measured body-frame acceleration to the world frame assuming the only measured acceleration is due to gravity (which is a crude approximation).
+To calculate the roll $\phi$ and pitch $\theta$ angles from the three-dimensional accelerometer readings $a_x$, $a_y$ and $a_z$, the formulas (\ref{eq:rp-acc}) are used. These can be derived from the \emph{Direction Cosine Matrix} when transforming the measured body frame acceleration to the world frame assuming the only measured acceleration is due to gravity (which is a crude approximation).
 
 \begin{equation}
 \label{eq:rp-acc}
 \phi_{acc} = \arctan \dfrac{a_y}{a_z} \qquad \theta_{acc} = -\arcsin \dfrac{a_x}{g}
 \end{equation}
 
-The yaw angle is calculated based on the magnetometer readings and the current rotational state in order to tilt-compensate the measurements. The equation for this is presented in (\ref{eq:y-mag}), where the used roll and pitch angles should prefereably be the estimated ones rather than the raw ones from the accelerometer.
+The yaw angle measurement is calculated based on the three-dimensional magnetometer readings, $m_x$, $m_y$ and $m_z$, and the current rotational state in order to tilt-compensate the measurements. The equation for this is presented in (\ref{eq:y-mag}), where the used roll and pitch angles should preferably be the estimated ones rather than the raw ones from the accelerometer.
 
 \begin{equation}
 \label{eq:y-mag}
 \psi_{mag} = \arctan - \dfrac{m_x \sin \phi \sin \theta + m_y \cos \phi - m_z \sin \phi \cos \theta}{m_x \cos \theta + m_z \sin \theta}
+\end{equation}
+
+Finally, the gyroscope angular rate measurements around each body axis, $p_{gyro}$, $q_{gyro}$ and $r_{gyro}$, need to be transformed to their world frame counterpart. This is done according to (\ref{eq:rpyrate-gyro}) using the using the current roll and pitch angle estimates.
+
+\begin{equation}
+\label{eq:rpyrate-gyro}
+\left[
+\begin{array}{c}
+\dot{\phi}_{gyro}\\
+\dot{\theta}_{gyro}\\
+\dot{\psi}_{gyro}
+\end{array} \right]
+=
+\left[
+		\begin{array}{c c c}
+		1 &   \sin \phi \tan \theta & \cos \phi \tan \theta \\
+		0 & \cos \phi & - \sin \phi \\
+		0 & \sin \phi \sec \theta & \cos \phi \sec \theta \\
+\end{array} \right]
+\left[
+\begin{array}{c}
+p_{gyro}\\
+q_{gyro}\\
+r_{gyro}
+\end{array} \right]
 \end{equation}
 
 	\subsection{Full Attitude State Estimator}
