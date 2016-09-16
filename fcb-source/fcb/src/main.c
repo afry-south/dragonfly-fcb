@@ -64,20 +64,20 @@ static void ConfigSystemClock(void);
  * @retval None
  */
 int main(void) {
-	/* At this stage the microcontroller clock setting is already configured,
-	 * this is done through SystemInit() function which is called from startup
-	 * file (startup_stm32f303.c) before to branch to application main.
-	 * To reconfigure the default setting of SystemInit() function, refer to
-	 * system_stm32f30x.c file
-	 */
+    /* At this stage the microcontroller clock setting is already configured,
+     * this is done through SystemInit() function which is called from startup
+     * file (startup_stm32f303.c) before to branch to application main.
+     * To reconfigure the default setting of SystemInit() function, refer to
+     * system_stm32f30x.c file
+     */
 
-	/* Init system at low level */
-	InitSystem();
+    /* Init system at low level */
+    InitSystem();
 
-	/* Initialize RTOS tasks */
-	InitRTOS();
+    /* Initialize RTOS tasks */
+    InitRTOS();
 
-	while (1);
+    while (1);
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -89,7 +89,7 @@ int main(void) {
  * @retval None
  */
 static void InitSystem(void) {
-	/* STM32F3xx HAL library initialization:
+    /* STM32F3xx HAL library initialization:
 	 - Configure the Flash prefetch
 	 - Systick timer is configured by default as source of time base, but user
 	 can eventually implement his proper time base source (a general purpose
@@ -98,50 +98,50 @@ static void InitSystem(void) {
 	 handled in milliseconds basis.
 	 - Set NVIC Group Priority to 4
 	 - Low Level Initialization
-	 */
-	HAL_Init();
+     */
+    HAL_Init();
 
-	/* Initialize the CRC peripheral */
-	InitCRC();
+    /* Initialize the CRC peripheral */
+    InitCRC();
 
-	/* Initialize Programmable Voltage Detection (PVD) */
-	ConfigPVD();
+    /* Initialize Programmable Voltage Detection (PVD) */
+    ConfigPVD();
 
-	/* Configure the system clock to 72 Mhz */
-	ConfigSystemClock();
+    /* Configure the system clock to 72 Mhz */
+    ConfigSystemClock();
 
-	/* Initialize Command Line Interface for USB communication */
-	RegisterCLICommands();
+    /* Initialize Command Line Interface for USB communication */
+    RegisterCLICommands();
 
-	/* Configure UART */
-	UartConfig();
+    /* Configure UART */
+    UartConfig();
 
-	/* Init on-board LEDs */
-	InitLEDs();
+    /* Init on-board LEDs */
+    InitLEDs();
 
-	/* Init User button */
-	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
+    /* Init User button */
+    BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
-	/* Init sensor reading */
-	if (FCB_OK != FcbSensorsConfig()) {
-		ErrorHandler();
-	}
+    /* Init sensor reading */
+    if (FCB_OK != FcbSensorsConfig()) {
+        ErrorHandler();
+    }
 
-	/* Init the rotation matrix */
-	InitRotationMatrix();
-	InitAngularRotationMatrix();
+    /* Init the rotation matrix */
+    InitRotationMatrix();
+    InitAngularRotationMatrix();
 
-	/* Initialize PID control variables */
-	InitPIDControllers();
+    /* Initialize PID control variables */
+    InitPIDControllers();
 
-	/* Setup motor output timer */
-	MotorControlConfig();
+    /* Setup motor output timer */
+    MotorControlConfig();
 
-	/* Setup receiver timers for receiver input */
-	ReceiverInputConfig();
+    /* Setup receiver timers for receiver input */
+    ReceiverInputConfig();
 
-	/* Setup timer for task status command*/
-	InitMonitoring();
+    /* Setup timer for task status command*/
+    InitMonitoring();
 }
 
 /**
@@ -151,31 +151,31 @@ static void InitSystem(void) {
  * @retval None
  */
 static void InitRTOS(void) {
-	/* # CREATE THREADS ####################################################### */
-	CreateFlightControlTask();
+    /* # CREATE THREADS ####################################################### */
+    CreateFlightControlTask();
 #if defined(USE_USB_COM)
-	CreateUSBComTasks();
+    CreateUSBComTasks();
 #endif
-	CreateUARTComTasks();
+    CreateUARTComTasks();
 
-	/* # CREATE QUEUES ######################################################## */
+    /* # CREATE QUEUES ######################################################## */
 #if defined(USE_USB_COM)
-	CreateUSBComQueues();
+    CreateUSBComQueues();
 #endif
-	CreateUARTComQueues();
+    CreateUARTComQueues();
 
-	/* # CREATE SEMAPHORES #################################################### */
-	CreateCLISemaphores();
+    /* # CREATE SEMAPHORES #################################################### */
+    CreateCLISemaphores();
 #if defined(USE_USB_COM)
-	CreateUSBComSemaphores();
+    CreateUSBComSemaphores();
 #endif
-	CreateUARTComSemaphores();
+    CreateUARTComSemaphores();
 
-	/* # Start the RTOS scheduler #############################################
-	 * Currently using heap2.c
-	 * See ST UM1722 manual section 1.6 for more information.
-	 */
-	vTaskStartScheduler();
+    /* # Start the RTOS scheduler #############################################
+     * Currently using heap2.c
+     * See ST UM1722 manual section 1.6 for more information.
+     */
+    vTaskStartScheduler();
 }
 
 /**
@@ -195,34 +195,34 @@ static void InitRTOS(void) {
  * @retval None
  */
 static void ConfigSystemClock(void) {
-	RCC_ClkInitTypeDef RCC_ClkInitStruct;
-	RCC_OscInitTypeDef RCC_OscInitStruct;
-	RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
+    RCC_ClkInitTypeDef RCC_ClkInitStruct;
+    RCC_OscInitTypeDef RCC_OscInitStruct;
+    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
 
-	/* Enable HSE Oscillator and activate PLL with HSE as source */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-	RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-	RCC_OscInitStruct.HSIState = RCC_HSI_OFF;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-	HAL_RCC_OscConfig(&RCC_OscInitStruct);
+    /* Enable HSE Oscillator and activate PLL with HSE as source */
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+    RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+    RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+    RCC_OscInitStruct.HSIState = RCC_HSI_OFF;
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+    RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+    HAL_RCC_OscConfig(&RCC_OscInitStruct);
 
-	/* Configures the USB clock */
-	HAL_RCCEx_GetPeriphCLKConfig(&RCC_PeriphClkInit);
-	RCC_PeriphClkInit.USBClockSelection = RCC_USBPLLCLK_DIV1_5; // 72/1.5 = 48 MHz USB clock
-	HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit);
+    /* Configures the USB clock */
+    HAL_RCCEx_GetPeriphCLKConfig(&RCC_PeriphClkInit);
+    RCC_PeriphClkInit.USBClockSelection = RCC_USBPLLCLK_DIV1_5; // 72/1.5 = 48 MHz USB clock
+    HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit);
 
-	/* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
+    /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
 	 clocks dividers */
-	RCC_ClkInitStruct.ClockType =
-			(RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2; // APB1 is limited to 36 MHz according to reference manual
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-	HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
+    RCC_ClkInitStruct.ClockType =
+            (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2; // APB1 is limited to 36 MHz according to reference manual
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+    HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
 }
 
 #ifdef  USE_FULL_ASSERT
@@ -236,13 +236,13 @@ static void ConfigSystemClock(void) {
  */
 void assert_failed(uint8_t* file, uint32_t line)
 {
-	/* User can add his own implementation to report the file name and line number,
+    /* User can add his own implementation to report the file name and line number,
 	 ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 
-	/* Infinite loop */
-	while (1)
-	{
-	}
+    /* Infinite loop */
+    while (1)
+    {
+    }
 }
 #endif
 
