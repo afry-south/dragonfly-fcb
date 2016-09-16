@@ -34,6 +34,7 @@
 #include "rotation_transformation.h"
 #include "state_estimation.h"
 #include "fcb_accelerometer_magnetometer.h"
+#include "fcb_barometer.h"
 #include "flash.h"
 
 #include "FreeRTOS.h"
@@ -411,7 +412,7 @@ void SendCorrectionUpdateToFlightControl(FcbSensorIndexType sensorType, float32_
     memcpy(msg.sensorReading.xyz, xyz, sizeof(float32_t)*3);
     portBASE_TYPE higherPriorityTaskWoken = pdFALSE;
 
-    if (pdTRUE != xQueueSendFromISR(qFlightControl, &msg, &higherPriorityTaskWoken)) {
+    if (pdTRUE != xQueueSend(qFlightControl, &msg, portMAX_DELAY)) {
         ErrorHandler();
     }
 }
