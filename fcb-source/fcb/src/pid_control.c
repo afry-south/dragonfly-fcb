@@ -55,6 +55,8 @@ typedef struct
 }PIDController_TypeDef;
 
 /* Private define ------------------------------------------------------------*/
+#define PID_USE_PARALLELL_FORM  1
+
 #define CONTROL_PERIOD			((float32_t) FLIGHT_CONTROL_TASK_PERIOD/1000.0)
 
 /* Private macro -------------------------------------------------------------*/
@@ -212,20 +214,26 @@ static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t c
 	ctrlParams->P = ctrlParams->K*(ctrlParams->Beta*refSignal - ctrlState);
 
 #if defined(PID_USE_CLASSIC_FORM)
-	/* Classic form based on: u(t) = K*e(t) + K/Ti*integr(e(t)) + K*Td*deriv(e(t))
-	 * */
+    /* Classic form based on: u(t) = K*e(t) + K/Ti*integr(e(t)) + K*Td*deriv(e(t))
+     * */
 
-	/* Calculate Integral control part */
-	if(ctrlParams->Ti > 0.0) {
-		ctrlParams->I += ctrlParams->K*CONTROL_PERIOD/ctrlParams->Ti*(refSignal - ctrlState);
-	}
+    /* Calculate Integral control part */
+    if(ctrlParams->Ti > 0.0) {
+        ctrlParams->I += ctrlParams->K*CONTROL_PERIOD/ctrlParams->Ti*(refSignal - ctrlState);
+    }
 
-	/* Calculate Derivative control part */
-	ctrlParams->D = ctrlParams->Td / (ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)*ctrlParams->D
-			+ ctrlParams->K * ctrlParams->Td * ctrlParams->N / (ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD )
-			* (ctrlParams->Gamma * (refSignal - ctrlParams->preRef) - (ctrlState - ctrlParams->preState));
+    /* If we don't have ctrl state rate, calculate if using the previous value. */
+    if (!useCtrlStateRate) {
+        /* Calculate Derivative control part */
+        ctrlParams->D = ctrlParams->K*ctrlParams->Td * (ctrlParams->Gamma*(refSignal - ctrlParams->preRef) - (ctrlState - ctrlParams->preState)) / CONTROL_PERIOD;
+    }
+    else {
+        /* Calculate Derivative control part */
+        ctrlParams->D = ctrlParams->K*ctrlParams->Td * (ctrlParams->Gamma*(refSignal - ctrlParams->preRef)/CONTROL_PERIOD - ctrlStateRate);
+    }
 
-#elif defined(PID_USE_PARALLEL_FORM)
+#elif defined(PID_USE_PARALLELL_FORM)
+
 	/* Parallel form based on: u(t) = K*e(t) + Ti*integr(e(t)) - Td*deriv(y(t))
 	 * */
 
@@ -236,16 +244,12 @@ static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t c
 
 	/* If we don't have ctrl state rate, calculate if using the previous value. */
 	if (!useCtrlStateRate) {
-		/* Calculate Derivative control part */
-		ctrlParams->D = ctrlParams->Td/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)*ctrlParams->D
-				+ ctrlParams->Td*ctrlParams->N/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)
-				* (ctrlParams->Gamma*(refSignal - ctrlParams->preRef) - (ctrlState - ctrlParams->preState));
+	    /* Calculate Derivative control part */
+	    ctrlParams->D = ctrlParams->Td * (ctrlParams->Gamma*(refSignal - ctrlParams->preRef) - (ctrlState - ctrlParams->preState)) / CONTROL_PERIOD;
 	}
 	else {
-		/* Calculate Derivative control part */
-		ctrlParams->D = ctrlParams->Td/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)*ctrlParams->D
-				+ ctrlParams->Td*ctrlParams->N*CONTROL_PERIOD/(ctrlParams->Td + ctrlParams->N * CONTROL_PERIOD)
-				* (ctrlParams->Gamma*(refSignal - ctrlParams->preRef)/CONTROL_PERIOD - ctrlStateRate);
+	    /* Calculate Derivative control part */
+	    ctrlParams->D = ctrlParams->Td * (ctrlParams->Gamma*(refSignal - ctrlParams->preRef)/CONTROL_PERIOD - ctrlStateRate);
 	}
 
 #endif
@@ -272,6 +276,14 @@ static float32_t UpdatePIDControl(PIDController_TypeDef* ctrlParams, float32_t c
 
 	return controlSignal;
 }
+
+//float32_t getPRollControlSignal() {
+//	return RollCtrl.P;
+//}
+//
+//float32_t getDRollControlSignal() {
+//	return RollCtrl.D;
+//}
 
 /**
  * @}

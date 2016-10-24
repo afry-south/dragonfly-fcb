@@ -311,7 +311,7 @@ static void _DebugFlashLEDs(uint8_t event) {
     	acc_cbk_sensor_counter++;
     } else if(event == FCB_SENSOR_MAGNETO_DATA_READY) {
     	if ((mag_cbk_sensor_counter % 200) == 0) {
-    		BSP_LED_Toggle(LED3);
+    		BSP_LED_Toggle(LED8);
     	}
     	mag_cbk_sensor_counter++;
     } else if(event == FCB_SENSOR_GYRO_DATA_READY) {

@@ -307,7 +307,7 @@ void FetchDataFromMagnetometer(void) {
         setXYZVector(magnetoMeterData, sXYZMagVector);
 
         if (SendCorrectionUpdateCallback != NULL) {
-			SendCorrectionUpdateCallback(MAG_IDX, sXYZMagVector);
+            SendCorrectionUpdateCallback(MAG_IDX, sXYZMagVector);
         }
     } else if (MAGMTR_CALIBRATING == accMagMode) {
         static uint32_t sampleIndex = 0;

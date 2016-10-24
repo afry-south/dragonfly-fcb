@@ -26,9 +26,9 @@
 #define MAX_THRUST			((float32_t) 4*AT*UINT16_MAX + 4*BT)	// Maximal upward thrust from all four motors combined [N]
 
 /* Roll/pitch angle control parameters */
-#define K_RP				(float32_t) 16.0 //25.0
+#define K_RP				(float32_t) 35.0
 #define TI_RP				(float32_t) 0.0
-#define TD_RP				(float32_t) 8.0 //10.0
+#define TD_RP				(float32_t) 10.0
 #define BETA_RP				(float32_t) 1.0			// Proportional set-point weighting
 #define GAMMA_RP			(float32_t) 0.0
 #define N_RP				(float32_t) 1000.0		// Max derivative gain
@@ -58,6 +58,9 @@ typedef struct
 void InitPIDControllers(void);
 void UpdatePIDControlSignals(CtrlSignals_TypeDef* ctrlSignals);
 void ResetCtrlSignals(CtrlSignals_TypeDef* ctrlSignals);
+
+//float32_t getPRollControlSignal();
+//float32_t getDRollControlSignal();
 
 #endif /* __PID_CONTROL_H_ */
 
